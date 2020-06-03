@@ -1,0 +1,167 @@
+import StigmaRegEx
+import re
+import Instrumenter as inst
+import SmaliAssemblyInstructions as smali
+from SmaliMethodDef import SmaliMethodDef
+
+
+class SmaliClassDef:
+
+	@staticmethod
+	def is_function(line):
+		# check this line is a method (begins with "invoke-*")
+		match_object = re.match(StigmaRegEx.REGEX_BEGINS_WITH_INVOKE, line)
+		return match_object is not None
+
+	def __init__(self, file_name):
+		# These are just lists of strings
+		self.header = []
+		self.static_fields = []
+		self.instance_fields = []
+
+		# This is a list of SmaliMethodDef (as seen above) which aids instrumentation later
+		self.methods = []
+
+		self.instrumenter = inst.Instrumenter()
+
+		fh = open(file_name, "r")
+		lines = fh.readlines()
+		fh.close()
+
+		self.class_name = lines[0].split()[-1].strip("\n")
+		print("Class: " + self.class_name)
+
+		cur_dest = self.header
+		pre_methods = True
+		idx = 0
+		while idx < len(lines):
+
+			# print("processing line: " + str(lines[idx]))
+			match_object = re.match(StigmaRegEx.REGEX_BEGINS_WITH_DOT_METHOD, lines[idx])
+			if match_object is not None:  # This is the start of a method defintion
+				# print(str(match_object) + " in line: " + lines[idx])
+				method_code = []
+
+				match_object = re.match(StigmaRegEx.REGEX_BEGINS_WITH_DOT_END_METHOD, lines[idx])
+				while match_object is None:
+					# print(str(idx) + "    " + lines[idx])
+					method_code.append(lines[idx])
+					del lines[idx]
+					match_object = re.match(StigmaRegEx.REGEX_BEGINS_WITH_DOT_END_METHOD, lines[idx])
+
+				# Eat the final ".end method" line
+				method_code.append(lines[idx])
+				del lines[idx]
+				idx -= 1
+
+				# print(str(match_object) + " in line: " + lines[idx])
+				smd = SmaliMethodDef(method_code)
+				self.methods.append(smd)
+
+			if "# static fields\n" == lines[idx]:
+				cur_dest = self.static_fields
+
+			if "# instance fields\n" == lines[idx]:
+				cur_dest = self.instance_fields
+
+			if "# direct methods\n" == lines[idx]:
+				pre_methods = False
+
+			if pre_methods:
+				cur_dest.append(lines[idx])
+				del lines[idx]
+				idx = idx - 1
+			# debugging left in
+			# print("\n")
+			# print(lines)
+			# print("len(lines): " + str(len(lines)))
+			#
+			# print("idx: " + str(idx))
+			idx = idx + 1
+
+	def taint_storage_name(self, method_name, reg_name):
+		method_name = method_name.replace("<", "")
+		method_name = method_name.replace(">", "")
+		static_f_name = str(method_name) + "_" + str(reg_name) + "_TAINT:I"
+		full_name = ".field public static " + static_f_name + "\n"
+
+		# could be more efficient as a hash map instead of a list but that might change the order
+		# AND, the number of items is small (probably < 50) so it doesn't really matter
+		if full_name not in self.static_fields:
+			self.static_fields.append(full_name)
+			self.static_fields.append("\n")
+
+		return static_f_name
+
+	def is_internal_function(self, line):
+		if not self.is_function(line):
+			return False
+
+		func_name = line.split(" ")[-1]
+		return func_name in self.methods
+
+	def is_external_function(self, line):
+		if not self.is_function(line):
+			return False
+
+		func_name = line.split(" ")[-1]
+		return func_name not in self.methods
+
+	def instrument(self):
+		for m in self.methods:
+
+			idx = 0
+			while idx < len(m.raw_text):
+				# print("line: " + m.raw_text[idx])
+				# The lines of code that we add (instrument) will be instances of smali.SmaliAssemblyInstruction
+				# the lines of code that are existing already will be type string
+				# So, this check prevents us from instrumenting our new, additional code
+				if not isinstance(m.raw_text[idx], smali.SmaliAssemblyInstruction):
+					idx = self._do_instrumentation_plugins(m, idx)
+
+				idx = idx + 1
+
+	def _do_instrumentation_plugins(self, m, idx):
+
+		for inst_method in self.instrumenter.instrumentation_methods:
+
+			# The lines of code that we add (instrument) will always leave
+			# a comment on the line before their target instruction
+			# in order to indicate that the target instruction has
+			# already been addressed by instrumentation.
+			# This check prevents "double" cases where two different instrumenters
+			# both try to add code for the same original instruction
+			# print("\n\ncur line: " + str(m.raw_text[idx]) + "   prev line: " + str(m.raw_text[idx-1]))
+			if isinstance(m.raw_text[idx - 1], smali.COMMENT):
+				# print("already instrumented check!")
+				# print("cur line: " + str(m.raw_text[idx]) + "   prev line: " + str(m.raw_text[idx-1]))
+				idx = idx + 1
+
+			lines_added = inst_method(self, m, idx)
+			idx = idx + lines_added
+
+		return idx
+
+	def write_to_file(self, class_smali_file):
+		# Write new "program" out to file
+		fh = open(class_smali_file, "w")
+
+		for line in self.header + self.static_fields + self.instance_fields:
+			fh.write(line)
+
+		fh.write("# methods\n")
+		for m in self.methods:
+			for line in m.raw_text:
+				fh.write(str(line))
+			fh.write("\n")
+
+		fh.close()
+
+	def verbose(self):
+		for line in self.header + self.static_fields + self.instance_fields:
+			print(line)
+		print("# methods\n")
+		for m in self.methods:
+			for line in m.raw_text:
+				print(str(line))
+			print("\n")

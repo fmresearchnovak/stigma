@@ -7,17 +7,31 @@
 .field public static final TAG:Ljava/lang/String;
 
 
+.field public static clinit_v0_TAINT:I
+
+.field public static getData_v0_TAINT:I
+
+.field public static onCreate_v1_TAINT:I
+
 # instance fields
 .field public blah:I
 
 
-# direct methods
+# methods
 .method static constructor <clinit>()V
-    .locals 1
+    .locals 3
 
     .line 19
     const-class v0, Ledu/fandm/enovak/leaks/SimpleLeak;
 
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for external method call
+    const/4 v1, 0x0
+    const/4 v2, 0x0
+    sget v2, Ledu/fandm/enovak/leaks/SimpleLeak;->clinit_v0_TAINT:I
+    or-int v1, v1, v2
+    sput v1, Ledu/fandm/enovak/leaks/SimpleLeak;->clinit_v0_TAINT:I
+    # IFT INSTRUCTIONS ADDED BY STIGMA for external method call
     invoke-virtual {v0}, Ljava/lang/Class;->getName()Ljava/lang/String;
 
     move-result-object v0
@@ -55,17 +69,23 @@
 .end method
 
 .method private getData(I)I
-    .locals 1
+    .locals 3
     .param p1, "x"    # I
 
     .line 38
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for ADD instruction
+    const/4 v1, 0x0
+    const/4 v2, 0x0
+    sget v2, Ledu/fandm/enovak/leaks/SimpleLeak;->getData_v0_TAINT:I
+    or-int v1, v1, v2
+    sput v1, Ledu/fandm/enovak/leaks/SimpleLeak;->getData_v0_TAINT:I
+    # IFT INSTRUCTIONS ADDED BY STIGMA for ADD instruction
     add-int/lit8 v0, p1, 0x38
 
     return v0
 .end method
 
-
-# virtual methods
 .method public IMEI_LEAK(Landroid/view/View;)V
     .locals 1
     .param p1, "v"    # Landroid/view/View;
@@ -84,7 +104,7 @@
 .end method
 
 .method protected onCreate(Landroid/os/Bundle;)V
-    .locals 3
+    .locals 5
     .param p1, "savedInstanceState"    # Landroid/os/Bundle;
 
     .line 25
@@ -124,6 +144,14 @@
 
     invoke-virtual {v1, v2}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
 
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for external method call
+    const/4 v3, 0x0
+    const/4 v4, 0x0
+    sget v4, Ledu/fandm/enovak/leaks/SimpleLeak;->onCreate_v1_TAINT:I
+    or-int v3, v3, v4
+    sput v3, Ledu/fandm/enovak/leaks/SimpleLeak;->onCreate_v1_TAINT:I
+    # IFT INSTRUCTIONS ADDED BY STIGMA for external method call
     invoke-virtual {v1}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
 
     move-result-object v1
@@ -133,3 +161,4 @@
     .line 34
     return-void
 .end method
+
