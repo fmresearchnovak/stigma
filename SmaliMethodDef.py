@@ -130,19 +130,3 @@ class SmaliMethodDef:
 
         else:
             return False
-
-    def instrument(self, instance_fields, instrumentation_match_function, instrumentation_function):
-
-        idx = 0
-        while idx < len(self.raw_text):
-
-            # The lines of code that we add (instrument) will be instances of smali.SmaliAssemblyInstruction
-            # the lines of code that are existing already will be type string
-            # So, this check prevents us from instrumenting our new additional code
-            if isinstance(self.raw_text[idx], smali.SmaliAssemblyInstruction):
-                idx = idx + 1
-
-            elif instrumentation_match_function(self.raw_text[idx]):
-                idx = instrumentation_function(idx, instance_fields)
-
-            idx = idx + 1
