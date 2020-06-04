@@ -152,7 +152,7 @@ class SmaliClassDef:
 		fh.write("# methods\n")
 		for m in self.methods:
 			for line in m.raw_text:
-				fh.write(str(line))
+				fh.write(str(line))  # because we're converting to str, SmaliAssemblyInstruction object's repr() called
 			fh.write("\n")
 
 		fh.close()

@@ -96,8 +96,6 @@ class CONST_4(CONST):
 		return "const/4 " + self.rd + ", " + str(self.v)
 
 
-
-
 class IF_EQZ(SmaliAssemblyInstruction):
 	def __init__(self, reg, label):
 		self.reg = reg
@@ -107,7 +105,7 @@ class IF_EQZ(SmaliAssemblyInstruction):
 		# the repr is necessary here because self.label might be a smali.LABEL
 		# object or it might be a string.  If it is a smali.LABEL object
 		# then we use repr to get a string that does not contain
-		# the preceeding four spaces and trailing \n which would be redundant
+		# the preceding four spaces and trailing \n which would be redundant
 		# LABELS are weird because it is possible to use a LABEL in-line as seen here
 		return "if-eqz " + self.reg + ", " + repr(self.label)
 
@@ -131,10 +129,6 @@ class CONST_STRING(SmaliAssemblyInstruction):
 		return "const-string " + self.reg + ", \"" + self.string + "\""
 
 
-
-
-
-
 class LABEL(SmaliAssemblyInstruction):
 	def __init__(self, num):
 		self.n = num
@@ -145,19 +139,17 @@ class LABEL(SmaliAssemblyInstruction):
 		return ":taint_jump_label_" + str(self.n)
 
 
-
 class INVOKE_VIRTUAL(SmaliAssemblyInstruction):
 	# remember: first arg is actually a reference to the calling object
 	def __init__(self, args, fully_qualified_name):
 		self.args = args
 		self.calling_object = args[0]
 		self.params = args[1:]
-		self.fully_qualified_name
+		self.fully_qualified_name = fully_qualified_name
 
 	def __repr__(self):
 		args_fmt = "{" + ", ".join(self.args) + "}"
 		return "invoke-virtual " + args_fmt + ", " + self.fully_qualified_name 
-
 
 
 # An invoke-virtual instruction that invokes a method defined inside of this app
@@ -172,7 +164,6 @@ class INVOKE_VIRTUAL_EXTERNAL(INVOKE_VIRTUAL):
 
 class INVOKE_STATIC(SmaliAssemblyInstruction):
 	pass
-
 
 
 class LOG_D(INVOKE_STATIC):
