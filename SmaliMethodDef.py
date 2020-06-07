@@ -95,14 +95,10 @@ class SmaliMethodDef:
         return res
 
     def embed_line(self, position, line):
-        # this is "+1" so that the index numbers
-        # of the preceeding spots
-        # (and _critically_ the index of the current spot)
-        # are not disrupted at all
-        self.raw_text.insert(position + 1, line)
+        self.raw_text.insert(position, line)
 
     def embed_block(self, position, block):
-        # print("embeddeding block as poisiton: " + str(position))
+        # print("embedding block as position: " + str(position))
 
         # print("--- before ---")
         # for i in range(position-5, position+len(block) + 5):

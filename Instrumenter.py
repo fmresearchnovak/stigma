@@ -7,6 +7,9 @@ REGEX_V_AND_NUMBERS = r"v[0-9]+"  # v and numbers (e.g., v5) are general purpose
 REGEX_BEGINS_WITH_INVOKE = r"^\s*invoke-"
 REGEX_BEGINS_WITH_MOVE_RESULT = r"^\s*move-result-"
 REGEX_BEGINS_WITH_ADD = r"^\s*add-"
+REGEX_BEGINS_WITH_SUB = r"^\s*sub-"
+REGEX_BEGINS_WITH_MUL = r"^\s*mul-"
+REGEX_BEGINS_WITH_DIV = r"^\s*div-"
 
 # A more complete listing of these sort of things can be found in ./SourcesAndSinks.txt
 STRING_IMEI_FUNCTION = "Landroid/telephony/TelephonyManager;->getDeviceId()Ljava/lang/String;"
@@ -17,7 +20,7 @@ class Instrumenter:
 
     def __init__(self):
         self.instrumentation_methods = {Instrumenter.IMEI_instrumentation, Instrumenter.WRITE_instrumentation,
-                                        Instrumenter.ADD_instrumenter, Instrumenter.EXTERNAL_FUNCTION_instrumentation}
+                                        Instrumenter.BINARYOP_instrumenter, Instrumenter.EXTERNAL_FUNCTION_instrumentation}
 
     def register_instrumentation_method(self, new_method):
 
@@ -204,12 +207,23 @@ class Instrumenter:
 
         return lines_embedded
 
+    # Propagation Tainting
     @staticmethod
-    def ADD_instrumenter(scd, m, line_num):
+    def BINARYOP_instrumenter(scd, m, line_num):
         # Can be extrapolated to all binary operations
 
         cur_line = m.raw_text[line_num]
         search_object = re.search(REGEX_BEGINS_WITH_ADD, cur_line)
+        instruction = 'ADD'
+        if search_object is None:
+            search_object = re.search(REGEX_BEGINS_WITH_SUB, cur_line)
+            instruction = 'SUB'
+        if search_object is None:
+            search_object = re.search(REGEX_BEGINS_WITH_MUL, cur_line)
+            instruction = 'MUL'
+        if search_object is None:
+            search_object = re.search(REGEX_BEGINS_WITH_DIV, cur_line)
+            instruction = 'DIV'
         if search_object is None:
             return 0
 
@@ -223,7 +237,7 @@ class Instrumenter:
         # as pointers (the values in the registers are memory addresses)
         # The "2addr" seems to indicate otherwise to me
 
-        block = [smali.BLANK_LINE(), smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for ADD instruction")]
+        block = [smali.BLANK_LINE(), smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for %s instruction" % instruction)]
 
         taint_loc_result = scd.taint_storage_name(m.get_name(), regs[0])
 
@@ -231,7 +245,7 @@ class Instrumenter:
         blockquette = Instrumenter.make_merge_register_block(scd, m, regs, taint_loc_result)
         block = block + blockquette
 
-        block.append(smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for ADD instruction"))
+        block.append(smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for %s instruction" % instruction))
 
         m.embed_block(line_num, block)
         lines_embedded = len(block)
