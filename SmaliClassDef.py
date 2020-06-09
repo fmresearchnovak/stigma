@@ -79,11 +79,14 @@ class SmaliClassDef:
 			# print("idx: " + str(idx))
 			idx = idx + 1
 
-	def taint_storage_name(self, identifier, reg_name):
+	def taint_storage_name(self, identifier, reg_name=""):
 		#identifier = method name or instance field name
 		identifier = identifier.replace("<", "")
 		identifier = identifier.replace(">", "")
-		static_f_name = str(identifier) + "_" + str(reg_name) + "_TAINT:I"
+		if(reg_name != ""):
+			static_f_name = str(identifier) + "_" + str(reg_name) + "_TAINT:I"
+		else:
+			static_f_name = str(identifier) + "_TAINT:I"
 		full_name = ".field public static " + static_f_name + "\n"
 
 		# could be more efficient as a hash map instead of a list but that might change the order
