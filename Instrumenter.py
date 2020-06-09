@@ -10,6 +10,7 @@ REGEX_BEGINS_WITH_ADD = r"^\s*add-"
 REGEX_BEGINS_WITH_SUB = r"^\s*sub-"
 REGEX_BEGINS_WITH_MUL = r"^\s*mul-"
 REGEX_BEGINS_WITH_DIV = r"^\s*div-"
+REGEX_BEGINS_WITH_IPUT = r"^\s*iput"
 
 # A more complete listing of these sort of things can be found in ./SourcesAndSinks.txt
 STRING_IMEI_FUNCTION = "Landroid/telephony/TelephonyManager;->getDeviceId()Ljava/lang/String;"
@@ -19,7 +20,7 @@ STRING_STREAM_WRITE_FUNCTION = "Ljava/io/OutputStreamWriter;->write(Ljava/lang/S
 class Instrumenter:
 
     def __init__(self):
-        self.instrumentation_methods = {Instrumenter.IMEI_instrumentation, Instrumenter.WRITE_instrumentation,
+        self.instrumentation_methods = {Instrumenter.IPUT_instrumentation, Instrumenter.IMEI_instrumentation, Instrumenter.WRITE_instrumentation,
                                         Instrumenter.BINARYOP_instrumenter, Instrumenter.EXTERNAL_FUNCTION_instrumentation}
 
     def register_instrumentation_method(self, new_method):
@@ -57,6 +58,42 @@ class Instrumenter:
 
     # all of the following "*_instrumentation" methods should take the same three arguments
     # Note: they are all static
+    @staticmethod
+    def IPUT_instrumentation(scd, m, line_num):
+        cur_line = m.raw_text[line_num]
+        search_object = re.search(REGEX_BEGINS_WITH_IPUT, cur_line)
+
+        if search_object is None:
+            return 0
+
+        regs = re.findall(REGEX_V_AND_NUMBERS, cur_line)
+
+        second_reg = cur_line.split(", ")[1]
+        if second_reg != 'p0':
+            return 0
+
+        field_name = re.search("->(.+)", cur_line).group(1)
+        field_name = field_name[:-2]
+
+        taint_source = scd.taint_storage_name(m.get_name(), regs[0])
+        taint_result = scd.taint_storage_name(field_name, regs[0])
+
+        tmp_reg = m.make_new_reg()
+
+        block = [smali.BLANK_LINE(),
+                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for IPUT"),
+                 smali.CONST(tmp_reg, "0x0"),
+                 smali.SGET(tmp_reg, scd.class_name, taint_source),
+                 smali.SPUT(tmp_reg, scd.class_name, taint_result),
+                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for IPUT")]
+
+        m.embed_block(line_num, block)
+
+        m.free_reg()
+
+        return len(block)
+
+
     @staticmethod
     def IMEI_instrumentation(scd, m, line_num):  # IMEI sources
         # print("IMEI_instrumentation")
