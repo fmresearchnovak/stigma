@@ -4,12 +4,15 @@ import SmaliAssemblyInstructions as smali
 import re
 
 REGEX_V_AND_NUMBERS = r"v[0-9]+"  # v and numbers (e.g., v5) are general purpose registers.  I think "v" means "virtual"
+REGEX_V_AND_P_NUMBERS = r"v[0-9]+|p[0-9]+"
 REGEX_BEGINS_WITH_INVOKE = r"^\s*invoke-"
 REGEX_BEGINS_WITH_MOVE_RESULT = r"^\s*move-result-"
 REGEX_BEGINS_WITH_ADD = r"^\s*add-"
 REGEX_BEGINS_WITH_SUB = r"^\s*sub-"
 REGEX_BEGINS_WITH_MUL = r"^\s*mul-"
 REGEX_BEGINS_WITH_DIV = r"^\s*div-"
+REGEX_BEGINS_WITH_IPUT = r"^\s*iput"
+REGEX_BEGINS_WITH_IGET = r"^\s*iget"
 
 # A more complete listing of these sort of things can be found in ./SourcesAndSinks.txt
 STRING_IMEI_FUNCTION = "Landroid/telephony/TelephonyManager;->getDeviceId()Ljava/lang/String;"
@@ -19,8 +22,10 @@ STRING_STREAM_WRITE_FUNCTION = "Ljava/io/OutputStreamWriter;->write(Ljava/lang/S
 class Instrumenter:
 
     def __init__(self):
-        self.instrumentation_methods = {Instrumenter.IMEI_instrumentation, Instrumenter.WRITE_instrumentation,
-                                        Instrumenter.BINARYOP_instrumenter, Instrumenter.EXTERNAL_FUNCTION_instrumentation}
+        self.instrumentation_methods = {Instrumenter.IGET_instrumentation, Instrumenter.IPUT_instrumentation,
+                                        Instrumenter.IMEI_instrumentation, Instrumenter.WRITE_instrumentation,
+                                        Instrumenter.BINARYOP_instrumenter,
+                                        Instrumenter.EXTERNAL_FUNCTION_instrumentation}
 
     def register_instrumentation_method(self, new_method):
 
@@ -30,6 +35,16 @@ class Instrumenter:
         # other developers could add instrumentation
         if new_method not in self.instrumentation_methods:
             self.instrumentation_methods.add(new_method)
+
+    @staticmethod
+    def registers_tainted(scd, m, registers):
+
+        registers = [r for r in registers if scd.get_taint_storage_name(m.get_name(), r) is not None]
+
+        if len(registers) == 0:
+            return False
+
+        return True
 
     @staticmethod
     def make_merge_register_block(scd, m, registers, taint_loc_result):
@@ -42,8 +57,10 @@ class Instrumenter:
         block.append(smali.CONST_4(tmp_reg1_for_merging, "0x0"))
         block.append(smali.CONST_4(tmp_reg2_for_merging, "0x0"))
 
+        registers = [r for r in registers if scd.get_taint_storage_name(m.get_name(), r) is not None]
+
         for r in registers:
-            taint_loc_param = scd.taint_storage_name(m.get_name(), r)
+            taint_loc_param = scd.get_taint_storage_name(m.get_name(), r)
             block.append(smali.SGET(tmp_reg2_for_merging, scd.class_name, taint_loc_param))
             block.append(smali.OR_INT(tmp_reg1_for_merging, tmp_reg1_for_merging, tmp_reg2_for_merging))
 
@@ -58,6 +75,81 @@ class Instrumenter:
     # all of the following "*_instrumentation" methods should take the same three arguments
     # Note: they are all static
     @staticmethod
+    def IPUT_instrumentation(scd, m, line_num):
+        cur_line = m.raw_text[line_num]
+        search_object = re.search(REGEX_BEGINS_WITH_IPUT, cur_line)
+
+        if search_object is None:
+            return 0
+
+        regs = re.findall(REGEX_V_AND_P_NUMBERS, cur_line)
+
+        second_reg = cur_line.split(", ")[1]
+        if second_reg != 'p0':
+            return 0
+
+        field_name = re.search("->(.+):", cur_line).group(1)
+
+        taint_source = scd.get_taint_storage_name(m.get_name(), regs[0])
+        if taint_source is None:
+            return 0
+
+        taint_result = scd.create_taint_storage_name(field_name)
+
+        tmp_reg = m.make_new_reg()
+
+        block = [smali.BLANK_LINE(),
+                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for IPUT"),
+                 smali.CONST(tmp_reg, "0x0"),
+                 smali.SGET(tmp_reg, scd.class_name, taint_source),
+                 smali.SPUT(tmp_reg, scd.class_name, taint_result),
+                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for IPUT")]
+
+        m.embed_block(line_num, block)
+
+        m.free_reg()
+
+        return len(block)
+
+    @staticmethod
+    def IGET_instrumentation(scd, m, line_num):
+        cur_line = m.raw_text[line_num]
+        search_object = re.search(REGEX_BEGINS_WITH_IGET, cur_line)
+
+        if search_object is None:
+            return 0
+
+        regs = re.findall(REGEX_V_AND_P_NUMBERS, cur_line)
+
+        second_reg = cur_line.split(", ")[1]
+
+        if second_reg != 'p0':
+            return 0
+
+        field_name = re.search("->(.+):", cur_line).group(1)
+
+        taint_source = scd.get_taint_storage_name(field_name)
+        if taint_source is None:
+            return 0
+
+        taint_result = scd.create_taint_storage_name(m.get_name(), regs[0])
+
+        tmp_reg = m.make_new_reg()
+
+        block = [smali.BLANK_LINE(),
+                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for IGET"),
+                 smali.CONST(tmp_reg, "0x0"),
+                 smali.SGET(tmp_reg, scd.class_name, taint_source),
+                 smali.SPUT(tmp_reg, scd.class_name, taint_result),
+                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for IGET")]
+
+        m.embed_block(line_num, block)
+
+        m.free_reg()
+
+        return len(block)
+
+    @staticmethod
     def IMEI_instrumentation(scd, m, line_num):  # IMEI sources
         # print("IMEI_instrumentation")
         if STRING_IMEI_FUNCTION not in m.raw_text[line_num]:
@@ -69,7 +161,7 @@ class Instrumenter:
         # print("search object: " + str(search_object))
         reg = search_object.group()
 
-        taint_location = scd.taint_storage_name(m.get_name(), reg)
+        taint_location = scd.create_taint_storage_name(m.get_name(), reg)
         # 1
         tmp_reg_for_constant = m.make_new_reg()
 
@@ -102,7 +194,10 @@ class Instrumenter:
         target_reg = results[1]
         # print("results: " + str(results))
 
-        taint_loc = scd.taint_storage_name(m.get_name(), target_reg)
+        if scd.get_taint_storage_name(m.get_name(), target_reg) is None:
+            return 0
+        else:
+            taint_loc = scd.create_taint_storage_name(m.get_name(), target_reg)
 
         # 1, 2, and 3
         tmp_reg_for_tag = m.make_new_reg()
@@ -192,7 +287,10 @@ class Instrumenter:
         result_regs = re.findall(REGEX_V_AND_NUMBERS, result_line)
         # print("result registers: " + str(result_regs))
 
-        taint_loc_result = scd.taint_storage_name(m.get_name(), result_regs[0])
+        if not Instrumenter.registers_tainted(scd, m, param_regs):
+            return 0
+
+        taint_loc_result = scd.create_taint_storage_name(m.get_name(), result_regs[0])
 
         wrapper_comment = smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for external method call")
         block = [smali.BLANK_LINE(), wrapper_comment]
@@ -239,10 +337,14 @@ class Instrumenter:
 
         block = [smali.BLANK_LINE(), smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for %s instruction" % instruction)]
 
-        taint_loc_result = scd.taint_storage_name(m.get_name(), regs[0])
+        if not Instrumenter.registers_tainted(scd, m, regs):
+            return 0
+
+        taint_loc_result = scd.create_taint_storage_name(m.get_name(), regs[0])
 
         # this should probably not merge in the destination register (only the parameter registers)
         blockquette = Instrumenter.make_merge_register_block(scd, m, regs, taint_loc_result)
+
         block = block + blockquette
 
         block.append(smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for %s instruction" % instruction))

@@ -9,6 +9,9 @@ __pycache__/
 # C extensions
 *.so
 
+# Smali test files
+*.smali
+
 # Distribution / packaging
 .Python
 build/
