@@ -80,8 +80,15 @@ class SmaliClassDef:
 			idx = idx + 1
 
 	def taint_storage_name(self, method_name, reg_name):
+		# <init> and v2 as input => init_v2_TAINT:I
+
+		# assert("init_v2_TAINT:I" in scd.static_fields)
+
+
+		# most method names are expected: "getIMEI(0", "leakSomething()"
+		# constructors show up as  <init> and <cinit>
 		method_name = method_name.replace("<", "")
-		method_name = method_name.replace(">", "")
+		method_name = method_name.replace(">", "") # let's get rid of such < and >
 		static_f_name = str(method_name) + "_" + str(reg_name) + "_TAINT:I"
 		full_name = ".field public static " + static_f_name + "\n"
 
@@ -89,9 +96,10 @@ class SmaliClassDef:
 		# AND, the number of items is small (probably < 50) so it doesn't really matter
 		if full_name not in self.static_fields:
 			self.static_fields.append(full_name)
-			self.static_fields.append("\n")
+			self.static_fields.append("\n") # because entire list will be appended to output file
 
 		return static_f_name
+		
 
 	def is_internal_function(self, line):
 		if not self.is_function(line):
