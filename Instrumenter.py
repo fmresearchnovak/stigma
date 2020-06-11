@@ -37,6 +37,16 @@ class Instrumenter:
             self.instrumentation_methods.add(new_method)
 
     @staticmethod
+    def registers_tainted(scd, m, registers):
+
+        registers = [r for r in registers if scd.get_taint_storage_name(m.get_name(), r) is not None]
+
+        if len(registers) == 0:
+            return False
+
+        return True
+
+    @staticmethod
     def make_merge_register_block(scd, m, registers, taint_loc_result):
 
         block = []
@@ -47,8 +57,10 @@ class Instrumenter:
         block.append(smali.CONST_4(tmp_reg1_for_merging, "0x0"))
         block.append(smali.CONST_4(tmp_reg2_for_merging, "0x0"))
 
+        registers = [r for r in registers if scd.get_taint_storage_name(m.get_name(), r) is not None]
+
         for r in registers:
-            taint_loc_param = scd.taint_storage_name(m.get_name(), r)
+            taint_loc_param = scd.get_taint_storage_name(m.get_name(), r)
             block.append(smali.SGET(tmp_reg2_for_merging, scd.class_name, taint_loc_param))
             block.append(smali.OR_INT(tmp_reg1_for_merging, tmp_reg1_for_merging, tmp_reg2_for_merging))
 
@@ -78,8 +90,11 @@ class Instrumenter:
 
         field_name = re.search("->(.+):", cur_line).group(1)
 
-        taint_source = scd.taint_storage_name(m.get_name(), regs[0])
-        taint_result = scd.taint_storage_name(field_name)
+        taint_source = scd.get_taint_storage_name(m.get_name(), regs[0])
+        if taint_source is None:
+            return 0
+
+        taint_result = scd.create_taint_storage_name(field_name)
 
         tmp_reg = m.make_new_reg()
 
@@ -113,8 +128,11 @@ class Instrumenter:
 
         field_name = re.search("->(.+):", cur_line).group(1)
 
-        taint_source = scd.taint_storage_name(field_name)
-        taint_result = scd.taint_storage_name(m.get_name(), regs[0])
+        taint_source = scd.get_taint_storage_name(field_name)
+        if taint_source is None:
+            return 0
+
+        taint_result = scd.create_taint_storage_name(m.get_name(), regs[0])
 
         tmp_reg = m.make_new_reg()
 
@@ -143,7 +161,7 @@ class Instrumenter:
         # print("search object: " + str(search_object))
         reg = search_object.group()
 
-        taint_location = scd.taint_storage_name(m.get_name(), reg)
+        taint_location = scd.create_taint_storage_name(m.get_name(), reg)
         # 1
         tmp_reg_for_constant = m.make_new_reg()
 
@@ -176,7 +194,10 @@ class Instrumenter:
         target_reg = results[1]
         # print("results: " + str(results))
 
-        taint_loc = scd.taint_storage_name(m.get_name(), target_reg)
+        if scd.get_taint_storage_name(m.get_name(), target_reg) is None:
+            return 0
+        else:
+            taint_loc = scd.create_taint_storage_name(m.get_name(), target_reg)
 
         # 1, 2, and 3
         tmp_reg_for_tag = m.make_new_reg()
@@ -266,7 +287,10 @@ class Instrumenter:
         result_regs = re.findall(REGEX_V_AND_NUMBERS, result_line)
         # print("result registers: " + str(result_regs))
 
-        taint_loc_result = scd.taint_storage_name(m.get_name(), result_regs[0])
+        if not Instrumenter.registers_tainted(scd, m, param_regs):
+            return 0
+
+        taint_loc_result = scd.create_taint_storage_name(m.get_name(), result_regs[0])
 
         wrapper_comment = smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for external method call")
         block = [smali.BLANK_LINE(), wrapper_comment]
@@ -313,10 +337,14 @@ class Instrumenter:
 
         block = [smali.BLANK_LINE(), smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for %s instruction" % instruction)]
 
-        taint_loc_result = scd.taint_storage_name(m.get_name(), regs[0])
+        if not Instrumenter.registers_tainted(scd, m, regs):
+            return 0
+
+        taint_loc_result = scd.create_taint_storage_name(m.get_name(), regs[0])
 
         # this should probably not merge in the destination register (only the parameter registers)
         blockquette = Instrumenter.make_merge_register_block(scd, m, regs, taint_loc_result)
+
         block = block + blockquette
 
         block.append(smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for %s instruction" % instruction))
