@@ -22,10 +22,10 @@ STRING_STREAM_WRITE_FUNCTION = "Ljava/io/OutputStreamWriter;->write(Ljava/lang/S
 class Instrumenter:
 
     def __init__(self):
-        self.instrumentation_methods = {Instrumenter.IGET_instrumentation, Instrumenter.IPUT_instrumentation,
+        self.instrumentation_methods = {Instrumenter.LOGD_instrumentation, Instrumenter.IGET_instrumentation, Instrumenter.IPUT_instrumentation,
                                         Instrumenter.IMEI_instrumentation, Instrumenter.WRITE_instrumentation,
                                         Instrumenter.BINARYOP_instrumenter,
-                                        Instrumenter.EXTERNAL_FUNCTION_instrumentation}
+                                        }
 
     def register_instrumentation_method(self, new_method):
 
@@ -57,10 +57,8 @@ class Instrumenter:
         block.append(smali.CONST_4(tmp_reg1_for_merging, "0x0"))
         block.append(smali.CONST_4(tmp_reg2_for_merging, "0x0"))
 
-        registers = [r for r in registers if scd.get_taint_storage_name(m.get_name(), r) is not None]
-
         for r in registers:
-            taint_loc_param = scd.get_taint_storage_name(m.get_name(), r)
+            taint_loc_param = scd.create_taint_storage_name(m.get_name(), r)
             block.append(smali.SGET(tmp_reg2_for_merging, scd.class_name, taint_loc_param))
             block.append(smali.OR_INT(tmp_reg1_for_merging, tmp_reg1_for_merging, tmp_reg2_for_merging))
 
@@ -90,10 +88,7 @@ class Instrumenter:
 
         field_name = re.search("->(.+):", cur_line).group(1)
 
-        taint_source = scd.get_taint_storage_name(m.get_name(), regs[0])
-        if taint_source is None:
-            return 0
-
+        taint_source = scd.create_taint_storage_name(m.get_name(), regs[0])
         taint_result = scd.create_taint_storage_name(field_name)
 
         tmp_reg = m.make_new_reg()
@@ -128,10 +123,7 @@ class Instrumenter:
 
         field_name = re.search("->(.+):", cur_line).group(1)
 
-        taint_source = scd.get_taint_storage_name(field_name)
-        if taint_source is None:
-            return 0
-
+        taint_source = scd.create_taint_storage_name(field_name)
         taint_result = scd.create_taint_storage_name(m.get_name(), regs[0])
 
         tmp_reg = m.make_new_reg()
@@ -194,10 +186,7 @@ class Instrumenter:
         target_reg = results[1]
         # print("results: " + str(results))
 
-        if scd.get_taint_storage_name(m.get_name(), target_reg) is None:
-            return 0
-        else:
-            taint_loc = scd.create_taint_storage_name(m.get_name(), target_reg)
+        taint_loc = scd.create_taint_storage_name(m.get_name(), target_reg)
 
         # 1, 2, and 3
         tmp_reg_for_tag = m.make_new_reg()
@@ -217,6 +206,48 @@ class Instrumenter:
                  smali.LOG_D(tmp_reg_for_tag, tmp_reg_for_msg),
                  jmp_label,
                  smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for write()")]
+
+        m.embed_block(line_num, block)
+        lines_embedded = len(block)
+
+        m.free_reg()
+        m.free_reg()
+        m.free_reg()
+        # 1, 2, and 3
+
+        return lines_embedded
+
+    @staticmethod
+    def LOGD_instrumentation(scd, m, line_num):  # simulated Log.d sink
+
+        if "Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I" not in m.raw_text[line_num]:
+            return 0
+
+        # print("line: " + m.raw_text[line_num])
+        results = re.findall(REGEX_V_AND_NUMBERS, m.raw_text[line_num])
+        target_reg = results[1]
+        # print("results: " + str(results))
+
+        taint_loc = scd.create_taint_storage_name(m.get_name(), target_reg)
+
+        # 1, 2, and 3
+        tmp_reg_for_tag = m.make_new_reg()
+        tmp_reg_for_msg = m.make_new_reg()
+        tmp_reg_for_compare = m.make_new_reg()
+
+        # This is a smali.LABEL
+        jmp_label = m.make_new_jump_label()
+
+        block = [smali.BLANK_LINE(),
+                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for Log.d() (simulated leak)"),
+                 smali.CONST_4(tmp_reg_for_compare, "0x0"),
+                 smali.SGET(tmp_reg_for_compare, scd.class_name, taint_loc),
+                 smali.IF_EQZ(tmp_reg_for_compare, jmp_label),
+                 smali.CONST_STRING(tmp_reg_for_tag, "STIGMA"),
+                 smali.CONST_STRING(tmp_reg_for_msg, "IMEI LEAK OCCURING!"),
+                 smali.LOG_D(tmp_reg_for_tag, tmp_reg_for_msg),
+                 jmp_label,
+                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for Log.d() (simulated leak)")]
 
         m.embed_block(line_num, block)
         lines_embedded = len(block)
@@ -287,9 +318,6 @@ class Instrumenter:
         result_regs = re.findall(REGEX_V_AND_NUMBERS, result_line)
         # print("result registers: " + str(result_regs))
 
-        if not Instrumenter.registers_tainted(scd, m, param_regs):
-            return 0
-
         taint_loc_result = scd.create_taint_storage_name(m.get_name(), result_regs[0])
 
         wrapper_comment = smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for external method call")
@@ -336,9 +364,6 @@ class Instrumenter:
         # The "2addr" seems to indicate otherwise to me
 
         block = [smali.BLANK_LINE(), smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for %s instruction" % instruction)]
-
-        if not Instrumenter.registers_tainted(scd, m, regs):
-            return 0
 
         taint_loc_result = scd.create_taint_storage_name(m.get_name(), regs[0])
 
