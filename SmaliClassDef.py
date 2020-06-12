@@ -79,8 +79,15 @@ class SmaliClassDef:
 			# print("idx: " + str(idx))
 			idx = idx + 1
 
+
 	def get_taint_storage_name(self, identifier, reg_name=""):
+		# <init> and v2 as input => init_v2_TAINT:I
+
+		# assert("init_v2_TAINT:I" in scd.static_fields)
+
 		# identifier = method name or instance field name
+		# most method names are expected: "getIMEI(0", "leakSomething()"
+		# constructors show up as  <init> and <cinit>
 		identifier = identifier.replace("<", "")
 		identifier = identifier.replace(">", "")
 		if reg_name != "":
@@ -104,15 +111,17 @@ class SmaliClassDef:
 			static_f_name = str(identifier) + "_" + str(reg_name) + "_TAINT:I"
 		else:
 			static_f_name = str(identifier) + "_TAINT:I"
+
 		full_name = ".field public static " + static_f_name + "\n"
 
 		# could be more efficient as a hash map instead of a list but that might change the order
 		# AND, the number of items is small (probably < 50) so it doesn't really matter
 		if full_name not in self.static_fields:
 			self.static_fields.append(full_name)
-			self.static_fields.append("\n")
+			self.static_fields.append("\n") # because entire list will be appended to output file
 
 		return static_f_name
+		
 
 	def is_internal_function(self, line):
 		if not self.is_function(line):
