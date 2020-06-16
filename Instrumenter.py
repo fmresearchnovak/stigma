@@ -22,10 +22,11 @@ STRING_STREAM_WRITE_FUNCTION = "Ljava/io/OutputStreamWriter;->write(Ljava/lang/S
 class Instrumenter:
 
     def __init__(self):
-        self.instrumentation_methods = {Instrumenter.LOGD_instrumentation, Instrumenter.IGET_instrumentation, Instrumenter.IPUT_instrumentation,
+        self.instrumentation_methods = [Instrumenter.LOGD_instrumentation, Instrumenter.IGET_instrumentation, Instrumenter.IPUT_instrumentation,
                                         Instrumenter.IMEI_instrumentation, Instrumenter.WRITE_instrumentation,
                                         Instrumenter.BINARYOP_instrumenter,
-                                        }
+                                        Instrumenter.EXTERNAL_FUNCTION_instrumentation
+                                        ]
 
     def register_instrumentation_method(self, new_method):
 

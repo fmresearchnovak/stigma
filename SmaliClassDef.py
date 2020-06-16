@@ -121,7 +121,6 @@ class SmaliClassDef:
 			self.static_fields.append("\n") # because entire list will be appended to output file
 
 		return static_f_name
-		
 
 	def is_internal_function(self, line):
 		if not self.is_function(line):
@@ -162,13 +161,11 @@ class SmaliClassDef:
 			# This check prevents "double" cases where two different instrumenters
 			# both try to add code for the same original instruction
 			# print("\n\ncur line: " + str(m.raw_text[idx]) + "   prev line: " + str(m.raw_text[idx-1]))
-			if isinstance(m.raw_text[idx - 1], smali.COMMENT):
-				# print("already instrumented check!")
-				# print("cur line: " + str(m.raw_text[idx]) + "   prev line: " + str(m.raw_text[idx-1]))
-				idx = idx + 1
 
 			lines_added = inst_method(self, m, idx)
 			idx = idx + lines_added
+			if lines_added != 0:
+				break
 
 		return idx
 
