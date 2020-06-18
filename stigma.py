@@ -33,6 +33,7 @@ def main():
 
     # Do the actual instrumentation
     scd.instrument()
+    print(scd.class_name)
     # scd.verbose()
     # Write out to file if flags specify to do so
     if "-wo" in flags:
