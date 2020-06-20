@@ -90,7 +90,7 @@ class SmaliMethodDef:
     def make_new_jump_label(self):
         res = smali.LABEL(self.num_jumps)
         self.num_jumps += 1
-        if self.num_jumps >= 3:
+        if self.num_jumps > 20:
             raise Exception("too many jumps")
         return res
 

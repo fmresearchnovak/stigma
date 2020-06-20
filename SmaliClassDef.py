@@ -165,6 +165,7 @@ class SmaliClassDef:
 			lines_added = inst_method(self, m, idx)
 			idx = idx + lines_added
 			if lines_added != 0:
+				#in the case an instrumentation has happened, end loop (prevents downstream double instrumentation)
 				break
 
 		return idx

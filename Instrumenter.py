@@ -333,28 +333,6 @@ class Instrumenter:
 
     @staticmethod
     def INTERNAL_FUNCTION_instrumentation(scd, m, line_num):
-        # This instrumentation is "downstream" which is the term
-        # I have decided means applied afterwords and only on lines which
-        # have not had any other instrumentation applied.
-
-        # The reason for this distinction was originally brought to light
-        # by the Landroid/telephony/TelephonyManager;->getDeviceId() method (IMEI)
-        # This function is both external (covered by this instrumentation)
-        # and also a "source" of sensitive information (covered by IMEI_instrumentation())
-        # So, the system would apply both instrumentation insertions which ended up as
-        # incoherent / incorrect assembly.
-
-        # "downstream" does not manifest in any implementation details besides
-        # this comment and the fact that this function is the last in the
-        # instance variable / list "self.instrumentation_methods"
-
-        # print("EXTERNAL_FUNCTION_instrumentation")
-
-        # determine that this is an EXTERNAL method call and is therefore
-        # necessary for this instrumentation
-
-        # print("line_num: " + str(line_num) )#+ "   line: " + str(m.raw_text[line_num]))
-        # find lines that are "invoke" instructions
         search_object = re.search(REGEX_BEGINS_WITH_INVOKE, m.raw_text[line_num])
         if search_object is None:
             return 0
@@ -371,9 +349,8 @@ class Instrumenter:
         if class_name_part != scd.class_name: # change here for Internal
             return 0
 
-        # It's external!
-        # print("\n\n\nEXTERNAL METHOD!")
-        # print("name: " + name)
+        # It's internal!
+
 
         # get result line
         result_line = m.raw_text[line_num + 2]
@@ -384,10 +361,10 @@ class Instrumenter:
         # print("There is a result line!")
         # print(result_line)
 
-        param_regs = re.findall(REGEX_V_AND_NUMBERS, invoke_line)
+        param_regs = re.findall(REGEX_V_AND_P_NUMBERS, invoke_line)
         # print("param registers: " + str(param_regs))
 
-        result_regs = re.findall(REGEX_V_AND_NUMBERS, result_line)
+        result_regs = re.findall(REGEX_V_AND_P_NUMBERS, result_line)
         # print("result registers: " + str(result_regs))
 
         taint_loc_result = scd.create_taint_storage_name(m.get_name(), result_regs[0])
@@ -453,16 +430,19 @@ class Instrumenter:
         result_line = m.raw_text[line_num + 2]
         match_obj = re.match(REGEX_BEGINS_WITH_MOVE_RESULT, result_line)
         if match_obj is None:
-            return 0
+            #In the case of a side-effect, external function
+            param_regs = re.findall(REGEX_V_AND_NUMBERS, invoke_line)
 
-        # print("There is a result line!")
-        # print(result_line)
+            if len(param_regs) <= 1:
+                return 0
 
-        param_regs = re.findall(REGEX_V_AND_NUMBERS, invoke_line)
-        # print("param registers: " + str(param_regs))
+            result_regs =[param_regs[0]]
+        else:
+            param_regs = re.findall(REGEX_V_AND_NUMBERS, invoke_line)
+            # print("param registers: " + str(param_regs))
 
-        result_regs = re.findall(REGEX_V_AND_NUMBERS, result_line)
-        # print("result registers: " + str(result_regs))
+            result_regs = re.findall(REGEX_V_AND_NUMBERS, result_line)
+            # print("result registers: " + str(result_regs))
 
         taint_loc_result = scd.create_taint_storage_name(m.get_name(), result_regs[0])
 
