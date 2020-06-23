@@ -15,6 +15,8 @@ REGEX_BEGINS_WITH_IPUT = r"^\s*iput"
 REGEX_BEGINS_WITH_IGET = r"^\s*iget"
 REGEX_BEGINS_WITH_SPUT = r"^\s*sput"
 REGEX_BEGINS_WITH_SGET = r"^\s*sget"
+REGEX_BEGINS_WITH_AGET = r"^\s*aget"
+REGEX_BEGINS_WITH_APUT = r"^\s*aput"
 
 # A more complete listing of these sort of things can be found in ./SourcesAndSinks.txt
 STRING_IMEI_FUNCTION = "Landroid/telephony/TelephonyManager;->getDeviceId()Ljava/lang/String;"
@@ -51,22 +53,78 @@ class Instrumenter:
         return True
 
     @staticmethod
-    def make_merge_register_block(scd, m, registers, taint_loc_result):
+    def assign_taint_from_fields(scd, m, fields, taint_result_loc, field_class=""):
+
+        if not isinstance(fields, list):
+            raise Exception("fields not a list")
 
         block = []
 
-        # 1, 2
+        if field_class == "" or field_class == scd.class_name:
+            # In case of a single field list, don't execute "or" operation
+            if len(fields) == 1:
+                tmp_reg = m.make_new_reg()
+                taint_param_loc = scd.create_taint_storage_name(fields[0])
+
+                block.append(smali.CONST_4(tmp_reg, "0x0"))
+                block.append(smali.SGET(tmp_reg, scd.class_name, taint_param_loc))
+                block.append(smali.SPUT(tmp_reg, scd.class_name, taint_result_loc))
+
+                m.free_reg()
+
+                return block
+
+            tmp_reg1_for_merging = m.make_new_reg()
+            tmp_reg2_for_merging = m.make_new_reg()
+            block.append(smali.CONST_4(tmp_reg1_for_merging, "0x0"))
+            block.append(smali.CONST_4(tmp_reg2_for_merging, "0x0"))
+
+            for f in fields:
+                taint_param_loc = scd.create_taint_storage_name(f)
+                block.append(smali.SGET(tmp_reg2_for_merging, scd.class_name, taint_param_loc))
+                block.append(smali.OR_INT(tmp_reg1_for_merging, tmp_reg1_for_merging, tmp_reg2_for_merging))
+
+            block.append(smali.SPUT(tmp_reg1_for_merging, scd.class_name, taint_result_loc))
+
+            m.free_reg()
+            m.free_reg()
+            # 2, 1
+
+            return block
+        else:
+            raise Exception("Not Same Class")
+
+    @staticmethod
+    def assign_taint_from_registers(scd, m, registers, taint_result_loc):
+
+        if not isinstance(registers, list):
+            raise Exception("registers not a list")
+
+        block = []
+
+        # In case of a single register list, don't execute "or" operation
+        if len(registers) == 1:
+            tmp_reg = m.make_new_reg()
+            taint_param_loc = scd.create_taint_storage_name(m.get_name(), registers[0])
+
+            block.append(smali.CONST_4(tmp_reg, "0x0"))
+            block.append(smali.SGET(tmp_reg, scd.class_name, taint_param_loc))
+            block.append(smali.SPUT(tmp_reg, scd.class_name, taint_result_loc))
+            m.free_reg()
+
+            return block
+
         tmp_reg1_for_merging = m.make_new_reg()
         tmp_reg2_for_merging = m.make_new_reg()
         block.append(smali.CONST_4(tmp_reg1_for_merging, "0x0"))
         block.append(smali.CONST_4(tmp_reg2_for_merging, "0x0"))
 
         for r in registers:
-            taint_loc_param = scd.create_taint_storage_name(m.get_name(), r)
-            block.append(smali.SGET(tmp_reg2_for_merging, scd.class_name, taint_loc_param))
+            taint_param_loc = scd.create_taint_storage_name(m.get_name(), r)
+            block.append(smali.SGET(tmp_reg2_for_merging, scd.class_name, taint_param_loc))
             block.append(smali.OR_INT(tmp_reg1_for_merging, tmp_reg1_for_merging, tmp_reg2_for_merging))
 
-        block.append(smali.SPUT(tmp_reg1_for_merging, scd.class_name, taint_loc_result))
+        block.append(smali.SPUT(tmp_reg1_for_merging, scd.class_name, taint_result_loc))
 
         m.free_reg()
         m.free_reg()
@@ -92,21 +150,13 @@ class Instrumenter:
 
         field_name = re.search("->(.+):", cur_line).group(1)
 
-        taint_source = scd.create_taint_storage_name(field_name)
         taint_result = scd.create_taint_storage_name(m.get_name(), regs[0])
 
-        tmp_reg = m.make_new_reg()
-
-        block = [smali.BLANK_LINE(),
-                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for IPUT"),
-                 smali.CONST(tmp_reg, "0x0"),
-                 smali.SGET(tmp_reg, scd.class_name, taint_source),
-                 smali.SPUT(tmp_reg, scd.class_name, taint_result),
-                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for IPUT")]
+        block = [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for SGET")] + \
+                Instrumenter.assign_taint_from_fields(scd, m, [field_name], taint_result) + \
+                [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for SGET")]
 
         m.embed_block(line_num, block)
-
-        m.free_reg()
 
         return len(block)
 
@@ -126,21 +176,13 @@ class Instrumenter:
 
         field_name = re.search("->(.+):", cur_line).group(1)
 
-        taint_source = scd.create_taint_storage_name(m.get_name(), regs[0])
         taint_result = scd.create_taint_storage_name(field_name)
 
-        tmp_reg = m.make_new_reg()
-
-        block = [smali.BLANK_LINE(),
-                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for IPUT"),
-                 smali.CONST(tmp_reg, "0x0"),
-                 smali.SGET(tmp_reg, scd.class_name, taint_source),
-                 smali.SPUT(tmp_reg, scd.class_name, taint_result),
-                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for IPUT")]
+        block = [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for SPUT")] + \
+                Instrumenter.assign_taint_from_registers(scd, m, [regs[0]], taint_result) + \
+                [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for SPUT")]
 
         m.embed_block(line_num, block)
-
-        m.free_reg()
 
         return len(block)
 
@@ -160,21 +202,13 @@ class Instrumenter:
 
         field_name = re.search("->(.+):", cur_line).group(1)
 
-        taint_source = scd.create_taint_storage_name(m.get_name(), regs[0])
         taint_result = scd.create_taint_storage_name(field_name)
 
-        tmp_reg = m.make_new_reg()
-
-        block = [smali.BLANK_LINE(),
-                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for IPUT"),
-                 smali.CONST(tmp_reg, "0x0"),
-                 smali.SGET(tmp_reg, scd.class_name, taint_source),
-                 smali.SPUT(tmp_reg, scd.class_name, taint_result),
-                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for IPUT")]
+        block = [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for IPUT")] + \
+                Instrumenter.assign_taint_from_registers(scd, m, [regs[0]], taint_result) + \
+                [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for IPUT")]
 
         m.embed_block(line_num, block)
-
-        m.free_reg()
 
         return len(block)
 
@@ -195,21 +229,59 @@ class Instrumenter:
 
         field_name = re.search("->(.+):", cur_line).group(1)
 
-        taint_source = scd.create_taint_storage_name(field_name)
         taint_result = scd.create_taint_storage_name(m.get_name(), regs[0])
 
-        tmp_reg = m.make_new_reg()
-
-        block = [smali.BLANK_LINE(),
-                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for IGET"),
-                 smali.CONST(tmp_reg, "0x0"),
-                 smali.SGET(tmp_reg, scd.class_name, taint_source),
-                 smali.SPUT(tmp_reg, scd.class_name, taint_result),
-                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for IGET")]
+        block = [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for IGET")] + \
+                Instrumenter.assign_taint_from_fields(scd, m, [field_name], taint_result) + \
+                [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for IGET")]
 
         m.embed_block(line_num, block)
 
-        m.free_reg()
+        return len(block)
+
+    @staticmethod
+    def AGET_instrumentation(scd, m, line_num):
+        cur_line = m.raw_text[line_num]
+        search_object = re.search(REGEX_BEGINS_WITH_AGET, cur_line)
+
+        if search_object is None:
+            return 0
+
+        regs = re.findall(REGEX_V_AND_P_NUMBERS, cur_line)
+
+        taint_result = scd.create_taint_storage_name(m.get_name(), regs[0])
+
+
+        blockquette = Instrumenter.assign_taint_from_registers(scd, m, regs[1:], taint_result)
+
+        block = ["IFT INSTRUCTIONS ADDED BY STIGMA for AGET"] + blockquette + ["IFT INSTRUCTIONS ADDED BY STIGMA for AGET"]
+
+        m.embed_block(line_num, block)
+
+        return len(block)
+
+    @staticmethod
+    def APUT_instrumentation(scd, m, line_num):
+        cur_line = m.raw_text[line_num]
+        search_object = re.search(REGEX_BEGINS_WITH_APUT, cur_line)
+
+        if search_object is None:
+            return 0
+
+        regs = re.findall(REGEX_V_AND_P_NUMBERS, cur_line)
+
+        taint_result_index = scd.create_taint_storage_name(m.get_name(), regs[2])
+
+        blockquette_index = Instrumenter.assign_taint_from_registers(scd, m, [regs[0]], taint_result_index)
+
+        taint_result_array = scd.create_taint_storage_name(m.get_name(), regs[1])
+
+        blockquette_array = Instrumenter.assign_taint_from_registers(scd, m, [regs[0]], taint_result_array)
+
+        block = ["IFT INSTRUCTIONS ADDED BY STIGMA for APUT"] + blockquette_array + blockquette_index + [
+            "IFT INSTRUCTIONS ADDED BY STIGMA for APUT"]
+
+        m.embed_block(line_num, block)
 
         return len(block)
 
@@ -372,7 +444,7 @@ class Instrumenter:
         wrapper_comment = smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for external method call")
         block = [smali.BLANK_LINE(), wrapper_comment]
 
-        blockquette = Instrumenter.make_merge_register_block(scd, m, param_regs, taint_loc_result)
+        blockquette = Instrumenter.assign_taint_from_registers(scd, m, param_regs, taint_loc_result)
         block = block + blockquette
 
         block.append(wrapper_comment)
@@ -449,7 +521,7 @@ class Instrumenter:
         wrapper_comment = smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for external method call")
         block = [smali.BLANK_LINE(), wrapper_comment]
 
-        blockquette = Instrumenter.make_merge_register_block(scd, m, param_regs, taint_loc_result)
+        blockquette = Instrumenter.assign_taint_from_registers(scd, m, param_regs, taint_loc_result)
         block = block + blockquette
 
         block.append(wrapper_comment)
@@ -494,7 +566,7 @@ class Instrumenter:
         taint_loc_result = scd.create_taint_storage_name(m.get_name(), regs[0])
 
         # this should probably not merge in the destination register (only the parameter registers)
-        blockquette = Instrumenter.make_merge_register_block(scd, m, regs, taint_loc_result)
+        blockquette = Instrumenter.assign_taint_from_registers(scd, m, regs, taint_loc_result)
 
         block = block + blockquette
 
