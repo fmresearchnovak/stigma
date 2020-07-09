@@ -17,6 +17,8 @@ REGEX_BEGINS_WITH_SPUT = r"^\s*sput"
 REGEX_BEGINS_WITH_SGET = r"^\s*sget"
 REGEX_BEGINS_WITH_AGET = r"^\s*aget"
 REGEX_BEGINS_WITH_APUT = r"^\s*aput"
+REGEX_BEGINS_WITH_ARRAY_LENGTH = r"^\s*array-length"
+REGEX_BEGINS_WITH_NEW_ARRAY = r"^\s*new-array"
 
 # A more complete listing of these sort of things can be found in ./SourcesAndSinks.txt
 STRING_IMEI_FUNCTION = "Landroid/telephony/TelephonyManager;->getDeviceId()Ljava/lang/String;"
@@ -26,8 +28,12 @@ STRING_STREAM_WRITE_FUNCTION = "Ljava/io/OutputStreamWriter;->write(Ljava/lang/S
 class Instrumenter:
 
     def __init__(self):
-        self.instrumentation_methods = [Instrumenter.SPUT_instrumentation, Instrumenter.SGET_instrumentation, Instrumenter.LOGD_instrumentation, Instrumenter.IGET_instrumentation, Instrumenter.IPUT_instrumentation,
+        self.instrumentation_methods = [Instrumenter.SPUT_instrumentation, Instrumenter.SGET_instrumentation,
+                                        Instrumenter.LOGD_instrumentation, Instrumenter.AGET_instrumentation,
+                                        Instrumenter.IGET_instrumentation, Instrumenter.IPUT_instrumentation,
                                         Instrumenter.IMEI_instrumentation, Instrumenter.WRITE_instrumentation,
+                                        Instrumenter.APUT_instrumentation, Instrumenter.ARRAY_LENGTH_instrumentation,
+                                        Instrumenter.NEW_ARRAY_instrumentation,
                                         Instrumenter.BINARYOP_instrumenter,
                                         Instrumenter.EXTERNAL_FUNCTION_instrumentation,
                                         Instrumenter.INTERNAL_FUNCTION_instrumentation
@@ -40,7 +46,7 @@ class Instrumenter:
         # this is _ideally_ to allow a sort of "plugin" system where
         # other developers could add instrumentation
         if new_method not in self.instrumentation_methods:
-            self.instrumentation_methods.add(new_method)
+            self.instrumentation_methods.append(new_method)
 
     @staticmethod
     def registers_tainted(scd, m, registers):
@@ -134,6 +140,47 @@ class Instrumenter:
 
     # all of the following "*_instrumentation" methods should take the same three arguments
     # Note: they are all static
+
+    @staticmethod
+    def NEW_ARRAY_instrumentation(scd, m, line_num):
+        cur_line = m.raw_text[line_num]
+        search_object = re.search(REGEX_BEGINS_WITH_NEW_ARRAY, cur_line)
+
+        if search_object is None:
+            return 0
+
+        regs = re.findall(REGEX_V_AND_P_NUMBERS, cur_line)
+
+        taint_location = scd.create_taint_storage_name(m.get_name(), regs[0])
+
+        block = ["IFT INSTRUCTIONS ADDED BY STIGMA for ARRAY-LENGTH"] + \
+                Instrumenter.assign_taint_from_registers(scd, m, [regs[1]], taint_location) \
+                + ["IFT INSTRUCTIONS ADDED BY STIGMA for ARRAY-LENGTH"]
+
+        m.embed_block(line_num, block)
+
+        return len(block)
+
+    @staticmethod
+    def ARRAY_LENGTH_instrumentation(scd, m, line_num):
+        cur_line = m.raw_text[line_num]
+        search_object = re.search(REGEX_BEGINS_WITH_ARRAY_LENGTH, cur_line)
+
+        if search_object is None:
+            return 0
+
+        regs = re.findall(REGEX_V_AND_P_NUMBERS, cur_line)
+
+        taint_location = scd.create_taint_storage_name(m.get_name(), regs[0])
+
+        block = ["IFT INSTRUCTIONS ADDED BY STIGMA for ARRAY-LENGTH"] + \
+                Instrumenter.assign_taint_from_registers(scd, m, [regs[1]], taint_location) \
+                + ["IFT INSTRUCTIONS ADDED BY STIGMA for ARRAY-LENGTH"]
+
+        m.embed_block(line_num, block)
+
+        return len(block)
+
     @staticmethod
     def SGET_instrumentation(scd, m, line_num):
         cur_line = m.raw_text[line_num]
