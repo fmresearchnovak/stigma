@@ -153,9 +153,9 @@ class Instrumenter:
 
         taint_location = scd.create_taint_storage_name(m.get_name(), regs[0])
 
-        block = ["IFT INSTRUCTIONS ADDED BY STIGMA for ARRAY-LENGTH"] + \
+        block = [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for ARRAY-LENGTH")] + \
                 Instrumenter.assign_taint_from_registers(scd, m, [regs[1]], taint_location) \
-                + ["IFT INSTRUCTIONS ADDED BY STIGMA for ARRAY-LENGTH"]
+                + [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for ARRAY-LENGTH")]
 
         m.embed_block(line_num, block)
 
@@ -173,9 +173,9 @@ class Instrumenter:
 
         taint_location = scd.create_taint_storage_name(m.get_name(), regs[0])
 
-        block = ["IFT INSTRUCTIONS ADDED BY STIGMA for ARRAY-LENGTH"] + \
+        block = [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for ARRAY-LENGTH")] + \
                 Instrumenter.assign_taint_from_registers(scd, m, [regs[1]], taint_location) \
-                + ["IFT INSTRUCTIONS ADDED BY STIGMA for ARRAY-LENGTH"]
+                + [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for ARRAY-LENGTH")]
 
         m.embed_block(line_num, block)
 
@@ -301,7 +301,7 @@ class Instrumenter:
 
         blockquette = Instrumenter.assign_taint_from_registers(scd, m, regs[1:], taint_result)
 
-        block = ["IFT INSTRUCTIONS ADDED BY STIGMA for AGET"] + blockquette + ["IFT INSTRUCTIONS ADDED BY STIGMA for AGET"]
+        block = [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for AGET")] + blockquette + [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for AGET")]
 
         m.embed_block(line_num, block)
 
@@ -325,8 +325,8 @@ class Instrumenter:
 
         blockquette_array = Instrumenter.assign_taint_from_registers(scd, m, [regs[0]], taint_result_array)
 
-        block = ["IFT INSTRUCTIONS ADDED BY STIGMA for APUT"] + blockquette_array + blockquette_index + [
-            "IFT INSTRUCTIONS ADDED BY STIGMA for APUT"]
+        block = [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for APUT")] + blockquette_array + blockquette_index + [
+            smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for APUT")]
 
         m.embed_block(line_num, block)
 
