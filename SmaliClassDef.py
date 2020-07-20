@@ -29,7 +29,7 @@ class SmaliClassDef:
 		fh.close()
 
 		self.class_name = lines[0].split()[-1].strip("\n")
-		print("Class: " + self.class_name)
+		#print("Class: " + self.class_name)
 
 		cur_dest = self.header
 		pre_methods = True
@@ -51,13 +51,17 @@ class SmaliClassDef:
 
 				# Eat the final ".end method" line
 				method_code.append(lines[idx])
+
 				del lines[idx]
 				idx -= 1
 
 				# print(str(match_object) + " in line: " + lines[idx])
-				smd = SmaliMethodDef(method_code)
+				smd = SmaliMethodDef(method_code, self)
 				self.methods.append(smd)
-
+			
+			#if all file is eaten up
+			if idx == -1:
+				break
 			if "# static fields\n" == lines[idx]:
 				cur_dest = self.static_fields
 

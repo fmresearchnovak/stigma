@@ -30,14 +30,22 @@ def runStigma():
 
 	smaliFiles = listdir(path5)
 
-	#relevantFilePaths = [path5 + "/" + file for file in smaliFiles if file != "BuildConfig.smali" and file[:2] != "R$" and file != "R.smali"]
+	relevantFilePaths = [path5 + "/" + file for file in smaliFiles if file != "BuildConfig.smali" and file[:2] != "R$" and file != "R.smali"]
 
-	relevantFilePaths = glob.glob("./apkOutput" + '/**/*.smali', recursive=True)
+	#relevantFilePaths = glob.glob("./apkOutput" + '/**/*.smali', recursive=True)
 	print(relevantFilePaths)
 
 	#run stigma on all file paths
+	print("Running Stigma")
+	start_time2 = time.time()
 	for path in relevantFilePaths:
-		p2 = Popen("py stigma.py -wo " + path, stdin=PIPE, shell=True)
+		p2 = Popen("py stigma.py -wo " + path, stdin=PIPE, stderr=PIPE, shell=True)
+		errorBytes = p2.stderr.read()
+		if(errorBytes != b''):
+			print(errorBytes.decode("utf-8"))
+			raise Exception("Error in stigma")
+	print("Stigma ran in " + str(time.time() - start_time2) + " seconds")
+
 
 #rebuild apk
 def rebuildApk():
@@ -69,13 +77,15 @@ def signApk():
 
 
 def deleteFiles():
-	if os.path.exists("./instrumentedApk"):
-		os.remove("./instrumentedApk")
+	if os.path.exists("./instrumentedApk2"):
+		shutil.rmtree("./instrumentedApk2")
+		os.mkdir("./instrumentedApk2")
 	else:
-		os.mkdir("./instrumentedApk")
+		os.mkdir("./instrumentedApk2")
 	pathOneMillion = "./apkOutput/dist/"
-	shutil.move("./apkOutput/dist/" + listdir(pathOneMillion)[0], "./instrumentedApk")
-	os.remove("my-release-key.keystore")
+	shutil.move("./apkOutput/dist/" + listdir(pathOneMillion)[0], "./instrumentedApk2")
+	if os.path.exists("my-release-key.keystore"):
+		os.remove("my-release-key.keystore")
 	shutil.rmtree("./apkOutput")
 
 

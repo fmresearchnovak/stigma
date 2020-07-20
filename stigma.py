@@ -11,11 +11,11 @@ def main():
 
     # Read source code into list of lines
     class_smali_file = sys.argv[-1]
-    print("File: " + class_smali_file)
+    #print("File: " + class_smali_file)
     scd = SmaliClassDef(class_smali_file)
 
     flags = sys.argv[1:-1]
-    print("main flags: " + str(flags))
+    #print("main flags: " + str(flags))
 
     # main parsing loop is done
     # manual check correct parsing
@@ -33,11 +33,11 @@ def main():
 
     # Do the actual instrumentation
     scd.instrument()
-    print(scd.class_name)
+    #print(scd.class_name)
     # scd.verbose()
     # Write out to file if flags specify to do so
     if "-wo" in flags:
-        print("Overwriting: " + str(class_smali_file))
+        #print("Overwriting: " + str(class_smali_file))
         scd.write_to_file(class_smali_file)
 
 

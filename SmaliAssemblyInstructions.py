@@ -56,6 +56,14 @@ class IPUT(SmaliAssemblyInstruction):
 		return "iput " + self.rd + ", " + self.rci + ", " + self.cn + "->" + self.ifn
 
 
+class MOVE16(SmaliAssemblyInstruction):
+	def __init__(self, reg1, reg2):
+		self.reg1 = reg1
+		self.reg2 = reg2
+
+	def __repr__(self):
+		return "move/16 " + self.reg1 + ", " + self.reg2
+
 
 # This can probably be combined with sput somehow
 class SGET(SmaliAssemblyInstruction):

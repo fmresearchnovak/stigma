@@ -24,7 +24,6 @@ REGEX_BEGINS_WITH_NEW_ARRAY = r"^\s*new-array"
 STRING_IMEI_FUNCTION = "Landroid/telephony/TelephonyManager;->getDeviceId()Ljava/lang/String;"
 STRING_STREAM_WRITE_FUNCTION = "Ljava/io/OutputStreamWriter;->write(Ljava/lang/String;II)V"
 
-
 class Instrumenter:
 
     def __init__(self):
@@ -38,6 +37,8 @@ class Instrumenter:
                                         Instrumenter.EXTERNAL_FUNCTION_instrumentation,
                                         Instrumenter.INTERNAL_FUNCTION_instrumentation
                                         ]
+
+
 
     def register_instrumentation_method(self, new_method):
 
@@ -59,6 +60,39 @@ class Instrumenter:
         return True
 
     @staticmethod
+    def create_registers_and_block(no_registers, method):
+        block = []
+        registers = []
+        idx = 0
+        if method.reg_number_float + method.no_of_parameters + no_registers < 16:
+            for n in range(no_registers):
+                temp = method.make_new_reg()
+                registers += [temp]
+                block += [smali.CONST(temp, "0x0")]
+                idx += 1
+
+            for n in range(no_registers):
+                method.free_reg()
+        else:
+            #old_locals_num = method.get_locals_directive_num()
+            #print("Old num " + str(old_locals_num))
+            #print("No reg " + str(no_registers))
+            #method.set_locals_directive((old_locals_num + no_registers))
+            #do the move
+            for n in range(no_registers):
+                temp = method.make_new_reg()
+                block += [smali.MOVE16(temp, "v" + str(n))]
+                block += [smali.CONST("v" + str(n), "0x0")]
+                registers += ["v" + str(n)]
+                idx += 2
+
+            for n in reversed(range(no_registers)):
+                method.free_reg()
+                block += [smali.MOVE16("v" + str(n), "v" + str(method.reg_number_float))]
+
+        return [block, idx, registers]
+
+    @staticmethod
     def assign_taint_from_fields(scd, m, fields, taint_result_loc, field_class=""):
 
         if not isinstance(fields, list):
@@ -69,32 +103,38 @@ class Instrumenter:
         if field_class == "" or field_class == scd.class_name:
             # In case of a single field list, don't execute "or" operation
             if len(fields) == 1:
-                tmp_reg = m.make_new_reg()
+                create_reg_list = Instrumenter.create_registers_and_block(1, m)
+                # unpacking list
+
+                block = create_reg_list[0]
+                interpolate_idx = create_reg_list[1]
+                tmp_reg = create_reg_list[2][0]
+
                 taint_param_loc = scd.create_taint_storage_name(fields[0])
 
-                block.append(smali.CONST_4(tmp_reg, "0x0"))
-                block.append(smali.SGET(tmp_reg, scd.class_name, taint_param_loc))
-                block.append(smali.SPUT(tmp_reg, scd.class_name, taint_result_loc))
-
-                m.free_reg()
+                block_to_interpolate = [smali.SGET(tmp_reg, scd.class_name, taint_param_loc),
+                                        smali.SPUT(tmp_reg, scd.class_name, taint_result_loc)]
+                block = block[:interpolate_idx] + block_to_interpolate + block[interpolate_idx:]
 
                 return block
 
-            tmp_reg1_for_merging = m.make_new_reg()
-            tmp_reg2_for_merging = m.make_new_reg()
-            block.append(smali.CONST_4(tmp_reg1_for_merging, "0x0"))
-            block.append(smali.CONST_4(tmp_reg2_for_merging, "0x0"))
+            create_reg_list = Instrumenter.create_registers_and_block(2, m)
+            # unpacking list
+            block = create_reg_list[0]
+            interpolate_idx = create_reg_list[1]
 
+            tmp_reg1_for_merging = create_reg_list[2][0]
+            tmp_reg2_for_merging = create_reg_list[2][1]
+
+            block_to_interpolate = []
             for f in fields:
                 taint_param_loc = scd.create_taint_storage_name(f)
-                block.append(smali.SGET(tmp_reg2_for_merging, scd.class_name, taint_param_loc))
-                block.append(smali.OR_INT(tmp_reg1_for_merging, tmp_reg1_for_merging, tmp_reg2_for_merging))
+                block_to_interpolate.append(smali.SGET(tmp_reg2_for_merging, scd.class_name, taint_param_loc))
+                block_to_interpolate.append(smali.OR_INT(tmp_reg1_for_merging, tmp_reg1_for_merging, tmp_reg2_for_merging))
 
-            block.append(smali.SPUT(tmp_reg1_for_merging, scd.class_name, taint_result_loc))
+            block_to_interpolate.append(smali.SPUT(tmp_reg1_for_merging, scd.class_name, taint_result_loc))
 
-            m.free_reg()
-            m.free_reg()
-            # 2, 1
+            block = block[:interpolate_idx] + block_to_interpolate + block[interpolate_idx]
 
             return block
         else:
@@ -110,31 +150,36 @@ class Instrumenter:
 
         # In case of a single register list, don't execute "or" operation
         if len(registers) == 1:
-            tmp_reg = m.make_new_reg()
+            create_reg_list = Instrumenter.create_registers_and_block(1, m)
+            #unpacking list
+            block = create_reg_list[0]
+            interpolate_idx = create_reg_list[1]
+            tmp_reg = create_reg_list[2][0]
+
             taint_param_loc = scd.create_taint_storage_name(m.get_name(), registers[0])
 
-            block.append(smali.CONST_4(tmp_reg, "0x0"))
-            block.append(smali.SGET(tmp_reg, scd.class_name, taint_param_loc))
-            block.append(smali.SPUT(tmp_reg, scd.class_name, taint_result_loc))
-            m.free_reg()
+            block_to_interpolate = [smali.SGET(tmp_reg, scd.class_name, taint_param_loc),
+                                    smali.SPUT(tmp_reg, scd.class_name, taint_result_loc)]
+            block = block[:interpolate_idx] + block_to_interpolate + block[interpolate_idx:]
 
             return block
 
-        tmp_reg1_for_merging = m.make_new_reg()
-        tmp_reg2_for_merging = m.make_new_reg()
-        block.append(smali.CONST_4(tmp_reg1_for_merging, "0x0"))
-        block.append(smali.CONST_4(tmp_reg2_for_merging, "0x0"))
+        create_reg_list = Instrumenter.create_registers_and_block(2, m)
+        # unpacking list
+        block = create_reg_list[0]
+        interpolate_idx = create_reg_list[1]
+        tmp_reg1_for_merging = create_reg_list[2][0]
+        tmp_reg2_for_merging = create_reg_list[2][1]
 
+        block_to_interpolate = []
         for r in registers:
             taint_param_loc = scd.create_taint_storage_name(m.get_name(), r)
-            block.append(smali.SGET(tmp_reg2_for_merging, scd.class_name, taint_param_loc))
-            block.append(smali.OR_INT(tmp_reg1_for_merging, tmp_reg1_for_merging, tmp_reg2_for_merging))
+            block_to_interpolate.append(smali.SGET(tmp_reg2_for_merging, scd.class_name, taint_param_loc))
+            block_to_interpolate.append(smali.OR_INT(tmp_reg1_for_merging, tmp_reg1_for_merging, tmp_reg2_for_merging))
 
-        block.append(smali.SPUT(tmp_reg1_for_merging, scd.class_name, taint_result_loc))
+        block_to_interpolate.append(smali.SPUT(tmp_reg1_for_merging, scd.class_name, taint_result_loc))
 
-        m.free_reg()
-        m.free_reg()
-        # 2, 1
+        block = block[:interpolate_idx] + block_to_interpolate + block[interpolate_idx:]
 
         return block
 
@@ -153,9 +198,9 @@ class Instrumenter:
 
         taint_location = scd.create_taint_storage_name(m.get_name(), regs[0])
 
-        block = [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for ARRAY-LENGTH")] + \
+        block = [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for NEW-ARRAY")] + \
                 Instrumenter.assign_taint_from_registers(scd, m, [regs[1]], taint_location) \
-                + [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for ARRAY-LENGTH")]
+                + [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for NEW-ARRAY")]
 
         m.embed_block(line_num, block)
 
@@ -340,25 +385,27 @@ class Instrumenter:
 
         result_line = m.raw_text[line_num + 2]
 
-        search_object = re.search(REGEX_V_AND_NUMBERS, result_line)
+        search_object = re.search(REGEX_V_AND_P_NUMBERS, result_line)
         # print("search object: " + str(search_object))
         reg = search_object.group()
 
         taint_location = scd.create_taint_storage_name(m.get_name(), reg)
         # 1
-        tmp_reg_for_constant = m.make_new_reg()
+        create_reg_list = Instrumenter.create_registers_and_block(1, m)
+        block = create_reg_list[0]
+        interpolate_idx = create_reg_list[1]
+        tmp_reg_for_constant = create_reg_list[2][0]
 
+        block_to_interpolate = [smali.CONST(tmp_reg_for_constant, "0x1")
+            ,smali.SPUT(tmp_reg_for_constant, scd.class_name, taint_location)]
+
+        block = block[:interpolate_idx] + block_to_interpolate + block[interpolate_idx:]
         block = [smali.BLANK_LINE(),
-                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for getDeviceID()"),
-                 smali.CONST(tmp_reg_for_constant, "0x1"),
-                 smali.SPUT(tmp_reg_for_constant, scd.class_name, taint_location),
-                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for getDeviceID()")]
+                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for getDeviceID()")] + block + \
+                [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for getDeviceID()")]
 
         m.embed_block(line_num, block)
         lines_embedded = len(block)
-
-        m.free_reg()
-        # 1
 
         return lines_embedded
 
@@ -373,38 +420,38 @@ class Instrumenter:
             return 0
 
         # print("line: " + m.raw_text[line_num])
-        results = re.findall(REGEX_V_AND_NUMBERS, m.raw_text[line_num])
+        results = re.findall(REGEX_V_AND_P_NUMBERS, m.raw_text[line_num])
         target_reg = results[1]
         # print("results: " + str(results))
 
         taint_loc = scd.create_taint_storage_name(m.get_name(), target_reg)
 
+        create_reg_list = Instrumenter.create_registers_and_block(3, m)
+        block = create_reg_list[0]
+        interpolate_idx = create_reg_list[1]
+
         # 1, 2, and 3
-        tmp_reg_for_tag = m.make_new_reg()
-        tmp_reg_for_msg = m.make_new_reg()
-        tmp_reg_for_compare = m.make_new_reg()
+        tmp_reg_for_tag = create_reg_list[2][0]
+        tmp_reg_for_msg = create_reg_list[2][1]
+        tmp_reg_for_compare = create_reg_list[2][2]
 
         # This is a smali.LABEL
         jmp_label = m.make_new_jump_label()
 
+        block_to_interpolate = [smali.SGET(tmp_reg_for_compare, scd.class_name, taint_loc),
+                                smali.IF_EQZ(tmp_reg_for_compare, jmp_label),
+                                smali.CONST_STRING(tmp_reg_for_tag, "STIGMA"),
+                                smali.CONST_STRING(tmp_reg_for_msg, "IMEI LEAK OCCURING!"),
+                                smali.LOG_D(tmp_reg_for_tag, tmp_reg_for_msg),
+                                jmp_label]
+
+        block = block[:interpolate_idx] + block_to_interpolate + block[interpolate_idx:]
         block = [smali.BLANK_LINE(),
-                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for write()"),
-                 smali.CONST_4(tmp_reg_for_compare, "0x0"),
-                 smali.SGET(tmp_reg_for_compare, scd.class_name, taint_loc),
-                 smali.IF_EQZ(tmp_reg_for_compare, jmp_label),
-                 smali.CONST_STRING(tmp_reg_for_tag, "STIGMA"),
-                 smali.CONST_STRING(tmp_reg_for_msg, "IMEI LEAK OCCURING!"),
-                 smali.LOG_D(tmp_reg_for_tag, tmp_reg_for_msg),
-                 jmp_label,
-                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for write()")]
+                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for write()")] + block + \
+                [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for write()")]
 
         m.embed_block(line_num, block)
         lines_embedded = len(block)
-
-        m.free_reg()
-        m.free_reg()
-        m.free_reg()
-        # 1, 2, and 3
 
         return lines_embedded
 
@@ -415,38 +462,38 @@ class Instrumenter:
             return 0
 
         # print("line: " + m.raw_text[line_num])
-        results = re.findall(REGEX_V_AND_NUMBERS, m.raw_text[line_num])
+        results = re.findall(REGEX_V_AND_P_NUMBERS, m.raw_text[line_num])
         target_reg = results[1]
         # print("results: " + str(results))
 
         taint_loc = scd.create_taint_storage_name(m.get_name(), target_reg)
 
+        create_reg_list = Instrumenter.create_registers_and_block(3, m)
+        block = create_reg_list[0]
+        interpolate_idx = create_reg_list[1]
+
         # 1, 2, and 3
-        tmp_reg_for_tag = m.make_new_reg()
-        tmp_reg_for_msg = m.make_new_reg()
-        tmp_reg_for_compare = m.make_new_reg()
+        tmp_reg_for_tag = create_reg_list[2][0]
+        tmp_reg_for_msg = create_reg_list[2][1]
+        tmp_reg_for_compare = create_reg_list[2][2]
 
         # This is a smali.LABEL
         jmp_label = m.make_new_jump_label()
 
+        block_to_interpolate = [smali.SGET(tmp_reg_for_compare, scd.class_name, taint_loc),
+                                smali.IF_EQZ(tmp_reg_for_compare, jmp_label),
+                                smali.CONST_STRING(tmp_reg_for_tag, "STIGMA"),
+                                smali.CONST_STRING(tmp_reg_for_msg, "IMEI LEAK OCCURING!"),
+                                smali.LOG_D(tmp_reg_for_tag, tmp_reg_for_msg),
+                                jmp_label]
+
+        block = block[:interpolate_idx] + block_to_interpolate + block[interpolate_idx:]
         block = [smali.BLANK_LINE(),
-                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for Log.d() (simulated leak)"),
-                 smali.CONST_4(tmp_reg_for_compare, "0x0"),
-                 smali.SGET(tmp_reg_for_compare, scd.class_name, taint_loc),
-                 smali.IF_EQZ(tmp_reg_for_compare, jmp_label),
-                 smali.CONST_STRING(tmp_reg_for_tag, "STIGMA"),
-                 smali.CONST_STRING(tmp_reg_for_msg, "IMEI LEAK OCCURING!"),
-                 smali.LOG_D(tmp_reg_for_tag, tmp_reg_for_msg),
-                 jmp_label,
-                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for Log.d() (simulated leak)")]
+                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for Log.d() (simulated leak)")] + block + \
+                [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for Log.d() (simulated leak)")]
 
         m.embed_block(line_num, block)
         lines_embedded = len(block)
-
-        m.free_reg()
-        m.free_reg()
-        m.free_reg()
-        # 1, 2, and 3
 
         return lines_embedded
 
@@ -550,17 +597,17 @@ class Instrumenter:
         match_obj = re.match(REGEX_BEGINS_WITH_MOVE_RESULT, result_line)
         if match_obj is None:
             #In the case of a side-effect, external function
-            param_regs = re.findall(REGEX_V_AND_NUMBERS, invoke_line)
+            param_regs = re.findall(REGEX_V_AND_P_NUMBERS, invoke_line)
 
             if len(param_regs) <= 1:
                 return 0
 
             result_regs =[param_regs[0]]
         else:
-            param_regs = re.findall(REGEX_V_AND_NUMBERS, invoke_line)
+            param_regs = re.findall(REGEX_V_AND_P_NUMBERS, invoke_line)
             # print("param registers: " + str(param_regs))
 
-            result_regs = re.findall(REGEX_V_AND_NUMBERS, result_line)
+            result_regs = re.findall(REGEX_V_AND_P_NUMBERS, result_line)
             # print("result registers: " + str(result_regs))
 
         taint_loc_result = scd.create_taint_storage_name(m.get_name(), result_regs[0])
@@ -598,7 +645,7 @@ class Instrumenter:
         if search_object is None:
             return 0
 
-        regs = re.findall(REGEX_V_AND_NUMBERS, cur_line)
+        regs = re.findall(REGEX_V_AND_P_NUMBERS, cur_line)
         # print("regs for add instrumenter: " + str(regs))
 
         # I am concerned about instructions of the form

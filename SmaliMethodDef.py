@@ -4,14 +4,21 @@ import SmaliAssemblyInstructions as smali
 
 class SmaliMethodDef:
 
-    def __init__(self, text):
+    def __init__(self, text, scd):
         # should be a list of strings (lines)
         # starting from .method... and ending in ... .end method
         self.raw_text = text
         self.num_jumps = 0
         self.ORIGINAL_NUMER_REGS = self.get_locals_directive_num()
         self.reg_number_float = self.ORIGINAL_NUMER_REGS
-
+        self.scd = scd
+        self.no_of_parameters = 1
+        for line in text:
+            stripped = line.strip()
+            if stripped == "":
+                break
+            if stripped[:6] == ".param":
+                self.no_of_parameters += 1
     # There are three "register numbers"
     # 1) The ORIGINAL_NUMER_REGS
     #		This is the number of registers this method had / used before
@@ -39,9 +46,12 @@ class SmaliMethodDef:
     def get_locals_directive_num(self):
         line = self.get_locals_directive_line()
         search_object = re.search(r"[0-9]+", line)
-        num = search_object.group()
-        # print("number: " +  str(num))
-        return int(num)
+        if search_object is not None:
+            num = search_object.group()
+            # print("number: " +  str(num))
+            return int(num)
+        else:
+            return 0
 
     def get_signature(self):
         return self.raw_text[0].strip()
@@ -59,8 +69,8 @@ class SmaliMethodDef:
     def make_new_reg(self):
         self.reg_number_float += 1
 
-        if self.reg_number_float > 15:
-            raise Exception("cannot request register > 15, apktool might be mad!")
+       # if self.reg_number_float > 15:
+       #     raise Exception("cannot request register > 15, apktool might be mad!")
         # It is possible depending on the instruction
         # see comment for free_reg
 
