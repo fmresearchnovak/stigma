@@ -13,12 +13,37 @@ class SmaliMethodDef:
         self.reg_number_float = self.ORIGINAL_NUMER_REGS
         self.scd = scd
         self.no_of_parameters = 1
-        for line in text:
-            stripped = line.strip()
-            if stripped == "":
-                break
-            if stripped[:6] == ".param":
+        parameter_raw = re.search("[(](.*)[)]", self.raw_text[0]).group(1)
+      
+        i = 0
+        while i < len(parameter_raw):
+            if parameter_raw[i] == "Z":
                 self.no_of_parameters += 1
+            elif parameter_raw[i] == "B":
+                self.no_of_parameters += 1
+            elif parameter_raw[i] == "S":
+                self.no_of_parameters += 1
+            elif parameter_raw[i] == "C":
+                self.no_of_parameters += 1
+            elif parameter_raw[i] == "I":
+                self.no_of_parameters += 1
+            elif parameter_raw[i] == "J":
+                self.no_of_parameters += 1
+            elif parameter_raw[i] == "F":
+                self.no_of_parameters += 1
+            elif parameter_raw[i] == "L":
+                self.no_of_parameters += 1
+                while parameter_raw[i] != ";":
+                    i += 1
+            i += 1
+
+
+        #for line in text:
+        #    stripped = line.strip()
+        #    if stripped == "":
+        #        break
+        #    if stripped[:6] == ".param":
+        #        self.no_of_parameters += 1
     # There are three "register numbers"
     # 1) The ORIGINAL_NUMER_REGS
     #		This is the number of registers this method had / used before

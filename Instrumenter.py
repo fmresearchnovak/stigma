@@ -5,6 +5,7 @@ import re
 
 REGEX_V_AND_NUMBERS = r"v[0-9]+"  # v and numbers (e.g., v5) are general purpose registers.  I think "v" means "virtual"
 REGEX_V_AND_P_NUMBERS = r"v[0-9]+|p[0-9]+"
+REGEX_P_NUMBERS = r"p[0-9]+"
 REGEX_BEGINS_WITH_INVOKE = r"^\s*invoke-"
 REGEX_BEGINS_WITH_MOVE_RESULT = r"^\s*move-result-"
 REGEX_BEGINS_WITH_ADD = r"^\s*add-"
@@ -35,7 +36,7 @@ class Instrumenter:
                                         Instrumenter.NEW_ARRAY_instrumentation,
                                         Instrumenter.BINARYOP_instrumenter,
                                         Instrumenter.EXTERNAL_FUNCTION_instrumentation,
-                                        Instrumenter.INTERNAL_FUNCTION_instrumentation
+                                        Instrumenter.INTERNAL_FUNCTION_instrumentation,
                                         ]
 
 
@@ -185,6 +186,59 @@ class Instrumenter:
 
     # all of the following "*_instrumentation" methods should take the same three arguments
     # Note: they are all static
+
+    @staticmethod
+    def p_instrumentation(scd, m, line_num):
+        #strange p11 bug #if m.get_locals_directive_num() + m.no_of_parameters <= 16:
+        #    return 0
+        #print(m.raw_text[0])
+        sig = m.raw_text[0]
+        abstract_search = re.search(r"\babstract\b", sig)
+        if abstract_search is not None:
+            return 0
+
+        if isinstance(m.raw_text[line_num], smali.SmaliAssemblyInstruction):
+            line = m.raw_text[line_num].__repr__()
+        else:
+            line = m.raw_text[line_num]
+            if line.strip()[:6] == ".param" or line.strip()[:6] == ".local":
+                return 0
+
+        if line_num == 0:
+            for n in range(m.no_of_parameters):
+                m.make_new_reg()
+            return 0
+
+        if not isinstance(line, str):
+            print("Line type:" + str(type(line)))
+            raise Exception("Line not str")
+        search_object = re.search(REGEX_P_NUMBERS, line)
+
+        if search_object is None:
+            return 0
+
+        p_regs = re.findall(REGEX_P_NUMBERS, line)
+        method_regs_number = m.get_locals_directive_num()
+        block_above = []
+        block_below = []
+
+        for p_reg in p_regs:
+            p_num = int(re.findall(r'\d+', p_reg)[0])
+            v_num = method_regs_number + p_num
+            line = re.sub("p" + str(p_num), "v" + str(p_num), line)
+            shadow_num = method_regs_number - m.no_of_parameters + p_num
+
+            block_above += [smali.MOVE16("v" + str(shadow_num), "v" + str(p_num))]
+            block_above += [smali.MOVE16("v" + str(p_num), "v" + str(v_num))]
+
+            block_below += [smali.MOVE16("v" + str(v_num), "v" + str(p_num))]
+            block_below += [smali.MOVE16("v" + str(p_num), "v" + str(shadow_num))]
+
+        total_block = block_above + [line] + block_below
+        del m.raw_text[line_num]
+        m.embed_block(line_num, total_block)
+
+        return len(total_block) - 1
 
     @staticmethod
     def NEW_ARRAY_instrumentation(scd, m, line_num):

@@ -30,9 +30,9 @@ def runStigma():
 
 	smaliFiles = listdir(path5)
 
-	relevantFilePaths = [path5 + "/" + file for file in smaliFiles if file != "BuildConfig.smali" and file[:2] != "R$" and file != "R.smali"]
+	#relevantFilePaths = [path5 + "/" + file for file in smaliFiles if file != "BuildConfig.smali" and file[:2] != "R$" and file != "R.smali"]
 
-	#relevantFilePaths = glob.glob("./apkOutput" + '/**/*.smali', recursive=True)
+	relevantFilePaths = glob.glob("./apkOutput" + '/**/*.smali', recursive=True)
 	print(relevantFilePaths)
 
 	#run stigma on all file paths
@@ -90,8 +90,8 @@ def deleteFiles():
 
 
 if __name__ == '__main__':
-	dumpApk()
-	runStigma()
+	#dumpApk()
+	#runStigma()
 	rebuildApk()
-	signApk()
-	deleteFiles()
+	#signApk()
+	#deleteFiles()

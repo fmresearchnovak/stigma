@@ -37,7 +37,7 @@ def main():
     # scd.verbose()
     # Write out to file if flags specify to do so
     if "-wo" in flags:
-        #print("Overwriting: " + str(class_smali_file))
+        print("Overwriting: " + str(class_smali_file))
         scd.write_to_file(class_smali_file)
 
 

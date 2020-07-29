@@ -154,6 +154,20 @@ class SmaliClassDef:
 
 				idx = idx + 1
 
+		for m in self.methods:
+
+			idx = 0
+			while idx < len(m.raw_text):
+				# print("line: " + m.raw_text[idx])
+				# The lines of code that we add (instrument) will be instances of smali.SmaliAssemblyInstruction
+				# the lines of code that are existing already will be type string
+				# So, this check prevents us from instrumenting our new, additional code
+
+				lines_added = self.instrumenter.p_instrumentation(self, m, idx)
+				idx = idx + lines_added
+				idx = idx + 1
+
+
 	def _do_instrumentation_plugins(self, m, idx):
 
 		for inst_method in self.instrumenter.instrumentation_methods:
