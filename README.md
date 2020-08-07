@@ -4,4 +4,4 @@ Stigma instruments the Smali assembly code of commodity Android applications in 
 # Usage (Testing Stage)
 py StigmaExecutor.py
 
-Instrumented apk should be in "apk" folder of the stigma directory
+Target apk should be in "apk" folder of the stigma directory
