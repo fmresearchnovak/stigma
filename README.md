@@ -11,5 +11,6 @@ configure which aspects of Stigma you would like to execute.
 
 ### Necessary Dependencies
 * apktool (available in Ubuntu repository and here: https://ibotpeaches.github.io/Apktool/)
+  * openjdk-11-jdk
 * adb (available in Ubuntu repository and here: https://www.lifewire.com/android-debug-bridge-adb-4149410)
   * official adb documentation: https://developer.android.com/studio/command-line/adb
