@@ -5,3 +5,11 @@ Stigma instruments the Smali assembly code of commodity Android applications in 
 py StigmaExecutor.py
 
 Target apk should be in "apk" folder of the stigma directory
+Consider modifiying the final lines in the "main" portion of StigmaExecutor to 
+configure which aspects of Stigma you would like to execute.
+
+
+### Necessary Dependencies
+* apktool (available in Ubuntu repository and here: https://ibotpeaches.github.io/Apktool/)
+* adb (available in Ubuntu repository and here: https://www.lifewire.com/android-debug-bridge-adb-4149410)
+  * official adb documentation: https://developer.android.com/studio/command-line/adb

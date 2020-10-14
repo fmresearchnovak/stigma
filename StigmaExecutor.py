@@ -13,33 +13,64 @@ def dumpApk():
 	print("Apk unpacked in " + str(time.time() - start_time) + " seconds")
 
 
-def runStigma():
+def getFiles():
+
 	#find relevant files (strong assumptions here!)
-	path1 = "./apkOutput/smali_classes2"
-	dirs = listdir(path1)
+	# This first chunk basically is hard-coded to 
+	# select the non-framework files written in the leaks
+	# test-bed app.  The non-framework files are usually thought
+	# of as "the code the developer actually wrote"
+	# This chunk is for debugging purposes to debug stigma itself.
+	
+	#path1 = "./apkOutput/smali_classes2"
+	#dirs = listdir(path1)
 
-	dirsExtracted = [s for s in dirs if s != "androidx" and s!= "android"]
+	#dirsExtracted = [s for s in dirs if s != "androidx" and s!= "android"]
 
-	path2 = path1 +"/" + dirsExtracted[0]
+	#path2 = path1 +"/" + dirsExtracted[0]
 
-	path3 = path2 +"/" + listdir(path2)[0]
+	#path3 = path2 +"/" + listdir(path2)[0]
 
-	path4 = path3 +"/" + listdir(path3)[0]
+	#path4 = path3 +"/" + listdir(path3)[0]
 
-	path5 = path4 +"/" + listdir(path4)[0]
+	#path5 = path4 +"/" + listdir(path4)[0]
 
-	smaliFiles = listdir(path5)
+	#smaliFiles = listdir(path5)
 
 	#relevantFilePaths = [path5 + "/" + file for file in smaliFiles if file != "BuildConfig.smali" and file[:2] != "R$" and file != "R.smali"]
+	# End of first chunk
 
+
+	# beginning of second chunk
+	# This gets all the files that end in ".smali" from the entire
+	# application.  This assumes all of the framework files
+	# as well as any files authored by the app developer.
 	relevantFilePaths = glob.glob("./apkOutput" + '/**/*.smali', recursive=True)
-	print(relevantFilePaths)
+	#print(relevantFilePaths)
+	# end of second chunk
+
+	# This is just a quick sanity test.
+	if(len(set(relevantFilePaths)) != len(relevantFilePaths)):
+		print("There are duplicates!!")
+		for item in relevantFilePaths:
+			print(item)
+
+		exit(1);
+	# end of sanity test
+
+	return relevantFilePaths
+
+
+def runStigma():
+
+	relevantFilePaths = getFiles()
 
 	#run stigma on all file paths
 	print("Running Stigma")
 	start_time2 = time.time()
 	for path in relevantFilePaths:
-		p2 = Popen("py stigma.py -wo " + path, stdin=PIPE, stderr=PIPE, shell=True)
+		print("path: " + str(path))
+		p2 = Popen("python3 stigma.py -wo " + path, stdin=PIPE, stderr=PIPE, shell=True)
 		errorBytes = p2.stderr.read()
 		if(errorBytes != b''):
 			print(errorBytes.decode("utf-8"))
@@ -57,6 +88,7 @@ def rebuildApk():
 
 def signApk():
 	p4 = Popen("keytool -genkey -v -keystore my-release-key.keystore -alias alias_name -keyalg RSA -validity 10000", stdin=PIPE, shell=True)
+	# WHAT?
 	p4.stdin.write(b"Shaamyl\n")
 	p4.stdin.write(b"Shaamyl\n")
 	p4.stdin.write(b"Shaamyl\n")
@@ -90,8 +122,10 @@ def deleteFiles():
 
 
 if __name__ == '__main__':
-	#dumpApk()
-	#runStigma()
+	# we need a better interface haha!
+	# Also ./apk should be a sys.argv param to the location of an APK file
+	dumpApk()
+	runStigma()
 	rebuildApk()
-	#signApk()
-	#deleteFiles()
+	signApk()
+	deleteFiles()
