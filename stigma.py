@@ -11,7 +11,7 @@ def main():
 
     # Read source code into list of lines
     class_smali_file = sys.argv[-1]
-    print("File: " + class_smali_file)
+    #print("File: " + class_smali_file)
     scd = SmaliClassDef(class_smali_file)
 
     flags = sys.argv[1:-1]

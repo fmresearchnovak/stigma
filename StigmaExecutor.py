@@ -61,6 +61,10 @@ def getFiles():
 	return relevantFilePaths
 
 
+def wrapString(string, wrapper):
+	return wrapper + str(string) + wrapper
+
+
 def runStigma():
 
 	relevantFilePaths = getFiles()
@@ -69,7 +73,13 @@ def runStigma():
 	print("Running Stigma")
 	start_time2 = time.time()
 	for path in relevantFilePaths:
-		print("path: " + str(path))
+		#print("path: " + str(path))
+
+		# This is necessary because some characters need to be 
+		# escaped in bash shell.  For example
+		# smali_classes2/edu/fandm/enovak/leaks/Main$1.smali
+		path = wrapString(path, "'")
+
 		p2 = Popen("python3 stigma.py -wo " + path, stdin=PIPE, stderr=PIPE, shell=True)
 		errorBytes = p2.stderr.read()
 		if(errorBytes != b''):
