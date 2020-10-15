@@ -27,6 +27,11 @@ STRING_STREAM_WRITE_FUNCTION = "Ljava/io/OutputStreamWriter;->write(Ljava/lang/S
 
 class Instrumenter:
 
+
+    # The structure of the constructor and the register_instrumentation_method functions
+    # are an attempt to make this a "plugin" style application where others can write
+    # more instrumentation functions.  I'm not sure it's 100% there and maybe this
+    # attempt just makes the code uglier for no benefit.
     def __init__(self):
         self.instrumentation_methods = [Instrumenter.SPUT_instrumentation, Instrumenter.SGET_instrumentation,
                                         Instrumenter.LOGD_instrumentation, Instrumenter.AGET_instrumentation,
@@ -50,6 +55,7 @@ class Instrumenter:
         if new_method not in self.instrumentation_methods:
             self.instrumentation_methods.append(new_method)
 
+
     @staticmethod
     def registers_tainted(scd, m, registers):
 
@@ -59,6 +65,7 @@ class Instrumenter:
             return False
 
         return True
+        
 
     @staticmethod
     def create_registers_and_block(no_registers, method):

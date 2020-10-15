@@ -4,14 +4,20 @@ import SmaliAssemblyInstructions as smali
 
 class SmaliMethodDef:
 
+
+
     def __init__(self, text, scd):
         # should be a list of strings (lines)
-        # starting from .method... and ending in ... .end method
+        # starting from ".method..." and ending in "... .end method"
         self.raw_text = text
-        self.num_jumps = 0
+
+        self.num_jumps = 0 # not used except for a sanity check
+
         self.ORIGINAL_NUMER_REGS = self.get_locals_directive_num()
         self.reg_number_float = self.ORIGINAL_NUMER_REGS
-        self.scd = scd
+
+        self.scd = scd # smali class definition
+
         self.no_of_parameters = 1
         parameter_raw = re.search("[(](.*)[)]", self.raw_text[0]).group(1)
       
@@ -44,6 +50,7 @@ class SmaliMethodDef:
         #        break
         #    if stripped[:6] == ".param":
         #        self.no_of_parameters += 1
+
     # There are three "register numbers"
     # 1) The ORIGINAL_NUMER_REGS
     #		This is the number of registers this method had / used before
