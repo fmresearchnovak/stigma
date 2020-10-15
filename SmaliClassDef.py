@@ -84,14 +84,17 @@ class SmaliClassDef:
 			idx = idx + 1
 
 
-	def get_taint_storage_name(self, identifier, reg_name=""):
-		# <init> and v2 as input => init_v2_TAINT:I
+	@staticmethod
+	def _get_taint_storage_name_pair(identifier, reg_name):
+		# computes the name of a taint_storage field given the
+		# identifier and the register name
 
+		# <init> and v2 as input => init_v2_TAINT:I
 		# assert("init_v2_TAINT:I" in scd.static_fields)
 
 		# identifier = method name or instance field name
-		# most method names are expected: "getIMEI(0", "leakSomething()"
-		# constructors show up as  <init> and <cinit>
+		# most method names are expected: "getIMEI(0", "leakSomething())"
+		# edge case 1: constructors show up as  <init> and <cinit>
 		identifier = identifier.replace("<", "")
 		identifier = identifier.replace(">", "")
 		if reg_name != "":
@@ -99,6 +102,14 @@ class SmaliClassDef:
 		else:
 			static_f_name = str(identifier) + "_TAINT:I"
 		full_name = ".field public static " + static_f_name + "\n"
+
+		return (static_f_name, full_name)
+
+
+	def get_taint_storage_name(self, identifier, reg_name=""):
+		# Gets a taint_storage field if it exists in this class already
+
+		static_f_name, full_name = self._get_taint_storage_name_pair(identifier, reg_name)
 
 		# could be more efficient as a hash map instead of a list but that might change the order
 		# AND, the number of items is small (probably < 50) so it doesn't really matter
@@ -107,16 +118,11 @@ class SmaliClassDef:
 
 		return static_f_name
 
-	def create_taint_storage_name(self, identifier, reg_name=""):
-		#identifier = method name or instance field name
-		identifier = identifier.replace("<", "")
-		identifier = identifier.replace(">", "")
-		if reg_name != "":
-			static_f_name = str(identifier) + "_" + str(reg_name) + "_TAINT:I"
-		else:
-			static_f_name = str(identifier) + "_TAINT:I"
 
-		full_name = ".field public static " + static_f_name + "\n"
+	def create_taint_storage_name(self, identifier, reg_name=""):
+		# Makes a new taint_storage field in this class
+
+		static_f_name, full_name = self._get_taint_storage_name_pair(identifier, reg_name)
 
 		# could be more efficient as a hash map instead of a list but that might change the order
 		# AND, the number of items is small (probably < 50) so it doesn't really matter
@@ -126,6 +132,7 @@ class SmaliClassDef:
 
 		return static_f_name
 
+
 	def is_internal_function(self, line):
 		if not self.is_function(line):
 			return False
@@ -133,12 +140,14 @@ class SmaliClassDef:
 		func_name = line.split(" ")[-1]
 		return func_name in self.methods
 
+
 	def is_external_function(self, line):
 		if not self.is_function(line):
 			return False
 
 		func_name = line.split(" ")[-1]
 		return func_name not in self.methods
+
 
 	def instrument(self):
 		for m in self.methods:
@@ -154,6 +163,8 @@ class SmaliClassDef:
 
 				idx = idx + 1
 
+
+		# second pass just for p_instrumentation
 		for m in self.methods:
 
 			idx = 0
@@ -203,6 +214,7 @@ class SmaliClassDef:
 
 		fh.close()
 
+
 	def verbose(self):
 		for line in self.header + self.static_fields + self.instance_fields:
 			print(line)
@@ -211,3 +223,5 @@ class SmaliClassDef:
 			for line in m.raw_text:
 				print(str(line))
 			print("\n")
+
+
