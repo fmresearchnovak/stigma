@@ -1,6 +1,8 @@
 import os
 import time
 from os import listdir
+import subprocess
+import multiprocessing
 from subprocess import Popen, PIPE
 import shutil
 import glob
@@ -70,6 +72,7 @@ def runStigma():
 	relevantFilePaths = getFiles()
 
 	#run stigma on all file paths
+	print("CPUS: " + str(multiprocessing.cpu_count()))
 	print("Running Stigma")
 	start_time2 = time.time()
 	for path in relevantFilePaths:
@@ -78,13 +81,19 @@ def runStigma():
 		# This is necessary because some characters need to be 
 		# escaped in bash shell.  For example
 		# smali_classes2/edu/fandm/enovak/leaks/Main$1.smali
-		path = wrapString(path, "'")
+		# the $1 will be treated like a variable in bash unless
+		# it is escaped or wrapped in quotes
+		# path = wrapString(path, "'")
 
-		p2 = Popen("python3 stigma.py -wo " + path, stdin=PIPE, stderr=PIPE, shell=True)
-		errorBytes = p2.stderr.read()
-		if(errorBytes != b''):
-			print(errorBytes.decode("utf-8"))
-			raise Exception("Error in stigma")
+
+		# refactored according to https://docs.python.org/3/library/subprocess.html
+		# shell = true means things like "*" and "~" will be expanded in the shell
+		# I DID NOT include shell=true, which means that shell=false.  
+		# This means that the string wrapping of the path with single-quotes
+		# is unnecessary.
+		completedProcess = subprocess.run(["python3", "stigma.py", "-wo", path])
+		completedProcess.check_returncode() # raises an exception on any error
+
 	print("Stigma ran in " + str(time.time() - start_time2) + " seconds")
 
 
