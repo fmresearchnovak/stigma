@@ -225,3 +225,23 @@ class SmaliClassDef:
 			print("\n")
 
 
+	def get_num_fields(self):
+		return self.get_num_static_fields() + self.get_num_instance_fields()
+
+
+	@staticmethod
+	def _count_fields(fieldsList):
+		regexBeginsWithField = r"^\s*.field"
+		count = 0
+		for line in fieldsList:
+			search_object = re.search(regexBeginsWithField, line)
+			if(search_object != None):
+				count+=1
+		return count
+
+	def get_num_static_fields(self):
+		return self._count_fields(self.static_fields)
+
+	def get_num_instance_fields(self):
+		return self._count_fields(self.instance_fields)
+
