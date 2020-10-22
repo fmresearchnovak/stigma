@@ -1,29 +1,15 @@
 #!/usr/bin/env python
 
 import SmaliAssemblyInstructions as smali
+import StigmaRegEx
 import re
 
-REGEX_V_AND_NUMBERS = r"v[0-9]+"  # v and numbers (e.g., v5) are general purpose registers.  I think "v" means "virtual"
-REGEX_V_AND_P_NUMBERS = r"v[0-9]+|p[0-9]+"
-REGEX_P_NUMBERS = r"p[0-9]+"
-REGEX_BEGINS_WITH_INVOKE = r"^\s*invoke-"
-REGEX_BEGINS_WITH_MOVE_RESULT = r"^\s*move-result-"
-REGEX_BEGINS_WITH_ADD = r"^\s*add-"
-REGEX_BEGINS_WITH_SUB = r"^\s*sub-"
-REGEX_BEGINS_WITH_MUL = r"^\s*mul-"
-REGEX_BEGINS_WITH_DIV = r"^\s*div-"
-REGEX_BEGINS_WITH_IPUT = r"^\s*iput"
-REGEX_BEGINS_WITH_IGET = r"^\s*iget"
-REGEX_BEGINS_WITH_SPUT = r"^\s*sput"
-REGEX_BEGINS_WITH_SGET = r"^\s*sget"
-REGEX_BEGINS_WITH_AGET = r"^\s*aget"
-REGEX_BEGINS_WITH_APUT = r"^\s*aput"
-REGEX_BEGINS_WITH_ARRAY_LENGTH = r"^\s*array-length"
-REGEX_BEGINS_WITH_NEW_ARRAY = r"^\s*new-array"
+
 
 # A more complete listing of these sort of things can be found in ./SourcesAndSinks.txt
 STRING_IMEI_FUNCTION = "Landroid/telephony/TelephonyManager;->getDeviceId()Ljava/lang/String;"
 STRING_STREAM_WRITE_FUNCTION = "Ljava/io/OutputStreamWriter;->write(Ljava/lang/String;II)V"
+STRING_LOGD_FUNCTION = "Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I"
 
 class Instrumenter:
 
@@ -34,15 +20,14 @@ class Instrumenter:
     # attempt just makes the code uglier for no benefit.
     def __init__(self):
         self.instrumentation_methods = [Instrumenter.SPUT_instrumentation, Instrumenter.SGET_instrumentation,
-                                        Instrumenter.LOGD_instrumentation, Instrumenter.AGET_instrumentation,
                                         Instrumenter.IGET_instrumentation, Instrumenter.IPUT_instrumentation,
-                                        Instrumenter.IMEI_instrumentation, Instrumenter.WRITE_instrumentation,
-                                        Instrumenter.APUT_instrumentation, Instrumenter.ARRAY_LENGTH_instrumentation,
-                                        Instrumenter.NEW_ARRAY_instrumentation,
+                                        Instrumenter.APUT_instrumentation, Instrumenter.AGET_instrumentation,
+                                        Instrumenter.ARRAY_LENGTH_instrumentation, Instrumenter.NEW_ARRAY_instrumentation
+                                        Instrumenter.IMEI_instrumentation,Instrumenter.LOGD_instrumentation
+                                        Instrumenter.WRITE_instrumentation, 
                                         Instrumenter.BINARYOP_instrumenter,
                                         Instrumenter.EXTERNAL_FUNCTION_instrumentation,
-                                        Instrumenter.INTERNAL_FUNCTION_instrumentation,
-                                        ]
+                                        Instrumenter.INTERNAL_FUNCTION_instrumentation]
 
 
 
@@ -65,203 +50,85 @@ class Instrumenter:
             return False
 
         return True
-        
+
 
     @staticmethod
-    def create_registers_and_block(no_registers, method):
-        block = []
-        registers = []
-        idx = 0
-        if method.reg_number_float + method.no_of_parameters + no_registers < 16:
-            for n in range(no_registers):
-                temp = method.make_new_reg()
-                registers += [temp]
-                block += [smali.CONST(temp, "0x0")]
-                idx += 1
-
-            for n in range(no_registers):
-                method.free_reg()
-        else:
-            #old_locals_num = method.get_locals_directive_num()
-            #print("Old num " + str(old_locals_num))
-            #print("No reg " + str(no_registers))
-            #method.set_locals_directive((old_locals_num + no_registers))
-            #do the move
-            for n in range(no_registers):
-                temp = method.make_new_reg()
-                block += [smali.MOVE16(temp, "v" + str(n))]
-                block += [smali.CONST("v" + str(n), "0x0")]
-                registers += ["v" + str(n)]
-                idx += 2
-
-            for n in reversed(range(no_registers)):
-                method.free_reg()
-                block += [smali.MOVE16("v" + str(n), "v" + str(method.reg_number_float))]
-
-        return [block, idx, registers]
-
-    @staticmethod
-    def assign_taint_from_fields(scd, m, fields, taint_result_loc, field_class=""):
-
-        if not isinstance(fields, list):
-            raise Exception("fields not a list")
+    def make_merge_register_block(scd, m, registers, taint_loc_result, comment_detail=""):
+        # This function creates a "merge block"
+        # A merge block takes every one of the registers in the 
+        # registers parameter, and performs an OR operation on their
+        # values storing the result in taint_loc_result
 
         block = []
 
-        if field_class == "" or field_class == scd.class_name:
-            # In case of a single field list, don't execute "or" operation
-            if len(fields) == 1:
-                create_reg_list = Instrumenter.create_registers_and_block(1, m)
-                # unpacking list
+        # 1, 2
+        tmp_reg1_for_merging = m.make_new_reg()
+        tmp_reg2_for_merging = m.make_new_reg()
+        block.append(smali.BLANK_LINE())
+        block.append(smali.CONST_4(tmp_reg1_for_merging, "0x0"))
+        block.append(smali.BLANK_LINE())
+        block.append(smali.CONST_4(tmp_reg2_for_merging, "0x0"))
 
-                block = create_reg_list[0]
-                interpolate_idx = create_reg_list[1]
-                tmp_reg = create_reg_list[2][0]
-
-                taint_param_loc = scd.create_taint_storage_name(fields[0])
-
-                block_to_interpolate = [smali.SGET(tmp_reg, scd.class_name, taint_param_loc),
-                                        smali.SPUT(tmp_reg, scd.class_name, taint_result_loc)]
-                block = block[:interpolate_idx] + block_to_interpolate + block[interpolate_idx:]
-
-                return block
-
-            create_reg_list = Instrumenter.create_registers_and_block(2, m)
-            # unpacking list
-            block = create_reg_list[0]
-            interpolate_idx = create_reg_list[1]
-
-            tmp_reg1_for_merging = create_reg_list[2][0]
-            tmp_reg2_for_merging = create_reg_list[2][1]
-
-            block_to_interpolate = []
-            for f in fields:
-                taint_param_loc = scd.create_taint_storage_name(f)
-                block_to_interpolate.append(smali.SGET(tmp_reg2_for_merging, scd.class_name, taint_param_loc))
-                block_to_interpolate.append(smali.OR_INT(tmp_reg1_for_merging, tmp_reg1_for_merging, tmp_reg2_for_merging))
-
-            block_to_interpolate.append(smali.SPUT(tmp_reg1_for_merging, scd.class_name, taint_result_loc))
-
-            block = block[:interpolate_idx] + block_to_interpolate + block[interpolate_idx]
-
-            return block
-        else:
-            raise Exception("Not Same Class")
-
-    @staticmethod
-    def assign_taint_from_registers(scd, m, registers, taint_result_loc):
-
-        if not isinstance(registers, list):
-            raise Exception("registers not a list")
-
-        block = []
-
-        # In case of a single register list, don't execute "or" operation
-        if len(registers) == 1:
-            create_reg_list = Instrumenter.create_registers_and_block(1, m)
-            #unpacking list
-            block = create_reg_list[0]
-            interpolate_idx = create_reg_list[1]
-            tmp_reg = create_reg_list[2][0]
-
-            taint_param_loc = scd.create_taint_storage_name(m.get_name(), registers[0])
-
-            block_to_interpolate = [smali.SGET(tmp_reg, scd.class_name, taint_param_loc),
-                                    smali.SPUT(tmp_reg, scd.class_name, taint_result_loc)]
-            block = block[:interpolate_idx] + block_to_interpolate + block[interpolate_idx:]
-
-            return block
-
-        create_reg_list = Instrumenter.create_registers_and_block(2, m)
-        # unpacking list
-        block = create_reg_list[0]
-        interpolate_idx = create_reg_list[1]
-        tmp_reg1_for_merging = create_reg_list[2][0]
-        tmp_reg2_for_merging = create_reg_list[2][1]
-
-        block_to_interpolate = []
         for r in registers:
-            taint_param_loc = scd.create_taint_storage_name(m.get_name(), r)
-            block_to_interpolate.append(smali.SGET(tmp_reg2_for_merging, scd.class_name, taint_param_loc))
-            block_to_interpolate.append(smali.OR_INT(tmp_reg1_for_merging, tmp_reg1_for_merging, tmp_reg2_for_merging))
+            taint_loc_param = scd.create_taint_storage_name(m.get_name(), r)
+            block.append(smali.BLANK_LINE())
+            block.append(smali.SGET(tmp_reg2_for_merging, scd.class_name, taint_loc_param))
+            block.append(smali.BLANK_LINE())
+            block.append(smali.OR_INT(tmp_reg1_for_merging, tmp_reg1_for_merging, tmp_reg2_for_merging))
 
-        block_to_interpolate.append(smali.SPUT(tmp_reg1_for_merging, scd.class_name, taint_result_loc))
+        block.append(smali.BLANK_LINE())
+        block.append(smali.SPUT(tmp_reg1_for_merging, scd.class_name, taint_loc_result))
 
-        block = block[:interpolate_idx] + block_to_interpolate + block[interpolate_idx:]
+        m.free_reg()
+        m.free_reg()
+        # 2, 1
 
         return block
 
-    # all of the following "*_instrumentation" methods should take the same three arguments
-    # Note: they are all static
 
     @staticmethod
-    def p_instrumentation(scd, m, line_num):
-        #strange p11 bug #if m.get_locals_directive_num() + m.no_of_parameters <= 16:
-        #    return 0
-        #print(m.raw_text[0])
-        sig = m.raw_text[0]
-        abstract_search = re.search(r"\babstract\b", sig)
-        if abstract_search is not None:
-            return 0
+    def make_simple_assign_block(scd, reg_dest, reg_src):
+        # this function makes an "assign-block"
+        # the value in the taint-tag for reg_src will be assigned
+        # to the taint-tag for reg_dest
 
-        if isinstance(m.raw_text[line_num], smali.SmaliAssemblyInstruction):
-            line = m.raw_text[line_num].__repr__()
-        else:
-            line = m.raw_text[line_num]
-            if line.strip()[:6] == ".param" or line.strip()[:6] == ".local":
-                return 0
+        taint_src_location = scd.create_taint_storage_name(m.get_name(), reg_src)
+        taint_result_location = scd.create_taint_storage_name(m.get_name(), reg_dest)
 
-        if line_num == 0:
-            for n in range(m.no_of_parameters):
-                m.make_new_reg()
-            return 0
+        #1
+        tmp_reg = m.make_new_reg()
+        block = [smali.BLANK_LINE(),
+                 smali.CONST_4(tmp_reg, "0x0")
+                 smali.BLANK_LINE(),
+                 smali.SGET(tmp_reg, scd.class_name, taint_src_location)
+                 smali.BLANK_LINE(),
+                 smali.SPUT(tmp_reg, scd.class_name, taint_result_location)]
 
-        if not isinstance(line, str):
-            print("Line type:" + str(type(line)))
-            raise Exception("Line not str")
-        search_object = re.search(REGEX_P_NUMBERS, line)
+        m.free_reg() #1
 
-        if search_object is None:
-            return 0
+        return block
 
-        p_regs = re.findall(REGEX_P_NUMBERS, line)
-        method_regs_number = m.get_locals_directive_num()
-        block_above = []
-        block_below = []
 
-        for p_reg in p_regs:
-            p_num = int(re.findall(r'\d+', p_reg)[0])
-            v_num = method_regs_number + p_num
-            line = re.sub("p" + str(p_num), "v" + str(p_num), line)
-            shadow_num = method_regs_number - m.no_of_parameters + p_num
+    @staticmethod
+    def make_comment_block(comment_detail=""):
+          block = [smali.BLANK_LINE(), smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA " + comment_detail)]
+          return block
 
-            block_above += [smali.MOVE16("v" + str(shadow_num), "v" + str(p_num))]
-            block_above += [smali.MOVE16("v" + str(p_num), "v" + str(v_num))]
 
-            block_below += [smali.MOVE16("v" + str(v_num), "v" + str(p_num))]
-            block_below += [smali.MOVE16("v" + str(p_num), "v" + str(shadow_num))]
-
-        total_block = block_above + [line] + block_below
-        del m.raw_text[line_num]
-        m.embed_block(line_num, total_block)
-
-        return len(total_block) - 1
 
     @staticmethod
     def NEW_ARRAY_instrumentation(scd, m, line_num):
         cur_line = m.raw_text[line_num]
-        search_object = re.search(REGEX_BEGINS_WITH_NEW_ARRAY, cur_line)
 
+        search_object = re.search(StigmaRegEx.BEGINS_WITH_NEW_ARRAY, cur_line)
         if search_object is None:
             return 0
 
-        regs = re.findall(REGEX_V_AND_P_NUMBERS, cur_line)
+        regs = re.findall(StigmaRegEx.V_AND_P_AND_NUMBERS, cur_line)
 
-        taint_location = scd.create_taint_storage_name(m.get_name(), regs[0])
-
-        block = [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for NEW-ARRAY")] + \
-                Instrumenter.assign_taint_from_registers(scd, m, [regs[1]], taint_location) \
-                + [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for NEW-ARRAY")]
+        block = make_comment_block("for NEW ARRAY")
+        block = block + simple_assign_block(regs[0], regs[1])
+        block = block + make_comment_block("for NEW ARRAY")
 
         m.embed_block(line_num, block)
 
@@ -270,32 +137,31 @@ class Instrumenter:
     @staticmethod
     def ARRAY_LENGTH_instrumentation(scd, m, line_num):
         cur_line = m.raw_text[line_num]
-        search_object = re.search(REGEX_BEGINS_WITH_ARRAY_LENGTH, cur_line)
 
+        search_object = re.search(StigmaRegEx.BEGINS_WITH_ARRAY_LENGTH, cur_line)
         if search_object is None:
             return 0
 
-        regs = re.findall(REGEX_V_AND_P_NUMBERS, cur_line)
+        regs = re.findall(StigmaRegEx.V_AND_P_AND_NUMBERS, cur_line)
 
-        taint_location = scd.create_taint_storage_name(m.get_name(), regs[0])
-
-        block = [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for ARRAY-LENGTH")] + \
-                Instrumenter.assign_taint_from_registers(scd, m, [regs[1]], taint_location) \
-                + [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for ARRAY-LENGTH")]
+        block = make_comment_block("for ARRAY LENGTH")
+        block = block + simple_assign_block(regs[0], regs[1])
+        block = block + make_comment_block("for ARRAY LENGTH")
 
         m.embed_block(line_num, block)
 
         return len(block)
 
+    '''
     @staticmethod
     def SGET_instrumentation(scd, m, line_num):
         cur_line = m.raw_text[line_num]
-        search_object = re.search(REGEX_BEGINS_WITH_SGET, cur_line)
+        search_object = re.search(StigmaRegEx.BEGINS_WITH_SGET, cur_line)
 
         if search_object is None:
             return 0
 
-        regs = re.findall(REGEX_V_AND_P_NUMBERS, cur_line)
+        regs = re.findall(StigmaRegEx.V_AND_P_NUMBERS, cur_line)
 
         class_name = re.search("(L.+)->", cur_line).group(1)
         if class_name != scd.class_name:
@@ -303,25 +169,39 @@ class Instrumenter:
 
         field_name = re.search("->(.+):", cur_line).group(1)
 
+        taint_source = scd.create_taint_storage_name(field_name)
         taint_result = scd.create_taint_storage_name(m.get_name(), regs[0])
 
-        block = [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for SGET")] + \
-                Instrumenter.assign_taint_from_fields(scd, m, [field_name], taint_result) + \
-                [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for SGET")]
+
+
+        tmp_reg = m.make_new_reg()
+
+        block = [smali.BLANK_LINE(),
+                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for SGET"),
+                 smali.BLANK_LINE(),
+                 smali.CONST(tmp_reg, "0x0"),
+                 smali.BLANK_LINE(),
+                 smali.SGET(tmp_reg, scd.class_name, taint_source),
+                 smali.BLANK_LINE(),
+                 smali.SPUT(tmp_reg, scd.class_name, taint_result),
+                 smali.BLANK_LINE(),
+                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for SGET")]
 
         m.embed_block(line_num, block)
+
+        m.free_reg()
 
         return len(block)
 
     @staticmethod
     def SPUT_instrumentation(scd, m, line_num):
         cur_line = m.raw_text[line_num]
-        search_object = re.search(REGEX_BEGINS_WITH_SPUT, cur_line)
+        search_object = re.search(StigmaRegEx.BEGINS_WITH_SPUT, cur_line)
 
         if search_object is None:
             return 0
 
-        regs = re.findall(REGEX_V_AND_P_NUMBERS, cur_line)
+        regs = re.findall(StigmaRegEx.V_AND_P_AND_NUMBERS, cur_line)
 
         class_name = re.search("(L.+)->", cur_line).group(1)
         if class_name != scd.class_name:
@@ -342,12 +222,12 @@ class Instrumenter:
     @staticmethod
     def IPUT_instrumentation(scd, m, line_num):
         cur_line = m.raw_text[line_num]
-        search_object = re.search(REGEX_BEGINS_WITH_IPUT, cur_line)
+        search_object = re.search(StigmaRegEx.BEGINS_WITH_IPUT, cur_line)
 
         if search_object is None:
             return 0
 
-        regs = re.findall(REGEX_V_AND_P_NUMBERS, cur_line)
+        regs = re.findall(StigmaRegEx.V_AND_P_NUMBERS, cur_line)
 
         second_reg = cur_line.split(", ")[1]
         if second_reg != 'p0':
@@ -365,15 +245,15 @@ class Instrumenter:
 
         return len(block)
 
+    
     @staticmethod
     def IGET_instrumentation(scd, m, line_num):
         cur_line = m.raw_text[line_num]
-        search_object = re.search(REGEX_BEGINS_WITH_IGET, cur_line)
-
+        search_object = re.search(StigmaRegEx.BEGINS_WITH_IGET, cur_line)
         if search_object is None:
             return 0
 
-        regs = re.findall(REGEX_V_AND_P_NUMBERS, cur_line)
+        regs = re.findall(StigmaRegEx.V_AND_P_AND_NUMBERS, cur_line)
 
         second_reg = cur_line.split(", ")[1]
 
@@ -392,22 +272,22 @@ class Instrumenter:
 
         return len(block)
 
+    '''
+
     @staticmethod
     def AGET_instrumentation(scd, m, line_num):
         cur_line = m.raw_text[line_num]
-        search_object = re.search(REGEX_BEGINS_WITH_AGET, cur_line)
 
+        search_object = re.search(StigmaRegEx.BEGINS_WITH_AGET, cur_line)
         if search_object is None:
             return 0
 
-        regs = re.findall(REGEX_V_AND_P_NUMBERS, cur_line)
-
+        regs = re.findall(StigmaRegEx.V_AND_P_AND_NUMBERS, cur_line)
         taint_result = scd.create_taint_storage_name(m.get_name(), regs[0])
 
-
-        blockquette = Instrumenter.assign_taint_from_registers(scd, m, regs[1:], taint_result)
-
-        block = [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for AGET")] + blockquette + [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for AGET")]
+        block = make_comment_block("for AGET")
+        block = block + make_merge_register_block(m, [regs[1], regs[2]], taint_result)
+        block = block + make_comment_block("for AGET")
 
         m.embed_block(line_num, block)
 
@@ -416,28 +296,22 @@ class Instrumenter:
     @staticmethod
     def APUT_instrumentation(scd, m, line_num):
         cur_line = m.raw_text[line_num]
-        search_object = re.search(REGEX_BEGINS_WITH_APUT, cur_line)
-
+        search_object = re.search(StigmaRegEx.BEGINS_WITH_APUT, cur_line)
         if search_object is None:
             return 0
 
-        regs = re.findall(REGEX_V_AND_P_NUMBERS, cur_line)
+        regs = re.findall(StigmaRegEx.V_AND_P_AND_NUMBERS, cur_line)
+        taint_result = scd.create_taint_storage_name(m.get_name(), regs[1])
 
-        taint_result_index = scd.create_taint_storage_name(m.get_name(), regs[2])
-
-        blockquette_index = Instrumenter.assign_taint_from_registers(scd, m, [regs[0]], taint_result_index)
-
-        taint_result_array = scd.create_taint_storage_name(m.get_name(), regs[1])
-
-        blockquette_array = Instrumenter.assign_taint_from_registers(scd, m, [regs[0]], taint_result_array)
-
-        block = [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for APUT")] + blockquette_array + blockquette_index + [
-            smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for APUT")]
+        block = make_comment_block("for APUT")
+        block = block + make_merge_register_block(m, [regs[0], regs[2]], taint_result)
+        block = block + make_comment_block("for APUT")
 
         m.embed_block(line_num, block)
 
         return len(block)
 
+    
     @staticmethod
     def IMEI_instrumentation(scd, m, line_num):  # IMEI sources
         # print("IMEI_instrumentation")
@@ -446,27 +320,29 @@ class Instrumenter:
 
         result_line = m.raw_text[line_num + 2]
 
-        search_object = re.search(REGEX_V_AND_P_NUMBERS, result_line)
+        search_object = re.search(StigmaRegEx.V_AND_P_AND_NUMBERS, result_line)
         # print("search object: " + str(search_object))
         reg = search_object.group()
 
         taint_location = scd.create_taint_storage_name(m.get_name(), reg)
         # 1
-        create_reg_list = Instrumenter.create_registers_and_block(1, m)
-        block = create_reg_list[0]
-        interpolate_idx = create_reg_list[1]
-        tmp_reg_for_constant = create_reg_list[2][0]
+        tmp_reg_for_constant = m.make_new_reg()
 
-        block_to_interpolate = [smali.CONST(tmp_reg_for_constant, "0x1")
-            ,smali.SPUT(tmp_reg_for_constant, scd.class_name, taint_location)]
-
-        block = block[:interpolate_idx] + block_to_interpolate + block[interpolate_idx:]
         block = [smali.BLANK_LINE(),
-                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for getDeviceID()")] + block + \
-                [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for getDeviceID()")]
+                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for getDeviceID()"),
+                 smali.BLANK_LINE(),
+                 smali.CONST(tmp_reg_for_constant, "0x1"),
+                 smali.BLANK_LINE(),
+                 smali.SPUT(tmp_reg_for_constant, scd.class_name, taint_location),
+                 smali.BLANK_LINE(),
+                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for getDeviceID()")]
 
         m.embed_block(line_num, block)
         lines_embedded = len(block)
+
+        m.free_reg()
+        # 1
+
 
         return lines_embedded
 
@@ -481,86 +357,104 @@ class Instrumenter:
             return 0
 
         # print("line: " + m.raw_text[line_num])
-        results = re.findall(REGEX_V_AND_P_NUMBERS, m.raw_text[line_num])
+        results = re.findall(StigmaRegEx.V_AND_P_AND_NUMBERS, m.raw_text[line_num])
         target_reg = results[1]
         # print("results: " + str(results))
 
         taint_loc = scd.create_taint_storage_name(m.get_name(), target_reg)
 
-        create_reg_list = Instrumenter.create_registers_and_block(3, m)
-        block = create_reg_list[0]
-        interpolate_idx = create_reg_list[1]
 
         # 1, 2, and 3
-        tmp_reg_for_tag = create_reg_list[2][0]
-        tmp_reg_for_msg = create_reg_list[2][1]
-        tmp_reg_for_compare = create_reg_list[2][2]
+        tmp_reg_for_tag = m.make_new_reg()
+        tmp_reg_for_msg = m.make_new_reg()
+        tmp_reg_for_compare = m.make_new_reg()
 
         # This is a smali.LABEL
         jmp_label = m.make_new_jump_label()
 
-        block_to_interpolate = [smali.SGET(tmp_reg_for_compare, scd.class_name, taint_loc),
-                                smali.IF_EQZ(tmp_reg_for_compare, jmp_label),
-                                smali.CONST_STRING(tmp_reg_for_tag, "STIGMA"),
-                                smali.CONST_STRING(tmp_reg_for_msg, "IMEI LEAK OCCURING!"),
-                                smali.LOG_D(tmp_reg_for_tag, tmp_reg_for_msg),
-                                jmp_label]
-
-        block = block[:interpolate_idx] + block_to_interpolate + block[interpolate_idx:]
         block = [smali.BLANK_LINE(),
-                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for write()")] + block + \
-                [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for write()")]
+                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for write()"),
+                 smali.BLANK_LINE(),
+                 smali.CONST_4(tmp_reg_for_compare, "0x0"),
+                 smali.BLANK_LINE(),
+                 smali.SGET(tmp_reg_for_compare, scd.class_name, taint_loc),
+                 smali.BLANK_LINE(),
+                 smali.IF_EQZ(tmp_reg_for_compare, jmp_label),
+                 smali.BLANK_LINE(),
+                 smali.CONST_STRING(tmp_reg_for_tag, "STIGMA"),
+                 smali.BLANK_LINE(),
+                 smali.CONST_STRING(tmp_reg_for_msg, "IMEI LEAK OCCURING!"),
+                 smali.BLANK_LINE(),
+                 smali.LOG_D(tmp_reg_for_tag, tmp_reg_for_msg),
+                 smali.BLANK_LINE(),
+                 jmp_label,
+                 smali.BLANK_LINE(),
+                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for write()")]
 
         m.embed_block(line_num, block)
         lines_embedded = len(block)
+
+        m.free_reg()
+        m.free_reg()
+        m.free_reg()
+        # 1, 2, and 3
+
 
         return lines_embedded
 
     @staticmethod
     def LOGD_instrumentation(scd, m, line_num):  # simulated Log.d sink
 
-        if "Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I" not in m.raw_text[line_num]:
+        if STRING_LOGD_FUNCTION not in m.raw_text[line_num]:
             return 0
 
         # print("line: " + m.raw_text[line_num])
-        results = re.findall(REGEX_V_AND_P_NUMBERS, m.raw_text[line_num])
+        results = re.findall(StigmaRegEx.V_AND_P_AND_NUMBERS, m.raw_text[line_num])
         target_reg = results[1]
         # print("results: " + str(results))
 
         taint_loc = scd.create_taint_storage_name(m.get_name(), target_reg)
 
-        create_reg_list = Instrumenter.create_registers_and_block(3, m)
-        block = create_reg_list[0]
-        interpolate_idx = create_reg_list[1]
-
-        # 1, 2, and 3
-        tmp_reg_for_tag = create_reg_list[2][0]
-        tmp_reg_for_msg = create_reg_list[2][1]
-        tmp_reg_for_compare = create_reg_list[2][2]
+               # 1, 2, and 3
+        tmp_reg_for_tag = m.make_new_reg()
+        tmp_reg_for_msg = m.make_new_reg()
+        tmp_reg_for_compare = m.make_new_reg()
 
         # This is a smali.LABEL
         jmp_label = m.make_new_jump_label()
 
-        block_to_interpolate = [smali.SGET(tmp_reg_for_compare, scd.class_name, taint_loc),
-                                smali.IF_EQZ(tmp_reg_for_compare, jmp_label),
-                                smali.CONST_STRING(tmp_reg_for_tag, "STIGMA"),
-                                smali.CONST_STRING(tmp_reg_for_msg, "IMEI LEAK OCCURING!"),
-                                smali.LOG_D(tmp_reg_for_tag, tmp_reg_for_msg),
-                                jmp_label]
-
-        block = block[:interpolate_idx] + block_to_interpolate + block[interpolate_idx:]
         block = [smali.BLANK_LINE(),
-                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for Log.d() (simulated leak)")] + block + \
-                [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for Log.d() (simulated leak)")]
+                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for Log.d() (simulated leak)"),
+                 smali.BLANK_LINE(),
+                 smali.CONST_4(tmp_reg_for_compare, "0x0"),
+                 smali.BLANK_LINE(),
+                 smali.SGET(tmp_reg_for_compare, scd.class_name, taint_loc),
+                 smali.BLANK_LINE(),
+                 smali.IF_EQZ(tmp_reg_for_compare, jmp_label),
+                 smali.BLANK_LINE(),
+                 smali.CONST_STRING(tmp_reg_for_tag, "STIGMA"),
+                 smali.BLANK_LINE(),
+                 smali.CONST_STRING(tmp_reg_for_msg, "LEAK via LOGD OCCURING!"),
+                 smali.BLANK_LINE(),
+                 smali.LOG_D(tmp_reg_for_tag, tmp_reg_for_msg),
+                 smali.BLANK_LINE(),
+                 jmp_label,
+                 smali.BLANK_LINE(),
+                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for Log.d() (simulated leak)")]
 
         m.embed_block(line_num, block)
         lines_embedded = len(block)
+
+        m.free_reg()
+        m.free_reg()
+        m.free_reg()
+        # 1, 2, and 3
 
         return lines_embedded
 
     @staticmethod
     def INTERNAL_FUNCTION_instrumentation(scd, m, line_num):
-        search_object = re.search(REGEX_BEGINS_WITH_INVOKE, m.raw_text[line_num])
+        search_object = re.search(StigmaRegEx.BEGINS_WITH_INVOKE, m.raw_text[line_num])
         if search_object is None:
             return 0
 
@@ -599,7 +493,7 @@ class Instrumenter:
         wrapper_comment = smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for external method call")
         block = [smali.BLANK_LINE(), wrapper_comment]
 
-        blockquette = Instrumenter.assign_taint_from_registers(scd, m, param_regs, taint_loc_result)
+        blockquette = Instrumenter.make_merge_register_block(scd, m, param_regs, taint_loc_result)
         block = block + blockquette
 
         block.append(wrapper_comment)
@@ -614,6 +508,12 @@ class Instrumenter:
         # This instrumentation is "downstream" which is the term
         # I have decided means applied afterwords and only on lines which
         # have not had any other instrumentation applied.
+
+        # Actually, there is a hierarchy based on specificity
+        # Some lines might be caught by multiple
+        # instrumenters (e.g., is Log.d an external method, or is 
+        # it a sink?).  For all cases EXTERNAL_FUNCTION should
+        # be the last resort.
 
         # The reason for this distinction was originally brought to light
         # by the Landroid/telephony/TelephonyManager;->getDeviceId() method (IMEI)
@@ -633,10 +533,13 @@ class Instrumenter:
 
         # print("line_num: " + str(line_num) )#+ "   line: " + str(m.raw_text[line_num]))
         # find lines that are "invoke" instructions
-        search_object = re.search(REGEX_BEGINS_WITH_INVOKE, m.raw_text[line_num])
+        search_object = re.search(StigmaRegEx.BEGINS_WITH_INVOKE, m.raw_text[line_num])
         if search_object is None:
             return 0
 
+
+        # Should the following few lines be a static
+        # function in the SmaliClassDef somewhere?
         invoke_line = m.raw_text[line_num]
         # check that the class does not match the current file's class name
         # print(search_object)
@@ -649,36 +552,39 @@ class Instrumenter:
         if class_name_part == scd.class_name:
             return 0
 
+
         # It's external!
         # print("\n\n\nEXTERNAL METHOD!")
         # print("name: " + name)
 
+        param_regs = re.findall(StigmaRegEx.V_AND_P_AND_NUMBERS, invoke_line)
+        # print("param registers: " + str(param_regs))
+
         # get result line
         result_line = m.raw_text[line_num + 2]
-        match_obj = re.match(REGEX_BEGINS_WITH_MOVE_RESULT, result_line)
-        if match_obj is None:
-            #In the case of a side-effect, external function
-            param_regs = re.findall(REGEX_V_AND_P_NUMBERS, invoke_line)
+        match_obj = re.match(StigmaRegEx.BEGINS_WITH_MOVE_RESULT, result_line)
 
-            if len(param_regs) <= 1:
-                return 0
+        if match_obj != None:
+            # if match_obj is None then the 
+            # only data flow possible is "side-effects"
+            # and calls to other external function
 
-            result_regs =[param_regs[0]]
-        else:
-            param_regs = re.findall(REGEX_V_AND_P_NUMBERS, invoke_line)
-            # print("param registers: " + str(param_regs))
+            # Maybe we should consider tainting the "this" reference?
 
-            result_regs = re.findall(REGEX_V_AND_P_NUMBERS, result_line)
+
+            result_regs = re.findall(StigmaRegEx.V_AND_P_AND_NUMBERS, result_line) 
             # print("result registers: " + str(result_regs))
+
 
         taint_loc_result = scd.create_taint_storage_name(m.get_name(), result_regs[0])
 
         wrapper_comment = smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for external method call")
         block = [smali.BLANK_LINE(), wrapper_comment]
 
-        blockquette = Instrumenter.assign_taint_from_registers(scd, m, param_regs, taint_loc_result)
+        blockquette = Instrumenter.make_merge_register_block(scd, m, param_regs, taint_loc_result)
         block = block + blockquette
 
+        block.append(smali.BLANK_LINE())
         block.append(wrapper_comment)
 
         m.embed_block(line_num, block)
@@ -686,27 +592,30 @@ class Instrumenter:
 
         return lines_embedded
 
-    # Propagation Tainting
+
     @staticmethod
     def BINARYOP_instrumenter(scd, m, line_num):
-        # Can be extrapolated to all binary operations
+        # Currently covers "ADD" "SUB" "MUL" and "DIV"
+        # could probably be expanded to cover other / all
+        # binary operations
 
         cur_line = m.raw_text[line_num]
-        search_object = re.search(REGEX_BEGINS_WITH_ADD, cur_line)
+        search_object = re.search(StigmaRegEx.BEGINS_WITH_ADD, cur_line)
         instruction = 'ADD'
         if search_object is None:
-            search_object = re.search(REGEX_BEGINS_WITH_SUB, cur_line)
+            search_object = re.search(StigmaRegEx.BEGINS_WITH_SUB, cur_line)
             instruction = 'SUB'
         if search_object is None:
-            search_object = re.search(REGEX_BEGINS_WITH_MUL, cur_line)
+            search_object = re.search(StigmaRegEx.BEGINS_WITH_MUL, cur_line)
             instruction = 'MUL'
         if search_object is None:
-            search_object = re.search(REGEX_BEGINS_WITH_DIV, cur_line)
+            search_object = re.search(StigmaRegEx.BEGINS_WITH_DIV, cur_line)
             instruction = 'DIV'
         if search_object is None:
             return 0
 
-        regs = re.findall(REGEX_V_AND_P_NUMBERS, cur_line)
+        # should this be REGEX_V_AND_P_NUMBERS?
+        regs = re.findall(StigmaRegEx.REGEX_V_AND_P_NUMBERS, cur_line)
         # print("regs for add instrumenter: " + str(regs))
 
         # I am concerned about instructions of the form
@@ -714,18 +623,20 @@ class Instrumenter:
         # The documentation does not seem to indicate that any
         # of the register arguments to add-int/2addr are treated
         # as pointers (the values in the registers are memory addresses)
-        # The "2addr" seems to indicate otherwise to me
+        # The "2addr" seems to indicate otherwise to me.
 
         block = [smali.BLANK_LINE(), smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for %s instruction" % instruction)]
 
         taint_loc_result = scd.create_taint_storage_name(m.get_name(), regs[0])
 
         # this should probably not merge in the destination register (only the parameter registers)
-        blockquette = Instrumenter.assign_taint_from_registers(scd, m, regs, taint_loc_result)
+        blockquette = Instrumenter.make_merge_register_block(scd, m, regs, taint_loc_result)
 
         block = block + blockquette
 
+        block.append(smali.BLANK_LINE())
         block.append(smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for %s instruction" % instruction))
+        block.append(smali.BLANK_LINE())
 
         m.embed_block(line_num, block)
         lines_embedded = len(block)

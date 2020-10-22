@@ -46,14 +46,14 @@ class IGET(SmaliAssemblyInstruction):
 
 # should probably combine this somehow with iget
 class IPUT(SmaliAssemblyInstruction):
-	def __init__(self, reg_dest, reg_calling_instance, class_name, instance_field_name):
-		self.rd = reg_dest
+	def __init__(self, reg_src, reg_calling_instance, class_name, instance_field_name):
+		self.rs = reg_src
 		self.rci = reg_calling_instance
 		self.cn = class_name
 		self.ifn = instance_field_name
 
 	def __repr__(self):
-		return "iput " + self.rd + ", " + self.rci + ", " + self.cn + "->" + self.ifn
+		return "iput " + self.rs + ", " + self.rci + ", " + self.cn + "->" + self.ifn
 
 
 class MOVE16(SmaliAssemblyInstruction):
@@ -80,13 +80,13 @@ class SGET(SmaliAssemblyInstruction):
 # This can probably be combined with sget somehow
 class SPUT(SmaliAssemblyInstruction):
 	# note: this instruction assumes that field being put to is an integer
-	def __init__(self, reg_dest, class_name, instance_field_name):
-		self.rd = reg_dest
+	def __init__(self, reg_src, class_name, instance_field_name):
+		self.rs = reg_src
 		self.cn = class_name
 		self.ifn = instance_field_name
 
 	def __repr__(self):
-		return "sput " + self.rd + ", " + self.cn + "->" + self.ifn
+		return "sput " + self.rs + ", " + self.cn + "->" + self.ifn
 
 
 class CONST(SmaliAssemblyInstruction):

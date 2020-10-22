@@ -196,7 +196,7 @@ def splitSmali():
 			if(smaliFile != newFileAbsPath):
 				# -n means "no clobber" in mv command on bash, do not overwrite existing files
 				mvCMD = ["mv", "-n", smaliFile, newFileAbsPath]
-				print(mvCMD)
+				#print(mvCMD)
 				completedProcess = subprocess.run(mvCMD)
 				completedProcess.check_returncode()
 
@@ -252,8 +252,8 @@ if __name__ == '__main__':
 	# Also ./apk should be a sys.argv param to the location of an APK file
 
 	dumpApk()
-	runStigma()
-	splitSmali()
-	rebuildApk()
-	signApk()
+	#runStigma()
+	#splitSmali()
+	#rebuildApk()
+	#signApk()
 	#deleteFiles()
