@@ -1,5 +1,96 @@
 import re
 import SmaliAssemblyInstructions as smali
+import StigmaRegEx
+
+
+class SmaliMethodSignature:
+    
+    def __init__(self, sig_line):
+        
+        self.sig_line = sig_line
+        
+        self.parameter_type_map = {}
+        self.parameter_type_map["p0"] = "THIS" # not really but that's ok
+        
+        self.no_of_parameters = 1 # starts with a 1 because of the implicit "this"
+        self.no_of_parameter_registers = 1
+        parameter_raw = re.search(StigmaRegEx.PARAMETERS, sig_line).group(1)
+      
+        i = 0
+        p_idx = 1
+        # https://github.com/JesusFreke/smali/wiki/TypesMethodsAndFields
+        while i < len(parameter_raw):
+            self.no_of_parameters += 1
+             
+            if parameter_raw[i] != "D" and parameter_raw[i] != "J" and parameter_raw[i] != "L" and parameter_raw[i] != "[":
+                self.no_of_parameter_registers += 1
+                p_name = "p" + str(p_idx)
+                self.parameter_type_map[p_name] = parameter_raw[i]
+                
+                
+            elif parameter_raw[i] == "J" or parameter_raw[i] == "D": # long or double
+                self.no_of_parameter_registers += 2
+                p_name = "p" + str(p_idx)
+                self.parameter_type_map[p_name] = parameter_raw[i]
+                p_idx+=1
+                p_name = "p" + str(p_idx)
+                self.parameter_type_map[p_name] = parameter_raw[i]+"2"
+                
+                
+            elif parameter_raw[i] == "L": # some object
+                self.no_of_parameter_registers += 1
+                p_name = "p" + str(p_idx)
+                self.parameter_type_map[p_name] = parameter_raw[i]
+
+            
+                # skip past all the characters in the type
+                # e.g., MyMethod(java/lang/String;[Ljava/lang/Object;)Ljava/lang/String;
+                i = SmaliMethodSignature.fast_forward_to_semicolon(i, parameter_raw)
+                    
+                    
+            elif parameter_raw[i] == "[": # an array
+                # note arrays are n-dimensional
+                # e.g., [[[I
+                i = SmaliMethodSignature.fast_forward_to_not_bracket(i, parameter_raw)
+                
+                if(parameter_raw[i] == "L"):
+                    # this is an array of objects (L indicates beginning of object FQN)
+                    i = SmaliMethodSignature.fast_forward_to_semicolon(i, parameter_raw)
+                    
+                #else: 
+                    # this is an array of primitives
+                    # this skips forward past the primitive letter
+                    # i += 1
+            
+                self.no_of_parameter_registers += 1
+                p_name = "p" + str(p_idx)
+                self.parameter_type_map[p_name] = "ARRAY"
+
+
+            #print("the big one")
+            p_idx += 1        
+            i += 1
+
+    @staticmethod
+    def fast_forward_to_semicolon(idx, string):
+        while(string[idx] != ";"):
+            idx+=1
+            #print("this one")
+        return idx
+        
+        
+    @staticmethod
+    def fast_forward_to_not_bracket(idx, string):
+        while(string[idx] == "["):
+            #print("that one")
+            idx+=1
+        return idx
+      
+      
+    def __str__(self):
+        return str(self.sig_line) + str(self.parameter_type_map)
+
+        
 
 
 class SmaliMethodDef:
@@ -17,39 +108,11 @@ class SmaliMethodDef:
         self.reg_number_float = self.ORIGINAL_NUMER_REGS
 
         self.scd = scd # smali class definition
-
-        self.no_of_parameters = 1
-        parameter_raw = re.search("[(](.*)[)]", self.raw_text[0]).group(1)
-      
-        i = 0
-        while i < len(parameter_raw):
-            if parameter_raw[i] == "Z":
-                self.no_of_parameters += 1
-            elif parameter_raw[i] == "B":
-                self.no_of_parameters += 1
-            elif parameter_raw[i] == "S":
-                self.no_of_parameters += 1
-            elif parameter_raw[i] == "C":
-                self.no_of_parameters += 1
-            elif parameter_raw[i] == "I":
-                self.no_of_parameters += 1
-            elif parameter_raw[i] == "J":
-                self.no_of_parameters += 1
-            elif parameter_raw[i] == "F":
-                self.no_of_parameters += 1
-            elif parameter_raw[i] == "L":
-                self.no_of_parameters += 1
-                while parameter_raw[i] != ";":
-                    i += 1
-            i += 1
+        
+        self.signature = SmaliMethodSignature(self.raw_text[0])
+        #print(self.signature)
 
 
-        #for line in text:
-        #    stripped = line.strip()
-        #    if stripped == "":
-        #        break
-        #    if stripped[:6] == ".param":
-        #        self.no_of_parameters += 1
 
     # There are three "register numbers"
     # 1) The ORIGINAL_NUMER_REGS
@@ -84,6 +147,11 @@ class SmaliMethodDef:
             return int(num)
         else:
             return 0
+            
+    def get_num_registers(self):
+        ans = self.get_locals_directive_num() + self.signature.no_of_parameter_registers
+        return ans
+        
 
     def get_signature(self):
         return self.raw_text[0].strip()
@@ -152,6 +220,42 @@ class SmaliMethodDef:
         # for i in range(position-5, position+len(block) + 5):
         # print(self.raw_text[i], end="")
         # print("\n\n")
+        
+    
+    
+    def get_v(self, p_register):
+        # e.g., p23
+        # print("p_register: " + str(p_register))
+        p_num = int(p_register[1:])
+        corresponding_v_num = self.get_locals_directive_num() + p_num
+        return "v" + str(corresponding_v_num)
+        
+        
+        
+    
+    def fix_register_limit(self):
+        idx = 0;
+        while idx < len(self.raw_text):
+            cur_line = str(self.raw_text[idx])
+            
+            # Replace all instances of pX with corresponding vY
+            # v0, v1, v2, v3, v4
+            #         p0, p1, p2
+            # even if p1 is a long, there will still be a p2
+            # and it will still correspond to v4
+            regs = re.findall(StigmaRegEx.V_AND_P_AND_NUMBERS, cur_line)
+            for reg in regs:
+                if(reg[0] == "p"):
+                    v_name = self.get_v(reg)
+                    self.raw_text[idx] = cur_line.replace(reg, v_name)
+                    
+                    
+            idx += 1
+                    
+            
+            
+           
+        
 
     def __repr__(self):
         return self.get_signature()
@@ -168,3 +272,4 @@ class SmaliMethodDef:
 
         else:
             return False
+            
