@@ -53,21 +53,21 @@ class SmaliMethodDef:
 
     # There are three "register numbers"
     # 1) The ORIGINAL_NUMER_REGS
-    #		This is the number of registers this method had / used before
-    #		any instrumentation
+    #       This is the number of registers this method had / used before
+    #       any instrumentation
     #
     # 2) The locals_directive_num()
-    #		This is the "max" or total number of unique registers
-    # 		the method uses.  If a register is used and free in
-    # 		the instrumentation this goes up.  But if it is used
-    #		again, this number would not go up, because the register
-    #		is being RE-used.
-    #		The locals_directive is checked at package time by apktool
+    #       This is the "max" or total number of unique registers
+    #       the method uses.  If a register is used and free in
+    #       the instrumentation this goes up.  But if it is used
+    #       again, this number would not go up, because the register
+    #       is being RE-used.
+    #       The locals_directive is checked at package time by apktool
     #
     # 3) The reg_number_float
-    #		This is the register number that is ready to be re-used
-    #		If a register is used this goes up, but if it is freed this
-    #		number goes down
+    #       This is the register number that is ready to be re-used
+    #       If a register is used this goes up, but if it is freed this
+    #       number goes down
 
     def set_locals_directive(self, new_val):
         self.raw_text[1] = "    .locals " + str(new_val) + "\n"

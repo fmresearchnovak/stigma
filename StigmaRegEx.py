@@ -11,7 +11,8 @@ BEGINS_WITH_INVOKE = r"^invoke-"
 V_AND_NUMBERS = r"v[0-9]+"  # v and numbers (e.g., v5) are general purpose registers.  I think "v" means "virtual"
 V_AND_P_AND_NUMBERS = r"v[0-9]+|p[0-9]+"
 P_AND_NUMBERS = r"p[0-9]+"
-
+FIELD_NAME = "->(.+):"
+CLASS_NAME = "(L.+)->"
 
 BEGINS_WITH_INVOKE = r"^\s*invoke-"
 BEGINS_WITH_MOVE_RESULT = r"^\s*move-result-"
@@ -30,4 +31,5 @@ BEGINS_WITH_AGET = r"^\s*aget"
 BEGINS_WITH_APUT = r"^\s*aput"
 BEGINS_WITH_ARRAY_LENGTH = r"^\s*array-length"
 BEGINS_WITH_NEW_ARRAY = r"^\s*new-array"
+
 # There is also "filled-new-array" instruction
