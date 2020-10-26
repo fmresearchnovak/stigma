@@ -229,7 +229,7 @@ class Instrumenter:
         
         cur_line = m.raw_text[line_num]
 
-        search_object = re.search(StigmaRegEx.BEGINS_WITH_SGET, cur_line)
+        search_object = re.search(StigmaRegEx.BEGINS_WITH_SPUT, cur_line)
         if search_object is None:
             return 0
 

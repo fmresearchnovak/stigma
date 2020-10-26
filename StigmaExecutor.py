@@ -251,9 +251,9 @@ if __name__ == '__main__':
     # we need a better interface haha!
     # Also ./apk should be a sys.argv param to the location of an APK file
 
-    dumpApk()
-    runStigma()
-    splitSmali()
+    #dumpApk()
+    #runStigma()
+    #splitSmali()
     rebuildApk()
     signApk()
     #deleteFiles()
