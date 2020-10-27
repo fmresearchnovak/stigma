@@ -2,7 +2,7 @@ import re
 import SmaliAssemblyInstructions as smali
 import StigmaRegEx
 
-
+        
 class SmaliMethodSignature:
     
     def __init__(self, sig_line):
@@ -111,6 +111,9 @@ class SmaliMethodDef:
         
         self.signature = SmaliMethodSignature(self.raw_text[0])
         #print(self.signature)
+        
+        self.remaining_shadows = []
+
 
 
 
@@ -232,23 +235,51 @@ class SmaliMethodDef:
         
         
         
-    
+    class RegShadowMap:
+        def __init__(self, instruction_regs):
+            #3-tuple format: high, shadow, corr
+            self.tuples = []
+            self.new_remaining_shadows = self.remaining_shadows[:]
+            self.instruction_regs = instruction_regs
+         
+        def insert(self, reg):
+            shadow = self.new_remaining_shadows.pop() #Create shadow
+            for i in range(16): # Create corr
+                test_v_num = "v" + str(i)
+                collision_list = [x for x in self.tuples if x[2] == test_v_num]
+                if len(collision_list) == 0 and not (test_v_num in self.instruction_regs):
+                    corr = test_v_num
+                    break
+            self.tuples.append((reg, shadow, corr))
+            
+            
+            
     def fix_register_limit(self):
         idx = 0;
         while idx < len(self.raw_text):
             cur_line = str(self.raw_text[idx])
             
+            #Step 2: Dereference p registers
             # Replace all instances of pX with corresponding vY
             # v0, v1, v2, v3, v4
             #         p0, p1, p2
             # even if p1 is a long, there will still be a p2
             # and it will still correspond to v4
-            regs = re.findall(StigmaRegEx.V_AND_P_AND_NUMBERS, cur_line)
+            regs = re.findall(StigmaRegEx.P_AND_NUMBERS, cur_line)
             for reg in regs:
-                if(reg[0] == "p"):
-                    v_name = self.get_v(reg)
-                    self.raw_text[idx] = cur_line.replace(reg, v_name)
+                v_name = self.get_v(reg)
+                self.raw_text[idx] = cur_line.replace(reg, v_name)
                     
+            #Step 2.5: Check for high numbered registers in instruction
+            regs = re.findall(StigmaRegEx.V_AND_NUMBERS, cur_line)
+            shadow_map = RegShadowMap(regs)
+            for reg in regs:
+                v_num = int(reg[1:]) # Get number from v string
+                if v_num > 15:
+                    shadow_map.insert(reg)
+            
+            #for t in shadow_map.tuples:
+                #All other steps
                     
             idx += 1
                     
