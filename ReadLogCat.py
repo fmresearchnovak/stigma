@@ -17,6 +17,9 @@ def main():
     print ("TESTING STARTED")
     print()
     for line in sys.stdin:
+        if STIGMA_GENERATED_MESSAGE in line:
+            leak_occured = True
+                
         if TEST_TAG_START in line:
             #print(line)
             # Use test tag format to extract test type
@@ -31,12 +34,7 @@ def main():
                 print()
                 leak_occured = False
            
-        
-        if STIGMA_GENERATED_MESSAGE in line:
-            leak_occured = True
-                
         if END_REACHED_FLAG in line:
-            
             #print(line)
             if leak_occured:
                 print ("Some untested leak(s) occured")
