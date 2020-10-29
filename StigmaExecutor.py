@@ -1,5 +1,6 @@
 import os
 import time
+import sys
 from os import listdir
 import subprocess
 import multiprocessing
@@ -11,7 +12,7 @@ from SmaliClassDef import SmaliClassDef
 
 
 def getOriginalAPKName():
-    return os.listdir("./apk")[0]
+    return sys.argv[1]
 
 
 def getNewAPKName():
@@ -21,7 +22,7 @@ def getNewAPKName():
 def dumpApk():
     #dump apk files
     start_time = time.time()
-    p = Popen("apktool d ./apk/" + getOriginalAPKName() + " -o apkOutput -f", stdin=PIPE, shell=True)
+    p = Popen("apktool d " + getOriginalAPKName() + " -o apkOutput -f", stdin=PIPE, shell=True)
     p.communicate(b'\n')
     print("Apk unpacked in " + str(time.time() - start_time) + " seconds")
 
@@ -83,7 +84,7 @@ def runStigma():
     relevantFilePaths = getFiles()
 
     #run stigma on all file paths
-    print("CPUS: " + str(multiprocessing.cpu_count()))
+    #print("CPUS: " + str(multiprocessing.cpu_count()))
     print("Running Stigma")
     start_time2 = time.time()
     for path in relevantFilePaths:
@@ -242,8 +243,8 @@ def deleteFiles():
         os.mkdir("./instrumentedApk2")
     pathOneMillion = "./apkOutput/dist/"
     shutil.move("./apkOutput/dist/" + listdir(pathOneMillion)[0], "./instrumentedApk2")
-    if os.path.exists("my-release-key.keystore"):
-        os.remove("my-release-key.keystore")
+    #if os.path.exists("my-release-key.keystore"):
+    #    os.remove("my-release-key.keystore")
     shutil.rmtree("./apkOutput")
 
 
@@ -251,9 +252,9 @@ if __name__ == '__main__':
     # we need a better interface haha!
     # Also ./apk should be a sys.argv param to the location of an APK file
 
-    #dumpApk()
-    #runStigma()
-    #splitSmali()
+    dumpApk()
+    runStigma()
+    splitSmali()
     rebuildApk()
     signApk()
     #deleteFiles()

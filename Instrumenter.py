@@ -458,7 +458,11 @@ class Instrumenter:
             return 0
 
         # print("line: " + m.raw_text[line_num])
+        
+        # class_name = re.search(StigmaRegEx.CLASS_NAME, cur_line).group(1)
         results = re.findall(StigmaRegEx.V_AND_P_AND_NUMBERS, m.raw_text[line_num])
+        
+        print("results: " + str(results))
         target_reg = results[1]
         # print("results: " + str(results))
 

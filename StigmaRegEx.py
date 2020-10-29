@@ -8,9 +8,10 @@ BEGINS_WITH_DOT_END_METHOD = r"^\s*\.end method"  # directive to indicate end of
 
 BEGINS_WITH_INVOKE = r"^invoke-"
 
-V_AND_NUMBERS = r"v[0-9]+"  # v and numbers (e.g., v5) are general purpose registers.  I think "v" means "virtual"
-V_AND_P_AND_NUMBERS = r"v[0-9]+|p[0-9]+"
-P_AND_NUMBERS = r"p[0-9]+"
+# one space and then a v and then some number of digits and then a comma
+V_AND_NUMBERS = r"\s(v[0-9]+)[,]"  # v and numbers (e.g., v5) are general purpose registers.  I think "v" means "virtual"
+V_AND_P_AND_NUMBERS = r"\s(v[0-9]+)[,]|\s(p[0-9]+)[,]"
+P_AND_NUMBERS = r"\s(p[0-9]+)[,]"
 FIELD_NAME = "->(.+):"
 CLASS_NAME = "(L.+)->"
 PARAMETERS = "[(](.*)[)]"
@@ -33,6 +34,23 @@ BEGINS_WITH_AGET = r"^\s*aget"
 BEGINS_WITH_APUT = r"^\s*aput"
 BEGINS_WITH_ARRAY_LENGTH = r"^\s*array-length"
 BEGINS_WITH_NEW_ARRAY = r"^\s*new-array"
+
+
+BEGINS_WITH_MOVE = r"^\s*move"
+ENDS_WITH_RANGE = r"/range"
+
+
+def get_v_and_p_numbers(line):
+    tokens = line.split(" ")
+    print(tokens)
+    ans = []
+    for token in tokens[1:]:
+        if(token != ""):
+            if(token[0] == "p" or token[0] == "v"):
+                ans.append(token.rstrip(","))
+            
+    return ans
+        
 
 
 

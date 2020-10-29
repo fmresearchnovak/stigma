@@ -213,6 +213,9 @@ class SmaliMethodDef:
         self.raw_text.insert(position, line)
 
     def embed_block(self, position, block):
+        # put the code in this block just before the position
+        
+        
         # print("embedding block as position: " + str(position))
 
         # print("--- before ---")
@@ -260,15 +263,22 @@ class SmaliMethodDef:
 
          
         def insert(self, reg):
+            
+            # This is two algorithms entangled to find both the shadow and coor registers
             shadow = self.new_remaining_shadows.pop() #Create shadow
+            
             for i in range(16): # Create corr
+                
                 # note: we will probably never reach v15
                 # since such an instruction will not be instrumented
+                # select cooresponding registers that (a) are not used in another tuple
+                # and (b) are not used in the instruction
                 test_v_num = "v" + str(i)
                 collision_list = [x for x in self.tuples if x[2] == test_v_num]
                 if len(collision_list) == 0 and not (test_v_num in self.instruction_regs):
                     corr = test_v_num
                     break
+                    
             self.tuples.append((reg, shadow, corr))
 
 
@@ -297,22 +307,32 @@ class SmaliMethodDef:
         # -- Example --  MyMethod(JI)  .locals = 17
         # Before: [v0, v1, ... , v15, v16, v17(p0), v18(p1), v19(p2), v20(p3)]
         # After:  [v0, v1, ... , v15, v16, v17,     v18,     v19,     v20,     v21, v22(p0), v23(p1), v24(p2), v25(p3)]
-        #                                  |_____________________________________|  |________________________________|
-        #                                                     |                                     |
-        #                                             "Shadow" registers                "Corresponding" registers
+        #                             |_|  |_____________________________________|  |________________________________|
+        #                              |                      |                                     |
+        #              "higher numbered" regsiters      "Shadow" registers                "higher numbered" registers
         #       
         # In the above example, get_num_regisers() is 21 so we will create
         # (21 - 16) = 5 new registers
         #                     
         # v17 up to v21 are the shadow registers (free temp registers) that we can use as general purpose
-        # v22 up to v25 are the 'corresponding' registers which now hold the parameters   
-        for i in range(m.get_num_register() - 16): 
-            m.remaining_shadows.append(m.make_new_reg())
+        # The 'corresponding' registers are lower numberd registers that will be used temporarily
+        # for a specific instruction
+        for i in range(self.get_num_register() - 16): 
+            self.remaining_shadows.append(self.make_new_reg())
 
 
-        idx = 0;
-        while idx < len(self.raw_text):
-            cur_line = str(self.raw_text[idx])
+        line_num = 0;
+        while line_num < len(self.raw_text):
+            cur_line = str(self.raw_text[line_num])
+            
+            # Don't do any of this on "range" lines or
+            # 
+            search_object = re.match(SmaliRegEx.ENDS_WITH_RANGE, cur_line)
+            
+            if( re.match(SmaliRegEx.ENDS_WITH_RANGE, cur_line) or re.match(SmaliRegEx.BEGINS_WITH_MOVE, cur_line) ):
+                line_num += 1
+                continue
+                
 
             
             #Step 2: Dereference p registers
@@ -324,18 +344,22 @@ class SmaliMethodDef:
             regs = re.findall(StigmaRegEx.P_AND_NUMBERS, cur_line)
             for reg in regs:
                 v_name = self.get_v(reg)
-                self.raw_text[idx] = cur_line.replace(reg, v_name)
+                self.raw_text[line_num] = cur_line.replace(reg, v_name)
 
 
-            assert(False)
+            #assert(False)
             # We need to check the instruction
             # some instructions don't need to have their register
             # limit fixed right?  Such as:
             # * pre-existing move instructions
             # * */range
             # * cmpl-double   (weird example IMHO: http://pallergabor.uw.hu/androidblog/dalvik_opcodes.html)
+            # move/from16 vx,vy # Moves the content of vy into vx. vy may be in the 64k register range while vx is one of the first 256 registers.
+            
+            # what are the instructions that can / cannot handle large number instructions
                     
-            #Step 2.5: Check for high numbered registers in instruction
+                    
+            #Step 2.5 and 3: Check for high numbered registers in instruction
             regs = re.findall(StigmaRegEx.V_AND_NUMBERS, cur_line)
             shadow_map = RegShadowMap(regs)
             for reg in regs:
@@ -343,10 +367,41 @@ class SmaliMethodDef:
                 if v_num > 15:
                     shadow_map.insert(reg)
             
-            #for t in shadow_map.tuples:
-                #All other steps
+            
+            # Step 4: move block before instruction
+            for t in shadow_map.tuples:
+                reg = t[0]
+                
+                block = [smali.BLANK_LINE(),
+                    smali.MOVE16(self.get_shadow(reg), self.get_corresponding(reg)),
+                    smali.BLANK_LINE(),
+                    smali.MOVE16(self.get_corresponding(reg), reg)]
                     
-            idx += 1
+                m.embed_block(line_num, block)
+                line_num = line_num + len(block)
+                
+                
+            # Step 5: re-write this instruction
+            for t in shadow_map.tuples:
+                reg = t[0]
+                self.raw_text[line_num] = cur_line.replace(reg, self.get_corresponding(reg))
+                
+            
+            # Step 6: move block after instruction
+            for t in shadow_map.tuples:
+                reg = t[0]
+                
+                block = [smali.BLANK_LINE(),
+                    smali.MOVE16(reg, self.get_corresponding(reg)),
+                    smali.BLANK_LINE(),
+                    smali.MOVE16(self.get_corresponding(reg), self.get_shadow(reg))]
+                    
+                m.embed_block(line_num+1, block)
+                line_num = line_num + len(block)
+                
+            
+                    
+            line_num += 1
                     
             
             

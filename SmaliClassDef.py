@@ -162,23 +162,13 @@ class SmaliClassDef:
                     idx = self._do_instrumentation_plugins(m, idx)
 
                 idx = idx + 1
-
-
-        # second pass just to fix large-numbered registers
-        for m in self.methods:
+           
+            # second pass on this method just to fix large-numbered registers 
             if(m.get_num_registers() > 16):
-                    
                 m.fix_register_limit() #iterates through whole method
-                
-                
-                # print("line: " + m.raw_text[idx])
-                # The lines of code that we add (instrument) will be instances of smali.SmaliAssemblyInstruction
-                # the lines of code that are existing already will be type string
-                # So, this check prevents us from instrumenting our new, additional code
 
-                #lines_added = self.instrumenter.p_instrumentation(self, m, idx)
-                #idx = idx + lines_added
-                #idx = idx + 1
+
+
         
 
 

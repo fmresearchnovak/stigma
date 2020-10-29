@@ -3,6 +3,7 @@ import os
 import time
 import io
 import re
+import StigmaRegEx
 
 
 STIGMA_GENERATED_MESSAGE = "LEAK via LOGD OCCURING!" # message stigma generates when it detects a leak
@@ -12,6 +13,9 @@ END_REACHED_FLAG = "endstigmatestapp" # StigmaTestApp Logs this to help detect e
 
 
 def main():
+	
+	
+	print(StigmaRegEx.get_v_and_p_numbers("    iget v12, p6, Landroid/graphics/Rect;->bottom:I"))
 
 	## Note: run emulator before running test
 
