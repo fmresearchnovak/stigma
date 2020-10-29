@@ -164,16 +164,9 @@ class SmaliClassDef:
                 idx = idx + 1
 
 
-        # second pass just for p_instrumentation
+        # second pass just to fix large-numbered registers
         for m in self.methods:
             if(m.get_num_registers() > 16):
-                
-                # Step 1: Make shadow registers
-                # Before: v0, v1, .... , v17(p0), v18(p1)
-                # After:   v0, v1, ... , v17, v18, v19(p0), v20(p1)
-                # v17, v18 are the shadow registers (free temp registers)
-                for(i in range(m.get_num_register() - 16): 
-                    m.remaining_shadows.append(m.make_new_reg())
                     
                 m.fix_register_limit() #iterates through whole method
                 

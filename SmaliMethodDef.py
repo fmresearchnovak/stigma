@@ -4,6 +4,8 @@ import StigmaRegEx
 
         
 class SmaliMethodSignature:
+
+    # This should maybe be an inner-class of SmaliMethodDef
     
     def __init__(self, sig_line):
         
@@ -236,28 +238,82 @@ class SmaliMethodDef:
         
         
     class RegShadowMap:
+        # This class is an inner-class of SmaliMethodDef 
+        # It is not a child-class!
+        # Any Innerclass design allows this class to 
+        # access all of the instance variables / state
+        # of the SmaliMethod without directly inheriting
+        # This is useful for things like the constructor
+        # which should not be inherited because the two classes are
+        # so different.
+
+        # At the same time, this class is never used for any other
+        # purpose besides in the context of a method
+
+        # For these reasons it should be an inner class.
+
         def __init__(self, instruction_regs):
-            #3-tuple format: high, shadow, corr
+            #3-tuple format: (high, shadow, corr)
             self.tuples = []
             self.new_remaining_shadows = self.remaining_shadows[:]
             self.instruction_regs = instruction_regs
+
          
         def insert(self, reg):
             shadow = self.new_remaining_shadows.pop() #Create shadow
             for i in range(16): # Create corr
+                # note: we will probably never reach v15
+                # since such an instruction will not be instrumented
                 test_v_num = "v" + str(i)
                 collision_list = [x for x in self.tuples if x[2] == test_v_num]
                 if len(collision_list) == 0 and not (test_v_num in self.instruction_regs):
                     corr = test_v_num
                     break
             self.tuples.append((reg, shadow, corr))
+
+
+        def _get(reg, idx):
+            for t in self.tuples:
+                if(t[0] == reg):
+                    return t[idx]
+            
+            raise ValueError("Register (" + str(reg) + ") not found in RegShadowMap")
+
+
+        def get_shadow(reg):
+            self._get(reg, 1)
+
+            
+        def get_corresponding(reg):
+            self._get(reg, 2)
+
             
             
             
     def fix_register_limit(self):
+
+        # Step 1: Make shadow registers
+
+        # -- Example --  MyMethod(JI)  .locals = 17
+        # Before: [v0, v1, ... , v15, v16, v17(p0), v18(p1), v19(p2), v20(p3)]
+        # After:  [v0, v1, ... , v15, v16, v17,     v18,     v19,     v20,     v21, v22(p0), v23(p1), v24(p2), v25(p3)]
+        #                                  |_____________________________________|  |________________________________|
+        #                                                     |                                     |
+        #                                             "Shadow" registers                "Corresponding" registers
+        #       
+        # In the above example, get_num_regisers() is 21 so we will create
+        # (21 - 16) = 5 new registers
+        #                     
+        # v17 up to v21 are the shadow registers (free temp registers) that we can use as general purpose
+        # v22 up to v25 are the 'corresponding' registers which now hold the parameters   
+        for i in range(m.get_num_register() - 16): 
+            m.remaining_shadows.append(m.make_new_reg())
+
+
         idx = 0;
         while idx < len(self.raw_text):
             cur_line = str(self.raw_text[idx])
+
             
             #Step 2: Dereference p registers
             # Replace all instances of pX with corresponding vY
@@ -269,6 +325,15 @@ class SmaliMethodDef:
             for reg in regs:
                 v_name = self.get_v(reg)
                 self.raw_text[idx] = cur_line.replace(reg, v_name)
+
+
+            assert(False)
+            # We need to check the instruction
+            # some instructions don't need to have their register
+            # limit fixed right?  Such as:
+            # * pre-existing move instructions
+            # * */range
+            # * cmpl-double   (weird example IMHO: http://pallergabor.uw.hu/androidblog/dalvik_opcodes.html)
                     
             #Step 2.5: Check for high numbered registers in instruction
             regs = re.findall(StigmaRegEx.V_AND_NUMBERS, cur_line)
