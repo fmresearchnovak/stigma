@@ -1,4 +1,4 @@
-import StigmaRegEx
+import StigmaStringParsingLib
 import re
 import Instrumenter as inst
 import SmaliAssemblyInstructions as smali
@@ -10,7 +10,7 @@ class SmaliClassDef:
     @staticmethod
     def is_function(line):
         # check this line is a method (begins with "invoke-*")
-        match_object = re.match(StigmaRegEx.REGEX_BEGINS_WITH_INVOKE, line)
+        match_object = re.match(StigmaStringParsingLib.REGEX_BEGINS_WITH_INVOKE, line)
         return match_object is not None
 
     def __init__(self, file_name):
@@ -37,17 +37,17 @@ class SmaliClassDef:
         while idx < len(lines):
 
             # print("processing line: " + str(lines[idx]))
-            match_object = re.match(StigmaRegEx.BEGINS_WITH_DOT_METHOD, lines[idx])
+            match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_METHOD, lines[idx])
             if match_object is not None:  # This is the start of a method defintion
                 # print(str(match_object) + " in line: " + lines[idx])
                 method_code = []
 
-                match_object = re.match(StigmaRegEx.BEGINS_WITH_DOT_END_METHOD, lines[idx])
+                match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_END_METHOD, lines[idx])
                 while match_object is None:
                     # print(str(idx) + "    " + lines[idx])
                     method_code.append(lines[idx])
                     del lines[idx]
-                    match_object = re.match(StigmaRegEx.BEGINS_WITH_DOT_END_METHOD, lines[idx])
+                    match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_END_METHOD, lines[idx])
 
                 # Eat the final ".end method" line
                 method_code.append(lines[idx])

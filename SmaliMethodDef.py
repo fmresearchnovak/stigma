@@ -1,6 +1,6 @@
 import re
 import SmaliAssemblyInstructions as smali
-import StigmaRegEx
+import StigmaStringParsingLib
 
         
 class SmaliMethodSignature:
@@ -16,7 +16,7 @@ class SmaliMethodSignature:
         
         self.no_of_parameters = 1 # starts with a 1 because of the implicit "this"
         self.no_of_parameter_registers = 1
-        parameter_raw = re.search(StigmaRegEx.PARAMETERS, sig_line).group(1)
+        parameter_raw = re.search(StigmaStringParsingLib.PARAMETERS, sig_line).group(1)
       
         i = 0
         p_idx = 1
@@ -255,10 +255,10 @@ class SmaliMethodDef:
 
         # For these reasons it should be an inner class.
 
-        def __init__(self, instruction_regs):
+        def __init__(self, instruction_regs, rem_shadows):
             #3-tuple format: (high, shadow, corr)
             self.tuples = []
-            self.new_remaining_shadows = self.remaining_shadows[:]
+            self.new_remaining_shadows = rem_shadows[:]
             self.instruction_regs = instruction_regs
 
          
@@ -282,7 +282,7 @@ class SmaliMethodDef:
             self.tuples.append((reg, shadow, corr))
 
 
-        def _get(reg, idx):
+        def _get(self, reg, idx):
             for t in self.tuples:
                 if(t[0] == reg):
                     return t[idx]
@@ -290,12 +290,12 @@ class SmaliMethodDef:
             raise ValueError("Register (" + str(reg) + ") not found in RegShadowMap")
 
 
-        def get_shadow(reg):
-            self._get(reg, 1)
+        def get_shadow(self, reg):
+            return self._get(reg, 1)
 
             
-        def get_corresponding(reg):
-            self._get(reg, 2)
+        def get_corresponding(self, reg):
+            return self._get(reg, 2)
 
             
             
@@ -317,19 +317,18 @@ class SmaliMethodDef:
         # v17 up to v21 are the shadow registers (free temp registers) that we can use as general purpose
         # The 'corresponding' registers are lower numberd registers that will be used temporarily
         # for a specific instruction
-        for i in range(self.get_num_register() - 16): 
+        for i in range(self.get_num_registers() - 16): 
             self.remaining_shadows.append(self.make_new_reg())
 
-
-        line_num = 0;
+        line_num = 1;
         while line_num < len(self.raw_text):
             cur_line = str(self.raw_text[line_num])
             
             # Don't do any of this on "range" lines or
             # 
-            search_object = re.match(SmaliRegEx.ENDS_WITH_RANGE, cur_line)
+            search_object = re.match(StigmaStringParsingLib.ENDS_WITH_RANGE, cur_line)
             
-            if( re.match(SmaliRegEx.ENDS_WITH_RANGE, cur_line) or re.match(SmaliRegEx.BEGINS_WITH_MOVE, cur_line) ):
+            if( re.match(StigmaStringParsingLib.ENDS_WITH_RANGE, cur_line) or re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE, cur_line) ):
                 line_num += 1
                 continue
                 
@@ -341,7 +340,8 @@ class SmaliMethodDef:
             #         p0, p1, p2
             # even if p1 is a long, there will still be a p2
             # and it will still correspond to v4
-            regs = re.findall(StigmaRegEx.P_AND_NUMBERS, cur_line)
+            regs = StigmaStringParsingLib.get_p_numbers(cur_line)
+            print(cur_line)
             for reg in regs:
                 v_name = self.get_v(reg)
                 self.raw_text[line_num] = cur_line.replace(reg, v_name)
@@ -360,8 +360,10 @@ class SmaliMethodDef:
                     
                     
             #Step 2.5 and 3: Check for high numbered registers in instruction
-            regs = re.findall(StigmaRegEx.V_AND_NUMBERS, cur_line)
-            shadow_map = RegShadowMap(regs)
+            regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
+            #print(cur_line)
+            #print(regs)
+            shadow_map = SmaliMethodDef.RegShadowMap(regs, self.remaining_shadows)
             for reg in regs:
                 v_num = int(reg[1:]) # Get number from v string
                 if v_num > 15:
@@ -373,18 +375,19 @@ class SmaliMethodDef:
                 reg = t[0]
                 
                 block = [smali.BLANK_LINE(),
-                    smali.MOVE16(self.get_shadow(reg), self.get_corresponding(reg)),
+                    smali.MOVE16(shadow_map.get_shadow(reg), shadow_map.get_corresponding(reg)),
                     smali.BLANK_LINE(),
-                    smali.MOVE16(self.get_corresponding(reg), reg)]
+                    smali.MOVE16(shadow_map.get_corresponding(reg), reg)]
                     
-                m.embed_block(line_num, block)
+                self.embed_block(line_num, block)
                 line_num = line_num + len(block)
                 
                 
             # Step 5: re-write this instruction
             for t in shadow_map.tuples:
                 reg = t[0]
-                self.raw_text[line_num] = cur_line.replace(reg, self.get_corresponding(reg))
+                print(shadow_map.tuples)
+                self.raw_text[line_num] = cur_line.replace(reg, shadow_map.get_corresponding(reg))
                 
             
             # Step 6: move block after instruction
@@ -392,11 +395,11 @@ class SmaliMethodDef:
                 reg = t[0]
                 
                 block = [smali.BLANK_LINE(),
-                    smali.MOVE16(reg, self.get_corresponding(reg)),
+                    smali.MOVE16(reg, shadow_map.get_corresponding(reg)),
                     smali.BLANK_LINE(),
-                    smali.MOVE16(self.get_corresponding(reg), self.get_shadow(reg))]
+                    smali.MOVE16(shadow_map.get_corresponding(reg), shadow_map.get_shadow(reg))]
                     
-                m.embed_block(line_num+1, block)
+                self.embed_block(line_num+1, block)
                 line_num = line_num + len(block)
                 
             

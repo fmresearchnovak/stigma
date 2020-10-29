@@ -1,3 +1,5 @@
+import re
+
 BEGINS_WITH_DOT = r"^\s*\."  # oat "assembler" directives begin with a .dot
 BEGINS_WITH_HASHTAG = r"^\s*\#"
 BEGINS_WITH_COLON = r"^\s*:"  # code labels (locations for branches) begin with a colon
@@ -9,9 +11,6 @@ BEGINS_WITH_DOT_END_METHOD = r"^\s*\.end method"  # directive to indicate end of
 BEGINS_WITH_INVOKE = r"^invoke-"
 
 # one space and then a v and then some number of digits and then a comma
-V_AND_NUMBERS = r"\s(v[0-9]+)[,]"  # v and numbers (e.g., v5) are general purpose registers.  I think "v" means "virtual"
-V_AND_P_AND_NUMBERS = r"\s(v[0-9]+)[,]|\s(p[0-9]+)[,]"
-P_AND_NUMBERS = r"\s(p[0-9]+)[,]"
 FIELD_NAME = "->(.+):"
 CLASS_NAME = "(L.+)->"
 PARAMETERS = "[(](.*)[)]"
@@ -42,16 +41,34 @@ ENDS_WITH_RANGE = r"/range"
 
 def get_v_and_p_numbers(line):
     tokens = line.split(" ")
-    print(tokens)
     ans = []
     for token in tokens[1:]:
+        token = token.lstrip("{")
+        token = token.rstrip(",")
+        token = token.rstrip("}")
         if(token != ""):
             if(token[0] == "p" or token[0] == "v"):
-                ans.append(token.rstrip(","))
+                ans.append(token)
             
     return ans
         
 
+
+def get_p_numbers(line):
+    tokens = line.split(" ")
+    ans = []
+    for token in tokens[1:]:
+        token = token.lstrip("{")
+        token = token.rstrip(",")
+        token = token.rstrip("}")
+        if(token != ""):
+            if(token[0] == "p"):
+                ans.append(token)
+            
+    return ans
+        
+
+        
 
 
 # There is also "filled-new-array" instruction

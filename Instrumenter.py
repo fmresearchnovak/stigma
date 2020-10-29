@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import SmaliAssemblyInstructions as smali
-import StigmaRegEx
+import StigmaStringParsingLib
 import re
 
 
@@ -146,11 +146,11 @@ class Instrumenter:
         
         cur_line = m.raw_text[line_num]
 
-        search_object = re.search(StigmaRegEx.BEGINS_WITH_NEW_ARRAY, cur_line)
+        search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_NEW_ARRAY, cur_line)
         if search_object is None:
             return 0
 
-        regs = re.findall(StigmaRegEx.V_AND_P_AND_NUMBERS, cur_line)
+        regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
         
         # create taint field for simple_assign_block() parameters
         taint_field_src = scd.create_taint_field(m.get_name(), regs[1])
@@ -171,11 +171,11 @@ class Instrumenter:
         
         cur_line = m.raw_text[line_num]
 
-        search_object = re.search(StigmaRegEx.BEGINS_WITH_ARRAY_LENGTH, cur_line)
+        search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_ARRAY_LENGTH, cur_line)
         if search_object is None:
             return 0
-
-        regs = re.findall(StigmaRegEx.V_AND_P_AND_NUMBERS, cur_line)
+            
+        regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line) 
 
         taint_field_src = scd.create_taint_field(m.get_name(), regs[1])
         taint_field_dest = scd.create_taint_field(m.get_name(), regs[0])
@@ -192,23 +192,23 @@ class Instrumenter:
     def SGET_instrumentation(scd, m, line_num):
         cur_line = m.raw_text[line_num]
 
-        search_object = re.search(StigmaRegEx.BEGINS_WITH_SGET, cur_line)
+        search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_SGET, cur_line)
         if search_object is None:
             return 0
 
         # the field being referenced may be in another class
         # for now, instrument only same class fields
-        class_name = re.search(StigmaRegEx.CLASS_NAME, cur_line).group(1)
+        class_name = re.search(StigmaStringParsingLib.CLASS_NAME, cur_line).group(1)
         if class_name != scd.class_name:
             return 0
-
-        regs = re.findall(StigmaRegEx.V_AND_P_AND_NUMBERS, cur_line)
+            
+        regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
         
         # get field base name and create corresponding taint field (taint_src)
         # sget-object v0, Ledu/fandm/enovak/leaks/Main;->TAG:Ljava/lang/String;
         # field_base_name = "TAG"
         # taint_field_src = "Ledu/fandm/enovak/leaks/Main;->TAG_TAINT:I;"
-        field_base_name = re.search(StigmaRegEx.FIELD_NAME, cur_line).group(1)
+        field_base_name = re.search(StigmaStringParsingLib.FIELD_NAME, cur_line).group(1)
         taint_field_src = scd.create_taint_field(field_base_name)
 
         taint_field_dest = scd.create_taint_field(m.get_name(), regs[0])
@@ -229,23 +229,23 @@ class Instrumenter:
         
         cur_line = m.raw_text[line_num]
 
-        search_object = re.search(StigmaRegEx.BEGINS_WITH_SPUT, cur_line)
+        search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_SPUT, cur_line)
         if search_object is None:
             return 0
 
         # the field being referenced may be in another class
         # for now, instrument only same class fields
-        class_name = re.search(StigmaRegEx.CLASS_NAME, cur_line).group(1)
+        class_name = re.search(StigmaStringParsingLib.CLASS_NAME, cur_line).group(1)
         if class_name != scd.class_name:
             return 0
-
-        regs = re.findall(StigmaRegEx.V_AND_P_AND_NUMBERS, cur_line)
+            
+        regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
         
         # get field base name and create corresponding taint field (taint_src)
         # sput-object v0, Ledu/fandm/enovak/leaks/Main;->TAG:Ljava/lang/String;
         # field_base_name = "TAG"
         # taint_field_dest = "Ledu/fandm/enovak/leaks/Main;->TAG_TAINT:I;"
-        field_base_name = re.search(StigmaRegEx.FIELD_NAME, cur_line).group(1)
+        field_base_name = re.search(StigmaStringParsingLib.FIELD_NAME, cur_line).group(1)
         taint_field_dest = scd.create_taint_field(field_base_name)
 
         taint_field_src = scd.create_taint_field(m.get_name(), regs[0])
@@ -263,12 +263,12 @@ class Instrumenter:
     def IPUT_instrumentation(scd, m, line_num):
         '''
         cur_line = m.raw_text[line_num]
-        search_object = re.search(StigmaRegEx.BEGINS_WITH_IPUT, cur_line)
+        search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_IPUT, cur_line)
 
         if search_object is None:
             return 0
 
-        regs = re.findall(StigmaRegEx.V_AND_P_AND_NUMBERS, cur_line)
+        regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
 
         second_reg = cur_line.split(", ")[1]
         if second_reg != 'p0':
@@ -292,11 +292,11 @@ class Instrumenter:
     def IGET_instrumentation(scd, m, line_num):
         '''
         cur_line = m.raw_text[line_num]
-        search_object = re.search(StigmaRegEx.BEGINS_WITH_IGET, cur_line)
+        search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_IGET, cur_line)
         if search_object is None:
             return 0
 
-        regs = re.findall(StigmaRegEx.V_AND_P_AND_NUMBERS, cur_line)
+        regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
 
         second_reg = cur_line.split(", ")[1]
 
@@ -323,11 +323,11 @@ class Instrumenter:
         '''
         cur_line = m.raw_text[line_num]
 
-        search_object = re.search(StigmaRegEx.BEGINS_WITH_AGET, cur_line)
+        search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_AGET, cur_line)
         if search_object is None:
             return 0
 
-        regs = re.findall(StigmaRegEx.V_AND_P_AND_NUMBERS, cur_line)
+        regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
         taint_result = scd.create_taint_field(m.get_name(), regs[0])
 
         block = make_comment_block("for AGET")
@@ -344,11 +344,11 @@ class Instrumenter:
     def APUT_instrumentation(scd, m, line_num):
         '''
         cur_line = m.raw_text[line_num]
-        search_object = re.search(StigmaRegEx.BEGINS_WITH_APUT, cur_line)
+        search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_APUT, cur_line)
         if search_object is None:
             return 0
 
-        regs = re.findall(StigmaRegEx.V_AND_P_AND_NUMBERS, cur_line)
+        regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
         taint_result = scd.create_taint_field(m.get_name(), regs[1])
 
         block = make_comment_block("for APUT")
@@ -369,9 +369,7 @@ class Instrumenter:
 
         result_line = m.raw_text[line_num + 2]
 
-        search_object = re.search(StigmaRegEx.V_AND_P_AND_NUMBERS, result_line)
-        # print("search object: " + str(search_object))
-        reg = search_object.group()
+        reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
 
         taint_location = scd.create_taint_field(m.get_name(), reg)
         # 1
@@ -406,7 +404,7 @@ class Instrumenter:
             return 0
 
         # print("line: " + m.raw_text[line_num])
-        results = re.findall(StigmaRegEx.V_AND_P_AND_NUMBERS, m.raw_text[line_num])
+        results = StigmaStringParsingLib.get_v_and_p_numbers(m.raw_text[line_num])
         target_reg = results[1]
         # print("results: " + str(results))
 
@@ -459,10 +457,10 @@ class Instrumenter:
 
         # print("line: " + m.raw_text[line_num])
         
-        # class_name = re.search(StigmaRegEx.CLASS_NAME, cur_line).group(1)
-        results = re.findall(StigmaRegEx.V_AND_P_AND_NUMBERS, m.raw_text[line_num])
+        results = StigmaStringParsingLib.get_v_and_p_numbers(m.raw_text[line_num])
         
-        print("results: " + str(results))
+        #print(m.raw_text[line_num])
+        #print("results: " + str(results))
         target_reg = results[1]
         # print("results: " + str(results))
 
@@ -507,7 +505,7 @@ class Instrumenter:
 
     @staticmethod
     def INTERNAL_FUNCTION_instrumentation(scd, m, line_num):
-        search_object = re.search(StigmaRegEx.BEGINS_WITH_INVOKE, m.raw_text[line_num])
+        search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_INVOKE, m.raw_text[line_num])
         if search_object is None:
             return 0
 
@@ -528,17 +526,17 @@ class Instrumenter:
 
         # get result line
         result_line = m.raw_text[line_num + 2]
-        match_obj = re.match(StigmaRegEx.BEGINS_WITH_MOVE_RESULT, result_line)
+        match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
         if match_obj is None:
             return 0
 
         # print("There is a result line!")
         # print(result_line)
 
-        param_regs = re.findall(StigmaRegEx.V_AND_P_AND_NUMBERS, invoke_line)
+        param_regs = StigmaStringParsingLib.get_v_and_p_numbers(invoke_line)
         # print("param registers: " + str(param_regs))
 
-        result_regs = re.findall(StigmaRegEx.V_AND_P_AND_NUMBERS, result_line)
+        result_regs = StigmaStringParsingLib.get_v_and_p_numbers(result_line)
         # print("result registers: " + str(result_regs))
 
         taint_loc_result = scd.create_taint_field(m.get_name(), result_regs[0])
@@ -586,7 +584,7 @@ class Instrumenter:
 
         # print("line_num: " + str(line_num) )#+ "   line: " + str(m.raw_text[line_num]))
         # find lines that are "invoke" instructions
-        search_object = re.search(StigmaRegEx.BEGINS_WITH_INVOKE, m.raw_text[line_num])
+        search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_INVOKE, m.raw_text[line_num])
         if search_object is None:
             return 0
 
@@ -610,12 +608,12 @@ class Instrumenter:
         # print("\n\n\nEXTERNAL METHOD!")
         # print("name: " + name)
 
-        param_regs = re.findall(StigmaRegEx.V_AND_P_AND_NUMBERS, invoke_line)
+        param_regs = StigmaStringParsingLib.get_v_and_p_numbers(invoke_line)
         # print("param registers: " + str(param_regs))
 
         # get result line
         result_line = m.raw_text[line_num + 2]
-        match_obj = re.match(StigmaRegEx.BEGINS_WITH_MOVE_RESULT, result_line)
+        match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
 
         if match_obj == None:
             return 0
@@ -628,8 +626,7 @@ class Instrumenter:
 
             # print("result registers: " + str(result_regs))
       
-
-        result_regs = re.findall(StigmaRegEx.V_AND_P_AND_NUMBERS, result_line)
+        result_regs = StigmaStringParsingLib.get_v_and_p_numbers(result_line)
         
         taint_loc_result = scd.create_taint_field(m.get_name(), result_regs[0])
 
@@ -655,22 +652,22 @@ class Instrumenter:
         # binary operations
 
         cur_line = m.raw_text[line_num]
-        search_object = re.search(StigmaRegEx.BEGINS_WITH_ADD, cur_line)
+        search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_ADD, cur_line)
         instruction = 'ADD'
         if search_object is None:
-            search_object = re.search(StigmaRegEx.BEGINS_WITH_SUB, cur_line)
+            search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_SUB, cur_line)
             instruction = 'SUB'
         if search_object is None:
-            search_object = re.search(StigmaRegEx.BEGINS_WITH_MUL, cur_line)
+            search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_MUL, cur_line)
             instruction = 'MUL'
         if search_object is None:
-            search_object = re.search(StigmaRegEx.BEGINS_WITH_DIV, cur_line)
+            search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_DIV, cur_line)
             instruction = 'DIV'
         if search_object is None:
             return 0
 
         # should this be REGEX_V_AND_P_NUMBERS?
-        regs = re.findall(StigmaRegEx.V_AND_P_AND_NUMBERS, cur_line)
+        regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
         # print("regs for add instrumenter: " + str(regs))
 
         # I am concerned about instructions of the form
