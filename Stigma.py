@@ -32,7 +32,7 @@ def main():
         print("------------------\n")
 
     # Do the actual instrumentation
-    print("Instrumenting: " + str(class_smali_file))
+    #print("Instrumenting: " + str(class_smali_file))
     scd.instrument()
     #print(scd.class_name)
     # scd.verbose()

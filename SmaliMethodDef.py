@@ -297,7 +297,8 @@ class SmaliMethodDef:
         def get_corresponding(self, reg):
             return self._get(reg, 2)
 
-            
+
+
             
             
     def fix_register_limit(self):
@@ -323,15 +324,12 @@ class SmaliMethodDef:
         line_num = 1;
         while line_num < len(self.raw_text):
             cur_line = str(self.raw_text[line_num])
-            
-            # Don't do any of this on "range" lines or
-            # 
-            search_object = re.match(StigmaStringParsingLib.ENDS_WITH_RANGE, cur_line)
-            
-            if( re.match(StigmaStringParsingLib.ENDS_WITH_RANGE, cur_line) or re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE, cur_line) ):
+            cur_smali_assembly_instruction_obj = smali.parse_line(cur_line)
+            print("obj: " + str(cur_smali_assembly_instruction_obj))
+
+            if(cur_smali_assembly_instruction_obj == None):
                 line_num += 1
                 continue
-                
 
             
             #Step 2: Dereference p registers
@@ -340,7 +338,7 @@ class SmaliMethodDef:
             #         p0, p1, p2
             # even if p1 is a long, there will still be a p2
             # and it will still correspond to v4
-            regs = StigmaStringParsingLib.get_p_numbers(cur_line)
+            regs = cur_smali_assembly_instruction_obj.get_p_registers(cur_line)
             print(cur_line)
             for reg in regs:
                 v_name = self.get_v(reg)
