@@ -1,6 +1,8 @@
 
 import SmaliAssemblyInstructions as smali
 
+# One test for every isntruction in SmaliAssemblyInstructions.py
+# http://pallergabor.uw.hu/androidblog/dalvik_opcodes.html
 
 # second line is intentionally a blank line
 TESTS = ["    nop\n",
@@ -39,7 +41,13 @@ TESTS = ["    nop\n",
 		 "    new-instance v0, Ljava/lang/RuntimeException;\n",
 		 "    array-length v0, p1\n",
 		 "    new-array v1, v0, [J\n",
-		 "    filled-new-array {v0, v1, v2}, [Ljava/lang/String;\n"
+		 "    filled-new-array {v0, v1, v2}, [Ljava/lang/String;\n",
+		 #"    filled-new-array/range {v19..v21}, [B\n",
+		 "    fill-array-data v1, :array_6\n"
+# New test cases can be added by (a) selecting an instruction
+# and then (b) grep-ing some smali for that instruction
+# e.g., suppose we're looking for an example of filled-new-array
+# grep -R -n "filled-new-array" ./apkOutput/*
 
 ]
 

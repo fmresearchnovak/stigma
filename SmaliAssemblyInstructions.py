@@ -6,8 +6,20 @@
 # They correspond to the instructions for smali bytecode as listed
 # here: http://pallergabor.uw.hu/androidblog/dalvik_opcodes.html
 # Implementation is incomplete.  Only the instructions necessary 
-# for taint-tracking implementation of the stigma project are complete
+# for taint-tracking implementation of the stigma project are present.
 
+
+# When adding a new class to this file
+# please consider the class hierarchy so far 
+# (please update this comment)
+#
+# Should the new class be a child of SmaliAssemblyInstruction?
+# Should the new class be a child of MOVE?
+# Should the new class be a child of _SINGLE_DEST_REGISTER_INSTRUCTION?
+#   * Note: _SINGLE_DEST_REGISTER_INSTRUCTION is any instruction that
+#			only one parameter; a register that serves as a destination.
+# Should the new class be a child of CONST?
+# Should the new class be a child of MOVE-RESULT?
 
 
 class SmaliAssemblyInstruction:
@@ -284,6 +296,23 @@ class FILLED_NEW_ARRAY(SmaliAssemblyInstruction):
 	def __repr__(self):
 		reg_string = ", ".join(self.register_list)
 		return "filled-new-array {" + reg_string + "}, " + str(self.type_id)
+
+class FILLED_NEW_ARRAY_RANGE(SmaliAssemblyInstruction):
+	pass
+
+class FILL_ARRAY_DATA(_SINGLE_DEST_REGISTER_INSTRUCTION):
+	def __init__(self, reg_dest, array_label):
+		self.rd = reg_dest
+		self.array_label = array_label
+
+	def __repr__(self):
+		return "fill-array-data " + str(self.rd) + ", " + str(self.array_label)
+
+
+
+
+
+
 
 
 
