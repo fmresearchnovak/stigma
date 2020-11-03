@@ -40,40 +40,62 @@ ENDS_WITH_RANGE = r"/range"
 
 
 
+valid_instructions_list = [x.strip() for x in open("./valid_smali_instructions.txt", "r").readlines()]
 
-def get_v_and_p_numbers(line):
-    line = line.strip()
-    tokens = line.split()
+
+def get_actual_num_registers(line):
+    tokens = break_into_tokens(line)
+    #print("tokens[0]: " + str(tokens[0]))
     number_registers = get_num_register_parameters(tokens[0])
     if number_registers is None:
         number_registers = get_parm_list_num_register_parameters(line)
+    return number_registers
+
+
+def get_v_and_p_numbers(line):
+    tokens = break_into_tokens(line)
+    number_registers = get_actual_num_registers(line)
     relevant_list = tokens[1:number_registers + 1]
     registers = []
     for token in relevant_list:
         registers += re.findall(r"p[0-9]+|v[0-9]+", token)
-    
+        
     return registers
         
 
-
 def get_p_numbers(line):
-    line = line.strip()
-    tokens = line.split()
-    number_registers = get_num_register_parameters(tokens[0])
-    if number_registers is None:
-        number_registers = get_parm_list_num_register_parameters(line)
+    #print("calling get p numbers on: " + line)
+    tokens = break_into_tokens(line)
+    number_registers = get_actual_num_registers(line)
+    #print("number of registers determined to be: "+ str(number_registers))
     relevant_list = tokens[1:number_registers + 1]
     registers = []
-    
     for token in relevant_list:
         registers += re.findall(r"p[0-9]+", token)
-    
+        
+    #print("returning: " + str(registers))
     return registers
     
+def break_into_tokens(line):
+    #print("calling break into tokens on: " + line)
+    line = line.strip()
+    tokens = line.split()
+    return tokens
+    
+def is_valid_instruction(line):
+    global valid_instructions_list
+    tokens = break_into_tokens(line)
+    if(tokens == []):
+        return False
+        
+    opcode = tokens[0]
+    return opcode in valid_instructions_list
 
 def get_num_register_parameters(instr):
+    #print("calling get num register parameters on: " + instr)
     if (has_zero_register_parameters(instr)):
         return 0
+        
     elif (has_one_register_parameters(instr)):
         return 1
 
@@ -86,7 +108,14 @@ def get_num_register_parameters(instr):
     return None
 
 def get_parm_list_num_register_parameters(line):
-    return len(re.search(r"{(.+)}", line).group(0).split())
+    #print("get_param_list_number_register_parameters: " + str(line))
+    result = re.search(r"{(.+)}", line)
+    other_result = re.search(r"{.*}", line)
+    #print("other result: " + str(other_result))
+    if(result == None and (other_result is not None)):
+        return 0
+        
+    return len(result.group(0).split())
 
 def has_zero_register_parameters(instr):
     return instr in ["nop", "return-void", "const-string-jumbo", "goto", "goto/16",
@@ -94,11 +123,12 @@ def has_zero_register_parameters(instr):
 
 
 def has_one_register_parameters(instr):
-    return instr in ["return", "return-wide", "return-object", "const/4",
+    return instr in ["move-result ", "move-result-wide", "move-result-object", "move-result-exception",
+        "return", "return-wide", "return-object", "const/4",
         "const/16", "const", "const/high16", "const-wide/16", "const-wide/32",
         "const-wide", "const-wide/high16", "const-string", "const-string-jumbo",
         "const-class", "monitor-enter", "monitor-exit", "check-cast",
-        "new-instance", "fill-array-data", "throw", "packed-switch", "sparse-switch"
+        "new-instance", "fill-array-data", "throw", "packed-switch", "sparse-switch",
         "if-eqz", "if-nez", "if-ltz", "if-gez", "if-gtz", "if-lez", "sget",
         "sget-wide", "sget-object", "sget-boolean", "sget-byte", "sget-char",
         "sget-short", "sput", "sput-wide", "sput-object", "sput-boolean",
@@ -126,7 +156,7 @@ def has_two_register_parameters(instr):
 
 
 def has_three_register_parameters(instr):
-    return instr in ["cmpl-float", "cmpg-float", "cmpg-double", "cmp-long", "aget",
+    return instr in ["cmpl-float", "cmpg-float", "cmpg-double", "cmpl-double", "cmp-long", "aget",
         "aget-wide", "aget-object", "aget-boolean", "aget-byte", "aget-char",
         "aget-short", "aput", "aput-wide", "aput-object", "aput-boolean", "aput-byte",
         "aput-char", "aput-short", "add-int", "sub-int", "mul-int", "div-int", "rem-int",
@@ -138,6 +168,7 @@ def has_three_register_parameters(instr):
 def main():
     assert(get_v_and_p_numbers("const-string v1, \"Parcelables cannot be written to an OutputStream\"\n") == ["v1"])
     assert(get_v_and_p_numbers("filled-new-array {v0, v1, v2}, [Ljava/lang/String;\n") == ["v0", "v1", "v2"])
+    assert(has_one_register_parameters("if-eqz") == True)
     print("StringParsingLib TESTS PASSED")
 
 

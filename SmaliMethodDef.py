@@ -296,12 +296,16 @@ class SmaliMethodDef:
             
         def get_corresponding(self, reg):
             return self._get(reg, 2)
+            
+        def __str__(self):
+            return str(self.tuples)
 
 
 
             
             
     def fix_register_limit(self):
+        #print("fix_register_limit(" + str(self.signature) + ")")
 
         # Step 1: Make shadow registers
 
@@ -319,13 +323,22 @@ class SmaliMethodDef:
         # The 'corresponding' registers are lower numberd registers that will be used temporarily
         # for a specific instruction
         for i in range(self.get_num_registers() - 16): 
+            print("creating shadow register: " + str(i))
             self.remaining_shadows.append(self.make_new_reg())
+        
+        print("remaining shadows: " + str(self.remaining_shadows))
 
         line_num = 1;
         while line_num < len(self.raw_text):
             cur_line = str(self.raw_text[line_num])
+            
+            # Check if this line is actually a smali instruction (starts with a valid opcode)
+            if(not StigmaStringParsingLib.is_valid_instruction(cur_line)):
+                line_num += 1
+                continue
+            
             # Don't do any of this on "range" lines or
--           # "move" lines
+            # "move" lines
 
             if re.match(StigmaStringParsingLib.ENDS_WITH_RANGE, cur_line) or re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE, cur_line):
                 line_num += 1
@@ -339,10 +352,13 @@ class SmaliMethodDef:
             # even if p1 is a long, there will still be a p2
             # and it will still correspond to v4
             regs = StigmaStringParsingLib.get_p_numbers(cur_line)
-            print(cur_line)
+            #print("all p registers: " + str(regs))
+            #print(cur_line)
             for reg in regs:
                 v_name = self.get_v(reg)
-                self.raw_text[line_num] = cur_line.replace(reg, v_name)
+                #print("v_name: " + str(v_name))
+                cur_line = cur_line.replace(reg, v_name)
+                self.raw_text[line_num] = cur_line
 
 
             #assert(False)
@@ -358,15 +374,16 @@ class SmaliMethodDef:
                     
                     
             #Step 2.5 and 3: Check for high numbered registers in instruction
-            regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
-            #print(cur_line)
-            #print(regs)
+            regs = list(set(StigmaStringParsingLib.get_v_and_p_numbers(cur_line)))
+            print(cur_line)
+            print(regs)
             shadow_map = SmaliMethodDef.RegShadowMap(regs, self.remaining_shadows)
+            print("shadow map: " + str(shadow_map))
             for reg in regs:
                 v_num = int(reg[1:]) # Get number from v string
                 if v_num > 15:
                     shadow_map.insert(reg)
-            
+            print("shadow map: " + str(shadow_map))
             
             # Step 4: move block before instruction
             for t in shadow_map.tuples:
@@ -385,7 +402,18 @@ class SmaliMethodDef:
             for t in shadow_map.tuples:
                 reg = t[0]
                 #print(shadow_map.tuples)
-                self.raw_text[line_num] = cur_line.replace(reg, shadow_map.get_corresponding(reg))
+                tokens = StigmaStringParsingLib.break_into_tokens(cur_line)
+                number_registers = StigmaStringParsingLib.get_actual_num_registers(cur_line)
+                
+                # tokens is everything, we only process up until number_registers
+                for idx in range(number_registers):
+                    tokens[idx+1] = tokens[idx+1].replace(reg, shadow_map.get_corresponding(reg))
+                    
+                new_line = "    " + " ".join(tokens) + "\n"
+                #print("cur_line: " + cur_line)
+                #print("new_line: " + new_line)
+                self.raw_text[line_num] = new_line
+                
                 
             
             # Step 6: move block after instruction
