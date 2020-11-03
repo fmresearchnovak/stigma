@@ -142,14 +142,5 @@ def has_three_register_parameters(instr):
         "rem-float", "add-double", "sub-double", "mul-double", "div-double", "rem-double"]
 
 
-def has_parameter_list(instr):
-    return instr in ["filled-new-array", "invoke-virtual", "invoke-super", "invoke-direct",
-        "invoke-static", "invoke-interface", "execute-inline", "invoke-virtual-quick", 
-        "invoke-super-quick"]
-
-
-def has_parameter_range(instr):
-    return instr.endswith("/range")
-
 '''        
 

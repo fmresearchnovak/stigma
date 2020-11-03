@@ -19,7 +19,7 @@ class SmaliAssemblyInstruction:
 		return []
 
 	def get_p_registers(self):
-		return []
+		return list(filter(lambda x : x[0] == "p", get_registers))
 
 
 class NOP(SmaliAssemblyInstruction):
@@ -54,11 +54,6 @@ class MOVE(SmaliAssemblyInstruction):
 
 	def get_registers(self):
 		return [self.reg1, self.reg2]
-
-	def get_p_registers(self):
-		ans = [self.reg1, self.reg2]
-		ans = filter(lambda x: x[0] == "p", ans)
-		return ans
 
 	def __repr__(self):
 		return "move " + self.reg1 + ", " + self.reg2
@@ -111,11 +106,6 @@ class _SINGLE_DEST_REGISTER_INSTRUCTION(SmaliAssemblyInstruction):
 
 	def get_registers(self):
 		return [self.rd]
-
-	def get_p_registers(self):
-		ans = [self.rd]
-		ans = filter(lambda x: x[0] == "p", ans)
-		return ans
 
 
 class MOVE_RESULT(_SINGLE_DEST_REGISTER_INSTRUCTION):
@@ -214,7 +204,89 @@ class CONST_CLASS(_SINGLE_DEST_REGISTER_INSTRUCTION):
 		self.type_id = type_id
 
 	def __repr__(self):
-		return "const-class " + self.rd + ", " + str(self.type_id)
+		return "const-class " + str(self.rd) + ", " + str(self.type_id)
+
+
+class MONITOR_ENTER(_SINGLE_DEST_REGISTER_INSTRUCTION):
+	def __repr__(self):
+		return "monitor-enter " + str(self.rd)
+		
+class MONITOR_EXIT(_SINGLE_DEST_REGISTER_INSTRUCTION):
+	def __repr__(self):
+		return "monitor-exit " + str(self.rd)
+	
+	
+class CHECK_CAST(_SINGLE_DEST_REGISTER_INSTRUCTION):
+	def __init__(self, reg_dest, type_id):
+		self.rd = reg_dest
+		self.type_id = type_id
+		
+	def __repr__(self):
+		return "check-cast " + str(self.rd) + ", " + str(self.type_id)	
+		
+class INSTANCE_OF(SmaliAssemblyInstruction):
+	def __init__(self, reg_res, reg_arg, type_id):
+		self.rr = reg_res
+		self.ra = reg_arg
+		self.type_id = type_id
+		
+	def get_registers(self):
+		return [self.rr, self.ra]
+		
+	def __repr__(self):
+		return "instance-of " + str(self.rr) + ", " + str(self.ra) + ", " + str(self.type_id)
+		
+class NEW_INSTANCE(SmaliAssemblyInstruction):
+	def __init__(self, reg_dest, type_id):
+		self.rd = reg_dest
+		self.type_id = type_id
+		
+	def get_registers(self):
+		return [self.rd]
+			
+	def __repr__(self):
+		return "new-instance " + str(self.rd) + ", " + str(self.type_id)
+		
+
+
+class ARRAY_LENGTH(SmaliAssemblyInstruction):
+	def __init__(self, reg_dest, reg_array_ref):
+		self.rd = reg_dest
+		self.rar = reg_array_ref
+		
+	def get_registers(self):
+		return [self.rd, self.rar]
+		
+	def __repr__(self):
+		return "array-length " + str(self.rd) + ", " + str(self.rar)
+		
+class NEW_ARRAY(SmaliAssemblyInstruction):
+	def __init__(self, reg_dest, reg_size, type_id):
+		self.rd = reg_dest
+		self.rs = reg_size
+		self.type_id = type_id
+		
+	def get_registers(self):
+		return [self.rd, self.rs]
+		
+	def __repr__(self):
+		return "new-array " + str(self.rd) + ", " + str(self.rs) + ", " + str(self.type_id)		
+
+class FILLED_NEW_ARRAY(SmaliAssemblyInstruction):
+	def __init__(self, element_list, type_id):
+		#print("element list: " + str(element_list))
+		self.register_list = element_list
+		self.type_id = type_id
+
+	def get_registers(self):
+		return self.register_list
+		
+	def __repr__(self):
+		reg_string = ", ".join(self.register_list)
+		return "filled-new-array {" + reg_string + "}, " + str(self.type_id)
+
+
+
 
 
 # should probably combine this somehow with iput
@@ -350,29 +422,44 @@ def parse_line(line):
 	# function to take a list (a string)
 	# and convert it to the appropriate SmaliAssemblyInstruction
 	line = line.strip("\n")
+	
 	tokens = line.split(" ")
 	tokens = list(filter(lambda x: x != "", tokens)) # removes ""
-
 	#print("tokens: " + str(tokens))
-
 	if(len(tokens) == 0):
 		return BLANK_LINE()
 
-	if(tokens[0].startswith("#")):
+
+	opcode = tokens[0]
+	
+	if(opcode.startswith("#")):
 		return COMMENT(line)
 
-	if(tokens[0] == "const-string"):
+	if(opcode == "const-string"):
 		return CONST_STRING(tokens[1].strip(","), line.split("\"")[1])
+	
 
-	opcode = tokens[0].upper()
-	opcode = opcode.replace("/", "_")
-	opcode = opcode.replace("-", "_")
-
-	args = tokens[1:]
-	args = map(lambda x : "\"" + str(x.strip(",")) + "\"", args)
+	if(opcode_has_parameter_list(opcode) or opcode_has_parameter_range(opcode)):
+		start = line.index("{")
+		end = line.index("}")
+		args = line[start+1:end]
+		args = args.split(" ")
+		args = str(list(map(lambda x : x.strip(","), args)))
+		args = [ args ]
+		args.append("\"" + tokens[-1] + "\"")
+		#print("args before: " + str(args))
+		
+	else:
+		args = tokens[1:]
+		#print("args before: " + str(args))
+		args = list(map(lambda x : "\"" + str(x.strip(",")) + "\"", args))
+		
 	#print("args: " + str(args))
 
 
+	opcode = opcode.upper()
+	opcode = opcode.replace("/", "_")
+	opcode = opcode.replace("-", "_")
 
 	# this next part is very very technical and feels
 	# pretty hacky
@@ -391,6 +478,15 @@ def parse_line(line):
 
 	return None
 
+
+def opcode_has_parameter_list(opcode):
+    return opcode in ["filled-new-array", "invoke-virtual", "invoke-super", "invoke-direct",
+        "invoke-static", "invoke-interface", "execute-inline", "invoke-virtual-quick", 
+        "invoke-super-quick"]
+
+
+def opcode_has_parameter_range(opcode):
+    return opcode.endswith("/range")
 
 
 

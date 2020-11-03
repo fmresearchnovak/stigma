@@ -31,7 +31,15 @@ TESTS = ["    nop\n",
 		 "    const-wide/high16 v2, -0x8000000000000000L\n",
 		 "    const-string v1, \"Parcelables cannot be written to an OutputStream\"\n",
 		 "    const-string-jumbo\n", # doesnt' occur in leaks app
-		 "    const-class v4, Landroidx/versionedparcelable/VersionedParcel;\n"
+		 "    const-class v4, Landroidx/versionedparcelable/VersionedParcel;\n",
+		 "    monitor-enter p0\n",
+		 "    monitor-exit p0\n",
+		 "    check-cast v3, Ljava/lang/String;\n",
+		 "    instance-of v0, p1, Ljava/lang/Integer;\n",
+		 "    new-instance v0, Ljava/lang/RuntimeException;\n",
+		 "    array-length v0, p1\n",
+		 "    new-array v1, v0, [J\n",
+		 "    filled-new-array {v0, v1, v2}, [Ljava/lang/String;\n"
 
 ]
 
