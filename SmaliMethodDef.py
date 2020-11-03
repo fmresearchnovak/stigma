@@ -324,10 +324,10 @@ class SmaliMethodDef:
         line_num = 1;
         while line_num < len(self.raw_text):
             cur_line = str(self.raw_text[line_num])
-            cur_smali_assembly_instruction_obj = smali.parse_line(cur_line)
-            print("obj: " + str(cur_smali_assembly_instruction_obj))
+            # Don't do any of this on "range" lines or
+-           # "move" lines
 
-            if(cur_smali_assembly_instruction_obj == None):
+            if re.match(StigmaStringParsingLib.ENDS_WITH_RANGE, cur_line) or re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE, cur_line):
                 line_num += 1
                 continue
 
@@ -338,7 +338,7 @@ class SmaliMethodDef:
             #         p0, p1, p2
             # even if p1 is a long, there will still be a p2
             # and it will still correspond to v4
-            regs = cur_smali_assembly_instruction_obj.get_p_registers(cur_line)
+            regs = StigmaStringParsingLib.get_p_numbers(cur_line)
             print(cur_line)
             for reg in regs:
                 v_name = self.get_v(reg)
@@ -384,7 +384,7 @@ class SmaliMethodDef:
             # Step 5: re-write this instruction
             for t in shadow_map.tuples:
                 reg = t[0]
-                print(shadow_map.tuples)
+                #print(shadow_map.tuples)
                 self.raw_text[line_num] = cur_line.replace(reg, shadow_map.get_corresponding(reg))
                 
             

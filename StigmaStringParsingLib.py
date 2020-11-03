@@ -42,44 +42,38 @@ ENDS_WITH_RANGE = r"/range"
 
 
 def get_v_and_p_numbers(line):
-    tokens = line.split(" ")
-    ans = []
-    for token in tokens[1:]:
-        token = token.lstrip("{")
-        token = token.rstrip(",")
-        token = token.rstrip("}")
-        if(token != ""):
-            if(token[0] == "p" or token[0] == "v"):
-                ans.append(token)
-            
-    return ans
+    line = line.strip()
+    tokens = line.split()
+    number_registers = get_num_register_parameters(tokens[0])
+    if number_registers is None:
+        number_registers = get_parm_list_num_register_parameters(line)
+    relevant_list = tokens[1:number_registers + 1]
+    registers = []
+    for token in relevant_list:
+        registers += re.findall(r"p[0-9]+|v[0-9]+", token)
+    
+    return registers
         
 
 
 def get_p_numbers(line):
-    line = parse_instruction(line)
-
-    # TO-DO: fix this
-    #if(has_parameter_list(line[0]) or has_parameter_range(line[0]):
-
-
-    ans = []
-    for token in tokens[1:]:
-        token = token.lstrip("{")
-        token = token.rstrip(",")
-        token = token.rstrip("}")
-        if(token != ""):
-            if(token[0] == "p"):
-                ans.append(token)
-            
-    return ans
-
-'''
+    line = line.strip()
+    tokens = line.split()
+    number_registers = get_num_register_parameters(tokens[0])
+    if number_registers is None:
+        number_registers = get_parm_list_num_register_parameters(line)
+    relevant_list = tokens[1:number_registers + 1]
+    registers = []
+    
+    for token in relevant_list:
+        registers += re.findall(r"p[0-9]+", token)
+    
+    return registers
+    
 
 def get_num_register_parameters(instr):
     if (has_zero_register_parameters(instr)):
         return 0
-
     elif (has_one_register_parameters(instr)):
         return 1
 
@@ -88,11 +82,11 @@ def get_num_register_parameters(instr):
 
     elif (has_three_register_parameters(instr)):
         return 3
+    
+    return None
 
-
-
-
-
+def get_parm_list_num_register_parameters(line):
+    return len(re.search(r"{(.+)}", line).group(0).split())
 
 def has_zero_register_parameters(instr):
     return instr in ["nop", "return-void", "const-string-jumbo", "goto", "goto/16",
@@ -140,7 +134,14 @@ def has_three_register_parameters(instr):
         "sub-long", "mul-long", "div-long", "rem-long", "and-long", "or-long", "xor-long",
         "shl-long", "shr-long", "ushr-long", "add-float", "sub-float", "mul-float", "div-float",
         "rem-float", "add-double", "sub-double", "mul-double", "div-double", "rem-double"]
+        
+def main():
+    assert(get_v_and_p_numbers("const-string v1, \"Parcelables cannot be written to an OutputStream\"\n") == ["v1"])
+    assert(get_v_and_p_numbers("filled-new-array {v0, v1, v2}, [Ljava/lang/String;\n") == ["v0", "v1", "v2"])
+    print("StringParsingLib TESTS PASSED")
 
 
-'''        
+
+if __name__ == "__main__":
+    main()
 

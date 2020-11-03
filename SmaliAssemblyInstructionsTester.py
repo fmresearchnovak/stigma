@@ -58,7 +58,7 @@ def main():
 		obj = smali.parse_line(cur_line)
 		#print(type(obj), ": " + str(obj))
 		assert(str(obj) == cur_line)
-
+        
 
 
 	print("ALL TESTS PASSED!")
