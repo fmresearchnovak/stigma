@@ -298,6 +298,9 @@ class FILLED_NEW_ARRAY(SmaliAssemblyInstruction):
 		return "filled-new-array {" + reg_string + "}, " + str(self.type_id)
 
 class FILLED_NEW_ARRAY_RANGE(SmaliAssemblyInstruction):
+	# doesn't need to be implemented
+	# because "range" instructions
+	# support higher-numbered registers
 	pass
 
 class FILL_ARRAY_DATA(_SINGLE_DEST_REGISTER_INSTRUCTION):
@@ -307,6 +310,27 @@ class FILL_ARRAY_DATA(_SINGLE_DEST_REGISTER_INSTRUCTION):
 
 	def __repr__(self):
 		return "fill-array-data " + str(self.rd) + ", " + str(self.array_label)
+
+class THROW(_SINGLE_DEST_REGISTER_INSTRUCTION):
+	def __repr__(self):
+		return "throw " + str(self.rd)
+
+
+
+class GOTO(SmaliAssemblyInstruction):
+	def __init__(self, target):
+		self.target = target
+
+	def __repr__(self):
+		return "goto " + str(self.target)
+
+class GOTO_16(GOTO):
+	def __repr__(self):
+		return "goto/16 " + str(self.target)
+
+class GOTO_32(GOTO):
+	def __repr__(self):
+		return "goto/32 " + str(self.target)
 
 
 

@@ -8,14 +8,14 @@ import SmaliAssemblyInstructions as smali
 TESTS = ["    nop\n",
 		 "    \n",
 		 "    move v6, p5\n",
-		 "    move16 v6, v24\n", # doesn't exist?
+		 "    move16 v6, v24\n", # synthetic example
 		 "    move/from16 v5, v26\n",
 		 "    move-wide v14, v7\n",
 		 "    move-wide/from16 v15, p3\n",
-		 "    move-wide16 v12, p2\n", # doesn't exist?
+		 "    move-wide16 v12, p2\n", # synthetic example
 		 "    move-object v4, v3\n",
 		 "    move-object/from16 v5, v31\n",
-		 "    move-object16 v2, v3\n", # doesn't exist?
+		 "    move-object16 v2, v3\n", # synthetic example
 		 "    move-result v0\n", 
 		 "    move-result-wide v3\n",
 		 "    move-result-object v3\n",
@@ -32,7 +32,7 @@ TESTS = ["    nop\n",
 		 "    const-wide v4, 0x100000000L\n",
 		 "    const-wide/high16 v2, -0x8000000000000000L\n",
 		 "    const-string v1, \"Parcelables cannot be written to an OutputStream\"\n",
-		 "    const-string-jumbo\n", # doesnt' occur in leaks app
+		 "    const-string-jumbo\n", # synthetic example
 		 "    const-class v4, Landroidx/versionedparcelable/VersionedParcel;\n",
 		 "    monitor-enter p0\n",
 		 "    monitor-exit p0\n",
@@ -43,7 +43,11 @@ TESTS = ["    nop\n",
 		 "    new-array v1, v0, [J\n",
 		 "    filled-new-array {v0, v1, v2}, [Ljava/lang/String;\n",
 		 #"    filled-new-array/range {v19..v21}, [B\n",
-		 "    fill-array-data v1, :array_6\n"
+		 "    fill-array-data v1, :array_6\n",
+		 "    throw v1\n",
+		 "    goto :goto_0\n",
+		 "    goto/32 :goto_0\n", # synthetic example
+		 "    goto/16 :goto_0\n"  # synthetic example
 # New test cases can be added by (a) selecting an instruction
 # and then (b) grep-ing some smali for that instruction
 # e.g., suppose we're looking for an example of filled-new-array
