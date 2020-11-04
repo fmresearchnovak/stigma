@@ -43,19 +43,21 @@ ENDS_WITH_RANGE = r"/range"
 valid_instructions_list = [x.strip() for x in open("./valid_smali_instructions.txt", "r").readlines()]
 
 
-def get_actual_num_registers(line):
+def get_num_registers(line):
     tokens = break_into_tokens(line)
     #print("tokens[0]: " + str(tokens[0]))
     number_registers = get_num_register_parameters(tokens[0])
     if number_registers is None:
-        number_registers = get_parm_list_num_register_parameters(line)
+        number_registers = _param_list_len(line)
     return number_registers
 
 
 def get_v_and_p_numbers(line):
+    number_registers = get_num_registers(line)
+
     tokens = break_into_tokens(line)
-    number_registers = get_actual_num_registers(line)
     relevant_list = tokens[1:number_registers + 1]
+
     registers = []
     for token in relevant_list:
         registers += re.findall(r"p[0-9]+|v[0-9]+", token)
@@ -64,18 +66,11 @@ def get_v_and_p_numbers(line):
         
 
 def get_p_numbers(line):
-    #print("calling get p numbers on: " + line)
-    tokens = break_into_tokens(line)
-    number_registers = get_actual_num_registers(line)
-    #print("number of registers determined to be: "+ str(number_registers))
-    relevant_list = tokens[1:number_registers + 1]
-    registers = []
-    for token in relevant_list:
-        registers += re.findall(r"p[0-9]+", token)
-        
-    #print("returning: " + str(registers))
-    return registers
+    registers = get_v_and_p_numbers(line)
+    p_only_registers = list(filter(lambda x : x[0] == "p"), registers)
+    return p_only_registers
     
+
 def break_into_tokens(line):
     #print("calling break into tokens on: " + line)
     line = line.strip()
@@ -84,6 +79,10 @@ def break_into_tokens(line):
     
 def is_valid_instruction(line):
     global valid_instructions_list
+    # valid_instructions_list 
+    # is global so reading from file 
+    # only happens once (not sure if 
+    # this is truely necessary)
     tokens = break_into_tokens(line)
     if(tokens == []):
         return False
@@ -107,7 +106,8 @@ def get_num_register_parameters(instr):
     
     return None
 
-def get_parm_list_num_register_parameters(line):
+
+def _param_list_len(line):
     #print("get_param_list_number_register_parameters: " + str(line))
     result = re.search(r"{(.+)}", line)
     other_result = re.search(r"{.*}", line)
@@ -116,6 +116,7 @@ def get_parm_list_num_register_parameters(line):
         return 0
         
     return len(result.group(0).split())
+
 
 def has_zero_register_parameters(instr):
     return instr in ["nop", "return-void", "const-string-jumbo", "goto", "goto/16",
@@ -166,10 +167,15 @@ def has_three_register_parameters(instr):
         "rem-float", "add-double", "sub-double", "mul-double", "div-double", "rem-double"]
         
 def main():
+    print("Minimal Tests for String Parsing Library")
+
     assert(get_v_and_p_numbers("const-string v1, \"Parcelables cannot be written to an OutputStream\"\n") == ["v1"])
     assert(get_v_and_p_numbers("filled-new-array {v0, v1, v2}, [Ljava/lang/String;\n") == ["v0", "v1", "v2"])
     assert(has_one_register_parameters("if-eqz") == True)
-    print("StringParsingLib TESTS PASSED")
+    assert(_param_list_len("filled-new-array {v0, v1, v2}, [Ljava/lang/String;\n") == 3)
+    assert(get_num_registers("const-string v1, \"hard example: v2\"\n") == 1)
+
+    print("ALL TESTS PASSED")
 
 
 

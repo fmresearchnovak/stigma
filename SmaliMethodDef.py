@@ -403,7 +403,7 @@ class SmaliMethodDef:
                 reg = t[0]
                 #print(shadow_map.tuples)
                 tokens = StigmaStringParsingLib.break_into_tokens(cur_line)
-                number_registers = StigmaStringParsingLib.get_actual_num_registers(cur_line)
+                number_registers = StigmaStringParsingLib.get_num_registers(cur_line)
                 
                 # tokens is everything, we only process up until number_registers
                 for idx in range(number_registers):
