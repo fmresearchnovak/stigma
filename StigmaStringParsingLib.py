@@ -67,7 +67,7 @@ def get_v_and_p_numbers(line):
 
 def get_p_numbers(line):
     registers = get_v_and_p_numbers(line)
-    p_only_registers = list(filter(lambda x : x[0] == "p"), registers)
+    p_only_registers = list(filter(lambda x : x[0] == "p", registers))
     return p_only_registers
     
 
@@ -171,6 +171,10 @@ def main():
 
     assert(get_v_and_p_numbers("const-string v1, \"Parcelables cannot be written to an OutputStream\"\n") == ["v1"])
     assert(get_v_and_p_numbers("filled-new-array {v0, v1, v2}, [Ljava/lang/String;\n") == ["v0", "v1", "v2"])
+
+    assert(get_p_numbers("const-string p0, \"Parcelables cannot be written to an OutputStream\"\n") == ["p0"])
+    assert(get_p_numbers("filled-new-array {v0, p1, v2}, [Ljava/lang/String;\n") == ["p1"])
+
     assert(has_one_register_parameters("if-eqz") == True)
     assert(_param_list_len("filled-new-array {v0, v1, v2}, [Ljava/lang/String;\n") == 3)
     assert(get_num_registers("const-string v1, \"hard example: v2\"\n") == 1)
