@@ -302,7 +302,33 @@ class SmaliMethodDef:
 
 
 
-            
+    @staticmethod
+    def _should_skip_line_frl(cur_line):
+        # We need to check the instruction
+        # some instructions don't need to have their register
+        # limit fixed.  Such as:
+        # * pre-existing move instructions
+        # * */range
+        # * cmpl-double   (weird example IMHO: http://pallergabor.uw.hu/androidblog/dalvik_opcodes.html)
+        # * move/from16 vx,vy # Moves the content of vy into vx. vy may be in the 64k register range while vx is one of the first 256 registers.
+
+        # Check if this line is actually a smali instruction (starts with a valid opcode)
+        if(not StigmaStringParsingLib.is_valid_instruction(cur_line)):
+            return True
+        
+        # Don't run on "range" lines, they can support higher numbered
+        # registers
+        if (re.match(StigmaStringParsingLib.ENDS_WITH_RANGE, cur_line)):
+            return True 
+
+        # don't touch "move" lines, basic "move" opcode can support
+        # as high as v255.  We assume that we will never see any
+        # higher v number as a result of our tracking / instrumentation
+        if(re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE, cur_line)):
+            return True
+
+        return False
+
             
     def fix_register_limit(self):
         #print("fix_register_limit(" + str(self.signature) + ")")
@@ -323,24 +349,17 @@ class SmaliMethodDef:
         # The 'corresponding' registers are lower numberd registers that will be used temporarily
         # for a specific instruction
         for i in range(self.get_num_registers() - 16): 
-            print("creating shadow register: " + str(i))
+            #print("creating shadow register: " + str(i))
             self.remaining_shadows.append(self.make_new_reg())
         
-        print("remaining shadows: " + str(self.remaining_shadows))
+        #print("remaining shadows: " + str(self.remaining_shadows))
 
         line_num = 1;
         while line_num < len(self.raw_text):
             cur_line = str(self.raw_text[line_num])
             
-            # Check if this line is actually a smali instruction (starts with a valid opcode)
-            if(not StigmaStringParsingLib.is_valid_instruction(cur_line)):
-                line_num += 1
-                continue
-            
-            # Don't do any of this on "range" lines or
-            # "move" lines
-
-            if re.match(StigmaStringParsingLib.ENDS_WITH_RANGE, cur_line) or re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE, cur_line):
+            # identify lines that should be skipped
+            if(SmaliMethodDef._should_skip_line_frl(cur_line)):
                 line_num += 1
                 continue
 
@@ -359,31 +378,19 @@ class SmaliMethodDef:
                 #print("v_name: " + str(v_name))
                 cur_line = cur_line.replace(reg, v_name)
                 self.raw_text[line_num] = cur_line
-
-
-            #assert(False)
-            # We need to check the instruction
-            # some instructions don't need to have their register
-            # limit fixed right?  Such as:
-            # * pre-existing move instructions
-            # * */range
-            # * cmpl-double   (weird example IMHO: http://pallergabor.uw.hu/androidblog/dalvik_opcodes.html)
-            # move/from16 vx,vy # Moves the content of vy into vx. vy may be in the 64k register range while vx is one of the first 256 registers.
-            
-            # what are the instructions that can / cannot handle large number instructions
-                    
+    
                     
             #Step 2.5 and 3: Check for high numbered registers in instruction
             regs = list(set(StigmaStringParsingLib.get_v_and_p_numbers(cur_line)))
-            print(cur_line)
-            print(regs)
+            #print(cur_line)
+            #print(regs)
             shadow_map = SmaliMethodDef.RegShadowMap(regs, self.remaining_shadows)
-            print("shadow map: " + str(shadow_map))
+            #print("shadow map: " + str(shadow_map))
             for reg in regs:
                 v_num = int(reg[1:]) # Get number from v string
                 if v_num > 15:
                     shadow_map.insert(reg)
-            print("shadow map: " + str(shadow_map))
+            #print("shadow map: " + str(shadow_map))
             
             # Step 4: move block before instruction
             for t in shadow_map.tuples:
@@ -453,3 +460,23 @@ class SmaliMethodDef:
         else:
             return False
             
+
+
+
+def tests():
+    print("Testing SmaliMethodDef Functions")
+
+    print("\t_should_skip_line_frl...")
+    assert(SmaliMethodDef._should_skip_line_frl("    .locals 3\n"))
+    assert(SmaliMethodDef._should_skip_line_frl("    filled-new-array/range {v19..v21}, [B\n"))
+    assert(SmaliMethodDef._should_skip_line_frl("    move-wide16 v12, p2\n"))
+    assert(SmaliMethodDef._should_skip_line_frl("    new-array v1, v0, [J\n") == False)
+
+
+    print("ALL TESTS PASSED!")
+
+
+
+
+if __name__ == "__main__":
+    tests()
