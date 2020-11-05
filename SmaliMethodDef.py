@@ -326,6 +326,7 @@ class SmaliMethodDef:
         # don't touch "move" lines, basic "move" opcode can support
         # as high as v255.  We assume that we will never see any
         # higher v number as a result of our tracking / instrumentation
+        # move-result v16  might be a problem?
         if(re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE, cur_line)):
             return True
 
@@ -354,6 +355,13 @@ class SmaliMethodDef:
         p_num = int(p_register[1:])
         corresponding_v_num = locals_num + p_num
         return "v" + str(corresponding_v_num)
+        
+    def _unique_frl(elements):
+        ans = []
+        for item in elements:
+            if(item not in ans):
+                ans.append(item)
+        return ans
 
     @staticmethod
     def _build_shadow_map_frl(cur_line, remaining_shadows):
@@ -365,7 +373,7 @@ class SmaliMethodDef:
         # guarantees that the contents of regs are unique elements
         # only.  This is important for an instruction like
         # add-int v0, v2, v2  which has duplicates
-        regs = list(set(StigmaStringParsingLib.get_v_and_p_numbers(cur_line)))
+        regs = SmaliMethodDef._unique_frl(StigmaStringParsingLib.get_v_and_p_numbers(cur_line))
         shadow_map = SmaliMethodDef.RegShadowMap(regs, remaining_shadows)
 
         # note: regs should should be only v registers
@@ -520,13 +528,29 @@ def tests():
 
 
     print("\t_build_shadow_map_frl...")
-    remaining_shadows = ["v17"]
-    soln_shadow_map = SmaliMethodDef.RegShadowMap("v16", remaining_shadows)
-    soln_shadow_map.tuples = [("v16", "v17", "v0")]
+    # originally .locals = 16 and there is 1 parameters  (p0 = v16)
+    remaining_shadows = ["v16"]
+    soln_shadow_map = SmaliMethodDef.RegShadowMap(["v17"], remaining_shadows)
+    soln_shadow_map.tuples = [("v17", "v16", "v0")]
     soln_shadow_map.new_remaining_shadows.pop()
-    soln_shadow_map.instruction_regs = ["v16"]
-    test1_shadow_map = SmaliMethodDef._build_shadow_map_frl("    throw v16\n", remaining_shadows)
+    test1_shadow_map = SmaliMethodDef._build_shadow_map_frl("    throw v17\n", remaining_shadows)
     assert(test1_shadow_map == soln_shadow_map)
+    
+    
+    
+    print("\t_unique_frl...")
+    assert(SmaliMethodDef._unique_frl([4, 5, 4]) == [4, 5])
+    
+    
+    # originally .locals = 17 and there is 2 parameter (p0 = v17 and p1 = v18)
+    remaining_shadows = [ "v17", "v18", "v19"]
+    soln_shadow_map = SmaliMethodDef.RegShadowMap(["v16", "v21"], remaining_shadows)
+    soln_shadow_map.tuples = [("v16", "v19", "v0"),("v21", "v18", "v1")]
+    soln_shadow_map.new_remaining_shadows.pop()
+    soln_shadow_map.new_remaining_shadows.pop()
+    test2_shadow_map = SmaliMethodDef._build_shadow_map_frl("    array-length v16, v21\n", remaining_shadows)
+    #print(test2_shadow_map)
+    assert(test2_shadow_map == soln_shadow_map)
 
     print("ALL TESTS PASSED!")
 
