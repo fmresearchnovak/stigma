@@ -336,6 +336,10 @@ class SmaliMethodDef:
             re.match("^\s*move-object/from16", cur_line)):
             return True
 
+        tokens = StigmaStringParsingLib.break_into_tokens(cur_line)
+        if ("range" in tokens[0]):
+            return True
+        
         return False
 
 
@@ -555,6 +559,7 @@ def tests():
     assert(SmaliMethodDef._should_skip_line_frl("    move-wide/16 v12, p2\n"))
     assert(SmaliMethodDef._should_skip_line_frl("    new-array v1, v0, [J\n") == False)
     assert(SmaliMethodDef._should_skip_line_frl("    move-object v1, v0 \n") == False)
+    assert(SmaliMethodDef._should_skip_line_frl("    invoke-super-quick/range {v0..v5}"))
 
 
     print("\t_get_v_frl...")
