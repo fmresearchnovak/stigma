@@ -231,12 +231,6 @@ class SmaliMethodDef:
         
     
     
-    def get_v(self, p_register):
-        # e.g., p23
-        # print("p_register: " + str(p_register))
-        p_num = int(p_register[1:])
-        corresponding_v_num = self.get_locals_directive_num() + p_num
-        return "v" + str(corresponding_v_num)
         
         
         
@@ -329,6 +323,30 @@ class SmaliMethodDef:
 
         return False
 
+
+    @staticmethod
+    def _dereference_p_registers_frl(cur_line, locals_num):
+        # Step 2, de-reference p registers
+        # Replace all instances of pX with corresponding vY
+        # v0, v1, v2, v3, v4
+        #         p0, p1, p2
+        # even if p1 is a long, there will still be a p2
+        # and it will still correspond to v4
+
+        p_regs = StigmaStringParsingLib.get_p_numbers(cur_line)
+        for reg in p_regs:
+            v_name = SmaliMethodDef._get_v_frl(reg, locals_num)
+            cur_line = cur_line.replace(reg, v_name)
+        return cur_line
+
+
+    @staticmethod
+    def _get_v_frl(p_register, locals_num):
+        # e.g., _get_v_frl(p2, 2) -> v4
+        p_num = int(p_register[1:])
+        corresponding_v_num = locals_num + p_num
+        return "v" + str(corresponding_v_num)
+
             
     def fix_register_limit(self):
         #print("fix_register_limit(" + str(self.signature) + ")")
@@ -365,19 +383,9 @@ class SmaliMethodDef:
 
             
             #Step 2: Dereference p registers
-            # Replace all instances of pX with corresponding vY
-            # v0, v1, v2, v3, v4
-            #         p0, p1, p2
-            # even if p1 is a long, there will still be a p2
-            # and it will still correspond to v4
-            regs = StigmaStringParsingLib.get_p_numbers(cur_line)
-            #print("all p registers: " + str(regs))
-            #print(cur_line)
-            for reg in regs:
-                v_name = self.get_v(reg)
-                #print("v_name: " + str(v_name))
-                cur_line = cur_line.replace(reg, v_name)
-                self.raw_text[line_num] = cur_line
+            locals_num = self.get_locals_directive_num()
+            cur_line = SmaliMethodDef._dereference_p_registers_frl(cur_line, locals_num)
+            self.raw_text[line_num] = cur_line
     
                     
             #Step 2.5 and 3: Check for high numbered registers in instruction
@@ -472,6 +480,18 @@ def tests():
     assert(SmaliMethodDef._should_skip_line_frl("    move-wide16 v12, p2\n"))
     assert(SmaliMethodDef._should_skip_line_frl("    new-array v1, v0, [J\n") == False)
 
+
+    print("\t_get_v_frl...")
+    assert(SmaliMethodDef._get_v_frl("p2", 2) == "v4")
+    assert(SmaliMethodDef._get_v_frl("p0", 5) == "v5")
+    assert(SmaliMethodDef._get_v_frl("p0", 0) == "v0")
+    assert(SmaliMethodDef._get_v_frl("p3", 0) == "v3")
+
+
+    print("\t_dereference_p_registers_frl...")
+    assert(SmaliMethodDef._dereference_p_registers_frl("    filled-new-array {v0, v1, p2}, [Ljava/lang/String;\n", 2) == "    filled-new-array {v0, v1, v4}, [Ljava/lang/String;\n")
+    assert(SmaliMethodDef._dereference_p_registers_frl("    throw p1\n", 16) == "    throw v17\n")
+    assert(SmaliMethodDef._dereference_p_registers_frl("    filled-new-array {p0, p1, p2}, [Ljava/lang/String;\n", 2) == "    filled-new-array {v2, v3, v4}, [Ljava/lang/String;\n")
 
     print("ALL TESTS PASSED!")
 
