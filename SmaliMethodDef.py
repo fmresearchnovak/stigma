@@ -386,7 +386,34 @@ class SmaliMethodDef:
         #print("shadow map: " + str(shadow_map))
 
         return shadow_map
-
+        
+        
+    @staticmethod
+    def _create_before_move_block_frl(shadow_map):
+        block = [smali.COMMENT("FRL MOVE ADDED BY STIGMA")]
+        for t in shadow_map.tuples:
+            reg = t[0]
+            block += [smali.BLANK_LINE(),
+                smali.MOVE16(shadow_map.get_shadow(reg), shadow_map.get_corresponding(reg)),
+                smali.BLANK_LINE(),
+                smali.MOVE16(shadow_map.get_corresponding(reg), reg)]
+        return block
+    
+    @staticmethod
+    def _create_after_move_block_frl(shadow_map):
+        block = []
+        for t in shadow_map.tuples:
+            reg = t[0]
+            
+            block += [smali.BLANK_LINE(),
+                smali.MOVE16(reg, shadow_map.get_corresponding(reg)),
+                smali.BLANK_LINE(),
+                smali.MOVE16(shadow_map.get_corresponding(reg), shadow_map.get_shadow(reg))]
+                
+        block += [smali.COMMENT("FRL MOVE ADDED BY STIGMA END")]
+        
+        return block
+        
             
     def fix_register_limit(self):
         #print("fix_register_limit(" + str(self.signature) + ")")
@@ -434,47 +461,36 @@ class SmaliMethodDef:
             
 
             # Step 4: move block before instruction
-            for t in shadow_map.tuples:
-                reg = t[0]
-                
-                block = [smali.BLANK_LINE(),
-                    smali.MOVE16(shadow_map.get_shadow(reg), shadow_map.get_corresponding(reg)),
-                    smali.BLANK_LINE(),
-                    smali.MOVE16(shadow_map.get_corresponding(reg), reg)]
-                    
-                self.embed_block(line_num, block)
-                line_num = line_num + len(block)
+            block = _create_before_move_block_frl(shadow_map)
+                  
+            self.embed_block(line_num, block)
+            line_num = line_num + len(block)
                 
                 
             # Step 5: re-write this instruction
+            tokens = StigmaStringParsingLib.break_into_tokens(cur_line)
+            
             for t in shadow_map.tuples:
                 reg = t[0]
                 #print(shadow_map.tuples)
-                tokens = StigmaStringParsingLib.break_into_tokens(cur_line)
+                
                 number_registers = StigmaStringParsingLib.get_num_registers(cur_line)
                 
                 # tokens is everything, we only process up until number_registers
                 for idx in range(number_registers):
                     tokens[idx+1] = tokens[idx+1].replace(reg, shadow_map.get_corresponding(reg))
                     
-                new_line = "    " + " ".join(tokens) + "\n"
+                cur_line = "    " + " ".join(tokens) + "\n"
                 #print("cur_line: " + cur_line)
                 #print("new_line: " + new_line)
-                self.raw_text[line_num] = new_line
-                
+                self.raw_text[line_num] = cur_line
                 
             
             # Step 6: move block after instruction
-            for t in shadow_map.tuples:
-                reg = t[0]
-                
-                block = [smali.BLANK_LINE(),
-                    smali.MOVE16(reg, shadow_map.get_corresponding(reg)),
-                    smali.BLANK_LINE(),
-                    smali.MOVE16(shadow_map.get_corresponding(reg), shadow_map.get_shadow(reg))]
+            block = _create_after_move_block_frl(shadow_map)
                     
-                self.embed_block(line_num+1, block)
-                line_num = line_num + len(block)
+            self.embed_block(line_num+1, block)
+            line_num = line_num + len(block)
                 
             
                     
@@ -551,6 +567,29 @@ def tests():
     test2_shadow_map = SmaliMethodDef._build_shadow_map_frl("    array-length v16, v21\n", remaining_shadows)
     #print(test2_shadow_map)
     assert(test2_shadow_map == soln_shadow_map)
+    
+    print("\t_create_before_move_block_frl...")
+    sol_before_block = [smali.COMMENT("FRL MOVE ADDED BY STIGMA"), 
+    smali.BLANK_LINE(), 
+    smali.MOVE16("v19", "v0"), smali.BLANK_LINE(), 
+    smali.MOVE16("v0", "v16"),
+    smali.BLANK_LINE(), smali.MOVE16("v18", "v1"), smali.BLANK_LINE(), 
+     smali.MOVE16("v1", "v21")]
+    #print(sol_before_block)
+    #print(SmaliMethodDef._create_before_move_block_frl(test2_shadow_map))
+    assert(SmaliMethodDef._create_before_move_block_frl(test2_shadow_map) == sol_before_block)
+    
+    print("\t_create_after_move_block_frl...")
+    sol_after_block = [ 
+    smali.BLANK_LINE(), 
+    smali.MOVE16("v16", "v0"), smali.BLANK_LINE(), 
+    smali.MOVE16("v0", "v19"),
+    smali.BLANK_LINE(), smali.MOVE16("v21", "v1"), smali.BLANK_LINE(), 
+    smali.MOVE16("v1", "v18"), 
+    smali.COMMENT("FRL MOVE ADDED BY STIGMA END")]
+    #print(sol_after_block)
+    #print(SmaliMethodDef._create_after_move_block_frl(test2_shadow_map))
+    assert(SmaliMethodDef._create_after_move_block_frl(test2_shadow_map) == sol_after_block)
 
     print("ALL TESTS PASSED!")
 
