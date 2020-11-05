@@ -306,6 +306,7 @@ class SmaliMethodDef:
 
     @staticmethod
     def _should_skip_line_frl(cur_line):
+        print(cur_line)
         # We need to check the instruction
         # some instructions don't need to have their register
         # limit fixed.  Such as:
@@ -327,7 +328,12 @@ class SmaliMethodDef:
         # as high as v255.  We assume that we will never see any
         # higher v number as a result of our tracking / instrumentation
         # move-result v16  might be a problem?
-        if(re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE, cur_line)):
+        if(re.match("^\s*move/16", cur_line) or 
+            re.match("^\s*move/from16", cur_line) or
+            re.match("^\s*move-wide/from16", cur_line) or
+            re.match("^\s*move-wide/16", cur_line) or
+            re.match("^\s*move-object/16", cur_line) or 
+            re.match("^\s*move-object/from16", cur_line)):
             return True
 
         return False
@@ -393,7 +399,6 @@ class SmaliMethodDef:
         #Step 4
         #mv shadow corr
         #mv corr high
-        
         block = [smali.COMMENT("FRL MOVE ADDED BY STIGMA")]
         for t in shadow_map.tuples:
             reg = t[0]
@@ -489,6 +494,9 @@ class SmaliMethodDef:
                     
             #Step 2.5 and 3: build shadow map
             shadow_map = SmaliMethodDef._build_shadow_map_frl(cur_line, remaining_shadows)
+            if len(shadow_map.tuples) == 0:
+                line_num += 1
+                continue
             
 
             # Step 4: move block before instruction
@@ -544,8 +552,9 @@ def tests():
     print("\t_should_skip_line_frl...")
     assert(SmaliMethodDef._should_skip_line_frl("    .locals 3\n"))
     assert(SmaliMethodDef._should_skip_line_frl("    filled-new-array/range {v19..v21}, [B\n"))
-    assert(SmaliMethodDef._should_skip_line_frl("    move-wide16 v12, p2\n"))
+    assert(SmaliMethodDef._should_skip_line_frl("    move-wide/16 v12, p2\n"))
     assert(SmaliMethodDef._should_skip_line_frl("    new-array v1, v0, [J\n") == False)
+    assert(SmaliMethodDef._should_skip_line_frl("    move-object v1, v0 \n") == False)
 
 
     print("\t_get_v_frl...")

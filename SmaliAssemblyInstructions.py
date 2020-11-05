@@ -77,7 +77,7 @@ class MOVE16(MOVE):
     # this might not exist
     # I couldn't find any occurrences in the smali of leaks
     def __repr__(self):
-        return "move16 " + self.reg1 + ", " + self.reg2
+        return "move/16 " + self.reg1 + ", " + self.reg2
 
 # This is a problem
 # I need the class name to be MOVE/FROM16
