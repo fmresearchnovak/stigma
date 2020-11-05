@@ -390,6 +390,10 @@ class SmaliMethodDef:
         
     @staticmethod
     def _create_before_move_block_frl(shadow_map):
+        #Step 4
+        #mv shadow corr
+        #mv corr high
+        
         block = [smali.COMMENT("FRL MOVE ADDED BY STIGMA")]
         for t in shadow_map.tuples:
             reg = t[0]
@@ -400,7 +404,33 @@ class SmaliMethodDef:
         return block
     
     @staticmethod
+    def _rewrite_instruction_frl(shadow_map, cur_line):
+        #Step 5
+        #Replace high numbered with corresponding in instruction
+        
+        tokens = StigmaStringParsingLib.break_into_tokens(cur_line)
+        
+        for t in shadow_map.tuples:
+            reg = t[0]
+            #print(shadow_map.tuples)
+            
+            number_registers = StigmaStringParsingLib.get_num_registers(cur_line)
+            
+            # tokens is everything, we only process up until number_registers
+            for idx in range(number_registers):
+                tokens[idx+1] = tokens[idx+1].replace(reg, shadow_map.get_corresponding(reg))
+                
+            cur_line = "    " + " ".join(tokens) + "\n"
+            #print("cur_line: " + cur_line)
+            #print("new_line: " + new_line)
+        return cur_line
+    
+    @staticmethod
     def _create_after_move_block_frl(shadow_map):
+        #Step 6
+        #mv high corr
+        #mv corr shadow
+        
         block = []
         for t in shadow_map.tuples:
             reg = t[0]
@@ -414,6 +444,7 @@ class SmaliMethodDef:
         
         return block
         
+    
             
     def fix_register_limit(self):
         #print("fix_register_limit(" + str(self.signature) + ")")
@@ -468,22 +499,9 @@ class SmaliMethodDef:
                 
                 
             # Step 5: re-write this instruction
-            tokens = StigmaStringParsingLib.break_into_tokens(cur_line)
-            
-            for t in shadow_map.tuples:
-                reg = t[0]
-                #print(shadow_map.tuples)
-                
-                number_registers = StigmaStringParsingLib.get_num_registers(cur_line)
-                
-                # tokens is everything, we only process up until number_registers
-                for idx in range(number_registers):
-                    tokens[idx+1] = tokens[idx+1].replace(reg, shadow_map.get_corresponding(reg))
-                    
-                cur_line = "    " + " ".join(tokens) + "\n"
-                #print("cur_line: " + cur_line)
-                #print("new_line: " + new_line)
-                self.raw_text[line_num] = cur_line
+            cur_line = SmaliMethodDef._rewrite_instruction_frl(shadow_map, cur_line)
+           
+            self.raw_text[line_num] = cur_line
                 
             
             # Step 6: move block after instruction
@@ -590,6 +608,11 @@ def tests():
     #print(sol_after_block)
     #print(SmaliMethodDef._create_after_move_block_frl(test2_shadow_map))
     assert(SmaliMethodDef._create_after_move_block_frl(test2_shadow_map) == sol_after_block)
+    
+    print("\t_rewrite_instruction_frl...")
+    test2_shadow_map = SmaliMethodDef._build_shadow_map_frl("    array-length v16, v21\n", remaining_shadows)
+    assert(SmaliMethodDef._rewrite_instruction_frl(test2_shadow_map, "    array-length v16, v21\n") == "    array-length v0, v1\n")
+    
 
     print("ALL TESTS PASSED!")
 
