@@ -113,8 +113,6 @@ class SmaliMethodDef:
         
         self.signature = SmaliMethodSignature(self.raw_text[0])
         #print(self.signature)
-        
-        self.remaining_shadows = []
 
 
 
@@ -252,6 +250,10 @@ class SmaliMethodDef:
         def __init__(self, instruction_regs, rem_shadows):
             #3-tuple format: (high, shadow, corr)
             self.tuples = []
+
+            # deep copy is provided by the slice
+            # but I think it's unnecessary since
+            # this list was passed into this function
             self.new_remaining_shadows = rem_shadows[:]
             self.instruction_regs = instruction_regs
 
@@ -293,6 +295,12 @@ class SmaliMethodDef:
             
         def __str__(self):
             return str(self.tuples)
+
+        def __eq__(self, other):
+            parta = (self.tuples == other.tuples)
+            partb = (self.new_remaining_shadows == other.new_remaining_shadows)
+            partc = (self.instruction_regs == other.instruction_regs)
+            return parta and partb and partc
 
 
 
@@ -347,6 +355,30 @@ class SmaliMethodDef:
         corresponding_v_num = locals_num + p_num
         return "v" + str(corresponding_v_num)
 
+    @staticmethod
+    def _build_shadow_map_frl(cur_line, remaining_shadows):
+        # Step 2.5 and 3
+        # 2.5: Check for high numbered registers in instruction
+        # 3: Build shadow map
+
+        # converting from a list back to a set back to a list
+        # guarantees that the contents of regs are unique elements
+        # only.  This is important for an instruction like
+        # add-int v0, v2, v2  which has duplicates
+        regs = list(set(StigmaStringParsingLib.get_v_and_p_numbers(cur_line)))
+        shadow_map = SmaliMethodDef.RegShadowMap(regs, remaining_shadows)
+
+        # note: regs should should be only v registers
+        # because of the de-reference p that happenened
+        # earlier (in step 2)
+        for reg in regs:
+            v_num = int(reg[1:]) # Get number from v string
+            if v_num > 15:
+                shadow_map.insert(reg)
+        #print("shadow map: " + str(shadow_map))
+
+        return shadow_map
+
             
     def fix_register_limit(self):
         #print("fix_register_limit(" + str(self.signature) + ")")
@@ -366,9 +398,10 @@ class SmaliMethodDef:
         # v17 up to v21 are the shadow registers (free temp registers) that we can use as general purpose
         # The 'corresponding' registers are lower numberd registers that will be used temporarily
         # for a specific instruction
+        remaining_shadows = []
         for i in range(self.get_num_registers() - 16): 
             #print("creating shadow register: " + str(i))
-            self.remaining_shadows.append(self.make_new_reg())
+            remaining_shadows.append(self.make_new_reg())
         
         #print("remaining shadows: " + str(self.remaining_shadows))
 
@@ -388,18 +421,10 @@ class SmaliMethodDef:
             self.raw_text[line_num] = cur_line
     
                     
-            #Step 2.5 and 3: Check for high numbered registers in instruction
-            regs = list(set(StigmaStringParsingLib.get_v_and_p_numbers(cur_line)))
-            #print(cur_line)
-            #print(regs)
-            shadow_map = SmaliMethodDef.RegShadowMap(regs, self.remaining_shadows)
-            #print("shadow map: " + str(shadow_map))
-            for reg in regs:
-                v_num = int(reg[1:]) # Get number from v string
-                if v_num > 15:
-                    shadow_map.insert(reg)
-            #print("shadow map: " + str(shadow_map))
+            #Step 2.5 and 3: build shadow map
+            shadow_map = SmaliMethodDef._build_shadow_map_frl(cur_line, remaining_shadows)
             
+
             # Step 4: move block before instruction
             for t in shadow_map.tuples:
                 reg = t[0]
@@ -492,6 +517,16 @@ def tests():
     assert(SmaliMethodDef._dereference_p_registers_frl("    filled-new-array {v0, v1, p2}, [Ljava/lang/String;\n", 2) == "    filled-new-array {v0, v1, v4}, [Ljava/lang/String;\n")
     assert(SmaliMethodDef._dereference_p_registers_frl("    throw p1\n", 16) == "    throw v17\n")
     assert(SmaliMethodDef._dereference_p_registers_frl("    filled-new-array {p0, p1, p2}, [Ljava/lang/String;\n", 2) == "    filled-new-array {v2, v3, v4}, [Ljava/lang/String;\n")
+
+
+    print("\t_build_shadow_map_frl...")
+    remaining_shadows = ["v17"]
+    soln_shadow_map = SmaliMethodDef.RegShadowMap("v16", remaining_shadows)
+    soln_shadow_map.tuples = [("v16", "v17", "v0")]
+    soln_shadow_map.new_remaining_shadows.pop()
+    soln_shadow_map.instruction_regs = ["v16"]
+    test1_shadow_map = SmaliMethodDef._build_shadow_map_frl("    throw v16\n", remaining_shadows)
+    assert(test1_shadow_map == soln_shadow_map)
 
     print("ALL TESTS PASSED!")
 
