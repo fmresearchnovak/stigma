@@ -492,7 +492,7 @@ class SmaliMethodDef:
             
 
             # Step 4: move block before instruction
-            block = _create_before_move_block_frl(shadow_map)
+            block = SmaliMethodDef._create_before_move_block_frl(shadow_map)
                   
             self.embed_block(line_num, block)
             line_num = line_num + len(block)
@@ -505,7 +505,7 @@ class SmaliMethodDef:
                 
             
             # Step 6: move block after instruction
-            block = _create_after_move_block_frl(shadow_map)
+            block = SmaliMethodDef._create_after_move_block_frl(shadow_map)
                     
             self.embed_block(line_num+1, block)
             line_num = line_num + len(block)
