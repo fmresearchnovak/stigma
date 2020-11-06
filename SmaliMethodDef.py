@@ -306,7 +306,7 @@ class SmaliMethodDef:
 
     @staticmethod
     def _should_skip_line_frl(cur_line):
-        print(cur_line)
+        #print(cur_line)
         # We need to check the instruction
         # some instructions don't need to have their register
         # limit fixed.  Such as:
@@ -407,9 +407,11 @@ class SmaliMethodDef:
         for t in shadow_map.tuples:
             reg = t[0]
             block += [smali.BLANK_LINE(),
-                smali.MOVE16(shadow_map.get_shadow(reg), shadow_map.get_corresponding(reg)),
+                smali.CONST_4(shadow_map.get_shadow(reg), "0x0"),
                 smali.BLANK_LINE(),
-                smali.MOVE16(shadow_map.get_corresponding(reg), reg)]
+                smali.MOVE_16(shadow_map.get_shadow(reg), shadow_map.get_corresponding(reg)),
+                smali.BLANK_LINE(),
+                smali.MOVE_16(shadow_map.get_corresponding(reg), reg)]
         return block
     
     @staticmethod
@@ -445,9 +447,9 @@ class SmaliMethodDef:
             reg = t[0]
             
             block += [smali.BLANK_LINE(),
-                smali.MOVE16(reg, shadow_map.get_corresponding(reg)),
+                smali.MOVE_16(reg, shadow_map.get_corresponding(reg)),
                 smali.BLANK_LINE(),
-                smali.MOVE16(shadow_map.get_corresponding(reg), shadow_map.get_shadow(reg))]
+                smali.MOVE_16(shadow_map.get_corresponding(reg), shadow_map.get_shadow(reg))]
                 
         block += [smali.COMMENT("FRL MOVE ADDED BY STIGMA END")]
         
@@ -593,6 +595,7 @@ def tests():
     # originally .locals = 17 and there is 2 parameter (p0 = v17 and p1 = v18)
     remaining_shadows = [ "v17", "v18", "v19"]
     soln_shadow_map = SmaliMethodDef.RegShadowMap(["v16", "v21"], remaining_shadows)
+                               #reg   #shad  #corr
     soln_shadow_map.tuples = [("v16", "v19", "v0"),("v21", "v18", "v1")]
     soln_shadow_map.new_remaining_shadows.pop()
     soln_shadow_map.new_remaining_shadows.pop()
@@ -602,22 +605,32 @@ def tests():
     
     print("\t_create_before_move_block_frl...")
     sol_before_block = [smali.COMMENT("FRL MOVE ADDED BY STIGMA"), 
+    smali.BLANK_LINE(),
+    smali.CONST_4("v19", "0x0"),
+    smali.BLANK_LINE(),
+    smali.MOVE_16("v19", "v0"), 
     smali.BLANK_LINE(), 
-    smali.MOVE16("v19", "v0"), smali.BLANK_LINE(), 
-    smali.MOVE16("v0", "v16"),
-    smali.BLANK_LINE(), smali.MOVE16("v18", "v1"), smali.BLANK_LINE(), 
-     smali.MOVE16("v1", "v21")]
+    smali.MOVE_16("v0", "v16"),
+    smali.BLANK_LINE(), 
+    smali.CONST_4("v18", "0x0"),
+    smali.BLANK_LINE(),
+    smali.MOVE_16("v18", "v1"), 
+    smali.BLANK_LINE(), 
+    smali.MOVE_16("v1", "v21")]
     #print(sol_before_block)
     #print(SmaliMethodDef._create_before_move_block_frl(test2_shadow_map))
     assert(SmaliMethodDef._create_before_move_block_frl(test2_shadow_map) == sol_before_block)
     
     print("\t_create_after_move_block_frl...")
-    sol_after_block = [ 
+    sol_after_block = [
     smali.BLANK_LINE(), 
-    smali.MOVE16("v16", "v0"), smali.BLANK_LINE(), 
-    smali.MOVE16("v0", "v19"),
-    smali.BLANK_LINE(), smali.MOVE16("v21", "v1"), smali.BLANK_LINE(), 
-    smali.MOVE16("v1", "v18"), 
+    smali.MOVE_16("v16", "v0"), 
+    smali.BLANK_LINE(), 
+    smali.MOVE_16("v0", "v19"),
+    smali.BLANK_LINE(), 
+    smali.MOVE_16("v21", "v1"), 
+    smali.BLANK_LINE(), 
+    smali.MOVE_16("v1", "v18"), 
     smali.COMMENT("FRL MOVE ADDED BY STIGMA END")]
     #print(sol_after_block)
     #print(SmaliMethodDef._create_after_move_block_frl(test2_shadow_map))

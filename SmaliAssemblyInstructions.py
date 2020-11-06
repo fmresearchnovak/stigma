@@ -73,7 +73,7 @@ class MOVE(SmaliAssemblyInstruction):
         return "move " + self.reg1 + ", " + self.reg2
 
 
-class MOVE16(MOVE):
+class MOVE_16(MOVE):
     # this might not exist
     # I couldn't find any occurrences in the smali of leaks
     def __repr__(self):
@@ -82,7 +82,7 @@ class MOVE16(MOVE):
 # This is a problem
 # I need the class name to be MOVE/FROM16
 # but "/" is not a valid character in a class name
-class MOVE_FROM16(MOVE):
+class MOVE_FROM_16(MOVE):
     def __repr__(self):
         return "move/from16 " + self.reg1 + ", " + self.reg2
 
@@ -93,11 +93,11 @@ class MOVE_WIDE(MOVE):
     def __repr__(self):
         return "move-wide " + self.reg1 + ", " + self.reg2
 
-class MOVE_WIDE_FROM16(MOVE):
+class MOVE_WIDE_FROM_16(MOVE):
     def __repr__(self):
         return "move-wide/from16 " + self.reg1 + ", " + self.reg2
 
-class MOVE_WIDE16(MOVE):
+class MOVE_WIDE_16(MOVE):
     def __repr__(self):
         return "move-wide16 " + self.reg1 + ", " + self.reg2
 
@@ -105,11 +105,11 @@ class MOVE_OBJECT(MOVE):
     def __repr__(self):
         return "move-object " + self.reg1 + ", " + self.reg2
 
-class MOVE_OBJECT_FROM16(MOVE):
+class MOVE_OBJECT_FROM_16(MOVE):
     def __repr__(self):
         return "move-object/from16 " + self.reg1 + ", " + self.reg2
 
-class MOVE_OBJECT16(MOVE):
+class MOVE_OBJECT_16(MOVE):
     def __repr__(self):
         return "move-object16 " + self.reg1 + ", " + self.reg2
 
