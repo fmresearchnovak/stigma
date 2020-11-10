@@ -73,7 +73,7 @@ class MOVE(SmaliAssemblyInstruction):
         return "move " + self.reg1 + ", " + self.reg2
 
 
-class MOVE16(MOVE):
+class MOVE_16(MOVE):
     # this might not exist
     # I couldn't find any occurrences in the smali of leaks
     def __repr__(self):
@@ -97,9 +97,9 @@ class MOVE_WIDE_FROM16(MOVE):
     def __repr__(self):
         return "move-wide/from16 " + self.reg1 + ", " + self.reg2
 
-class MOVE_WIDE16(MOVE):
+class MOVE_WIDE_16(MOVE):
     def __repr__(self):
-        return "move-wide16 " + self.reg1 + ", " + self.reg2
+        return "move-wide/16 " + self.reg1 + ", " + self.reg2
 
 class MOVE_OBJECT(MOVE):
     def __repr__(self):
@@ -115,6 +115,7 @@ class MOVE_OBJECT16(MOVE):
 
 
 class _SINGLE_DEST_REGISTER_INSTRUCTION(SmaliAssemblyInstruction):
+	# A parent class that should never be instantiated directly.
     def __init__(self, reg_dest):
         self.rd = reg_dest
 
@@ -317,8 +318,6 @@ class THROW(_SINGLE_DEST_REGISTER_INSTRUCTION):
     def __repr__(self):
         return "throw " + str(self.rd)
 
-
-
 class GOTO(SmaliAssemblyInstruction):
     def __init__(self, target):
         self.target = target
@@ -333,6 +332,153 @@ class GOTO_16(GOTO):
 class GOTO_32(GOTO):
     def __repr__(self):
         return "goto/32 " + str(self.target)
+
+
+class PACKED_SWITCH(_SINGLE_DEST_REGISTER_INSTRUCTION):
+	# NOTE: there is a .packed-switch and .sparse-switch
+	# compiler directive in smali
+	# e.g., .packed-switch -0x9
+	def __init__(self, reg_dest, table):
+			self.rd = reg_dest
+			self.table = table
+			
+	def __repr__(self):
+		return "packed-switch " + str(self.rd) + ", " + str(self.table)
+
+class SPARSE_SWITCH(PACKED_SWITCH):
+	def __repr__(self):
+		return "sparse-switch " + str(self.rd) + ", " + str(self.table)
+
+
+class _TRIPLE_REGISTER_INSTRUCTION(SmaliAssemblyInstruction):
+	# A parent class that should never be instantiated directly
+	def __init__(self, reg_dest, reg_arg1, reg_arg2):
+		self.rd = reg_dest
+		self.ra1 = reg_arg1
+		self.ra2 = reg_arg2
+		
+	def get_registers(self):
+		return [self.rd, self.ra1, self.ra2]
+		
+	def __repr__(self):
+		return self.opcode() + " " + self.rd + ", " + self.ra1 + ", " + self.ra2
+		
+		
+class CMPL_FLOAT(_TRIPLE_REGISTER_INSTRUCTION):
+	def opcode(self):
+		return "cmpl-float"
+		
+class CMPG_FLOAT(_TRIPLE_REGISTER_INSTRUCTION):
+	def opcode(self):
+		return "cmpg-float"
+		
+class CMPL_DOUBLE(_TRIPLE_REGISTER_INSTRUCTION):
+	def opcode(self):
+		return "cmpl-double"
+		
+class CMPG_DOUBLE(_TRIPLE_REGISTER_INSTRUCTION):
+	def opcode(self):
+		return "cmpg-double"
+		
+class CMP_LONG(_TRIPLE_REGISTER_INSTRUCTION):
+	def opcode(self):
+		return "cmp-long"
+		
+class _TWO_REG_EQ(SmaliAssemblyInstruction):
+	# A parent class that should never be instantiated directly
+	def __init__(self, reg_arg1, reg_arg2, target):
+		self.ra1 = reg_arg1
+		self.ra2 = reg_arg2
+		self.target = target
+		
+	def get_registers(self):
+		return [self.ra1, self.ra2]
+		
+	def __repr__(self):
+		return self.opcode() + " " + str(self.ra1) + ", " + str(self.ra2) + ", " + str(self.target)
+		
+class IF_EQ(_TWO_REG_EQ):
+	def opcode(self):
+		return "if-eq"
+		
+class IF_NE(_TWO_REG_EQ):
+	def opcode(self):
+		return "if-ne"
+		
+class IF_LT(_TWO_REG_EQ):
+	def opcode(self):
+		return "if-lt"
+		
+class IF_GE(_TWO_REG_EQ):
+	def opcode(self):
+		return "if-ge"
+		
+class IF_GT(_TWO_REG_EQ):
+	def opcode(self):
+		return "if-gt"
+		
+class IF_LE(_TWO_REG_EQ):
+	def opcode(self):
+		return "if-le"
+		
+		
+class _ONE_REG_EQ_ZERO(SmaliAssemblyInstruction):
+	# A parent class that should never be instantiated correctly
+	def __init__(self, reg_arg, target):
+		self.ra = reg_arg
+		self.target = target
+		
+	def get_registers(self):
+		return [self.ra]
+		
+	def __repr__(self):
+		# It might be necessary to use repr(self.target)
+		# here because self.target might be a smali.LABEL
+        # object or it might be a string.  
+        
+        # If it is a smali.LABEL object
+        # then we use repr to get a string that does not contain
+        # the preceding four spaces and trailing \n which would be 
+        # redundant LABELS are weird because it is possible to use a 
+        # LABEL in-line
+        
+        # This could be a bug in other classes, maybe re-write 
+        # the LABEL(SmaliAssemblyInstruction) class
+		return self.opcode() + " " + str(self.ra) + ", " + str(self.target)
+		
+
+class IF_EQZ(_ONE_REG_EQ_ZERO):
+	def opcode(self):
+		return "if-eqz"
+		
+class IF_NEZ(_ONE_REG_EQ_ZERO):
+	def opcode(self):
+		return "if-nez"
+
+class IF_LTZ(_ONE_REG_EQ_ZERO):
+	def opcode(self):
+		return "if-ltz"
+		
+class IF_GEZ(_ONE_REG_EQ_ZERO):
+	def opcode(self):
+		return "if-gez"
+		
+class IF_GTZ(_ONE_REG_EQ_ZERO):
+	def opcode(self):
+		return "if-gtz"
+		
+class IF_LEZ(_ONE_REG_EQ_ZERO):
+	def opcode(self):
+		return "if-lez"		
+
+		
+			
+		
+
+
+
+
+
 
 
 
@@ -397,20 +543,6 @@ class SPUT(SmaliAssemblyInstruction):
 
 
 
-
-
-class IF_EQZ(SmaliAssemblyInstruction):
-    def __init__(self, reg, label):
-        self.reg = reg
-        self.label = label
-
-    def __repr__(self):
-        # the repr is necessary here because self.label might be a smali.LABEL
-        # object or it might be a string.  If it is a smali.LABEL object
-        # then we use repr to get a string that does not contain
-        # the preceding four spaces and trailing \n which would be redundant
-        # LABELS are weird because it is possible to use a LABEL in-line as seen here
-        return "if-eqz " + self.reg + ", " + repr(self.label)
 
 
 class OR_INT(SmaliAssemblyInstruction):
