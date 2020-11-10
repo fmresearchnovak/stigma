@@ -66,7 +66,11 @@ TESTS = ["    nop\n",
 		 "    if-ltz v0, :cond_7\n",
 		 "    if-gez v0, :cond_0\n",
 		 "    if-gtz v5, :cond_0\n",
-		 "    if-lez v0, :cond_0\n"
+		 "    if-lez v0, :cond_0\n",
+         "    aget v0, v0, v1\n",
+         "    aput v1, v0, v2\n",
+         "    iget-object v0, p0, Landroidx/transition/TransitionSet$1;->val$nextTransition:Landroidx/transition/Transition;\n",
+         "    iput p2, p0, Landroidx/transition/TransitionSet$1;->val$nextTransition:Landroidx/transition/Transition;\n"
 		 
 # New test cases can be added by (a) selecting an instruction
 # and then (b) grep-ing some smali for that instruction

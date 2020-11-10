@@ -22,7 +22,8 @@
 # Should the new class be a child of MOVE-RESULT?
 
 
-class SmaliAssemblyInstruction:
+
+class SmaliAssemblyInstruction():
 
     def __str__(self):
         return "    " + repr(self) + "\n"
@@ -35,8 +36,32 @@ class SmaliAssemblyInstruction:
 
     def __eq__(self, other):
         return repr(self) == repr(other)
+    
+    def get_move(reg1, reg2):
+        return MOVE_16(reg1, reg2)
 
-class NOP(SmaliAssemblyInstruction):
+class NormalMovable():
+      def get_move(self, reg1, reg2):
+        return MOVE_16(reg1, reg2)
+
+class WideMovable():
+    def get_move(self, reg1, reg2):
+        return MOVE_WIDE_16(reg1, reg2)
+
+class ObjectMovable():
+    def get_move(self, reg1, reg2):
+        return MOVE_OBJECT16(reg1, reg2)
+    
+class VaryingMovable():
+    def get_move(self):
+        raise NotImplementedError("get_move() not implemented by VaryingMovable")
+        
+class NonMovable():
+    def get_move(self):
+        raise ValueError("get_move() called on NoneMovable")
+    
+
+class NOP(SmaliAssemblyInstruction, NonMovable):
     def __init__(self):
         pass
 
@@ -44,7 +69,7 @@ class NOP(SmaliAssemblyInstruction):
         return "nop"
 
 
-class BLANK_LINE(SmaliAssemblyInstruction):
+class BLANK_LINE(SmaliAssemblyInstruction, NonMovable):
     def __init__(self):
         pass
 
@@ -52,7 +77,7 @@ class BLANK_LINE(SmaliAssemblyInstruction):
         return ""
 
 
-class COMMENT(SmaliAssemblyInstruction):
+class COMMENT(SmaliAssemblyInstruction, NonMovable):
     def __init__(self, line):
         self.l = line
 
@@ -61,7 +86,7 @@ class COMMENT(SmaliAssemblyInstruction):
 
 
 
-class MOVE(SmaliAssemblyInstruction):
+class MOVE(SmaliAssemblyInstruction, NormalMovable):
     def __init__(self, reg1, reg2):
         self.reg1 = reg1
         self.reg2 = reg2
@@ -73,7 +98,7 @@ class MOVE(SmaliAssemblyInstruction):
         return "move " + self.reg1 + ", " + self.reg2
 
 
-class MOVE_16(MOVE):
+class MOVE_16(MOVE, NormalMovable):
     # this might not exist
     # I couldn't find any occurrences in the smali of leaks
     def __repr__(self):
@@ -82,34 +107,34 @@ class MOVE_16(MOVE):
 # This is a problem
 # I need the class name to be MOVE/FROM16
 # but "/" is not a valid character in a class name
-class MOVE_FROM16(MOVE):
+class MOVE_FROM16(MOVE, NormalMovable):
     def __repr__(self):
         return "move/from16 " + self.reg1 + ", " + self.reg2
 
 # This is a problem
 # I need the class name to be MOVE-WIDE
 # but "-" is not a valid character in a class name
-class MOVE_WIDE(MOVE):
+class MOVE_WIDE(MOVE, WideMovable):
     def __repr__(self):
         return "move-wide " + self.reg1 + ", " + self.reg2
 
-class MOVE_WIDE_FROM16(MOVE):
+class MOVE_WIDE_FROM16(MOVE, WideMovable):
     def __repr__(self):
         return "move-wide/from16 " + self.reg1 + ", " + self.reg2
 
-class MOVE_WIDE_16(MOVE):
+class MOVE_WIDE_16(MOVE, WideMovable):
     def __repr__(self):
         return "move-wide/16 " + self.reg1 + ", " + self.reg2
 
-class MOVE_OBJECT(MOVE):
+class MOVE_OBJECT(MOVE, ObjectMovable):
     def __repr__(self):
         return "move-object " + self.reg1 + ", " + self.reg2
 
-class MOVE_OBJECT_FROM16(MOVE):
+class MOVE_OBJECT_FROM16(MOVE, ObjectMovable):
     def __repr__(self):
         return "move-object/from16 " + self.reg1 + ", " + self.reg2
 
-class MOVE_OBJECT16(MOVE):
+class MOVE_OBJECT16(MOVE, ObjectMovable):
     def __repr__(self):
         return "move-object16 " + self.reg1 + ", " + self.reg2
 
@@ -123,34 +148,34 @@ class _SINGLE_DEST_REGISTER_INSTRUCTION(SmaliAssemblyInstruction):
         return [self.rd]
 
 
-class MOVE_RESULT(_SINGLE_DEST_REGISTER_INSTRUCTION):
+class MOVE_RESULT(_SINGLE_DEST_REGISTER_INSTRUCTION, NormalMovable):
 
     def __repr__(self):
         return "move-result " + self.rd
 
-class MOVE_RESULT_WIDE(MOVE_RESULT):
+class MOVE_RESULT_WIDE(MOVE_RESULT, WideMovable):
     def __repr__(self):
         return "move-result-wide " + self.rd
 
-class MOVE_RESULT_OBJECT(MOVE_RESULT):
+class MOVE_RESULT_OBJECT(MOVE_RESULT, ObjectMovable):
     def __repr__(self):
         return "move-result-object " + self.rd
 
-class MOVE_EXCEPTION(MOVE_RESULT):
+class MOVE_EXCEPTION(MOVE_RESULT, ObjectMovable):
     def __repr__(self):
         return "move-exception " + self.rd
 
 
 
-class RETURN_VOID(SmaliAssemblyInstruction):
+class RETURN_VOID(SmaliAssemblyInstruction, NonMovable):
     def __repr__(self):
         return "return-void"
 
-class RETURN(_SINGLE_DEST_REGISTER_INSTRUCTION):
+class RETURN(_SINGLE_DEST_REGISTER_INSTRUCTION, NormalMovable):
     def __repr__(self):
         return "return " + self.rd
 
-class RETURN_WIDE(_SINGLE_DEST_REGISTER_INSTRUCTION):
+class RETURN_WIDE(_SINGLE_DEST_REGISTER_INSTRUCTION): ## STOPPED HERE
     def __repr__(self):
         return "return-wide " + self.rd
 
@@ -474,47 +499,142 @@ class IF_LEZ(_ONE_REG_EQ_ZERO):
 		
 			
 		
+class AGET(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "aget"
+
+class AGET_WIDE(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "aget-wide"
+
+class AGET_OBJECT(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "aget-object"
+
+class AGET_BOOLEAN(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "aget-boolean"
+
+class AGET_BYTE(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "aget-byte"
+
+class AGET_CHAR(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "aget-char"
+
+class AGET_SHORT(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "aget-short"
+#aput vx,vy,vz
+
+class APUT(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "aput"
+
+class APUT_WIDE(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "aput-wide"
+
+class APUT_OBJECT(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "aput-object"
+
+class APUT_BOOLEAN(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "aput-boolean"
+
+class APUT_BYTE(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "aput-byte"
+
+class APUT_CHAR(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "aput-char"
+
+class APUT_SHORT(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "aput-short"
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-# should probably combine this somehow with iput
-class IGET(SmaliAssemblyInstruction):
-
-    def __init__(self, reg_dest, reg_calling_instance, class_name, instance_field_name):
+class _I_INSTRUCTION(SmaliAssemblyInstruction):
+    #   Backward compatibility with how we call IGET() in Instrument
+    def __init__(self, reg_dest, reg_calling_instance, class_name , instance_field_name = ""): 
         self.rd = reg_dest
         self.rci = reg_calling_instance
-        self.cn = class_name
-        self.ifn = instance_field_name
+        if instance_field_name != "":
+            cn = class_name
+            ifn = instance_field_name
+            self.field_id =  cn + "->" + ifn
+        else:
+            self.field_id = class_name
+
+        
+    def get_registers(self):
+        return [self.rd, self.rci]
 
     def __repr__(self):
-        return "iget " + self.rd + ", " + self.rci + ", " + self.cn + "->" + self.ifn
+        return self.opcode() + " " + self.rd + ", " + self.rci + ", " + self.field_id
 
+class IGET(_I_INSTRUCTION):
+    def opcode(self):
+        return "iget"
 
-# should probably combine this somehow with iget
-class IPUT(SmaliAssemblyInstruction):
-    def __init__(self, reg_src, reg_calling_instance, class_name, instance_field_name):
-        self.rs = reg_src
-        self.rci = reg_calling_instance
-        self.cn = class_name
-        self.ifn = instance_field_name
+        
+class IGET_WIDE(_I_INSTRUCTION):
+    def opcode(self):
+        return "iget-wide"
+        
+class IGET_OBJECT(_I_INSTRUCTION):
+    def opcode(self):
+        return "iget-object"
 
-    def __repr__(self):
-        return "iput " + self.rs + ", " + self.rci + ", " + self.cn + "->" + self.ifn
+class IGET_BOOLEN(_I_INSTRUCTION):
+    def opcode(self):
+        return "iget-boolean"
 
+class IGET_BYTE(_I_INSTRUCTION):
+    def opcode(self):
+        return "iget-byte"
 
+class IGET_CHAR(_I_INSTRUCTION):
+    def opcode(self):
+        return "iget-char"
+
+class IGET_SHORT(_I_INSTRUCTION):
+    def opcode(self):
+        return "iget-short"
+
+class IPUT(_I_INSTRUCTION):
+    def opcode(self):
+        return "iput"
+        
+class IPUT_WIDE(_I_INSTRUCTION):
+    def opcode(self):
+        return "iput-wide"
+        
+class IPUT_OBJECT(_I_INSTRUCTION):
+    def opcode(self):
+        return "iput-object"
+
+class IPUT_BOOLEN(_I_INSTRUCTION):
+    def opcode(self):
+        return "iput-boolean"
+
+class IPUT_BYTE(_I_INSTRUCTION):
+    def opcode(self):
+        return "iput-byte"
+
+class IPUT_CHAR(_I_INSTRUCTION):
+    def opcode(self):
+        return "iput-char"
+
+class IPUT_SHORT(_I_INSTRUCTION):
+    def opcode(self):
+        return "iput-short"
 
 
 

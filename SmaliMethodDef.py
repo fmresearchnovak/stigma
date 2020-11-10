@@ -406,6 +406,8 @@ class SmaliMethodDef:
         block = [smali.COMMENT("FRL MOVE ADDED BY STIGMA")]
         for t in shadow_map.tuples:
             reg = t[0]
+            #move = corline_obj.getmovetype(a, corr)
+            #move = curline_obj.getmovetype(reg)
             block += [smali.BLANK_LINE(),
                 smali.MOVE16(shadow_map.get_shadow(reg), shadow_map.get_corresponding(reg)),
                 smali.BLANK_LINE(),
