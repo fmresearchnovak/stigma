@@ -106,7 +106,7 @@ class SmaliMethodDef:
 
         self.num_jumps = 0 # not used except for a sanity check
 
-        self.ORIGINAL_NUMER_REGS = self.get_locals_directive_num()
+        self.ORIGINAL_LOCAL_NUMBER_REGS = self.get_locals_directive_num()
         self.reg_number_float = self.ORIGINAL_NUMER_REGS
 
         self.scd = scd # smali class definition
@@ -114,6 +114,7 @@ class SmaliMethodDef:
         self.signature = SmaliMethodSignature(self.raw_text[0])
         #print(self.signature)
 
+        self.ORIGINAL_NUM_REGISTERS = self.get_num_registers()
 
 
 
@@ -194,7 +195,7 @@ class SmaliMethodDef:
     # several instrumentation lines into one method.
     # This first became an issue with EXTERNAL_FUNCTION_instrumentation
     def free_reg(self):
-        if self.reg_number_float == self.ORIGINAL_NUMER_REGS:
+        if self.reg_number_float == self.ORIGINAL_LOCAL_NUMBER_REGS:
             raise Exception("No registers to free!")
 
         self.reg_number_float -= 1
@@ -399,19 +400,79 @@ class SmaliMethodDef:
         
         
     @staticmethod
-    def _create_before_move_block_frl(shadow_map):
+    def _update_hashmap_frl(move_type_hashmap, cur_line):
+        # this creates a hashmap that indicates for each register
+        # what the corresponding move instruction must be used
+        # in order to move that register (assuming that register
+        # will be used on the RIGHT hand side of the move
+        #
+        # e.g., suppose v0 is a long, we should use move-wide/16 vx, v0
+        
+        # In order to know that v0 is a long, there must have been
+        # an instruction that writes a long value to v0 
+        # (that is, v0 is the destination register in such an instruction)
+        # All such instructions are in WIDE_MOVE_LIST
+        
+        # This function is called on every (original) instruction
+        # of smali code
+        opcode = StigmaStringParsingLib.break_into_tokens(cur_line)[0]
+        key_reg = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)[0]
+        
+        if opcode in StigmaStringParsingLib.WORD_MOVE_LIST:
+            move_type_hashmap[key_reg] = smali.MOVE_16
+        
+        if opcode in StigmaStringParsingLib.WIDE_MOVE_LIST:
+            move_type_hashmap[key_reg] = smali.MOVE_WIDE_16
+            
+        if opcode in StigmaStringParsingLib.OBJECT_MOVE_LIST:
+            move_type_hashmap[key_reg] = smali.MOVE_OBJECT
+            
+        return move_type_hashmap
+        
+        
+    @staticmethod
+    def _create_before_move_block_frl(shadow_map, move_map):
+        # move map says things like: {"v0", smali.MOVE_WIDE_16}
+        # shadow map says
+        
+        # We will use the move_map to create a block with the
+        # correct MOVE instructions (MOVE_16, MOVE_WIDE_16, MOVE_OBJECT_16)
+        # for the register being moved.
+        
+        # the move map is created in "_update_move_map_frl()", Step 5.5
+        
         #Step 4
         #mv shadow corr
         #mv corr high
-        block = [smali.COMMENT("FRL MOVE ADDED BY STIGMA")]
+        block = [smali.COMMENT("FRL MOVE ADDED BY STIGMA"),
+        smali.BLANK_LINE()]
         for t in shadow_map.tuples:
             reg = t[0]
             #move = corline_obj.getmovetype(a, corr)
             #move = curline_obj.getmovetype(reg)
-            block += [smali.BLANK_LINE(),
-                smali.MOVE16(shadow_map.get_shadow(reg), shadow_map.get_corresponding(reg)),
-                smali.BLANK_LINE(),
-                smali.MOVE16(shadow_map.get_corresponding(reg), reg)]
+            
+           
+            
+            corr_reg = shadow_map.get_corresponding(reg)
+            shad_reg = shadow_map.get_shadow(reg)
+            high_reg = reg
+            if(corr_reg in move_map):
+                move1 = move_map[corr_reg]
+                move1 = move1(shad_reg, corr_reg)
+
+                
+                block.append(move1)
+                block.append(smali.BLANK_LINE())
+
+            if(high_reg not in move_map):
+                raise RuntimeError("Could not find high reg:" + str(high_reg) + " in move_map!")
+            
+            move2 = move_map[high_reg]
+            move2 = move2(corr_reg, high_reg)
+
+            block.append(move2)
+            block.append(smali.BLANK_LINE())
+            
         return block
     
     @staticmethod
@@ -455,6 +516,7 @@ class SmaliMethodDef:
         
         return block
         
+
     
             
     def fix_register_limit(self):
@@ -482,6 +544,10 @@ class SmaliMethodDef:
         
         #print("remaining shadows: " + str(self.remaining_shadows))
 
+        # key: register name (v's only)
+        # value: 
+        move_type_hashmap = {}
+        
         line_num = 1;
         while line_num < len(self.raw_text):
             cur_line = str(self.raw_text[line_num])
@@ -490,7 +556,7 @@ class SmaliMethodDef:
             if(SmaliMethodDef._should_skip_line_frl(cur_line)):
                 line_num += 1
                 continue
-
+    
             
             #Step 2: Dereference p registers
             locals_num = self.get_locals_directive_num()
@@ -506,21 +572,22 @@ class SmaliMethodDef:
             
 
             # Step 4: move block before instruction
-            block = SmaliMethodDef._create_before_move_block_frl(shadow_map)
-                  
+            block = SmaliMethodDef._create_before_move_block_frl(shadow_map, move_type_hashmap)
             self.embed_block(line_num, block)
             line_num = line_num + len(block)
-                
-                
+            
+            
             # Step 5: re-write this instruction
             cur_line = SmaliMethodDef._rewrite_instruction_frl(shadow_map, cur_line)
-           
             self.raw_text[line_num] = cur_line
+            
+            
+            # Step 5.5: update move_type_hash_map
+            move_type_hashmap = SmaliMethodDef._update_hashmap_frl(move_type_hashmap, cur_line)
                 
             
             # Step 6: move block after instruction
             block = SmaliMethodDef._create_after_move_block_frl(shadow_map)
-                    
             self.embed_block(line_num+1, block)
             line_num = line_num + len(block)
                 
@@ -602,32 +669,71 @@ def tests():
     #print(test2_shadow_map)
     assert(test2_shadow_map == soln_shadow_map)
     
+    
+    print("\t_update_hashmap_frl...")
+    res_map = SmaliMethodDef._update_hashmap_frl({}, "    const-wide/16 v18, 0x1\n")
+    soln_map = {"v18": smali.MOVE_WIDE_16}
+    #print("res: " + str(res_map) + "   soln: " + str(soln_map))
+    assert(res_map == soln_map)
+    res_map = SmaliMethodDef._update_hashmap_frl({"v21": smali.MOVE_OBJECT_16}, "    array-length v16, v21\n")
+    soln_map = {"v16": smali.MOVE_16, "v21": smali.MOVE_OBJECT_16}
+    assert(res_map == soln_map)
+    
+    
+    
+    
     print("\t_create_before_move_block_frl...")
     sol_before_block = [smali.COMMENT("FRL MOVE ADDED BY STIGMA"), 
     smali.BLANK_LINE(), 
-    smali.MOVE16("v19", "v0"), smali.BLANK_LINE(), 
-    smali.MOVE16("v0", "v16"),
-    smali.BLANK_LINE(), smali.MOVE16("v18", "v1"), smali.BLANK_LINE(), 
-     smali.MOVE16("v1", "v21")]
+    smali.MOVE_16("v0", "v16"),
+    smali.BLANK_LINE(), 
+    smali.MOVE_OBJECT_16("v1", "v21"),
+    smali.BLANK_LINE()]
     #print(sol_before_block)
-    #print(SmaliMethodDef._create_before_move_block_frl(test2_shadow_map))
-    assert(SmaliMethodDef._create_before_move_block_frl(test2_shadow_map) == sol_before_block)
+    #print(SmaliMethodDef._create_before_move_block_frl(test2_shadow_map, res_map))
+    assert(SmaliMethodDef._create_before_move_block_frl(test2_shadow_map, res_map) == sol_before_block)
+    
+
+    res_map["v0"] = smali.MOVE_16
+    sol2_before_block = [smali.COMMENT("FRL MOVE ADDED BY STIGMA"), 
+    smali.BLANK_LINE(), 
+    smali.MOVE_16("v19", "v0"),
+    smali.BLANK_LINE(),
+    smali.MOVE_16("v0", "v16"),
+    smali.BLANK_LINE(), 
+    smali.MOVE_OBJECT_16("v1", "v21"),
+    smali.BLANK_LINE()]
+    ans2 = SmaliMethodDef._create_before_move_block_frl(test2_shadow_map, res_map)
+    #print("soln: " + str(sol2_before_block))
+    #print("ans2: " + str(ans2))
+    assert(ans2 == sol2_before_block)
+    
+    
+    
+    
+    
     
     print("\t_create_after_move_block_frl...")
     sol_after_block = [ 
     smali.BLANK_LINE(), 
-    smali.MOVE16("v16", "v0"), smali.BLANK_LINE(), 
-    smali.MOVE16("v0", "v19"),
-    smali.BLANK_LINE(), smali.MOVE16("v21", "v1"), smali.BLANK_LINE(), 
-    smali.MOVE16("v1", "v18"), 
+    smali.MOVE_16("v16", "v0"), smali.BLANK_LINE(), 
+    smali.MOVE_16("v0", "v19"),
+    smali.BLANK_LINE(), smali.MOVE_16("v21", "v1"), smali.BLANK_LINE(), 
+    smali.MOVE_16("v1", "v18"), 
     smali.COMMENT("FRL MOVE ADDED BY STIGMA END")]
     #print(sol_after_block)
     #print(SmaliMethodDef._create_after_move_block_frl(test2_shadow_map))
     assert(SmaliMethodDef._create_after_move_block_frl(test2_shadow_map) == sol_after_block)
     
+    
     print("\t_rewrite_instruction_frl...")
     test2_shadow_map = SmaliMethodDef._build_shadow_map_frl("    array-length v16, v21\n", remaining_shadows)
-    assert(SmaliMethodDef._rewrite_instruction_frl(test2_shadow_map, "    array-length v16, v21\n") == "    array-length v0, v1\n")
+    assert(SmaliMethodDef._rewrte_instruction_frl(test2_shadow_map, "    array-length v16, v21\n") == "    array-length v0, v1\n")
+    
+    
+
+    
+    
     
 
     print("ALL TESTS PASSED!")

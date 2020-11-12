@@ -163,8 +163,10 @@ class SmaliClassDef:
 
                 idx = idx + 1
            
-            # second pass on this method just to fix large-numbered registers 
-            if(m.get_num_registers() > 16):
+            # second pass on this method just to fix methods with
+            #  large-numbered registers that WE introduced
+            # we should not fix methods that originally had large numbered registers
+            if(m.get_num_registers() > 16  and m.ORIGINAL_NUM_REGISTERS <= 16):
                 m.fix_register_limit() #iterates through whole method
 
 

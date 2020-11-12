@@ -92,6 +92,10 @@ class MOVE(SmaliAssemblyInstruction, NormalMovable):
         self.reg2 = reg2
 
     def get_registers(self):
+        if(self.reg1 == ""):
+            raise UnboundLocalError("reg1")
+        if(self.reg2 == ""):
+            raise UnboundLocalError("reg2")
         return [self.reg1, self.reg2]
 
     def __repr__(self):
@@ -134,9 +138,9 @@ class MOVE_OBJECT_FROM16(MOVE, ObjectMovable):
     def __repr__(self):
         return "move-object/from16 " + self.reg1 + ", " + self.reg2
 
-class MOVE_OBJECT16(MOVE, ObjectMovable):
+class MOVE_OBJECT_16(MOVE, ObjectMovable):
     def __repr__(self):
-        return "move-object16 " + self.reg1 + ", " + self.reg2
+        return "move-object/16 " + self.reg1 + ", " + self.reg2
 
 
 class _SINGLE_DEST_REGISTER_INSTRUCTION(SmaliAssemblyInstruction):

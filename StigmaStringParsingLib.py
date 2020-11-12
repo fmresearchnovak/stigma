@@ -166,6 +166,66 @@ def has_three_register_parameters(instr):
         "shl-long", "shr-long", "ushr-long", "add-float", "sub-float", "mul-float", "div-float",
         "rem-float", "add-double", "sub-double", "mul-double", "div-double", "rem-double"]
         
+   
+    
+# GLOBAL
+# these instructions specify that the first register is of the 
+# corresponding "move type" e.g., seeing the instruction 
+#    array-length v0, p1 
+# indicates that v0 is an int and should be moved using move/16
+WORD_MOVE_LIST = ["move", "move/from16", "move/16", "return", 
+    "move-result", "const/4", "const/16", "const", "const/high16", 
+    "instance-of", "array-length", "packed-switch", "sparse-switch",
+    "cmpl-float", "cmpg-float", "if-eq", "if-ne", "if-lt", "if-ge",
+    "if-gt", "if-le", "if-eqz", "if-nez", "if-ltz", "if-gez", 
+    "if-gtz", "if-lez", "aget-boolean" , "aget-byte" , "aget-char", 
+    "aget-short", "aput", "aput-boolean", "aput-byte", "aput-char",
+    "aput-short", "iget", "iget-boolean", "iget-byte", "iget-char",
+    "iget-short", "iput", "iput-boolean", "iput-byte", "iput-char", 
+    "iput-short", "sget", "sget-boolean", "sget-byte", "sget-char",
+    "sget-short", "sput", "sput-boolean", "sput-byte", "sput-char", 
+    "sput-short", "neg-int", "not-int", "neg-float", "int-to-float",
+    "long-to-int", "long-to-float", "float-to-int", "double-to-int",
+    "double-to-float", "add-int", "sub-int", "mul-int", "div-int",
+    "rem-int", "and-int", "or-int", "xor-int", "shl-int", "shr-int",
+    "ushr-int", "add-float", "sub-float", "mul-float", "div-float",
+    "rem-float", "iput-quick", "iget-quick", "ushr-int/lit8", 
+    "shr-int/lit8", "shl-int/lit8", "xor-int/lit8", "or-int/lit8", 
+    "and-int/lit8", "rem-int/lit8", "div-int/lit8", "mul-int/lit8", 
+    "sub-int/lit8", "add-int/lit8","xor-int/lit16", "or-int/lit16", 
+    "and-int/lit16", "rem-int/lit16", "div-int/lit16", "mul-int/lit16", 
+    "sub-int/lit16", "add-int/lit16", "rem-float/2addr", 
+    "div-float/2addr", "mul-float/2addr", "sub-float/2addr", 
+    "add-float/2addr"]
+    
+WIDE_MOVE_LIST = ["move-wide", "move-wide/from16", 
+    "move-wide16", "move-result-wide", "return-wide", "const-wide/16", 
+    "const-wide/32", "const-wide", "const-wide/high16", "cmpl-double",
+    "cmpg-double", "cmp-long", "aget-wide", "aget-object", "aput-wide",
+    "iget-wide", "iput-wide", "sget-wide", "sput-wide", "neg-long", 
+    "not-long", "neg-double", "int-to-long", "int-to-double", 
+    "long-to-double", "float-to-long", "float-to-double", 
+    "double-to-long", "add-long", "sub-long", "mul-long", "div-long", 
+    "rem-long", "and-long", "or-long", "xor-long", "shl-long", 
+    "shr-long", "add-double", "sub-double", "mul-double", "div-double"
+    "rem-double", "iput-wide-quick", "iget-wide-quick", 
+    "rem-double/2addr", "div-double/2addr", "mul-double/2addr", 
+    "sub-double/2addr", "add-double/2addr", "ushr-long/2addr", 
+    "shr-long/2addr", "shl-long/2addr","xor-long/2addr", 
+    "or-long/2addr", "and-long/2addr", "rem-long/2addr", 
+    "div-long/2addr", "mul-long/2addr", "sub-long/2addr", 
+    "add-long/2addr"]
+    
+OBJECT_MOVE_LIST = ["move-object", "move-object/from16", "move-object16",
+    "move-result-object", "move-exception", "return-object",
+    "const-string", "const-string-jumbo", "const-class", 
+    "monitor-enter", "check-cast", "new-instance", "new-array", 
+    "throw", "aput-object", "iget-object", "iput-object", "sget-object",
+    "sput-object", "iput-object-quick", "iget-object-quick"]
+    
+
+    
+        
 def main():
     print("Minimal Tests for String Parsing Library")
 
