@@ -70,7 +70,12 @@ TESTS = ["    nop\n",
          "    aget v0, v0, v1\n",
          "    aput v1, v0, v2\n",
          "    iget-object v0, p0, Landroidx/transition/TransitionSet$1;->val$nextTransition:Landroidx/transition/Transition;\n",
-         "    iput p2, p0, Landroidx/transition/TransitionSet$1;->val$nextTransition:Landroidx/transition/Transition;\n"
+         "    iput p2, p0, Landroidx/transition/TransitionSet$1;->val$nextTransition:Landroidx/transition/Transition;\n",
+         "    sget-wide v2, Lcom/google/android/material/card/MaterialCardViewHelper;->COS_45:D\n",
+         "    sput-object v0, Lcom/google/android/material/snackbar/Snackbar;->SNACKBAR_BUTTON_STYLE_ATTR:[I\n",
+         "    sput-boolean v0, Lcom/google/android/material/ripple/RippleUtils;->USE_FRAMEWORK_RIPPLE:Z\n",
+         "    sput-char v0, Lcom/google/android/material/ripple/RippleUtils;->USE_FRAMEWORK_RIPPLE:Z\n", # synthetic
+         "    invoke-virtual {v1, v2, p1}, Landroid/os/Bundle;->putParcelable(Ljava/lang/String;Landroid/os/Parcelable;)V\n"
 		 
 # New test cases can be added by (a) selecting an instruction
 # and then (b) grep-ing some smali for that instruction
@@ -82,7 +87,7 @@ TESTS = ["    nop\n",
 def main():
 
 	for cur_line in TESTS:
-		print(cur_line)
+		print("\t" + cur_line.strip())
 		obj = smali.parse_line(cur_line)
 		#print(type(obj), ": " + str(obj))
 		assert(str(obj) == cur_line)

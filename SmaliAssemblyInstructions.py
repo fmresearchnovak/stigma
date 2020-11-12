@@ -312,18 +312,23 @@ class NEW_ARRAY(SmaliAssemblyInstruction):
     def __repr__(self):
         return "new-array " + str(self.rd) + ", " + str(self.rs) + ", " + str(self.type_id)     
 
-class FILLED_NEW_ARRAY(SmaliAssemblyInstruction):
+class _PARAMETER_LIST_INSTRUCTION(SmaliAssemblyInstruction):
     def __init__(self, element_list, type_id):
-        #print("element list: " + str(element_list))
         self.register_list = element_list
         self.type_id = type_id
 
     def get_registers(self):
         return self.register_list
-        
+
     def __repr__(self):
         reg_string = ", ".join(self.register_list)
-        return "filled-new-array {" + reg_string + "}, " + str(self.type_id)
+        return self.opcode() + " {" + reg_string + "}, " + str(self.type_id)
+
+
+class FILLED_NEW_ARRAY(_PARAMETER_LIST_INSTRUCTION):
+    def opcode(self):
+        return "filled-new-array"
+        
 
 class FILLED_NEW_ARRAY_RANGE(SmaliAssemblyInstruction):
     # doesn't need to be implemented
@@ -637,29 +642,94 @@ class IPUT_SHORT(_I_INSTRUCTION):
         return "iput-short"
 
 
-
-# This can probably be combined with sput somehow
-class SGET(SmaliAssemblyInstruction):
-    # note: this instruction assumes that field being gotten is an integer
-    def __init__(self, reg_dest, class_name, instance_field_name):
+class _S_INSTRUCTION(SmaliAssemblyInstruction):
+    #   Backward compatibility with how we call IGET() in Instrument
+    def __init__(self, reg_dest, class_name , instance_field_name = ""): 
         self.rd = reg_dest
-        self.cn = class_name
-        self.ifn = instance_field_name
+        if instance_field_name != "":
+            cn = class_name
+            ifn = instance_field_name
+            self.field_id =  cn + "->" + ifn
+        else:
+            self.field_id = class_name
+
+        
+    def get_registers(self):
+        return [self.rd]
 
     def __repr__(self):
-        return "sget " + self.rd + ", " + self.cn + "->" + self.ifn
+        return self.opcode() + " " + self.rd + ", " + self.field_id
+
+class SGET(_S_INSTRUCTION):
+    def opcode(self):
+        return "sget"
+
+class SGET_WIDE(_S_INSTRUCTION):
+    def opcode(self):
+        return "sget-wide"
+        
+class SGET_OBJECT(_S_INSTRUCTION):
+    def opcode(self):
+        return "sget-object"
+
+class SGET_BOOLEN(_S_INSTRUCTION):
+    def opcode(self):
+        return "sget-boolean"
+
+class SGET_BYTE(_S_INSTRUCTION):
+    def opcode(self):
+        return "sget-byte"
+
+class SGET_CHAR(_S_INSTRUCTION):
+    def opcode(self):
+        return "sget-char"
+
+class SGET_SHORT(_S_INSTRUCTION):
+    def opcode(self):
+        return "sget-short"
+
+class SPUT(_S_INSTRUCTION):
+    def opcode(self):
+        return "sput"
+        
+class SPUT_WIDE(_S_INSTRUCTION):
+    def opcode(self):
+        return "sput-wide"
+        
+class SPUT_OBJECT(_S_INSTRUCTION):
+    def opcode(self):
+        return "sput-object"
+
+class SPUT_BOOLEAN(_S_INSTRUCTION):
+    def opcode(self):
+        return "sput-boolean"
+
+class SPUT_BYTE(_S_INSTRUCTION):
+    def opcode(self):
+        return "sput-byte"
+
+class SPUT_CHAR(_S_INSTRUCTION):
+    def opcode(self):
+        return "sput-char"
+
+class SPUT_SHORT(_S_INSTRUCTION):
+    def opcode(self):
+        return "sput-short"
+
+class INVOKE_VIRTUAL(_PARAMETER_LIST_INSTRUCTION):
+    def __init__(self, element_list, type_id):
+        super().__init__(element_list, type_id)
+
+        # I'm not sure if this is necessary?
+        # I found it in the "old" implementation
+        # of this instruction, which I think
+        # wasn't actually executed or tested anywhere
+        self.calling_object = element_list[0] 
+
+    def opcode(self):
+        return "invoke-virtual"
 
 
-# This can probably be combined with sget somehow
-class SPUT(SmaliAssemblyInstruction):
-    # note: this instruction assumes that field being put to is an integer
-    def __init__(self, reg_src, class_name, instance_field_name):
-        self.rs = reg_src
-        self.cn = class_name
-        self.ifn = instance_field_name
-
-    def __repr__(self):
-        return "sput " + self.rs + ", " + self.cn + "->" + self.ifn
 
 
 
