@@ -107,7 +107,7 @@ class SmaliMethodDef:
         self.num_jumps = 0 # not used except for a sanity check
 
         self.ORIGINAL_LOCAL_NUMBER_REGS = self.get_locals_directive_num()
-        self.reg_number_float = self.ORIGINAL_NUMER_REGS
+        self.reg_number_float = self.ORIGINAL_LOCAL_NUMBER_REGS
 
         self.scd = scd # smali class definition
         
@@ -307,7 +307,7 @@ class SmaliMethodDef:
 
     @staticmethod
     def _should_skip_line_frl(cur_line):
-        print(cur_line)
+        # print(cur_line)
         # We need to check the instruction
         # some instructions don't need to have their register
         # limit fixed.  Such as:
@@ -400,7 +400,8 @@ class SmaliMethodDef:
         
         
     @staticmethod
-    def _update_hashmap_frl(move_type_hashmap, cur_line):
+    def _update_mt_hashmap_frl(move_type_hashmap, cur_line):
+        # "update move-type hashmap"
         # this creates a hashmap that indicates for each register
         # what the corresponding move instruction must be used
         # in order to move that register (assuming that register
@@ -431,15 +432,15 @@ class SmaliMethodDef:
         
         
     @staticmethod
-    def _create_before_move_block_frl(shadow_map, move_map):
+    def _create_before_move_block_frl(shadow_map, move_type_map):
         # move map says things like: {"v0", smali.MOVE_WIDE_16}
         # shadow map says
         
-        # We will use the move_map to create a block with the
+        # We will use the move_type_map to create a block with the
         # correct MOVE instructions (MOVE_16, MOVE_WIDE_16, MOVE_OBJECT_16)
         # for the register being moved.
         
-        # the move map is created in "_update_move_map_frl()", Step 5.5
+        # the move map is created in "_update_mt_map_frl()", Step 5.5
         
         #Step 4
         #mv shadow corr
@@ -448,26 +449,22 @@ class SmaliMethodDef:
         smali.BLANK_LINE()]
         for t in shadow_map.tuples:
             reg = t[0]
-            #move = corline_obj.getmovetype(a, corr)
-            #move = curline_obj.getmovetype(reg)
-            
-           
             
             corr_reg = shadow_map.get_corresponding(reg)
             shad_reg = shadow_map.get_shadow(reg)
             high_reg = reg
-            if(corr_reg in move_map):
-                move1 = move_map[corr_reg]
+            if(corr_reg in move_type_map):
+                move1 = move_type_map[corr_reg]
                 move1 = move1(shad_reg, corr_reg)
 
                 
                 block.append(move1)
                 block.append(smali.BLANK_LINE())
 
-            if(high_reg not in move_map):
-                raise RuntimeError("Could not find high reg:" + str(high_reg) + " in move_map!")
+            if(high_reg not in move_type_map):
+                raise RuntimeError("Could not find high reg:" + str(high_reg) + " in move_type_map!")
             
-            move2 = move_map[high_reg]
+            move2 = move_type_map[high_reg]
             move2 = move2(corr_reg, high_reg)
 
             block.append(move2)
@@ -498,20 +495,35 @@ class SmaliMethodDef:
         return cur_line
     
     @staticmethod
-    def _create_after_move_block_frl(shadow_map):
+    def _create_after_move_block_frl(shadow_map, move_type_map):
+        #print("create_after_move_block()")
+        #print("shad map: " + str(shadow_map))
+        #print("move_type_map: " + str(move_type_map))
         #Step 6
         #mv high corr
-        #mv corr shadow
+        #mv corr shadow (if corr found in mt_map)
         
-        block = []
+        block = [smali.BLANK_LINE()]
         for t in shadow_map.tuples:
             reg = t[0]
+                        
+            corr_reg = shadow_map.get_corresponding(reg)
+            shad_reg = shadow_map.get_shadow(reg)
+            high_reg = reg
             
-            block += [smali.BLANK_LINE(),
-                smali.MOVE16(reg, shadow_map.get_corresponding(reg)),
-                smali.BLANK_LINE(),
-                smali.MOVE16(shadow_map.get_corresponding(reg), shadow_map.get_shadow(reg))]
-                
+            move2 = move_type_map[corr_reg]
+            move2 = move2(high_reg, corr_reg)
+
+            block.append(move2)
+            block.append(smali.BLANK_LINE())
+            
+            if(shad_reg in move_type_map):
+                move1 = move_type_map[shad_reg]
+                move1 = move1(corr_reg, shad_reg)
+
+                block.append(move1)
+                block.append(smali.BLANK_LINE())
+      
         block += [smali.COMMENT("FRL MOVE ADDED BY STIGMA END")]
         
         return block
@@ -572,9 +584,9 @@ class SmaliMethodDef:
             
 
             # Step 4: move block before instruction
-            block = SmaliMethodDef._create_before_move_block_frl(shadow_map, move_type_hashmap)
-            self.embed_block(line_num, block)
-            line_num = line_num + len(block)
+            before_block = SmaliMethodDef._create_before_move_block_frl(shadow_map, move_type_hashmap)
+            self.embed_block(line_num, before_block)
+            line_num = line_num + len(before_block)
             
             
             # Step 5: re-write this instruction
@@ -583,13 +595,19 @@ class SmaliMethodDef:
             
             
             # Step 5.5: update move_type_hash_map
-            move_type_hashmap = SmaliMethodDef._update_hashmap_frl(move_type_hashmap, cur_line)
+            # it is possible that we need to update
+            # the move-type-map with the newly added 
+            # mv instructions (created in _create_before_move_block_frl())
+            for line in before_block:
+                move_type_hashmap = SmaliMethodDef._update_mt_hashmap_frl(move_type_hashmap, str(line))
+            move_type_hashmap = SmaliMethodDef._update_mt_hashmap_frl(move_type_hashmap, cur_line)
+            
                 
             
             # Step 6: move block after instruction
-            block = SmaliMethodDef._create_after_move_block_frl(shadow_map)
-            self.embed_block(line_num+1, block)
-            line_num = line_num + len(block)
+            after_block = SmaliMethodDef._create_after_move_block_frl(shadow_map, move_type_hashmap)
+            self.embed_block(line_num+1, after_block)
+            line_num = line_num + len(after_block)
                 
             
                     
@@ -670,12 +688,12 @@ def tests():
     assert(test2_shadow_map == soln_shadow_map)
     
     
-    print("\t_update_hashmap_frl...")
-    res_map = SmaliMethodDef._update_hashmap_frl({}, "    const-wide/16 v18, 0x1\n")
+    print("\t_update_mt_hashmap_frl...")
+    res_map = SmaliMethodDef._update_mt_hashmap_frl({}, "    const-wide/16 v18, 0x1\n")
     soln_map = {"v18": smali.MOVE_WIDE_16}
     #print("res: " + str(res_map) + "   soln: " + str(soln_map))
     assert(res_map == soln_map)
-    res_map = SmaliMethodDef._update_hashmap_frl({"v21": smali.MOVE_OBJECT_16}, "    array-length v16, v21\n")
+    res_map = SmaliMethodDef._update_mt_hashmap_frl({"v21": smali.MOVE_OBJECT_16}, "    array-length v16, v21\n")
     soln_map = {"v16": smali.MOVE_16, "v21": smali.MOVE_OBJECT_16}
     assert(res_map == soln_map)
     
@@ -710,25 +728,34 @@ def tests():
     
     
     
+    print("\t_rewrite_instruction_frl...")
+    test2_shadow_map = SmaliMethodDef._build_shadow_map_frl("    array-length v16, v21\n", remaining_shadows)
+    assert(SmaliMethodDef._rewrite_instruction_frl(test2_shadow_map, "    array-length v16, v21\n") == "    array-length v0, v1\n")
+    
+    
     
     
     
     print("\t_create_after_move_block_frl...")
     sol_after_block = [ 
     smali.BLANK_LINE(), 
-    smali.MOVE_16("v16", "v0"), smali.BLANK_LINE(), 
+    smali.MOVE_16("v16", "v0"), 
+    smali.BLANK_LINE(), 
     smali.MOVE_16("v0", "v19"),
-    smali.BLANK_LINE(), smali.MOVE_16("v21", "v1"), smali.BLANK_LINE(), 
-    smali.MOVE_16("v1", "v18"), 
+    smali.BLANK_LINE(), 
+    smali.MOVE_OBJECT_16("v21", "v1"), 
+    smali.BLANK_LINE(), 
     smali.COMMENT("FRL MOVE ADDED BY STIGMA END")]
+    
+    # the move_type_map needs to be updated with 
+    # the moves we did in the before block
+    res_map["v0"] = smali.MOVE_16
+    res_map["v1"] = smali.MOVE_OBJECT_16
+    res_map["v19"] = smali.MOVE_16
+   
     #print(sol_after_block)
-    #print(SmaliMethodDef._create_after_move_block_frl(test2_shadow_map))
-    assert(SmaliMethodDef._create_after_move_block_frl(test2_shadow_map) == sol_after_block)
-    
-    
-    print("\t_rewrite_instruction_frl...")
-    test2_shadow_map = SmaliMethodDef._build_shadow_map_frl("    array-length v16, v21\n", remaining_shadows)
-    assert(SmaliMethodDef._rewrte_instruction_frl(test2_shadow_map, "    array-length v16, v21\n") == "    array-length v0, v1\n")
+    #print(SmaliMethodDef._create_after_move_block_frl(test2_shadow_map, res_map))
+    assert(SmaliMethodDef._create_after_move_block_frl(test2_shadow_map, res_map) == sol_after_block)
     
     
 
