@@ -142,7 +142,7 @@ def has_two_register_parameters(instr):
     ends_with_lit16 = instr.endswith("lit16")
     ends_with_lit8 = instr.endswith("lit8")
     in_list = instr in ["move", "move/from16", "move/16", "move-wide", "move-wide/from16",
-        "move-wide16", "move-object", "move-object/from16", "move-object16", 
+        "move-wide/16", "move-object", "move-object/from16", "move-object/16", 
         "instance-of", "array-length", "new-array", "if-eq", "if-ne", "if-lt", "if-ge", 
         "if-gt", "if-le","iget", "iget-wide", "iget-wide", "iget-object", "iget-boolean",
         "iget-byte", "iget-char", "iget-short", "iput", "iput-wide", "iput-object",
@@ -198,8 +198,8 @@ WORD_MOVE_LIST = ["move", "move/from16", "move/16", "return",
     "div-float/2addr", "mul-float/2addr", "sub-float/2addr", 
     "add-float/2addr"]
     
-WIDE_MOVE_LIST = ["move-wide", "move-wide/from16", 
-    "move-wide16", "move-result-wide", "return-wide", "const-wide/16", 
+WIDE_MOVE_LIST = ["move-wide", "move-wide/from16", "move-wide/16", 
+    "move-result-wide", "return-wide", "const-wide/16", 
     "const-wide/32", "const-wide", "const-wide/high16", "cmpl-double",
     "cmpg-double", "cmp-long", "aget-wide", "aget-object", "aput-wide",
     "iget-wide", "iput-wide", "sget-wide", "sput-wide", "neg-long", 
@@ -216,7 +216,7 @@ WIDE_MOVE_LIST = ["move-wide", "move-wide/from16",
     "div-long/2addr", "mul-long/2addr", "sub-long/2addr", 
     "add-long/2addr"]
     
-OBJECT_MOVE_LIST = ["move-object", "move-object/from16", "move-object16",
+OBJECT_MOVE_LIST = ["move-object", "move-object/from16", "move-object/16",
     "move-result-object", "move-exception", "return-object",
     "const-string", "const-string-jumbo", "const-class", 
     "monitor-enter", "check-cast", "new-instance", "new-array", 
