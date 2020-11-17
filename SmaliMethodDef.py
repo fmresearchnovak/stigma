@@ -321,7 +321,8 @@ class SmaliMethodDef:
                 
             elif reg_type in ["Z", "B", "S", "C", "I", "F"]:
                 mt_hashmap[v_reg] = smali.MOVE_16
-            
+            elif reg_type in ["J2", "D2"]:
+                pass
             else:
                 raise RuntimeError("cannot assign register type for: " + str(reg_type))
             
@@ -646,7 +647,9 @@ class SmaliMethodDef:
             self.embed_block(line_num+1, after_block)
             line_num = line_num + len(after_block)
             
-            
+            # Step 6.5: update move_type_hash_map
+            for a_block_line in after_block:
+                move_type_hashmap = SmaliMethodDef._update_mt_hashmap_frl(move_type_hashmap, str(a_block_line))
             
             line_num += 1
             
