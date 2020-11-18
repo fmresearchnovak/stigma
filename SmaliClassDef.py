@@ -24,6 +24,7 @@ class SmaliClassDef:
 
         self.instrumenter = inst.Instrumenter()
 
+        self.file_name = file_name
         fh = open(file_name, "r")
         lines = fh.readlines()
         fh.close()
@@ -239,5 +240,8 @@ class SmaliClassDef:
 
     def get_num_instance_fields(self):
         return self._count_fields(self.instance_fields)
+        
+    def __str__(self):
+        return str(self.file_name)
 
 

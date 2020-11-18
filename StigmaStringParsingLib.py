@@ -8,8 +8,6 @@ BLANK_LINE = r"^\s*$"
 BEGINS_WITH_DOT_METHOD = r"^\.method"  # directive to indicate start of a method
 BEGINS_WITH_DOT_END_METHOD = r"^\s*\.end method"  # directive to indicate end of method
 
-BEGINS_WITH_INVOKE = r"^invoke-"
-
 # one space and then a v and then some number of digits and then a comma
 FIELD_NAME = "->(.+):"
 CLASS_NAME = "(L.+)->"
@@ -36,7 +34,6 @@ BEGINS_WITH_NEW_ARRAY = r"^\s*new-array"
 
 
 BEGINS_WITH_MOVE = r"^\s*move"
-ENDS_WITH_RANGE = r"/range"
 
 
 

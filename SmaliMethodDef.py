@@ -344,19 +344,21 @@ class SmaliMethodDef:
         # Check if this line is actually a smali instruction (starts with a valid opcode)
         if(not StigmaStringParsingLib.is_valid_instruction(cur_line)):
             return True
-        
-        # Don't run on "range" lines, they can support higher numbered
-        # registers
-        if (re.match(StigmaStringParsingLib.ENDS_WITH_RANGE, cur_line)):
-            return True 
-        
-        # it should be investigated why the following is 
-        # redundant with the previous if statement
-        tokens = StigmaStringParsingLib.break_into_tokens(cur_line)
-        if ("range" in tokens[0]):
+            
+        # Check if this line has "range" in the opcode
+        opcode = StigmaStringParsingLib.break_into_tokens(cur_line)[0]
+        if ("range" in opcode):
+            return True
+            
+        # don't touch any line that has {} in it, which indicate
+        # a list of parameters
+        if opcode == "filled-new-array" or opcode == "filled-new-array-range":
+            return True
+        search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_INVOKE, opcode)
+        if(search_object != None):
             return True
 
-        # don't touch "move" lines, basic "move" opcode can support
+        # don't touch "move" lines, basic "move/16" opcode can support
         # as high as v255.  We assume that we will never see any
         # higher v number as a result of our tracking / instrumentation
         # move-result v16  might be a problem?
@@ -367,6 +369,8 @@ class SmaliMethodDef:
             re.match("^\s*move-object/16", cur_line) or 
             re.match("^\s*move-object/from16", cur_line)):
             return True
+            
+
 
 
         
@@ -430,7 +434,7 @@ class SmaliMethodDef:
         
     @staticmethod
     def _update_mt_hashmap_frl(move_type_hashmap, cur_line):
-        #print("update_mt_hashmap(" + str(cur_line) + ")")
+        #print("update_mt_hashmap(" + repr(cur_line) + ")")
         
         if(not StigmaStringParsingLib.is_valid_instruction(cur_line)):
             return move_type_hashmap
@@ -451,16 +455,21 @@ class SmaliMethodDef:
         # This function is called on every (original) instruction
         # of smali code
         opcode = StigmaStringParsingLib.break_into_tokens(cur_line)[0]
-        key_reg = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)[0]
         
         if opcode in StigmaStringParsingLib.WORD_MOVE_LIST:
-            move_type_hashmap[key_reg] = smali.MOVE_16
+            best_move_type = smali.MOVE_16
         
-        if opcode in StigmaStringParsingLib.WIDE_MOVE_LIST:
-            move_type_hashmap[key_reg] = smali.MOVE_WIDE_16
+        elif opcode in StigmaStringParsingLib.WIDE_MOVE_LIST:
+            best_move_type = smali.MOVE_WIDE_16
             
-        if opcode in StigmaStringParsingLib.OBJECT_MOVE_LIST:
-            move_type_hashmap[key_reg] = smali.MOVE_OBJECT
+        elif opcode in StigmaStringParsingLib.OBJECT_MOVE_LIST:
+            best_move_type = smali.MOVE_OBJECT
+        
+        else:
+            return move_type_hashmap
+            
+        key_reg = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)[0]
+        move_type_hashmap[key_reg] = best_move_type
             
         return move_type_hashmap
         
@@ -498,7 +507,7 @@ class SmaliMethodDef:
                 block.append(smali.BLANK_LINE())
 
             if(high_reg not in move_type_map):
-                raise RuntimeError("Could not find high reg:" + str(high_reg) + " in move_type_map!")
+                raise RuntimeError("Could not find high reg: " + str(high_reg) + " in move_type_map!")
             
             move2 = move_type_map[high_reg]
             move2 = move2(corr_reg, high_reg)
@@ -568,10 +577,9 @@ class SmaliMethodDef:
     
             
     def fix_register_limit(self):
-        #print("fix_register_limit(" + str(self.signature) + ")")
+        print("fix_register_limit(" + str(self.signature) + ")")
 
-        # Step 1: Make shadow registers
-
+        # Step 1: Initiate shadow registers
         # -- Example --  MyMethod(JI)  .locals = 17
         # Before: [v0, v1, ... , v15, v16, v17(p0), v18(p1), v19(p2), v20(p3)]
         # After:  [v0, v1, ... , v15, v16, v17,     v18,     v19,     v20,     v21, v22(p0), v23(p1), v24(p2), v25(p3)]
@@ -592,65 +600,85 @@ class SmaliMethodDef:
         
         #print("remaining shadows: " + str(self.remaining_shadows))
 
+        # Step 2: Initiate move_type_hashmap with parameters of funciton
+        # -- Example -- MyMethod(JI)  .locals = 17
+        # p0 = v22 type: object reference ("this") => smali.MOVE_OBJECT_16
+        # p1 = v23 type: long => smali.MOVE_WIDE_16
+        # p2 = v24 type: long2
+        # p3 = v25 type: int => smali.MOVE_16
         # key: register name (v's only)
         # value: smali.MOVE corresponding to register type
-        # Create and fill move_type_hashmap with function parameters
         move_type_hashmap = SmaliMethodDef._build_move_type_hash_map_frl(self.signature, self.get_locals_directive_num())
+        
+        print(self)
         
         line_num = 1;
         while line_num < len(self.raw_text):
             cur_line = str(self.raw_text[line_num])
             #print(cur_line)
-            
-            # identify lines that should be skipped
-            if(SmaliMethodDef._should_skip_line_frl(cur_line)):
+            # Check if this line is actually a smali instruction (starts with a valid opcode)
+            if(not StigmaStringParsingLib.is_valid_instruction(cur_line)):
                 line_num += 1
                 continue
-            
-            
-            #Step 2: Dereference p registers
+                
+            # Step 3: Dereference p registers
             locals_num = self.get_locals_directive_num()
             cur_line = SmaliMethodDef._dereference_p_registers_frl(cur_line, locals_num)
             self.raw_text[line_num] = cur_line
-    
+            
+            # Step 4: Update move_type_hashmap with this instruction
+            move_type_hashmap = SmaliMethodDef._update_mt_hashmap_frl(move_type_hashmap, cur_line)
+            
+            
+            # identify lines that should be skipped for the rest of this
+            if(SmaliMethodDef._should_skip_line_frl(cur_line)):
+                line_num += 1
+                continue
                     
-            #Step 2.5 and 3: build shadow map
+            #Step 5: build shadow map
             shadow_map = SmaliMethodDef._build_shadow_map_frl(cur_line, remaining_shadows)
             if len(shadow_map.tuples) == 0:
                 line_num += 1
                 continue
             
             
-            # Step 4: move block before instruction
+            #print("cur_line: " + str(cur_line))
+            #print("shadow_map: " + str(shadow_map))
+            #print("move_type_hashmap: " + str(move_type_hashmap))
+            
+            # Step 6: move block before instruction
             before_block = SmaliMethodDef._create_before_move_block_frl(shadow_map, move_type_hashmap)
             self.embed_block(line_num, before_block)
             line_num = line_num + len(before_block)
             
             
-            # Step 5: re-write this instruction
+            # Step 7: re-write this instruction
             cur_line = SmaliMethodDef._rewrite_instruction_frl(shadow_map, cur_line)
             self.raw_text[line_num] = cur_line
             
             
-            # Step 5.5: update move_type_hash_map
+            # Step 6.5: update move_type_hash_map
             # I think it's necessary to update
             # the move-type-map with the newly added 
             # mv instructions (created in _create_before_move_block_frl())
+            # and also on the line that was re-written in step 7
             for b_block_line in before_block:
                 move_type_hashmap = SmaliMethodDef._update_mt_hashmap_frl(move_type_hashmap, str(b_block_line))
             move_type_hashmap = SmaliMethodDef._update_mt_hashmap_frl(move_type_hashmap, cur_line)
             
             
-            
-            # Step 6: move block after instruction
+            # Step 8: move block after instruction
             after_block = SmaliMethodDef._create_after_move_block_frl(shadow_map, move_type_hashmap)
             self.embed_block(line_num+1, after_block)
             line_num = line_num + len(after_block)
             
-            # Step 6.5: update move_type_hash_map
+            
+            # Step 8.5: update move_type_hash_map
             for a_block_line in after_block:
                 move_type_hashmap = SmaliMethodDef._update_mt_hashmap_frl(move_type_hashmap, str(a_block_line))
             
+            
+            # go to next line!
             line_num += 1
             
             
@@ -687,6 +715,7 @@ def tests():
     assert(SmaliMethodDef._should_skip_line_frl("    new-array v1, v0, [J\n") == False)
     assert(SmaliMethodDef._should_skip_line_frl("    move-object v1, v0 \n") == False)
     assert(SmaliMethodDef._should_skip_line_frl("    invoke-super-quick/range {v0..v5}"))
+    assert(SmaliMethodDef._should_skip_line_frl("    invoke-super {v12, v13, v14, v15, v16}, Landroid/view/ViewGroup;->drawChild(Landroid/graphics/Canvas;Landroid/view/View;J)Z\n"))
 
 
     print("\t_get_v_frl...")
@@ -747,6 +776,8 @@ def tests():
     assert(res_map == soln_map)
     res_map = SmaliMethodDef._update_mt_hashmap_frl({"v21": smali.MOVE_OBJECT_16}, "    array-length v16, v21\n")
     soln_map = {"v16": smali.MOVE_16, "v21": smali.MOVE_OBJECT_16}
+    assert(res_map == soln_map)
+    res_map = SmaliMethodDef._update_mt_hashmap_frl(res_map, "    return-void\n")
     assert(res_map == soln_map)
     
     
