@@ -65,9 +65,9 @@ class Instrumenter:
         tmp_reg1_for_merging = m.make_new_reg()
         tmp_reg2_for_merging = m.make_new_reg()
         block.append(smali.BLANK_LINE())
-        block.append(smali.CONST_4(tmp_reg1_for_merging, "0x0"))
+        block.append(smali.CONST_16(tmp_reg1_for_merging, "0x0"))
         block.append(smali.BLANK_LINE())
-        block.append(smali.CONST_4(tmp_reg2_for_merging, "0x0"))
+        block.append(smali.CONST_16(tmp_reg2_for_merging, "0x0"))
 
         for r in registers:
             taint_loc_param = scd.create_taint_field(m.get_name(), r)
@@ -98,7 +98,7 @@ class Instrumenter:
         #1
         tmp_reg = m.make_new_reg()
         block = [smali.BLANK_LINE(),
-                 smali.CONST_4(tmp_reg, "0x0"),
+                 smali.CONST_16(tmp_reg, "0x0"),
                  smali.BLANK_LINE(),
                  smali.SGET(tmp_reg, scd.class_name, taint_field_src),
                  smali.BLANK_LINE(),
@@ -422,7 +422,7 @@ class Instrumenter:
         block = [smali.BLANK_LINE(),
                  smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for write()"),
                  smali.BLANK_LINE(),
-                 smali.CONST_4(tmp_reg_for_compare, "0x0"),
+                 smali.CONST_16(tmp_reg_for_compare, "0x0"),
                  smali.BLANK_LINE(),
                  smali.SGET(tmp_reg_for_compare, scd.class_name, taint_loc),
                  smali.BLANK_LINE(),
@@ -477,7 +477,7 @@ class Instrumenter:
         block = [smali.BLANK_LINE(),
                  smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for Log.d() (simulated leak)"),
                  smali.BLANK_LINE(),
-                 smali.CONST_4(tmp_reg_for_compare, "0x0"),
+                 smali.CONST_16(tmp_reg_for_compare, "0x0"),
                  smali.BLANK_LINE(),
                  smali.SGET(tmp_reg_for_compare, scd.class_name, taint_loc),
                  smali.BLANK_LINE(),
