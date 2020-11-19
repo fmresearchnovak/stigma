@@ -303,6 +303,7 @@ class SmaliMethodDef:
             partc = (self.instruction_regs == other.instruction_regs)
             return parta and partb and partc
 
+
     @staticmethod
     def _build_move_type_hash_map_frl(signature, num_local_params):
         mt_hashmap = {}
@@ -322,7 +323,7 @@ class SmaliMethodDef:
             elif reg_type in ["Z", "B", "S", "C", "I", "F"]:
                 mt_hashmap[v_reg] = smali.MOVE_16
             elif reg_type in ["J2", "D2"]:
-                pass
+                mt_hashmap[v_reg] = "2"
             else:
                 raise RuntimeError("cannot assign register type for: " + str(reg_type))
             
@@ -352,11 +353,11 @@ class SmaliMethodDef:
             
         # don't touch any line that has {} in it, which indicate
         # a list of parameters
-        if opcode == "filled-new-array" or opcode == "filled-new-array-range":
-            return True
-        search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_INVOKE, opcode)
-        if(search_object != None):
-            return True
+        #if opcode == "filled-new-array" or opcode == "filled-new-array-range":
+        #    return True
+        #search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_INVOKE, opcode)
+        #if(search_object != None):
+        #    return True
 
         # don't touch "move" lines, basic "move/16" opcode can support
         # as high as v255.  We assume that we will never see any
@@ -369,10 +370,6 @@ class SmaliMethodDef:
             re.match("^\s*move-object/16", cur_line) or 
             re.match("^\s*move-object/from16", cur_line)):
             return True
-            
-
-
-
         
         return False
 
@@ -470,7 +467,12 @@ class SmaliMethodDef:
             
         key_reg = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)[0]
         move_type_hashmap[key_reg] = best_move_type
-            
+        
+        if best_move_type == smali.MOVE_WIDE_16:
+            key_reg_num = int(key_reg[1:])
+            new_key_reg = "v" + str(key_reg_num + 1)
+            move_type_hashmap[new_key_reg] = "2"    
+
         return move_type_hashmap
         
         
@@ -508,13 +510,14 @@ class SmaliMethodDef:
 
             if(high_reg not in move_type_map):
                 raise RuntimeError("Could not find high reg: " + str(high_reg) + " in move_type_map!")
-            
-            move2 = move_type_map[high_reg]
-            move2 = move2(corr_reg, high_reg)
 
-            block.append(move2)
-            block.append(smali.BLANK_LINE())
-            
+## Think about this problem
+            move2 = move_type_map[high_reg]
+            if move2 != "2":
+                move2 = move2(corr_reg, high_reg)
+                block.append(move2)
+                block.append(smali.BLANK_LINE())
+                
         return block
     
     @staticmethod
@@ -610,7 +613,7 @@ class SmaliMethodDef:
         # value: smali.MOVE corresponding to register type
         move_type_hashmap = SmaliMethodDef._build_move_type_hash_map_frl(self.signature, self.get_locals_directive_num())
         
-        print(self)
+        #print(self)
         
         line_num = 1;
         while line_num < len(self.raw_text):
@@ -715,7 +718,7 @@ def tests():
     assert(SmaliMethodDef._should_skip_line_frl("    new-array v1, v0, [J\n") == False)
     assert(SmaliMethodDef._should_skip_line_frl("    move-object v1, v0 \n") == False)
     assert(SmaliMethodDef._should_skip_line_frl("    invoke-super-quick/range {v0..v5}"))
-    assert(SmaliMethodDef._should_skip_line_frl("    invoke-super {v12, v13, v14, v15, v16}, Landroid/view/ViewGroup;->drawChild(Landroid/graphics/Canvas;Landroid/view/View;J)Z\n"))
+    assert(SmaliMethodDef._should_skip_line_frl("    invoke-super {v12, v13, v14, v15, v16}, Landroid/view/ViewGroup;->drawChild(Landroid/graphics/Canvas;Landroid/view/View;J)Z\n") == False)
 
 
     print("\t_get_v_frl...")
@@ -766,12 +769,17 @@ def tests():
     #print(soln)
     #print(result)
     assert(result == soln)
-    
+    signature = SmaliMethodSignature(".method private calculatePageOffsets(Landroidx/viewpager/widget/ViewPager$ItemInfo;ILandroidx/viewpager/widget/ViewPager$ItemInfo;J)V")
+    result = SmaliMethodDef._build_move_type_hash_map_frl(signature, 13)
+    soln = {"v13": smali.MOVE_OBJECT_16, "v14": smali.MOVE_OBJECT_16, "v15": smali.MOVE_16, "v16": smali.MOVE_OBJECT_16, "v17" : smali.MOVE_WIDE_16, "v18" : "2"}
+    #print(soln)
+    #print(result)
+    assert(result == soln)
     
     
     print("\t_update_mt_hashmap_frl...")
     res_map = SmaliMethodDef._update_mt_hashmap_frl({}, "    const-wide/16 v18, 0x1\n")
-    soln_map = {"v18": smali.MOVE_WIDE_16}
+    soln_map = {"v18": smali.MOVE_WIDE_16, "v19": "2"}
     #print("res: " + str(res_map) + "   soln: " + str(soln_map))
     assert(res_map == soln_map)
     res_map = SmaliMethodDef._update_mt_hashmap_frl({"v21": smali.MOVE_OBJECT_16}, "    array-length v16, v21\n")
