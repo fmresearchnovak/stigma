@@ -322,8 +322,10 @@ class SmaliMethodDef:
                 
             elif reg_type in ["Z", "B", "S", "C", "I", "F"]:
                 mt_hashmap[v_reg] = smali.MOVE_16
+                
             elif reg_type in ["J2", "D2"]:
                 mt_hashmap[v_reg] = "2"
+                
             else:
                 raise RuntimeError("cannot assign register type for: " + str(reg_type))
             
@@ -384,6 +386,12 @@ class SmaliMethodDef:
         # and it will still correspond to v4
 
         p_regs = StigmaStringParsingLib.get_p_numbers(cur_line)
+        
+        # because this loops through the registers found
+        # and str.replace() replaces only the first occurence
+        # this little algoritm will not replace instances of
+        # "v4" and other register-like strings in instructions
+        # such as: const-string v4, "edge v2 case p0 string v4\n"
         for reg in p_regs:
             v_name = SmaliMethodDef._get_v_frl(reg, locals_num)
             cur_line = cur_line.replace(reg, v_name)
