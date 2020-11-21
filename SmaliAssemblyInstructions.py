@@ -17,9 +17,18 @@
 # Should the new class be a child of MOVE?
 # Should the new class be a child of _SINGLE_DEST_REGISTER_INSTRUCTION?
 #   * Note: _SINGLE_DEST_REGISTER_INSTRUCTION is any instruction that
-#           only one parameter; a register that serves as a destination.
+#           only has ONE parameter; a register that serves as a destination.
 # Should the new class be a child of CONST?
 # Should the new class be a child of MOVE-RESULT?
+# _SINGLE_DEST_REGISTER_INSTRUCTION
+# _PARAMETER_LIST_INSTRUCTION
+# _TRIPLE_REGISTER_INSTRUCTION
+# _TWO_REG_EQ
+# _ONE_REG_EQ_ZERO
+# _I_INSTRUCTION
+# _S_INSTRUCTION
+# _INVOKE_INSTRUCTION
+# _TWO_REGISTER_UNARY_INSTRUCTION
 
 
 
@@ -145,6 +154,8 @@ class MOVE_OBJECT_16(MOVE, ObjectMovable):
 
 class _SINGLE_DEST_REGISTER_INSTRUCTION(SmaliAssemblyInstruction):
 	# A parent class that should never be instantiated directly.
+    #   * Note: _SINGLE_DEST_REGISTER_INSTRUCTION is any instruction that
+    #   only has ONE parameter; a register that serves as a destination.
     def __init__(self, reg_dest):
         self.rd = reg_dest
 
@@ -720,7 +731,7 @@ class SPUT_SHORT(_S_INSTRUCTION):
     def opcode(self):
         return "sput-short"
 
-class INVOKE_VIRTUAL(_PARAMETER_LIST_INSTRUCTION):
+class _INVOKE_INSTRUCTION(_PARAMETER_LIST_INSTRUCTION):
     def __init__(self, element_list, type_id):
         super().__init__(element_list, type_id)
 
@@ -730,23 +741,293 @@ class INVOKE_VIRTUAL(_PARAMETER_LIST_INSTRUCTION):
         # wasn't actually executed or tested anywhere
         self.calling_object = element_list[0] 
 
+
+class INVOKE_VIRTUAL(_INVOKE_INSTRUCTION):
     def opcode(self):
         return "invoke-virtual"
 
+class INVOKE_SUPER(_INVOKE_INSTRUCTION):
+    def opcode(self):
+        return "invoke-super"
+
+class INVOKE_DIRECT(_INVOKE_INSTRUCTION):
+    def opcode(self):
+        return "invoke-direct"
+
+class INVOKE_STATIC(_INVOKE_INSTRUCTION):
+    def opcode(self):
+        return "invoke-static"
+
+class INVOKE_INTERFACE(_INVOKE_INSTRUCTION):
+    def opcode(self):
+        return "invoke-interface"
+
+class INVOKE_VIRTUAL(_INVOKE_INSTRUCTION):
+    def opcode(self):
+        return "invoke-virtual"
+
+class INVOKE_VIRTUAL_RANGE(SmaliAssemblyInstruction):
+    # doesn't need to be implemented
+    # because "range" instructions
+    # support higher-numbered registers
+    pass
+
+class INVOKE_SUPER_RANGE(SmaliAssemblyInstruction):
+    # doesn't need to be implemented
+    # because "range" instructions
+    # support higher-numbered registers
+    pass
+
+class INVOKE_DIRECT_RANGE(SmaliAssemblyInstruction):
+    # doesn't need to be implemented
+    # because "range" instructions
+    # support higher-numbered registers
+    pass
+
+class INVOKE_STATIC_RANGE(SmaliAssemblyInstruction):
+    # doesn't need to be implemented
+    # because "range" instructions
+    # support higher-numbered registers
+    pass
+
+class INVOKE_INTERFACEERFACEERFACE_RANGE(SmaliAssemblyInstruction):
+    # doesn't need to be implemented
+    # because "range" instructions
+    # support higher-numbered registers
+    pass
 
 
-
-
-
-
-class OR_INT(SmaliAssemblyInstruction):
-    def __init__(self, reg_dest, reg_src1, reg_src2):
+class _TWO_REGISTER_UNARY_INSTRUCTION(SmaliAssemblyInstruction):
+    def __init__(self, reg_dest, reg_arg):
         self.rd = reg_dest
-        self.rs1 = reg_src1
-        self.rs2 = reg_src2
+        self.ra = reg_arg
+
+    def get_registers(self):
+        return [self.rd, self.ra]
 
     def __repr__(self):
-        return "or-int " + self.rd + ", " + self.rs1 + ", " + self.rs2
+        return self.opcode() + " " + str(self.rd) + ", " + str(self.ra)
+
+
+class NEG_INT(_TWO_REGISTER_UNARY_INSTRUCTION):
+    def opcode(self):
+        return "neg-int"
+
+class NOT_INT(_TWO_REGISTER_UNARY_INSTRUCTION):
+    def opcode(self):
+        return "not-int"
+
+class NEG_INT(_TWO_REGISTER_UNARY_INSTRUCTION):
+    def opcode(self):
+        return "neg-int"
+
+class NEG_LONG(_TWO_REGISTER_UNARY_INSTRUCTION):
+    def opcode(self):
+        return "neg-long"
+
+class NEG_FLOAT(_TWO_REGISTER_UNARY_INSTRUCTION):
+    def opcode(self):
+        return "neg-float"
+
+class NEG_DOUBLE(_TWO_REGISTER_UNARY_INSTRUCTION):
+    def opcode(self):
+        return "neg-double"
+
+class INT_TO_LONG(_TWO_REGISTER_UNARY_INSTRUCTION):
+    def opcode(self):
+        return "int-to-long"
+
+class INT_TO_FLOAT(_TWO_REGISTER_UNARY_INSTRUCTION):
+    def opcode(self):
+        return "int-to-float"
+
+class INT_TO_DOUBLE(_TWO_REGISTER_UNARY_INSTRUCTION):
+    def opcode(self):
+        return "int-to-double"
+
+class LONG_TO_INT(_TWO_REGISTER_UNARY_INSTRUCTION):
+    def opcode(self):
+        return "long-to-int"
+
+class LONG_TO_FLOAT(_TWO_REGISTER_UNARY_INSTRUCTION):
+    def opcode(self):
+        return "long-to-float"
+
+class LONG_TO_DOUBLE(_TWO_REGISTER_UNARY_INSTRUCTION):
+    def opcode(self):
+        return "long-to-double"
+
+class FLOAT_TO_INT(_TWO_REGISTER_UNARY_INSTRUCTION):
+    def opcode(self):
+        return "float-to-int"
+
+class FLOAT_TO_LONG(_TWO_REGISTER_UNARY_INSTRUCTION):
+    def opcode(self):
+        return "float-to-long"
+
+class FLOAT_TO_DOUBLE(_TWO_REGISTER_UNARY_INSTRUCTION):
+    def opcode(self):
+        return "float-to-double"
+
+class DOUBLE_TO_INT(_TWO_REGISTER_UNARY_INSTRUCTION):
+    def opcode(self):
+        return "double-to-int"
+
+class DOUBLE_TO_LONG(_TWO_REGISTER_UNARY_INSTRUCTION):
+    def opcode(self):
+        return "double-to-long"
+
+class DOUBLE_TO_FLOAT(_TWO_REGISTER_UNARY_INSTRUCTION):
+    def opcode(self):
+        return "double-to-float"
+
+class INT_TO_BYTE(_TWO_REGISTER_UNARY_INSTRUCTION):
+    def opcode(self):
+        return "int-to-byte"
+
+class INT_TO_CHAR(_TWO_REGISTER_UNARY_INSTRUCTION):
+    def opcode(self):
+        return "int-to-char"
+
+class INT_TO_SHORT(_TWO_REGISTER_UNARY_INSTRUCTION):
+    def opcode(self):
+        return "int-to-short"
+
+class ADD_INT(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "add-int"
+
+class SUB_INT(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "sub-int"
+
+class MUL_INT(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "mul-int"
+
+class DIV_INT(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "div-int"
+
+class REM_INT(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "rem-int"
+
+class AND_INT(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "and-int"
+
+class OR_INT(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "or-int"
+
+class XOR_INT(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "xor-int"
+
+class SHL_INT(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "shl-int"
+
+class SHR_INT(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "shr-int"
+
+class USHR_INT(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "ushr-int"
+
+class ADD_LONG(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "add-long"
+
+class SUB_LONG(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "sub-long"
+
+class MUL_LONG(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "mul-long"
+
+class DIV_LONG(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "div-long"
+
+class REM_LONG(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "rem-long"
+
+class AND_LONG(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "and-long"
+
+class OR_LONG(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "or-long"
+
+class XOR_LONG(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "xor-long"
+
+class SHL_LONG(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "shl-long"
+
+class SHR_LONG(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "shr-long"
+
+class USHR_LONG(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "ushr-long"
+
+class ADD_FLOAT(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "add-float"
+
+class SUB_FLOAT(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "sub-float"
+
+class MUL_FLOAT(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "mul-float"
+
+class DIV_FLOAT(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "div-float"
+
+class REM_FLOAT(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "rem-float"
+
+class ADD_DOUBLE(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "add-double"
+
+class SUB_DOUBLE(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "sub-double"
+
+class MUL_DOUBLE(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "mul-double"
+
+class DIV_DOUBLE(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "div-double"
+
+class REM_DOUBLE(_TRIPLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "rem-double"
+
+
+
+
+
+
+
+
 
 
 class LABEL(SmaliAssemblyInstruction):
@@ -757,33 +1038,6 @@ class LABEL(SmaliAssemblyInstruction):
         # LABELS are weird.  If you change this code be careful of compatibility 
         # with instructions such as IF_EQZ that use a LABEL in-line
         return ":taint_jump_label_" + str(self.n)
-
-
-class INVOKE_VIRTUAL(SmaliAssemblyInstruction):
-    # remember: first arg is actually a reference to the calling object
-    def __init__(self, args, fully_qualified_name):
-        self.args = args
-        self.calling_object = args[0]
-        self.params = args[1:]
-        self.fully_qualified_name = fully_qualified_name
-
-    def __repr__(self):
-        args_fmt = "{" + ", ".join(self.args) + "}"
-        return "invoke-virtual " + args_fmt + ", " + self.fully_qualified_name 
-
-
-# An invoke-virtual instruction that invokes a method defined inside of this app
-class INVOKE_VIRTUAL_INTERNAL(INVOKE_VIRTUAL):
-    pass
-
-
-# An invoke-virtual instruction that invokes a method defined outside of this app (e.g., Ljava/lang/StringBuilder;->append(Ljava/lang/String;))
-class INVOKE_VIRTUAL_EXTERNAL(INVOKE_VIRTUAL):
-    pass
-
-
-class INVOKE_STATIC(SmaliAssemblyInstruction):
-    pass
 
 
 class LOG_D(INVOKE_STATIC):
@@ -870,8 +1124,115 @@ def opcode_has_parameter_range(opcode):
     return opcode.endswith("/range")
 
 
+def main():
+
+    # One test for every isntruction in SmaliAssemblyInstructions.py
+    # http://pallergabor.uw.hu/androidblog/dalvik_opcodes.html
+
+    # second line is intentionally a blank line
+    TESTS = ["    nop\n",
+             "    \n",
+             "    move v6, p5\n",
+             "    move/16 v6, v24\n", # synthetic example
+             "    move/from16 v5, v26\n",
+             "    move-wide v14, v7\n",
+             "    move-wide/from16 v15, p3\n",
+             "    move-wide/16 v12, p2\n", # synthetic example
+             "    move-object v4, v3\n",
+             "    move-object/from16 v5, v31\n",
+             "    move-object/16 v2, v3\n", # synthetic example
+             "    move-result v0\n", 
+             "    move-result-wide v3\n",
+             "    move-result-object v3\n",
+             "    move-exception v0\n",
+             "    return-void\n",
+             "    return-wide v0\n",
+             "    return-object v1\n",
+             "    const v3, 0xffff\n",
+             "    const/4 v1, -0x1\n",
+             "    const/16 v0, 0xb\n",
+             "    const/high16 v3, 0x3f800000\n", # 0xf800... is float value 1.0
+             "    const-wide/16 v18, 0x1\n",
+             "    const-wide/32 v6, 0x2932e00\n",
+             "    const-wide v4, 0x100000000L\n",
+             "    const-wide/high16 v2, -0x8000000000000000L\n",
+             "    const-string v1, \"Parcelables cannot be written to an OutputStream\"\n",
+             "    const-string-jumbo\n", # synthetic example
+             "    const-class v4, Landroidx/versionedparcelable/VersionedParcel;\n",
+             "    monitor-enter p0\n",
+             "    monitor-exit p0\n",
+             "    check-cast v3, Ljava/lang/String;\n",
+             "    instance-of v0, p1, Ljava/lang/Integer;\n",
+             "    new-instance v0, Ljava/lang/RuntimeException;\n",
+             "    array-length v0, p1\n",
+             "    new-array v1, v0, [J\n",
+             "    filled-new-array {v0, v1, v2}, [Ljava/lang/String;\n",
+             #"    filled-new-array/range {v19..v21}, [B\n",
+             "    fill-array-data v1, :array_6\n",
+             "    throw v1\n",
+             "    goto :goto_0\n",
+             "    goto/32 :goto_0\n", # synthetic example
+             "    goto/16 :goto_0\n",  # synthetic example
+             "    packed-switch p1, :pswitch_data_0\n",
+             "    sparse-switch v3, :sswitch_data_0\n",
+             "    cmpl-float v5, v4, v6\n",
+             "    cmpg-float v5, p1, v5\n",
+             "    cmpl-double v16, v0, v14\n",
+             "    cmpg-double v13, v8, v14\n",
+             "    cmp-long v6, v4, p1\n",
+             "    if-eq v3, v1, :cond_2\n",
+             "    if-ne v1, p1, :cond_0\n",
+             "    if-lt v3, v2, :cond_0\n",
+             "    if-ge v1, v0, :cond_1\n",
+             "    if-gt v12, v14, :cond_8\n",
+             "    if-le v3, v10, :cond_25\n",
+             "    if-eqz v4, :cond_0\n",
+             "    if-nez v0, :cond_0\n",
+             "    if-ltz v0, :cond_7\n",
+             "    if-gez v0, :cond_0\n",
+             "    if-gtz v5, :cond_0\n",
+             "    if-lez v0, :cond_0\n",
+             "    aget v0, v0, v1\n",
+             "    aput v1, v0, v2\n",
+             "    iget-object v0, p0, Landroidx/transition/TransitionSet$1;->val$nextTransition:Landroidx/transition/Transition;\n",
+             "    iput p2, p0, Landroidx/transition/TransitionSet$1;->val$nextTransition:Landroidx/transition/Transition;\n",
+             "    sget-wide v2, Lcom/google/android/material/card/MaterialCardViewHelper;->COS_45:D\n",
+             "    sput-object v0, Lcom/google/android/material/snackbar/Snackbar;->SNACKBAR_BUTTON_STYLE_ATTR:[I\n",
+             "    sput-boolean v0, Lcom/google/android/material/ripple/RippleUtils;->USE_FRAMEWORK_RIPPLE:Z\n",
+             "    sput-char v0, Lcom/google/android/material/ripple/RippleUtils;->USE_FRAMEWORK_RIPPLE:Z\n", # synthetic
+             "    invoke-virtual {v1, v2, p1}, Landroid/os/Bundle;->putParcelable(Ljava/lang/String;Landroid/os/Parcelable;)V\n",
+             "    invoke-direct {v1}, Ljava/lang/StringBuilder;-><init>()V\n",
+             "    invoke-super {p0}, Landroid/widget/GridView;->onAttachedToWindow()V\n",
+             "    invoke-interface {v1}, Ljava/util/Collection;->iterator()Ljava/util/Iterator;\n",
+             "    neg-int v2, v0\n",
+             "    int-to-long v3, p1\n",
+             "    long-to-int v7, v6\n",
+             "    float-to-int v1, v1\n",
+             "    double-to-float v3, v3\n",
+             "    int-to-char v2, v2\n",
+             "    add-int v0, v11, v13\n",
+             "    or-int v6, v2, p2\n",
+             "    div-double v2, p17, v2\n"
+             
+    # New test cases can be added by (a) selecting an instruction
+    # and then (b) grep-ing some smali for that instruction
+    # e.g., suppose we're looking for an example of filled-new-array
+    # grep -R -n "filled-new-array" ./apkOutput/*
+
+    ]
+
+
+    for cur_line in TESTS:
+        print("\t" + cur_line.strip())
+        obj = parse_line(cur_line)
+        #print(type(obj), ": " + str(obj))
+        assert(str(obj) == cur_line)
+        
+
+
+    print("ALL TESTS PASSED!")
 
 # Do nothing if this file is called directly
 # this is only a library
-if __name__ == "__main__()":
-    pass
+if __name__ == "__main__":
+    main()
