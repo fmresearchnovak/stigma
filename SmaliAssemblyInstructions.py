@@ -29,6 +29,7 @@
 # _S_INSTRUCTION
 # _INVOKE_INSTRUCTION
 # _TWO_REGISTER_UNARY_INSTRUCTION
+# _TWO_REGISTER_BINARY_INSTRUCTION
 
 
 
@@ -468,7 +469,7 @@ class IF_LE(_TWO_REG_EQ):
 		
 		
 class _ONE_REG_EQ_ZERO(SmaliAssemblyInstruction):
-	# A parent class that should never be instantiated correctly
+	# A parent class that should never be instantiated directly
 	def __init__(self, reg_arg, target):
 		self.ra = reg_arg
 		self.target = target
@@ -581,6 +582,7 @@ class APUT_SHORT(_TRIPLE_REGISTER_INSTRUCTION):
 
 
 class _I_INSTRUCTION(SmaliAssemblyInstruction):
+	# A parent class that should never be instantiated directly
     #   Backward compatibility with how we call IGET() in Instrument
     def __init__(self, reg_dest, reg_calling_instance, class_name , instance_field_name = ""): 
         self.rd = reg_dest
@@ -658,6 +660,7 @@ class IPUT_SHORT(_I_INSTRUCTION):
 
 
 class _S_INSTRUCTION(SmaliAssemblyInstruction):
+	# A parent class that should never be instantiated directly
     #   Backward compatibility with how we call IGET() in Instrument
     def __init__(self, reg_dest, class_name , instance_field_name = ""): 
         self.rd = reg_dest
@@ -732,6 +735,7 @@ class SPUT_SHORT(_S_INSTRUCTION):
         return "sput-short"
 
 class _INVOKE_INSTRUCTION(_PARAMETER_LIST_INSTRUCTION):
+	# A parent class that should never be instantiated directly
     def __init__(self, element_list, type_id):
         super().__init__(element_list, type_id)
 
@@ -798,6 +802,7 @@ class INVOKE_INTERFACEERFACEERFACE_RANGE(SmaliAssemblyInstruction):
 
 
 class _TWO_REGISTER_UNARY_INSTRUCTION(SmaliAssemblyInstruction):
+	# A parent class that should never be instantiated directly
     def __init__(self, reg_dest, reg_arg):
         self.rd = reg_dest
         self.ra = reg_arg
@@ -1022,12 +1027,113 @@ class REM_DOUBLE(_TRIPLE_REGISTER_INSTRUCTION):
         return "rem-double"
 
 
+class _TWO_REGISTER_BINARY_INSTRUCTION(SmaliAssemblyInstruction):
+	# A parent class that should never be instantiated directly
+	
+	def __init__(self, reg_dest_and_arg1, reg_arg2):
+		self.rd = reg_dest_and_arg1
+		self.ra1 = reg_dest_and_arg1
+		self.ra2 = reg_arg2
+		
+	def get_registers(self):
+		return [self.rd, self.ra2]
+		
+	def __repr__(self):
+		return self.opcode() + " " + str(self.rd) + ", " + str(self.ra2)
+	
+	
+class ADD_INT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+	def opcode(self):
+		return "add-int/2addr"
 
+class SUB_INT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+	def opcode(self):
+		return "sub-int/2addr"
 
+class MUL_INT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+	def opcode(self):
+		return "mul-int/2addr"
 
+class DIV_INT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+	def opcode(self):
+		return "div-int/2addr"
+		
+class REM_INT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+	def opcode(self):
+		return "rem-int/2addr"
 
+class AND_INT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+	def opcode(self):
+		return "and-int/2addr"
+		
+class OR_INT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+	def opcode(self):
+		return "or-int/2addr"
 
+class XOR_INT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+	def opcode(self):
+		return "xor-int/2addr"
 
+class SHL_INT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+	def opcode(self):
+		return "shl-int/2addr"
+
+class SHR_INT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+	def opcode(self):
+		return "shr-int/2addr"
+
+class USHR_INT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+	def opcode(self):
+		return "ushr-int/2addr"
+			
+class ADD_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+	def opcode(self):
+		return "add-long/2addr"
+
+class SUB_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+	def opcode(self):
+		return "sub-long/2addr"
+
+class MUL_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+	def opcode(self):
+		return "mul-long/2addr"
+
+class DIV_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+	def opcode(self):
+		return "div-long/2addr"
+		
+class REM_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+	def opcode(self):
+		return "rem-long/2addr"
+
+class AND_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+	def opcode(self):
+		return "and-long/2addr"
+		
+class OR_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+	def opcode(self):
+		return "or-long/2addr"
+
+class XOR_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+	def opcode(self):
+		return "xor-long/2addr"
+
+class SHL_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+	def opcode(self):
+		return "shl-long/2addr"
+
+class SHR_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+	def opcode(self):
+		return "shr-long/2addr"
+
+class USHR_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+	def opcode(self):
+		return "ushr-long/2addr"
+		
+		
+		
+		
+		
 
 
 class LABEL(SmaliAssemblyInstruction):
@@ -1212,7 +1318,10 @@ def main():
              "    int-to-char v2, v2\n",
              "    add-int v0, v11, v13\n",
              "    or-int v6, v2, p2\n",
-             "    div-double v2, p17, v2\n"
+             "    div-double v2, p17, v2\n",
+             "    add-int/2addr v3, v4\n",
+             "    shl-int/2addr v7, v2\n",
+             "    add-long/2addr v1, v3\n"
              
     # New test cases can be added by (a) selecting an instruction
     # and then (b) grep-ing some smali for that instruction
