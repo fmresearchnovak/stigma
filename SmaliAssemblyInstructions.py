@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+    #!/usr/bin/env python3
 
 # SmaliAssemblyInstructions.py
 #
@@ -20,16 +20,20 @@
 #           only has ONE parameter; a register that serves as a destination.
 # Should the new class be a child of CONST?
 # Should the new class be a child of MOVE-RESULT?
+
+# Here are some of the "abstract" parent classes
 # _SINGLE_DEST_REGISTER_INSTRUCTION
 # _PARAMETER_LIST_INSTRUCTION
 # _TRIPLE_REGISTER_INSTRUCTION
 # _TWO_REG_EQ
 # _ONE_REG_EQ_ZERO
 # _I_INSTRUCTION
+# _I_INSTRUCTION_QUICK
 # _S_INSTRUCTION
 # _INVOKE_INSTRUCTION
 # _TWO_REGISTER_UNARY_INSTRUCTION
 # _TWO_REGISTER_BINARY_INSTRUCTION
+# _TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION
 
 
 
@@ -76,7 +80,21 @@ class NOP(SmaliAssemblyInstruction, NonMovable):
         pass
 
     def __repr__(self):
+        return self.opcode()
+        
+    def opcode(self):
         return "nop"
+        
+
+class INVOKE_DIRECT_EMPY(NOP):
+    # could not find any instance of this instruction
+    # in our APK files
+    # From the documentation:
+    #   "Stands as a placeholder for pruned empty methods 
+    #   like Object.<init>. This acts as nop during 
+    #   normal execution."
+    def opcode(self):
+        return "invoke-direct-empty"
 
 
 class BLANK_LINE(SmaliAssemblyInstruction, NonMovable):
@@ -95,7 +113,6 @@ class COMMENT(SmaliAssemblyInstruction, NonMovable):
         return "# " + self.l
 
 
-
 class MOVE(SmaliAssemblyInstruction, NormalMovable):
     def __init__(self, reg1, reg2):
         self.reg1 = reg1
@@ -107,54 +124,65 @@ class MOVE(SmaliAssemblyInstruction, NormalMovable):
         if(self.reg2 == ""):
             raise UnboundLocalError("reg2")
         return [self.reg1, self.reg2]
+        
+    def opcode(self):
+        return "move"
 
     def __repr__(self):
-        return "move " + self.reg1 + ", " + self.reg2
+        return self.opcode() + " " + str(self.reg1) + ", " + str(self.reg2)
 
 
 class MOVE_16(MOVE, NormalMovable):
     # this might not exist
     # I couldn't find any occurrences in the smali of leaks
+    
+    def opcode(self):
+        return "move/16"
+    
     def __repr__(self):
-        return "move/16 " + self.reg1 + ", " + self.reg2
+        return self.opcode() + " " + str(self.reg1) + ", " + str(self.reg2)
 
 # This is a problem
 # I need the class name to be MOVE/FROM16
 # but "/" is not a valid character in a class name
 class MOVE_FROM16(MOVE, NormalMovable):
+    
+    def opcode(self):
+        return "move/from16"
+    
     def __repr__(self):
-        return "move/from16 " + self.reg1 + ", " + self.reg2
+        return self.opcode() + " " + str(self.reg1) + ", " + str(self.reg2)
 
 # This is a problem
 # I need the class name to be MOVE-WIDE
 # but "-" is not a valid character in a class name
 class MOVE_WIDE(MOVE, WideMovable):
-    def __repr__(self):
-        return "move-wide " + self.reg1 + ", " + self.reg2
-
+    def opcode(self):
+        return "move-wide"
+    
 class MOVE_WIDE_FROM16(MOVE, WideMovable):
-    def __repr__(self):
-        return "move-wide/from16 " + self.reg1 + ", " + self.reg2
+    def opcode(self):
+        return "move-wide/from16"
 
 class MOVE_WIDE_16(MOVE, WideMovable):
-    def __repr__(self):
-        return "move-wide/16 " + self.reg1 + ", " + self.reg2
+    def opcode(self):
+        return "move-wide/16"
 
 class MOVE_OBJECT(MOVE, ObjectMovable):
-    def __repr__(self):
-        return "move-object " + self.reg1 + ", " + self.reg2
-
+    def opcode(self):
+        return "move-object"
+        
 class MOVE_OBJECT_FROM16(MOVE, ObjectMovable):
-    def __repr__(self):
-        return "move-object/from16 " + self.reg1 + ", " + self.reg2
+    def opcode(self):
+        return "move-object/from16"
 
 class MOVE_OBJECT_16(MOVE, ObjectMovable):
-    def __repr__(self):
-        return "move-object/16 " + self.reg1 + ", " + self.reg2
+    def opcode(self):
+        return "move-object/16"
 
 
 class _SINGLE_DEST_REGISTER_INSTRUCTION(SmaliAssemblyInstruction):
-	# A parent class that should never be instantiated directly.
+    # A parent class that should never be instantiated directly.
     #   * Note: _SINGLE_DEST_REGISTER_INSTRUCTION is any instruction that
     #   only has ONE parameter; a register that serves as a destination.
     def __init__(self, reg_dest):
@@ -162,42 +190,47 @@ class _SINGLE_DEST_REGISTER_INSTRUCTION(SmaliAssemblyInstruction):
 
     def get_registers(self):
         return [self.rd]
+        
+    def __repr__(self):
+        return self.opcode() + " " + str(self.rd)
 
 
 class MOVE_RESULT(_SINGLE_DEST_REGISTER_INSTRUCTION, NormalMovable):
+    def opcode(self):
+        return "move-result"
 
-    def __repr__(self):
-        return "move-result " + self.rd
+class MOVE_RESULT_WIDE(_SINGLE_DEST_REGISTER_INSTRUCTION, WideMovable):
+    def opcode(self):
+        return "move-result-wide"
 
-class MOVE_RESULT_WIDE(MOVE_RESULT, WideMovable):
-    def __repr__(self):
-        return "move-result-wide " + self.rd
+class MOVE_RESULT_OBJECT(_SINGLE_DEST_REGISTER_INSTRUCTION, ObjectMovable):
+    def opcode(self):
+        return "move-result-object"
 
-class MOVE_RESULT_OBJECT(MOVE_RESULT, ObjectMovable):
-    def __repr__(self):
-        return "move-result-object " + self.rd
-
-class MOVE_EXCEPTION(MOVE_RESULT, ObjectMovable):
-    def __repr__(self):
-        return "move-exception " + self.rd
+class MOVE_EXCEPTION(_SINGLE_DEST_REGISTER_INSTRUCTION, ObjectMovable):
+    def opcode(self):
+        return "move-exception"
 
 
 
 class RETURN_VOID(SmaliAssemblyInstruction, NonMovable):
-    def __repr__(self):
+    def opcode(self):
         return "return-void"
+        
+    def __repr__(self):
+        return self.opcode()
 
 class RETURN(_SINGLE_DEST_REGISTER_INSTRUCTION, NormalMovable):
-    def __repr__(self):
-        return "return " + self.rd
+    def opcode(self):
+        return "return"
 
-class RETURN_WIDE(_SINGLE_DEST_REGISTER_INSTRUCTION): ## STOPPED HERE
-    def __repr__(self):
-        return "return-wide " + self.rd
+class RETURN_WIDE(_SINGLE_DEST_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "return-wide"
 
 class RETURN_OBJECT(_SINGLE_DEST_REGISTER_INSTRUCTION):
-    def __repr__(self):
-        return "return-object " + self.rd
+    def opcode(self):
+        return "return-object"
 
 
 
@@ -205,71 +238,79 @@ class CONST(_SINGLE_DEST_REGISTER_INSTRUCTION):
     def __init__(self, reg_dest, hex_literal):
         self.rd = reg_dest
         self.l = hex_literal
+        
+    def opcode(self):
+        return "const"
 
     def __repr__(self):
-        return "const " + self.rd + ", " + str(self.l)
+        return self.opcode() + " " + str(self.rd) + ", " + str(self.l)
 
 
 class CONST_4(CONST):
-    def __repr__(self):
-        return "const/4 " + self.rd + ", " + str(self.l)
+    def opcode(self):
+        return "const/4"
 
 class CONST_16(CONST):
-    def __repr__(self):
-        return "const/16 " + self.rd + ", " + str(self.l)
+    def opcode(self):
+        return "const/16"
 
 class CONST_HIGH16(CONST):
-    def __repr__(self):
-        return "const/high16 " + self.rd + ", " + str(self.l)
+    def opcode(self):
+        return "const/high16"
 
 class CONST_WIDE_16(CONST):
-    def __repr__(self):
-        return "const-wide/16 " + self.rd + ", " + str(self.l)
+    def opcode(self):
+        return "const-wide/16"
 
 class CONST_WIDE_32(CONST):
-    def __repr__(self):
-        return "const-wide/32 " + self.rd + ", " + str(self.l)
+    def opcode(self):
+        return "const-wide/32"
 
 class CONST_WIDE(CONST):
-    def __repr__(self):
-        return "const-wide " + self.rd + ", " + str(self.l)
+    def opcode(self):
+        return "const-wide"
 
 class CONST_WIDE_HIGH16(CONST):
-    def __repr__(self):
-        return "const-wide/high16 " + self.rd + ", " + str(self.l)
+    def opcode(self):
+        return "const-wide/high16"
 
 class CONST_STRING(_SINGLE_DEST_REGISTER_INSTRUCTION):
     def __init__(self, reg_dest, str_literal):
         self.rd = reg_dest
         self.l = str_literal
-
+    
+    def opcode(self):
+        return "const-string"
+        
     def __repr__(self):
-        return "const-string " + self.rd + ", \"" + self.l + "\""
+        return self.opcode() + " " + str(self.rd) + ", \"" + str(self.l) + "\""
 
-class CONST_STRING_JUMBO(_SINGLE_DEST_REGISTER_INSTRUCTION):
-    def __init__(self):
+class CONST_STRING_JUMBO(SmaliAssemblyInstruction):
+    # https://stackoverflow.com/questions/19991833/in-dalvik-what-expression-will-generate-instructions-not-int-and-const-strin
+    def __init__(self, ):
         print("not yet implemented: const-string-jumbo")
         pass
-
-    def __repr__(self):
-        return "const-string-jumbo"
+        
 
 class CONST_CLASS(_SINGLE_DEST_REGISTER_INSTRUCTION):
     def __init__(self, reg_dest, type_id):
         self.rd = reg_dest
         self.type_id = type_id
 
+    def opcode(self):
+        return "const-class"
+        
     def __repr__(self):
-        return "const-class " + str(self.rd) + ", " + str(self.type_id)
+        return self.opcode() + " " + str(self.rd) + ", " + str(self.type_id)
 
 
 class MONITOR_ENTER(_SINGLE_DEST_REGISTER_INSTRUCTION):
-    def __repr__(self):
-        return "monitor-enter " + str(self.rd)
+    def opcode(self):
+        return "monitor-enter"
         
 class MONITOR_EXIT(_SINGLE_DEST_REGISTER_INSTRUCTION):
-    def __repr__(self):
-        return "monitor-exit " + str(self.rd)
+    def opcode(self):
+        return "monitor-exit"
     
     
 class CHECK_CAST(_SINGLE_DEST_REGISTER_INSTRUCTION):
@@ -277,8 +318,11 @@ class CHECK_CAST(_SINGLE_DEST_REGISTER_INSTRUCTION):
         self.rd = reg_dest
         self.type_id = type_id
         
+    def opcode(self):
+        return "check-cast"
+        
     def __repr__(self):
-        return "check-cast " + str(self.rd) + ", " + str(self.type_id)  
+        return self.opcode() + " " + str(self.rd) + ", " + str(self.type_id)  
         
 class INSTANCE_OF(SmaliAssemblyInstruction):
     def __init__(self, reg_res, reg_arg, type_id):
@@ -289,8 +333,11 @@ class INSTANCE_OF(SmaliAssemblyInstruction):
     def get_registers(self):
         return [self.rr, self.ra]
         
+    def opcode(self):
+        return "instance-of"
+        
     def __repr__(self):
-        return "instance-of " + str(self.rr) + ", " + str(self.ra) + ", " + str(self.type_id)
+        return self.opcode() + " " + str(self.rr) + ", " + str(self.ra) + ", " + str(self.type_id)
         
 class NEW_INSTANCE(SmaliAssemblyInstruction):
     def __init__(self, reg_dest, type_id):
@@ -300,8 +347,11 @@ class NEW_INSTANCE(SmaliAssemblyInstruction):
     def get_registers(self):
         return [self.rd]
             
+    def opcode(self):
+        return "new-instance"
+        
     def __repr__(self):
-        return "new-instance " + str(self.rd) + ", " + str(self.type_id)
+        return self.opcode() + " " + str(self.rd) + ", " + str(self.type_id)
         
 
 
@@ -313,8 +363,11 @@ class ARRAY_LENGTH(SmaliAssemblyInstruction):
     def get_registers(self):
         return [self.rd, self.rar]
         
+    def opcode(self):
+        return "array-length"
+        
     def __repr__(self):
-        return "array-length " + str(self.rd) + ", " + str(self.rar)
+        return self.opcode() + " " + str(self.rd) + ", " + str(self.rar)
         
 class NEW_ARRAY(SmaliAssemblyInstruction):
     def __init__(self, reg_dest, reg_size, type_id):
@@ -325,8 +378,11 @@ class NEW_ARRAY(SmaliAssemblyInstruction):
     def get_registers(self):
         return [self.rd, self.rs]
         
+    def opcode(self):
+        return "new-array"
+        
     def __repr__(self):
-        return "new-array " + str(self.rd) + ", " + str(self.rs) + ", " + str(self.type_id)     
+        return self.opcode() + " " + str(self.rd) + ", " + str(self.rs) + ", " + str(self.type_id)     
 
 class _PARAMETER_LIST_INSTRUCTION(SmaliAssemblyInstruction):
     def __init__(self, element_list, type_id):
@@ -356,130 +412,145 @@ class FILL_ARRAY_DATA(_SINGLE_DEST_REGISTER_INSTRUCTION):
     def __init__(self, reg_dest, array_label):
         self.rd = reg_dest
         self.array_label = array_label
+        
+    def opcode(self):
+        return "fill-array-data"
 
     def __repr__(self):
-        return "fill-array-data " + str(self.rd) + ", " + str(self.array_label)
+        return self.opcode() + " " + str(self.rd) + ", " + str(self.array_label)
 
 class THROW(_SINGLE_DEST_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "throw"
+        
     def __repr__(self):
-        return "throw " + str(self.rd)
+        return self.opcode() + " " + str(self.rd)
 
 class GOTO(SmaliAssemblyInstruction):
     def __init__(self, target):
         self.target = target
+        
+    def opcode(self):
+        return "goto"
 
     def __repr__(self):
-        return "goto " + str(self.target)
+        return self.opcode() + " " + str(self.target)
 
 class GOTO_16(GOTO):
-    def __repr__(self):
-        return "goto/16 " + str(self.target)
+    def opcode(self):
+        return "goto/16"
 
 class GOTO_32(GOTO):
-    def __repr__(self):
-        return "goto/32 " + str(self.target)
+    def opcode(self):
+        return "goto/32"
 
 
 class PACKED_SWITCH(_SINGLE_DEST_REGISTER_INSTRUCTION):
-	# NOTE: there is a .packed-switch and .sparse-switch
-	# compiler directive in smali
-	# e.g., .packed-switch -0x9
-	def __init__(self, reg_dest, table):
-			self.rd = reg_dest
-			self.table = table
-			
-	def __repr__(self):
-		return "packed-switch " + str(self.rd) + ", " + str(self.table)
+    # NOTE: there is a .packed-switch and .sparse-switch
+    # compiler directive in smali
+    # e.g., .packed-switch -0x9
+    def __init__(self, reg_dest, table):
+            self.rd = reg_dest
+            self.table = table
+            
+    def opcode(self):
+        return "packed-switch"
+            
+    def __repr__(self):
+        return self.opcode() + " " + str(self.rd) + ", " + str(self.table)
 
 class SPARSE_SWITCH(PACKED_SWITCH):
-	def __repr__(self):
-		return "sparse-switch " + str(self.rd) + ", " + str(self.table)
+    def opcode(self):
+        return "sparse-switch"
+    
+    def __repr__(self):
+        return self.opcode() + " " + str(self.rd) + ", " + str(self.table)
 
 
 class _TRIPLE_REGISTER_INSTRUCTION(SmaliAssemblyInstruction):
-	# A parent class that should never be instantiated directly
-	def __init__(self, reg_dest, reg_arg1, reg_arg2):
-		self.rd = reg_dest
-		self.ra1 = reg_arg1
-		self.ra2 = reg_arg2
-		
-	def get_registers(self):
-		return [self.rd, self.ra1, self.ra2]
-		
-	def __repr__(self):
-		return self.opcode() + " " + self.rd + ", " + self.ra1 + ", " + self.ra2
-		
-		
+    # A parent class that should never be instantiated directly
+    def __init__(self, reg_dest, reg_arg1, reg_arg2):
+        self.rd = reg_dest
+        self.ra1 = reg_arg1
+        self.ra2 = reg_arg2
+        
+    def get_registers(self):
+        return [self.rd, self.ra1, self.ra2]
+        
+    def __repr__(self):
+        return self.opcode() + " " + self.rd + ", " + self.ra1 + ", " + self.ra2
+        
+        
 class CMPL_FLOAT(_TRIPLE_REGISTER_INSTRUCTION):
-	def opcode(self):
-		return "cmpl-float"
-		
+    def opcode(self):
+        return "cmpl-float"
+        
 class CMPG_FLOAT(_TRIPLE_REGISTER_INSTRUCTION):
-	def opcode(self):
-		return "cmpg-float"
-		
+    def opcode(self):
+        return "cmpg-float"
+        
 class CMPL_DOUBLE(_TRIPLE_REGISTER_INSTRUCTION):
-	def opcode(self):
-		return "cmpl-double"
-		
+    def opcode(self):
+        return "cmpl-double"
+        
 class CMPG_DOUBLE(_TRIPLE_REGISTER_INSTRUCTION):
-	def opcode(self):
-		return "cmpg-double"
-		
+    def opcode(self):
+        return "cmpg-double"
+        
 class CMP_LONG(_TRIPLE_REGISTER_INSTRUCTION):
-	def opcode(self):
-		return "cmp-long"
-		
+    def opcode(self):
+        return "cmp-long"
+        
 class _TWO_REG_EQ(SmaliAssemblyInstruction):
-	# A parent class that should never be instantiated directly
-	def __init__(self, reg_arg1, reg_arg2, target):
-		self.ra1 = reg_arg1
-		self.ra2 = reg_arg2
-		self.target = target
-		
-	def get_registers(self):
-		return [self.ra1, self.ra2]
-		
-	def __repr__(self):
-		return self.opcode() + " " + str(self.ra1) + ", " + str(self.ra2) + ", " + str(self.target)
-		
+    # A parent class that should never be instantiated directly
+    def __init__(self, reg_arg1, reg_arg2, target):
+        self.ra1 = reg_arg1
+        self.ra2 = reg_arg2
+        self.target = target
+        
+    def get_registers(self):
+        return [self.ra1, self.ra2]
+        
+    def __repr__(self):
+        return self.opcode() + " " + str(self.ra1) + ", " + str(self.ra2) + ", " + str(self.target)
+        
 class IF_EQ(_TWO_REG_EQ):
-	def opcode(self):
-		return "if-eq"
-		
+    def opcode(self):
+        return "if-eq"
+        
 class IF_NE(_TWO_REG_EQ):
-	def opcode(self):
-		return "if-ne"
-		
+    def opcode(self):
+        return "if-ne"
+        
 class IF_LT(_TWO_REG_EQ):
-	def opcode(self):
-		return "if-lt"
-		
+    def opcode(self):
+        return "if-lt"
+        
 class IF_GE(_TWO_REG_EQ):
-	def opcode(self):
-		return "if-ge"
-		
+    def opcode(self):
+        return "if-ge"
+        
 class IF_GT(_TWO_REG_EQ):
-	def opcode(self):
-		return "if-gt"
-		
+    def opcode(self):
+        return "if-gt"
+        
 class IF_LE(_TWO_REG_EQ):
-	def opcode(self):
-		return "if-le"
-		
-		
+    def opcode(self):
+        return "if-le"
+        
+        
 class _ONE_REG_EQ_ZERO(SmaliAssemblyInstruction):
-	# A parent class that should never be instantiated directly
-	def __init__(self, reg_arg, target):
-		self.ra = reg_arg
-		self.target = target
-		
-	def get_registers(self):
-		return [self.ra]
-		
-	def __repr__(self):
-		# It might be necessary to use repr(self.target)
-		# here because self.target might be a smali.LABEL
+    # A parent class that should never be instantiated directly
+    def __init__(self, reg_arg, target):
+        self.ra = reg_arg
+        self.target = target
+        
+    def get_registers(self):
+        return [self.ra]
+        
+    def __repr__(self):
+        # It might be necessary to use repr(self.target)
+        # here because self.target might be a smali.LABEL
         # object or it might be a string.  
         
         # If it is a smali.LABEL object
@@ -490,36 +561,36 @@ class _ONE_REG_EQ_ZERO(SmaliAssemblyInstruction):
         
         # This could be a bug in other classes, maybe re-write 
         # the LABEL(SmaliAssemblyInstruction) class
-		return self.opcode() + " " + str(self.ra) + ", " + str(self.target)
-		
+        return self.opcode() + " " + str(self.ra) + ", " + str(self.target)
+        
 
 class IF_EQZ(_ONE_REG_EQ_ZERO):
-	def opcode(self):
-		return "if-eqz"
-		
+    def opcode(self):
+        return "if-eqz"
+        
 class IF_NEZ(_ONE_REG_EQ_ZERO):
-	def opcode(self):
-		return "if-nez"
+    def opcode(self):
+        return "if-nez"
 
 class IF_LTZ(_ONE_REG_EQ_ZERO):
-	def opcode(self):
-		return "if-ltz"
-		
+    def opcode(self):
+        return "if-ltz"
+        
 class IF_GEZ(_ONE_REG_EQ_ZERO):
-	def opcode(self):
-		return "if-gez"
-		
+    def opcode(self):
+        return "if-gez"
+        
 class IF_GTZ(_ONE_REG_EQ_ZERO):
-	def opcode(self):
-		return "if-gtz"
-		
+    def opcode(self):
+        return "if-gtz"
+        
 class IF_LEZ(_ONE_REG_EQ_ZERO):
-	def opcode(self):
-		return "if-lez"		
+    def opcode(self):
+        return "if-lez"     
 
-		
-			
-		
+        
+            
+        
 class AGET(_TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "aget"
@@ -582,7 +653,7 @@ class APUT_SHORT(_TRIPLE_REGISTER_INSTRUCTION):
 
 
 class _I_INSTRUCTION(SmaliAssemblyInstruction):
-	# A parent class that should never be instantiated directly
+    # A parent class that should never be instantiated directly
     #   Backward compatibility with how we call IGET() in Instrument
     def __init__(self, reg_dest, reg_calling_instance, class_name , instance_field_name = ""): 
         self.rd = reg_dest
@@ -660,7 +731,7 @@ class IPUT_SHORT(_I_INSTRUCTION):
 
 
 class _S_INSTRUCTION(SmaliAssemblyInstruction):
-	# A parent class that should never be instantiated directly
+    # A parent class that should never be instantiated directly
     #   Backward compatibility with how we call IGET() in Instrument
     def __init__(self, reg_dest, class_name , instance_field_name = ""): 
         self.rd = reg_dest
@@ -735,7 +806,7 @@ class SPUT_SHORT(_S_INSTRUCTION):
         return "sput-short"
 
 class _INVOKE_INSTRUCTION(_PARAMETER_LIST_INSTRUCTION):
-	# A parent class that should never be instantiated directly
+    # A parent class that should never be instantiated directly
     def __init__(self, element_list, type_id):
         super().__init__(element_list, type_id)
 
@@ -802,7 +873,7 @@ class INVOKE_INTERFACEERFACEERFACE_RANGE(SmaliAssemblyInstruction):
 
 
 class _TWO_REGISTER_UNARY_INSTRUCTION(SmaliAssemblyInstruction):
-	# A parent class that should never be instantiated directly
+    # A parent class that should never be instantiated directly
     def __init__(self, reg_dest, reg_arg):
         self.rd = reg_dest
         self.ra = reg_arg
@@ -1028,114 +1099,315 @@ class REM_DOUBLE(_TRIPLE_REGISTER_INSTRUCTION):
 
 
 class _TWO_REGISTER_BINARY_INSTRUCTION(SmaliAssemblyInstruction):
-	# A parent class that should never be instantiated directly
-	
-	def __init__(self, reg_dest_and_arg1, reg_arg2):
-		self.rd = reg_dest_and_arg1
-		self.ra1 = reg_dest_and_arg1
-		self.ra2 = reg_arg2
-		
-	def get_registers(self):
-		return [self.rd, self.ra2]
-		
-	def __repr__(self):
-		return self.opcode() + " " + str(self.rd) + ", " + str(self.ra2)
-	
-	
+    # A parent class that should never be instantiated directly
+    
+    def __init__(self, reg_dest_and_arg1, reg_arg2):
+        self.rd = reg_dest_and_arg1
+        self.ra1 = reg_dest_and_arg1
+        self.ra2 = reg_arg2
+        
+    def get_registers(self):
+        return [self.rd, self.ra2]
+        
+    def __repr__(self):
+        return self.opcode() + " " + str(self.rd) + ", " + str(self.ra2)
+    
+    
 class ADD_INT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
-	def opcode(self):
-		return "add-int/2addr"
+    def opcode(self):
+        return "add-int/2addr"
 
 class SUB_INT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
-	def opcode(self):
-		return "sub-int/2addr"
+    def opcode(self):
+        return "sub-int/2addr"
 
 class MUL_INT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
-	def opcode(self):
-		return "mul-int/2addr"
+    def opcode(self):
+        return "mul-int/2addr"
 
 class DIV_INT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
-	def opcode(self):
-		return "div-int/2addr"
-		
+    def opcode(self):
+        return "div-int/2addr"
+        
 class REM_INT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
-	def opcode(self):
-		return "rem-int/2addr"
+    def opcode(self):
+        return "rem-int/2addr"
 
 class AND_INT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
-	def opcode(self):
-		return "and-int/2addr"
-		
+    def opcode(self):
+        return "and-int/2addr"
+        
 class OR_INT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
-	def opcode(self):
-		return "or-int/2addr"
+    def opcode(self):
+        return "or-int/2addr"
 
 class XOR_INT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
-	def opcode(self):
-		return "xor-int/2addr"
+    def opcode(self):
+        return "xor-int/2addr"
 
 class SHL_INT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
-	def opcode(self):
-		return "shl-int/2addr"
+    def opcode(self):
+        return "shl-int/2addr"
 
 class SHR_INT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
-	def opcode(self):
-		return "shr-int/2addr"
+    def opcode(self):
+        return "shr-int/2addr"
 
 class USHR_INT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
-	def opcode(self):
-		return "ushr-int/2addr"
-			
+    def opcode(self):
+        return "ushr-int/2addr"
+            
 class ADD_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
-	def opcode(self):
-		return "add-long/2addr"
+    def opcode(self):
+        return "add-long/2addr"
 
 class SUB_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
-	def opcode(self):
-		return "sub-long/2addr"
+    def opcode(self):
+        return "sub-long/2addr"
 
 class MUL_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
-	def opcode(self):
-		return "mul-long/2addr"
+    def opcode(self):
+        return "mul-long/2addr"
 
 class DIV_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
-	def opcode(self):
-		return "div-long/2addr"
-		
+    def opcode(self):
+        return "div-long/2addr"
+        
 class REM_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
-	def opcode(self):
-		return "rem-long/2addr"
+    def opcode(self):
+        return "rem-long/2addr"
 
 class AND_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
-	def opcode(self):
-		return "and-long/2addr"
-		
+    def opcode(self):
+        return "and-long/2addr"
+        
 class OR_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
-	def opcode(self):
-		return "or-long/2addr"
+    def opcode(self):
+        return "or-long/2addr"
 
 class XOR_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
-	def opcode(self):
-		return "xor-long/2addr"
+    def opcode(self):
+        return "xor-long/2addr"
 
 class SHL_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
-	def opcode(self):
-		return "shl-long/2addr"
+    def opcode(self):
+        return "shl-long/2addr"
 
 class SHR_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
-	def opcode(self):
-		return "shr-long/2addr"
+    def opcode(self):
+        return "shr-long/2addr"
 
 class USHR_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
-	def opcode(self):
-		return "ushr-long/2addr"
-		
-		
-		
-		
-		
+    def opcode(self):
+        return "ushr-long/2addr"
+
+class ADD_FLOAT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "add-float/2addr"
+        
+class SUB_FLOAT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "sub-float/2addr"
+        
+class MUL_FLOAT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "mul-float/2addr"
+        
+class DIV_FLOAT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "div-float/2addr"
+        
+class REM_FLOAT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "rem-float/2addr"
+        
+class ADD_DOUBLE_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "add-double/2addr"
+        
+class SUB_DOUBLE_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "sub-double/2addr"
+        
+class MUL_DOUBLE_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "mul-double/2addr"
+        
+class DIV_DOUBLE_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "div-double/2addr"
+        
+class REM_DOUBLE_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "rem-double/2addr"
+        
+
+class _TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION(SmaliAssemblyInstruction):
+    # A parent class that should never be instantiated directly
+    
+    def __init__(self, reg_dest_and_arg1, reg_arg2, literal):
+        self.rd = reg_dest_and_arg1
+        self.ra1 = reg_dest_and_arg1
+        self.ra2 = reg_arg2
+        self.lit = literal
+        
+    def get_registers(self):
+        return [self.rd, self.ra2]
+        
+    def __repr__(self):
+        return self.opcode() + " " + str(self.rd) + ", " + str(self.ra2) + ", " + str(self.lit)
 
 
+class ADD_INT_LIT16(_TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "add-int/lit16"
+        
+class SUB_INT_LIT16(_TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "sub-int/lit16"
+
+class MUL_INT_LIT16(_TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "mul-int/lit16"
+        
+class DIV_INT_LIT16(_TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "div-int/lit16"
+        
+class REM_INT_LIT16(_TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "rem-int/lit16"
+
+class AND_INT_LIT16(_TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "and-int/lit16"
+
+class OR_INT_LIT16(_TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "or-int/lit16"
+        
+class XOR_INT_LIT16(_TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "xor-int/lit16"
+        
+class ADD_INT_LIT8(_TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "add-int/lit8"
+        
+class SUB_INT_LIT8(_TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "sub-int/lit8"
+        
+class MUL_INT_LIT8(_TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "mul-int/lit8"
+        
+class DIV_INT_LIT8(_TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "div-int/lit8"
+        
+class REM_INT_LIT8(_TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "rem-int/lit8"
+        
+class AND_INT_LIT8(_TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "and-int/lit8"
+        
+class OR_INT_LIT8(_TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "or-int/lit8"
+        
+class XOR_INT_LIT8(_TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "xor-int/lit8"
+        
+class SHL_INT_LIT8(_TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "shl-int/lit8"
+        
+class SHR_INT_LIT8(_TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "shr-int/lit8"
+        
+class USHR_INT_LIT8(_TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION):
+    def opcode(self):
+        return "ushr-int/lit8"
+        
+
+        
+        
+class _I_INSTRUCTION_QUICK(SmaliAssemblyInstruction):
+    # A parent class that should never be instantiated directly
+    # No instances of any "quick" instruction found in our APKs
+    def __init__(self, reg_dest, reg_calling_instance, offset): 
+        self.rd = reg_dest
+        self.rci = reg_calling_instance
+        self.offset = offset
+        
+    def get_registers(self):
+        return [self.rd, self.rci]
+
+    def __repr__(self):
+        return self.opcode() + " " + str(self.rd) + ", " + str(self.rci) + ", " + str(self.offset)
+
+class IGET_QUICK(_I_INSTRUCTION_QUICK):
+    def opcode(self):
+        return "iget-quick"
+
+class IGET_WIDE_QUICK(_I_INSTRUCTION_QUICK):
+    def opcode(self):
+        return "iget-wide-quick"
+        
+class IGET_OBJECT_QUICK(_I_INSTRUCTION_QUICK):
+    def opcode(self):
+        return "iget-object-quick"
+        
+class IPUT_QUICK(_I_INSTRUCTION_QUICK):
+    def opcode(self):
+        return "iput-quick"
+        
+class IPUT_WIDE_QUICK(_I_INSTRUCTION_QUICK):
+    def opcode(self):
+        return "iput-wide-quick"
+        
+class IPUT_OBJECT_QUICK(_I_INSTRUCTION_QUICK):
+    def opcode(self):
+        return "iput-object-quick"
+
+class INVOKE_VIRTUAL_QUICK(_PARAMETER_LIST_INSTRUCTION):
+    def __init__(self, element_list, vtable):
+        super().__init__(element_list, None)
+        self.vtable = vtable
+        self.calling_object = element_list[0]
+        
+    def opcode(self):
+        return "invoke-virtual-quick"
+        
+    def __repr__(self):
+        reg_string = ", ".join(self.register_list)
+        return self.opcode() + " {" + reg_string + "}, " + str(self.vtable)
+
+class INVOKE_SUPER_QUICK(_PARAMETER_LIST_INSTRUCTION):
+    def __init__(self, element_list, vtable):
+        super().__init__(element_list, None)
+        self.vtable = vtable
+        self.calling_object = element_list[0]
+        
+    def opcode(self):
+        return "invoke-super-quick"
+        
+    def __repr__(self):
+        reg_string = ", ".join(self.register_list)
+        return self.opcode() + " {" + reg_string + "}, " + str(self.vtable)
+
+
+# The following classes don't seem to
+# appear anywhere in our APK files
+# so they are left unimplemented
+# class INVOKE_VIRTUAL_QUICK_RANGE
+# class INVOKE_SUPER_QUICK_RANGE
+        
 class LABEL(SmaliAssemblyInstruction):
     def __init__(self, num):
         self.n = num
@@ -1147,7 +1419,9 @@ class LABEL(SmaliAssemblyInstruction):
 
 
 class LOG_D(INVOKE_STATIC):
-    
+    # Not actually an assembly instruction!  More 
+    # of a short-cut to quickly create an instance
+    # of invoke-static for a Log.d() call
     def __init__(self, reg_tag, reg_msg):
         self.rt = reg_tag
         self.rm = reg_msg
@@ -1263,7 +1537,6 @@ def main():
              "    const-wide v4, 0x100000000L\n",
              "    const-wide/high16 v2, -0x8000000000000000L\n",
              "    const-string v1, \"Parcelables cannot be written to an OutputStream\"\n",
-             "    const-string-jumbo\n", # synthetic example
              "    const-class v4, Landroidx/versionedparcelable/VersionedParcel;\n",
              "    monitor-enter p0\n",
              "    monitor-exit p0\n",
@@ -1321,8 +1594,13 @@ def main():
              "    div-double v2, p17, v2\n",
              "    add-int/2addr v3, v4\n",
              "    shl-int/2addr v7, v2\n",
-             "    add-long/2addr v1, v3\n"
-             
+             "    add-long/2addr v1, v3\n",
+             "    add-float/2addr v6, v7\n",
+             "    sub-double/2addr v11, v9\n",
+             "    mul-int/lit16 v0, v0, 0x3e8\n",
+             "    ushr-int/lit8 v2, v2, 0x1\n",
+             "    iget-quick v1, v2, [obj+0010]\n", # not sure about this
+             "    invoke-virtual-quick {v15, v12}, vtable\n", # not sure about this
     # New test cases can be added by (a) selecting an instruction
     # and then (b) grep-ing some smali for that instruction
     # e.g., suppose we're looking for an example of filled-new-array
