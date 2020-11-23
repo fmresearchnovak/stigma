@@ -35,7 +35,77 @@
 # _TWO_REGISTER_BINARY_INSTRUCTION
 # _TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION
 
+import StigmaStringParsingLib
 
+        
+def _build_move_type_hash_map_frl(signature, num_local_params):
+    mt_hashmap = {}
+    
+    for key in signature.parameter_type_map:
+        #print("key: " + str(key) + "  value: " + str(signature.parameter_type_map[key]))
+        p_reg = key
+        reg_type = signature.parameter_type_map[key]
+        v_reg = StigmaStringParsingLib._get_v_from_p(p_reg, num_local_params)
+        
+        if reg_type in ["THIS", "L", "ARRAY"]:
+            mt_hashmap[v_reg] = MOVE_OBJECT_16
+            
+        elif reg_type in ["J", "D"]:
+            mt_hashmap[v_reg] = MOVE_WIDE_16
+            
+        elif reg_type in ["Z", "B", "S", "C", "I", "F"]:
+            mt_hashmap[v_reg] = MOVE_16
+            
+        elif reg_type in ["J2", "D2"]:
+            mt_hashmap[v_reg] = "2"
+            
+        else:
+            raise RuntimeError("cannot assign register type for: " + str(reg_type))
+        
+    return mt_hashmap
+    
+def _update_mt_hashmap_frl(move_type_hashmap, cur_line):
+    #print("update_mt_hashmap(" + repr(cur_line) + ")")
+    
+    if(not StigmaStringParsingLib.is_valid_instruction(cur_line)):
+        return None
+
+    # "update move-type hashmap"
+    # this creates a hashmap that indicates for each register
+    # what the corresponding move instruction must be used
+    # in order to move that register (assuming that register
+    # will be used on the RIGHT hand side of the move
+    #
+    # e.g., suppose v0 is a long, we should use move-wide/16 vx, v0
+    
+    # In order to know that v0 is a long, there must have been
+    # an instruction that writes a long value to v0 
+    # (that is, v0 is the destination register in such an instruction)
+    # All such instructions are in WIDE_MOVE_LIST
+    
+    # This function is called on every (original) instruction
+    # of smali code
+    opcode = StigmaStringParsingLib.break_into_tokens(cur_line)[0]
+    
+    if opcode in StigmaStringParsingLib.WORD_MOVE_LIST:
+        best_move_type = MOVE_16
+    
+    elif opcode in StigmaStringParsingLib.WIDE_MOVE_LIST:
+        best_move_type = MOVE_WIDE_16
+        
+    elif opcode in StigmaStringParsingLib.OBJECT_MOVE_LIST:
+        best_move_type = MOVE_OBJECT
+    
+    else:
+        return move_type_hashmap
+        
+    key_reg = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)[0]
+    move_type_hashmap[key_reg] = best_move_type
+    
+    if best_move_type == MOVE_WIDE_16:
+        key_reg_num = int(key_reg[1:])
+        new_key_reg = "v" + str(key_reg_num + 1)
+        move_type_hashmap[new_key_reg] = "2"    
 
 class SmaliAssemblyInstruction():
 
@@ -238,6 +308,10 @@ class CONST(_SINGLE_DEST_REGISTER_INSTRUCTION):
     def __init__(self, reg_dest, hex_literal):
         self.rd = reg_dest
         self.l = hex_literal
+
+    def fix_register_limit(self, mt_map):
+        block = [str(CONST_16(self.rd, self.l))]
+        return block
         
     def opcode(self):
         return "const"
@@ -258,21 +332,35 @@ class CONST_HIGH16(CONST):
     def opcode(self):
         return "const/high16"
 
-class CONST_WIDE_16(CONST):
-    def opcode(self):
-        return "const-wide/16"
+    def fix_register_limit(self):
+        return [self]
 
-class CONST_WIDE_32(CONST):
-    def opcode(self):
-        return "const-wide/32"
 
 class CONST_WIDE(CONST):
     def opcode(self):
         return "const-wide"
 
+    def fix_register_limit(self):
+        return [CONST_WIDE_16(self.rd, self.l)]
+
+class CONST_WIDE_16(CONST_WIDE):
+    def opcode(self):
+        return "const-wide/16"
+
+class CONST_WIDE_32(CONST_WIDE):
+    def opcode(self):
+        return "const-wide/32"
+
+    def fix_register_limit(self):
+        return [self]
+
+
 class CONST_WIDE_HIGH16(CONST):
     def opcode(self):
         return "const-wide/high16"
+
+    def fix_register_limit(self):
+        return [self]
 
 class CONST_STRING(_SINGLE_DEST_REGISTER_INSTRUCTION):
     def __init__(self, reg_dest, str_literal):

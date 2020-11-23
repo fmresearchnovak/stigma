@@ -40,6 +40,12 @@ BEGINS_WITH_MOVE = r"^\s*move"
 valid_instructions_list = [x.strip() for x in open("./valid_smali_instructions.txt", "r").readlines()]
 
 
+def _get_v_from_p(p_register, locals_num):
+    # e.g., _get_v_frl(p2, 2) -> v4
+    p_num = int(p_register[1:])
+    corresponding_v_num = locals_num + p_num
+    return "v" + str(corresponding_v_num)
+
 def get_num_registers(line):
     tokens = break_into_tokens(line)
     #print("tokens[0]: " + str(tokens[0]))
