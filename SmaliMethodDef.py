@@ -312,12 +312,7 @@ class SmaliMethodDef:
     @staticmethod
 
     def _build_shadow_map_frl(cur_line, remaining_shadows):
-        # Step 2.5 and 3
-        # 2.5: Check for high numbered registers in instruction
-        # 3: Build shadow map
-
-        # converting from a list back to a set back to a list
-        # guarantees that the contents of regs are unique elements
+        # Guarantees that the contents of regs are unique elements
         # only.  This is important for an instruction like
         # add-int v0, v2, v2  which has duplicates
         regs = SmaliMethodDef._unique_frl(StigmaStringParsingLib.get_v_and_p_numbers(cur_line))
@@ -614,7 +609,8 @@ class SmaliMethodDef:
             
             '''
 
-            block = smali.parse_line(cur_line).fix_register_limit()
+            smali_asm_obj = smali.parse_line(cur_line)
+            block = smali_asm_obj.fix_register_limit()
             self.embed_block_with_replace(block, line_num)
 
 
@@ -763,9 +759,6 @@ def tests():
     assert(SmaliMethodDef._rewrite_instruction_frl(test2_shadow_map, "    array-length v16, v21\n") == "    array-length v0, v1\n")
     
     
-    
-    
-    
     print("\t_create_after_move_block_frl...")
     sol_after_block = [ 
     smali.BLANK_LINE(), 
@@ -788,6 +781,42 @@ def tests():
     assert(SmaliMethodDef._create_after_move_block_frl(test2_shadow_map, res_map) == sol_after_block)
     
     
+    print("\tfix_register_limit()...")
+    ans_block = smali.parse_line("    const v21, 0x800053\n").fix_register_limit()
+    #print(ans_block)
+    assert(ans_block == ["    const/16 v21, 0x800053\n"])
+    # This test raises a concern about introducing logical bugs
+    # -0x1 is 1111 in 4bit 2's compliment binary
+    # -0x1 is 1111 1111 1111 1111 in 16bit 2's compliment binary
+    
+    # 0xFFFF = 65535 = 0000 0000 0000 0000 1111 1111 1111 1111 (in 32-bit binary)
+    # imagine the instruction const/32 vx 0xFFFF
+    # if we convert this to const/16 without changing anything else we have
+    # const/16 vx, 0xFFFF
+    # 1111 1111 1111 1111 which is now interpreted as
+    # -1 (two's compliment).
+    ans_block = smali.parse_line("    const/4 v25, -0x1\n").fix_register_limit()
+    assert(ans_block == ["    const/16 v25, -0x1\n"])
+
+    asm_obj = smali.parse_line("    const-string v16, \"hey there! v4, test string!\"\n")
+    #print(test2_shadow_map)
+    ans_block = asm_obj.fix_register_limit(test2_shadow_map, {"v0": smali.MOVE_OBJECT_16})
+    soln_block = [smali.COMMENT("FRL MOVE ADDED BY STIGMA"), 
+            smali.BLANK_LINE(),
+            smali.MOVE_OBJECT_16("v19", "v0"),
+            smali.BLANK_LINE(),
+            smali.CONST_STRING("v0", "hey there! v4, test string!"),
+            smali.BLANK_LINE(),
+            smali.MOVE_OBJECT_16("v16", "v0"),
+            smali.BLANK_LINE(),
+            smali.MOVE_OBJECT_16("v0", "v19"),
+            smali.BLANK_LINE(),
+            smali.COMMENT("END OF FRL MOVE ADDED BY STIGMA"),
+            smali.BLANK_LINE()]
+    
+    #print(ans_block)
+    #print(soln_block)
+    assert(ans_block == soln_block)
 
     
     

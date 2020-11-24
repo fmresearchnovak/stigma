@@ -309,7 +309,10 @@ class CONST(_SINGLE_DEST_REGISTER_INSTRUCTION):
         self.rd = reg_dest
         self.l = hex_literal
 
-    def fix_register_limit(self, mt_map):
+    def fix_register_limit(self, shadow_map = None, mt_map = None):
+        # this instruction doesn't use the shadow map
+        # or the move_type_hashmap
+        # others likely will
         block = [str(CONST_16(self.rd, self.l))]
         return block
         
@@ -332,15 +335,14 @@ class CONST_HIGH16(CONST):
     def opcode(self):
         return "const/high16"
 
-    def fix_register_limit(self):
+    def fix_register_limit(self, shadow_map = None, mt_map = None):
         return [self]
-
 
 class CONST_WIDE(CONST):
     def opcode(self):
         return "const-wide"
 
-    def fix_register_limit(self):
+    def fix_register_limit(self, shadow_map = None, mt_map = None):
         return [CONST_WIDE_16(self.rd, self.l)]
 
 class CONST_WIDE_16(CONST_WIDE):
@@ -351,7 +353,7 @@ class CONST_WIDE_32(CONST_WIDE):
     def opcode(self):
         return "const-wide/32"
 
-    def fix_register_limit(self):
+    def fix_register_limit(self, shadow_map = None, mt_map = None):
         return [self]
 
 
@@ -359,7 +361,7 @@ class CONST_WIDE_HIGH16(CONST):
     def opcode(self):
         return "const-wide/high16"
 
-    def fix_register_limit(self):
+    def fix_register_limit(self, shadow_map = None, mt_map = None):
         return [self]
 
 class CONST_STRING(_SINGLE_DEST_REGISTER_INSTRUCTION):
@@ -369,6 +371,86 @@ class CONST_STRING(_SINGLE_DEST_REGISTER_INSTRUCTION):
     
     def opcode(self):
         return "const-string"
+        
+    def fix_register_limit(self, shadow_map = None, mt_map = None):
+        #print("shadow map: " + str(shadow_map))
+        #print("move_type_map: " + str(move_type_map))
+        # move map says things like: {"v0", smali.MOVE_WIDE_16}
+        
+        # We will use the move_type_map to create a block with the
+        # correct MOVE instructions (MOVE_16, MOVE_WIDE_16, MOVE_OBJECT_16)
+        # for the register being moved.
+
+        # consider the following example:
+        # const-string v21, "hello!"
+
+        #     shad  corr
+        #1 move v17, v0
+        #
+        #    corr  high
+        #2 move v0, v21   <--- unnecessary
+        #
+        #  const-string v0, "hello!"
+        #
+        #3 move-object/16 v21, v0
+        #
+        #4 move v0, v17
+        #
+        # the second move (v21 to v0) is 
+        # actually _NOT_ necessary because 
+        # the instruction does not actually READ
+        # the value of the register, it
+        # only writes to it.
+
+        # optimally, we can only update the mt_map
+        # with move #3
+
+
+
+        #mv shadow corr
+        #mv corr high
+        block = [COMMENT("FRL MOVE ADDED BY STIGMA")]
+        block.append(BLANK_LINE())
+        
+        # for this instruction there will be
+        # only 1 tuple since this instruction has
+        # only one register
+        
+        high_reg = shadow_map.tuples[0][0]
+        corr_reg = shadow_map.get_corresponding(high_reg)
+        shad_reg = shadow_map.get_shadow(high_reg)
+        
+        # move 1
+        if(corr_reg in mt_map):
+            move1 = mt_map[corr_reg]
+            move1 = move1(shad_reg, corr_reg)
+            block.append(move1)
+            block.append(BLANK_LINE())
+
+        
+        # replace with correct register so
+        # that instruction has small-numbered
+        # registers only
+        block.append(CONST_STRING(corr_reg, self.l))
+        block.append(BLANK_LINE())
+
+        # move 3
+        move3 = MOVE_OBJECT_16(high_reg, corr_reg)
+        _update_mt_hashmap_frl(mt_map, str(move3))
+        block.append(move3)
+        block.append(BLANK_LINE())
+
+        # move 4
+        if(corr_reg in mt_map):
+            move4 = mt_map[corr_reg]
+            move4 = move4(corr_reg, shad_reg)
+            block.append(move4)
+            block.append(BLANK_LINE())
+
+        block.append(COMMENT("END OF FRL MOVE ADDED BY STIGMA"))
+        block.append(BLANK_LINE())
+
+        return block
         
     def __repr__(self):
         return self.opcode() + " " + str(self.rd) + ", \"" + str(self.l) + "\""
