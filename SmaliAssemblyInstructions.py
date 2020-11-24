@@ -22,6 +22,7 @@
 # Should the new class be a child of MOVE-RESULT?
 
 # Here are some of the "abstract" parent classes
+# _SINGLE_REGISTER_INSTRUCTION
 # _SINGLE_DEST_REGISTER_INSTRUCTION
 # _PARAMETER_LIST_INSTRUCTION
 # _TRIPLE_REGISTER_INSTRUCTION
@@ -64,6 +65,19 @@ def _build_move_type_hash_map_frl(signature, num_local_params):
         
     return mt_hashmap
     
+def get_move_type(opcode):
+    if opcode in StigmaStringParsingLib.WORD_MOVE_LIST:
+        return MOVE_16
+    
+    elif opcode in StigmaStringParsingLib.WIDE_MOVE_LIST:
+        return MOVE_WIDE_16
+        
+    elif opcode in StigmaStringParsingLib.OBJECT_MOVE_LIST:
+        return MOVE_OBJECT_16
+    
+    else:
+        return None
+
 def _update_mt_hashmap_frl(move_type_hashmap, cur_line):
     #print("update_mt_hashmap(" + repr(cur_line) + ")")
     
@@ -87,16 +101,10 @@ def _update_mt_hashmap_frl(move_type_hashmap, cur_line):
     # of smali code
     opcode = StigmaStringParsingLib.break_into_tokens(cur_line)[0]
     
-    if opcode in StigmaStringParsingLib.WORD_MOVE_LIST:
-        best_move_type = MOVE_16
-    
-    elif opcode in StigmaStringParsingLib.WIDE_MOVE_LIST:
-        best_move_type = MOVE_WIDE_16
-        
-    elif opcode in StigmaStringParsingLib.OBJECT_MOVE_LIST:
-        best_move_type = MOVE_OBJECT
-    
-    else:
+    best_move_type = get_move_type(opcode)
+
+    if best_move_type is None:
+
         return move_type_hashmap
         
     key_reg = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)[0]
@@ -121,20 +129,20 @@ class SmaliAssemblyInstruction():
     def __eq__(self, other):
         return repr(self) == repr(other)
     
-    def get_move(reg1, reg2):
-        return MOVE_16(reg1, reg2)
+    def get_move(self):
+        return MOVE_16
 
 class NormalMovable():
-      def get_move(self, reg1, reg2):
-        return MOVE_16(reg1, reg2)
+      def get_move(self):
+        return MOVE_16
 
 class WideMovable():
-    def get_move(self, reg1, reg2):
-        return MOVE_WIDE_16(reg1, reg2)
+    def get_move(self):
+        return MOVE_WIDE_16
 
 class ObjectMovable():
-    def get_move(self, reg1, reg2):
-        return MOVE_OBJECT16(reg1, reg2)
+    def get_move(self):
+        return MOVE_OBJECT16
     
 class VaryingMovable():
     def get_move(self):
@@ -250,129 +258,122 @@ class MOVE_OBJECT_16(MOVE, ObjectMovable):
     def opcode(self):
         return "move-object/16"
 
-
-class _SINGLE_DEST_REGISTER_INSTRUCTION(SmaliAssemblyInstruction):
-    # A parent class that should never be instantiated directly.
-    #   * Note: _SINGLE_DEST_REGISTER_INSTRUCTION is any instruction that
-    #   only has ONE parameter; a register that serves as a destination.
+class _SINGLE_REGISTER_INSTRUCTION(SmaliAssemblyInstruction):
     def __init__(self, reg_dest):
         self.rd = reg_dest
 
     def get_registers(self):
         return [self.rd]
-        
+
     def __repr__(self):
         return self.opcode() + " " + str(self.rd)
 
-
-class MOVE_RESULT(_SINGLE_DEST_REGISTER_INSTRUCTION, NormalMovable):
-    def opcode(self):
-        return "move-result"
-
-class MOVE_RESULT_WIDE(_SINGLE_DEST_REGISTER_INSTRUCTION, WideMovable):
-    def opcode(self):
-        return "move-result-wide"
-
-class MOVE_RESULT_OBJECT(_SINGLE_DEST_REGISTER_INSTRUCTION, ObjectMovable):
-    def opcode(self):
-        return "move-result-object"
-
-class MOVE_EXCEPTION(_SINGLE_DEST_REGISTER_INSTRUCTION, ObjectMovable):
-    def opcode(self):
-        return "move-exception"
-
-
-
-class RETURN_VOID(SmaliAssemblyInstruction, NonMovable):
-    def opcode(self):
-        return "return-void"
+    def fix_register_limit(self, shadow_map, mt_map):
+        #print("shadow map: " + str(shadow_map))
+        #print("move_type_map: " + str(move_type_map))
+        # move map says things like: {"v0", smali.MOVE_WIDE_16}
         
-    def __repr__(self):
-        return self.opcode()
+        # We will use the move_type_map to create a block with the
+        # correct MOVE instructions (MOVE_16, MOVE_WIDE_16, MOVE_OBJECT_16)
+        # for the register being moved.
 
-class RETURN(_SINGLE_DEST_REGISTER_INSTRUCTION, NormalMovable):
-    def opcode(self):
-        return "return"
+        # consider the following example:
+        # move-result v0
 
-class RETURN_WIDE(_SINGLE_DEST_REGISTER_INSTRUCTION):
-    def opcode(self):
-        return "return-wide"
+        #     shad  corr
+        #1 move v17, v0
+        #
+        #    corr  high
+        #2 move v0, v21 
+        #
+        #  move-result v0
+        #
+        #3 move v21, v0
+        #
+        #4 move v0, v17
+        #
+        # the second move (v21 to v0) is 
+        # actually _NOT_ necessary because 
+        # the instruction does not actually READ
+        # the value of the register, it
+        # only writes to it.
 
-class RETURN_OBJECT(_SINGLE_DEST_REGISTER_INSTRUCTION):
-    def opcode(self):
-        return "return-object"
+        # optimally, we can only update the mt_map
+        # with move #3
+        #mv shadow corr
+        #mv corr high
+        block = [COMMENT("FRL MOVE ADDED BY STIGMA")]
+        block.append(BLANK_LINE())
+        
+        # for this instruction there will be
+        # only 1 tuple since this instruction has
+        # only one register
+        
+        high_reg = shadow_map.tuples[0][0]
+        corr_reg = shadow_map.get_corresponding(high_reg)
+        shad_reg = shadow_map.get_shadow(high_reg)
+        
+        # move 1
+        if(corr_reg in mt_map):
+            move1 = mt_map[corr_reg]
+            move1 = move1(shad_reg, corr_reg)
+            _update_mt_hashmap_frl(mt_map, str(move1))
+            block.append(move1)
+            block.append(BLANK_LINE())
+           
+        if(high_reg in mt_map):
+            move2 = mt_map[high_reg]
+            move2 = move2(corr_reg, high_reg)
+            block.append(move2)
+            block.append(BLANK_LINE())
+            _update_mt_hashmap_frl(mt_map, str(move2))
+        
+        
+        # replace with correct register so
+        # that instruction has small-numbered
+        # registers only
+        instr = self.__class__(corr_reg)
+        _update_mt_hashmap_frl(mt_map, str(instr))
+        block.append(instr)
+        block.append(BLANK_LINE())
+       
 
+        # move 3
+        move3 = get_move_type(instr.opcode())
+        move3 = move3(high_reg, corr_reg)
+        _update_mt_hashmap_frl(mt_map, str(move3))
+        block.append(move3)
+        block.append(BLANK_LINE())
 
+        # move 4
+        if(corr_reg in mt_map):
+            move4 = mt_map[shad_reg]
+            move4 = move4(corr_reg, shad_reg)
+            _update_mt_hashmap_frl(mt_map, str(move4))
+            block.append(move4)
+            block.append(BLANK_LINE())
 
-class CONST(_SINGLE_DEST_REGISTER_INSTRUCTION):
-    def __init__(self, reg_dest, hex_literal):
-        self.rd = reg_dest
-        self.l = hex_literal
+        block.append(COMMENT("END OF FRL MOVE ADDED BY STIGMA"))
+        block.append(BLANK_LINE())
 
-    def fix_register_limit(self, shadow_map = None, mt_map = None):
-        # this instruction doesn't use the shadow map
-        # or the move_type_hashmap
-        # others likely will
-        block = [str(CONST_16(self.rd, self.l))]
         return block
-        
-    def opcode(self):
-        return "const"
 
-    def __repr__(self):
-        return self.opcode() + " " + str(self.rd) + ", " + str(self.l)
-
-
-class CONST_4(CONST):
-    def opcode(self):
-        return "const/4"
-
-class CONST_16(CONST):
-    def opcode(self):
-        return "const/16"
-
-class CONST_HIGH16(CONST):
-    def opcode(self):
-        return "const/high16"
-
-    def fix_register_limit(self, shadow_map = None, mt_map = None):
-        return [self]
-
-class CONST_WIDE(CONST):
-    def opcode(self):
-        return "const-wide"
-
-    def fix_register_limit(self, shadow_map = None, mt_map = None):
-        return [CONST_WIDE_16(self.rd, self.l)]
-
-class CONST_WIDE_16(CONST_WIDE):
-    def opcode(self):
-        return "const-wide/16"
-
-class CONST_WIDE_32(CONST_WIDE):
-    def opcode(self):
-        return "const-wide/32"
-
-    def fix_register_limit(self, shadow_map = None, mt_map = None):
-        return [self]
-
-
-class CONST_WIDE_HIGH16(CONST):
-    def opcode(self):
-        return "const-wide/high16"
-
-    def fix_register_limit(self, shadow_map = None, mt_map = None):
-        return [self]
-
-class CONST_STRING(_SINGLE_DEST_REGISTER_INSTRUCTION):
-    def __init__(self, reg_dest, str_literal):
+class _SINGLE_DEST_REGISTER_INSTRUCTION(SmaliAssemblyInstruction):
+    # A parent class that should never be instantiated directly.
+    #   * Note: _SINGLE_DEST_REGISTER_INSTRUCTION is any instruction that
+    #   only has ONE parameter; a register that serves as a destination.
+    def __init__(self, reg_dest, value_arg):
         self.rd = reg_dest
-        self.l = str_literal
-    
-    def opcode(self):
-        return "const-string"
+        self.value_arg = value_arg
+
+    def get_registers(self):
+        return [self.rd]
+
         
-    def fix_register_limit(self, shadow_map = None, mt_map = None):
+    def __repr__(self):
+        return self.opcode() + " " + str(self.rd) + ", " + str(self.value_arg)
+
+    def fix_register_limit(self, shadow_map, mt_map):
         #print("shadow map: " + str(shadow_map))
         #print("move_type_map: " + str(move_type_map))
         # move map says things like: {"v0", smali.MOVE_WIDE_16}
@@ -404,9 +405,6 @@ class CONST_STRING(_SINGLE_DEST_REGISTER_INSTRUCTION):
 
         # optimally, we can only update the mt_map
         # with move #3
-
-
-
         #mv shadow corr
         #mv corr high
         block = [COMMENT("FRL MOVE ADDED BY STIGMA")]
@@ -424,6 +422,7 @@ class CONST_STRING(_SINGLE_DEST_REGISTER_INSTRUCTION):
         if(corr_reg in mt_map):
             move1 = mt_map[corr_reg]
             move1 = move1(shad_reg, corr_reg)
+            _update_mt_hashmap_frl(mt_map, str(move1))
             block.append(move1)
             block.append(BLANK_LINE())
 
@@ -431,18 +430,20 @@ class CONST_STRING(_SINGLE_DEST_REGISTER_INSTRUCTION):
         # replace with correct register so
         # that instruction has small-numbered
         # registers only
-        block.append(CONST_STRING(corr_reg, self.l))
+        instr = self.__class__(corr_reg, self.value_arg)
+        block.append(instr)
         block.append(BLANK_LINE())
 
         # move 3
-        move3 = MOVE_OBJECT_16(high_reg, corr_reg)
+        move3 = get_move_type(instr.opcode())
+        move3 = move3(high_reg, corr_reg)
         _update_mt_hashmap_frl(mt_map, str(move3))
         block.append(move3)
         block.append(BLANK_LINE())
 
         # move 4
         if(corr_reg in mt_map):
-            move4 = mt_map[corr_reg]
+            move4 = mt_map[shad_reg]
             move4 = move4(corr_reg, shad_reg)
             block.append(move4)
             block.append(BLANK_LINE())
@@ -451,9 +452,105 @@ class CONST_STRING(_SINGLE_DEST_REGISTER_INSTRUCTION):
         block.append(BLANK_LINE())
 
         return block
+
+
+
+class MOVE_RESULT(_SINGLE_REGISTER_INSTRUCTION, NormalMovable):
+    def opcode(self):
+        return "move-result"
+
+class MOVE_RESULT_WIDE(_SINGLE_REGISTER_INSTRUCTION, WideMovable):
+    def opcode(self):
+        return "move-result-wide"
+
+class MOVE_RESULT_OBJECT(_SINGLE_REGISTER_INSTRUCTION, ObjectMovable):
+    def opcode(self):
+        return "move-result-object"
+
+class MOVE_EXCEPTION(_SINGLE_REGISTER_INSTRUCTION, ObjectMovable):
+    def opcode(self):
+        return "move-exception"
+
+
+
+class RETURN_VOID(SmaliAssemblyInstruction, NonMovable):
+    def opcode(self):
+        return "return-void"
         
     def __repr__(self):
-        return self.opcode() + " " + str(self.rd) + ", \"" + str(self.l) + "\""
+        return self.opcode()
+
+class RETURN(_SINGLE_REGISTER_INSTRUCTION, NormalMovable):
+    def opcode(self):
+        return "return"
+
+class RETURN_WIDE(_SINGLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "return-wide"
+
+class RETURN_OBJECT(_SINGLE_REGISTER_INSTRUCTION):
+    def opcode(self):
+        return "return-object"
+
+
+
+class CONST(_SINGLE_DEST_REGISTER_INSTRUCTION):
+    def fix_register_limit(self, shadow_map = None, mt_map = None):
+        # this instruction doesn't use the shadow map
+        # or the move_type_hashmap
+        # others likely will
+        block = [str(CONST_16(self.rd, self.value_arg))]
+        return block
+        
+    def opcode(self):
+        return "const"
+
+
+class CONST_4(CONST):
+    def opcode(self):
+        return "const/4"
+
+class CONST_16(CONST):
+    def opcode(self):
+        return "const/16"
+
+class CONST_HIGH16(CONST):
+    def opcode(self):
+        return "const/high16"
+
+    def fix_register_limit(self, shadow_map = None, mt_map = None):
+        return [self]
+
+class CONST_WIDE(CONST):
+    def opcode(self):
+        return "const-wide"
+
+    def fix_register_limit(self, shadow_map = None, mt_map = None):
+        return [CONST_WIDE_16(self.rd, self.value_arg)]
+
+class CONST_WIDE_16(CONST_WIDE):
+    def opcode(self):
+        return "const-wide/16"
+
+class CONST_WIDE_32(CONST_WIDE):
+    def opcode(self):
+        return "const-wide/32"
+
+    def fix_register_limit(self, shadow_map = None, mt_map = None):
+        return [self]
+
+
+class CONST_WIDE_HIGH16(CONST):
+    def opcode(self):
+        return "const-wide/high16"
+
+    def fix_register_limit(self, shadow_map = None, mt_map = None):
+        return [self]
+
+class CONST_STRING(_SINGLE_DEST_REGISTER_INSTRUCTION, ObjectMovable):
+    
+    def opcode(self):
+        return "const-string"
 
 class CONST_STRING_JUMBO(SmaliAssemblyInstruction):
     # https://stackoverflow.com/questions/19991833/in-dalvik-what-expression-will-generate-instructions-not-int-and-const-strin
@@ -462,37 +559,29 @@ class CONST_STRING_JUMBO(SmaliAssemblyInstruction):
         pass
         
 
-class CONST_CLASS(_SINGLE_DEST_REGISTER_INSTRUCTION):
-    def __init__(self, reg_dest, type_id):
-        self.rd = reg_dest
-        self.type_id = type_id
+class CONST_CLASS(_SINGLE_DEST_REGISTER_INSTRUCTION, ObjectMovable):
 
     def opcode(self):
         return "const-class"
         
     def __repr__(self):
-        return self.opcode() + " " + str(self.rd) + ", " + str(self.type_id)
+        return self.opcode() + " " + str(self.rd) + ", " + str(self.value_arg)
 
 
-class MONITOR_ENTER(_SINGLE_DEST_REGISTER_INSTRUCTION):
+class MONITOR_ENTER(_SINGLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "monitor-enter"
         
-class MONITOR_EXIT(_SINGLE_DEST_REGISTER_INSTRUCTION):
+class MONITOR_EXIT(_SINGLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "monitor-exit"
     
     
 class CHECK_CAST(_SINGLE_DEST_REGISTER_INSTRUCTION):
-    def __init__(self, reg_dest, type_id):
-        self.rd = reg_dest
-        self.type_id = type_id
         
     def opcode(self):
         return "check-cast"
-        
-    def __repr__(self):
-        return self.opcode() + " " + str(self.rd) + ", " + str(self.type_id)  
+         
         
 class INSTANCE_OF(SmaliAssemblyInstruction):
     def __init__(self, reg_res, reg_arg, type_id):
@@ -579,22 +668,15 @@ class FILLED_NEW_ARRAY_RANGE(SmaliAssemblyInstruction):
     pass
 
 class FILL_ARRAY_DATA(_SINGLE_DEST_REGISTER_INSTRUCTION):
-    def __init__(self, reg_dest, array_label):
-        self.rd = reg_dest
-        self.array_label = array_label
         
     def opcode(self):
         return "fill-array-data"
 
-    def __repr__(self):
-        return self.opcode() + " " + str(self.rd) + ", " + str(self.array_label)
+class THROW(_SINGLE_REGISTER_INSTRUCTION):
 
-class THROW(_SINGLE_DEST_REGISTER_INSTRUCTION):
     def opcode(self):
         return "throw"
-        
-    def __repr__(self):
-        return self.opcode() + " " + str(self.rd)
+
 
 class GOTO(SmaliAssemblyInstruction):
     def __init__(self, target):
@@ -619,22 +701,12 @@ class PACKED_SWITCH(_SINGLE_DEST_REGISTER_INSTRUCTION):
     # NOTE: there is a .packed-switch and .sparse-switch
     # compiler directive in smali
     # e.g., .packed-switch -0x9
-    def __init__(self, reg_dest, table):
-            self.rd = reg_dest
-            self.table = table
-            
     def opcode(self):
         return "packed-switch"
-            
-    def __repr__(self):
-        return self.opcode() + " " + str(self.rd) + ", " + str(self.table)
 
-class SPARSE_SWITCH(PACKED_SWITCH):
+class SPARSE_SWITCH(_SINGLE_DEST_REGISTER_INSTRUCTION):
     def opcode(self):
         return "sparse-switch"
-    
-    def __repr__(self):
-        return self.opcode() + " " + str(self.rd) + ", " + str(self.table)
 
 
 class _TRIPLE_REGISTER_INSTRUCTION(SmaliAssemblyInstruction):
@@ -1621,7 +1693,7 @@ def parse_line(line):
         return COMMENT(line)
 
     if(opcode == "const-string"):
-        return CONST_STRING(tokens[1].strip(","), line.split("\"")[1])
+        return CONST_STRING(tokens[1].strip(","), "\"" + line.split("\"")[1] + "\"")
     
 
     if(opcode_has_parameter_list(opcode) or opcode_has_parameter_range(opcode)):

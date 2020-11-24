@@ -801,11 +801,12 @@ def tests():
     asm_obj = smali.parse_line("    const-string v16, \"hey there! v4, test string!\"\n")
     #print(test2_shadow_map)
     ans_block = asm_obj.fix_register_limit(test2_shadow_map, {"v0": smali.MOVE_OBJECT_16})
+    #print("TEST HERE")
     soln_block = [smali.COMMENT("FRL MOVE ADDED BY STIGMA"), 
             smali.BLANK_LINE(),
             smali.MOVE_OBJECT_16("v19", "v0"),
             smali.BLANK_LINE(),
-            smali.CONST_STRING("v0", "hey there! v4, test string!"),
+            smali.CONST_STRING("v0", "\"hey there! v4, test string!\""),
             smali.BLANK_LINE(),
             smali.MOVE_OBJECT_16("v16", "v0"),
             smali.BLANK_LINE(),
@@ -818,7 +819,67 @@ def tests():
     #print(soln_block)
     assert(ans_block == soln_block)
 
+    asm_obj = smali.parse_line("    const-class v16, Ljavax/swingx/JFrame;")
+    #print(test2_shadow_map)
+    ans_block = asm_obj.fix_register_limit(test2_shadow_map, {"v0": smali.MOVE_OBJECT_16})
+    soln_block = [smali.COMMENT("FRL MOVE ADDED BY STIGMA"), 
+            smali.BLANK_LINE(),
+            smali.MOVE_OBJECT_16("v19", "v0"),
+            smali.BLANK_LINE(),
+            smali.CONST_CLASS("v0", "Ljavax/swingx/JFrame;"),
+            smali.BLANK_LINE(),
+            smali.MOVE_OBJECT_16("v16", "v0"),
+            smali.BLANK_LINE(),
+            smali.MOVE_OBJECT_16("v0", "v19"),
+            smali.BLANK_LINE(),
+            smali.COMMENT("END OF FRL MOVE ADDED BY STIGMA"),
+            smali.BLANK_LINE()]
     
+    #print(ans_block)
+    #print(soln_block)
+    assert(ans_block == soln_block)
+
+    asm_obj = smali.parse_line("    move-result v16")
+    #print(test2_shadow_map)
+    ans_block = asm_obj.fix_register_limit(test2_shadow_map, {"v0": smali.MOVE_OBJECT_16})
+    soln_block = [smali.COMMENT("FRL MOVE ADDED BY STIGMA"), 
+            smali.BLANK_LINE(),
+            smali.MOVE_OBJECT_16("v19", "v0"),
+            smali.BLANK_LINE(),
+            smali.MOVE_RESULT("v0"),
+            smali.BLANK_LINE(),
+            smali.MOVE_16("v16", "v0"),
+            smali.BLANK_LINE(),
+            smali.MOVE_OBJECT_16("v0", "v19"),
+            smali.BLANK_LINE(),
+            smali.COMMENT("END OF FRL MOVE ADDED BY STIGMA"),
+            smali.BLANK_LINE()]
+    
+    #print(ans_block)
+    #print(soln_block)
+    assert(ans_block == soln_block)
+    
+    asm_obj = smali.parse_line("    throw v16")
+    #print(test2_shadow_map)
+    ans_block = asm_obj.fix_register_limit(test2_shadow_map, {"v0": smali.MOVE_16, "v16" : smali.MOVE_OBJECT_16})
+    soln_block = [smali.COMMENT("FRL MOVE ADDED BY STIGMA"), 
+            smali.BLANK_LINE(),
+            smali.MOVE_16("v19", "v0"),
+            smali.BLANK_LINE(),
+            smali.MOVE_OBJECT_16("v0", "v16"),
+            smali.BLANK_LINE(),
+            smali.THROW("v0"),
+            smali.BLANK_LINE(),
+            smali.MOVE_OBJECT_16("v16", "v0"),
+            smali.BLANK_LINE(),
+            smali.MOVE_16("v0", "v19"),
+            smali.BLANK_LINE(),
+            smali.COMMENT("END OF FRL MOVE ADDED BY STIGMA"),
+            smali.BLANK_LINE()]
+    
+    #print(ans_block)
+    #print(soln_block)
+    assert(ans_block == soln_block)
     
     
 
