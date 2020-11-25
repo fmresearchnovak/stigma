@@ -113,7 +113,86 @@ def _update_mt_hashmap_frl(move_type_hashmap, cur_line):
     if best_move_type == MOVE_WIDE_16:
         key_reg_num = int(key_reg[1:])
         new_key_reg = "v" + str(key_reg_num + 1)
-        move_type_hashmap[new_key_reg] = "2"    
+        move_type_hashmap[new_key_reg] = "2"
+
+@staticmethod
+def _create_before_move_block_frl(shadow_map, move_type_map):
+    #print("shadow map: " + str(shadow_map))
+    #print("move_type_map: " + str(move_type_map))
+    # move map says things like: {"v0", smali.MOVE_WIDE_16}
+    # shadow map says
+    
+    # We will use the move_type_map to create a block with the
+    # correct MOVE instructions (MOVE_16, MOVE_WIDE_16, MOVE_OBJECT_16)
+    # for the register being moved.
+    
+    # the move map is created in "_update_mt_map_frl()", Step 5.5
+    
+    #Step 4
+    #mv shadow corr
+    #mv corr high
+    block = [smali.COMMENT("FRL MOVE ADDED BY STIGMA"),
+    smali.BLANK_LINE()]
+    for t in shadow_map.tuples:
+        reg = t[0]
+        
+        corr_reg = shadow_map.get_corresponding(reg)
+        shad_reg = shadow_map.get_shadow(reg)
+        high_reg = reg
+        if(corr_reg in move_type_map):
+            move1 = move_type_map[corr_reg]
+            move1 = move1(shad_reg, corr_reg)
+
+            
+            block.append(move1)
+            block.append(smali.BLANK_LINE())
+
+        if(high_reg not in move_type_map):
+            raise RuntimeError("Could not find high reg: " + str(high_reg) + " in move_type_map!")
+
+## Think about this problem
+        move2 = move_type_map[high_reg]
+        if move2 != "2":
+            move2 = move2(corr_reg, high_reg)
+            block.append(move2)
+            block.append(smali.BLANK_LINE())
+            
+    return block
+
+@staticmethod
+def _create_after_move_block_frl(shadow_map, move_type_map):
+    #print("create_after_move_block()")
+    #print("shad map: " + str(shadow_map))
+    #print("move_type_map: " + str(move_type_map))
+    #Step 6
+    #mv high corr
+    #mv corr shadow (if corr found in mt_map)
+    
+    block = [smali.BLANK_LINE()]
+    for t in shadow_map.tuples:
+        reg = t[0]
+                    
+        corr_reg = shadow_map.get_corresponding(reg)
+        shad_reg = shadow_map.get_shadow(reg)
+        high_reg = reg
+        
+        move2 = move_type_map[corr_reg]
+        move2 = move2(high_reg, corr_reg)
+
+        block.append(move2)
+        block.append(smali.BLANK_LINE())
+        
+        if(shad_reg in move_type_map):
+            move1 = move_type_map[shad_reg]
+            move1 = move1(corr_reg, shad_reg)
+
+            block.append(move1)
+            block.append(smali.BLANK_LINE())
+  
+    block += [smali.COMMENT("FRL MOVE ADDED BY STIGMA END")]
+    
+    return block
+
 
 class SmaliAssemblyInstruction():
 
@@ -131,6 +210,22 @@ class SmaliAssemblyInstruction():
     
     def get_move(self):
         return MOVE_16
+
+    def fix_register_limit(self, shadow_map, mt_map):
+
+        # move v20 v1
+        # move v1 v22
+
+        # move v19 v0
+        # move v0 v21
+        # isinstance v0(v21), v1(v22), lsome/some_id;
+        # move v21 v0
+        # move v0 v19
+
+        # move-object v22 v1
+        # move v1 v20
+        pass
+
 
 class NormalMovable():
       def get_move(self):
