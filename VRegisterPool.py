@@ -5,10 +5,10 @@ import SmaliAssemblyInstructions as smali
 
 
 
+
 TYPE_CODE_WORD = 0
 TYPE_CODE_WIDE = 1
 TYPE_CODE_OBJ_REF = 2
-
 MOVE_TYPE_LIST = [smali.MOVE_16, smali.MOVE_WIDE_16, smali.MOVE_OBJECT_16]
 
 class VRegisterPool():

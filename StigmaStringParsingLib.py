@@ -40,7 +40,7 @@ BEGINS_WITH_MOVE = r"^\s*move"
 valid_instructions_list = [x.strip() for x in open("./valid_smali_instructions.txt", "r").readlines()]
 
 
-def _get_v_from_p(p_register, locals_num):
+def get_v_from_p(p_register, locals_num):
     # e.g., _get_v_frl(p2, 2) -> v4
     p_num = int(p_register[1:])
     corresponding_v_num = locals_num + p_num
@@ -54,7 +54,6 @@ def get_num_registers(line):
         number_registers = _param_list_len(line)
     return number_registers
 
-
 def get_v_and_p_numbers(line):
     number_registers = get_num_registers(line)
 
@@ -67,7 +66,6 @@ def get_v_and_p_numbers(line):
         
     return registers
         
-
 def get_p_numbers(line):
     registers = get_v_and_p_numbers(line)
     p_only_registers = list(filter(lambda x : x[0] == "p", registers))
@@ -93,18 +91,18 @@ def is_valid_instruction(line):
     opcode = tokens[0]
     return opcode in valid_instructions_list
 
-def get_num_register_parameters(instr):
+def get_num_register_parameters(opcode):
     #print("calling get num register parameters on: " + instr)
-    if (has_zero_register_parameters(instr)):
+    if (has_zero_register_parameters(opcode)):
         return 0
         
-    elif (has_one_register_parameters(instr)):
+    elif (has_one_register_parameters(opcode)):
         return 1
 
-    elif (has_two_register_parameters(instr)):
+    elif (has_two_register_parameters(opcode)):
         return 2
 
-    elif (has_three_register_parameters(instr)):
+    elif (has_three_register_parameters(opcode)):
         return 3
     
     return None
@@ -241,6 +239,20 @@ def main():
     assert(has_one_register_parameters("if-eqz") == True)
     assert(_param_list_len("filled-new-array {v0, v1, v2}, [Ljava/lang/String;\n") == 3)
     assert(get_num_registers("const-string v1, \"hard example: v2\"\n") == 1)
+    
+    assert(get_v_from_p("p2", 14) == "v16")
+    
+    tokens_res = break_into_tokens("    const-string v1, \"hard example: v2\"\n")
+    tokens_soln = ["const-string", "v1,", "\"hard", "example:", "v2\""]
+    assert(tokens_res == tokens_soln)
+    
+    
+    assert(is_valid_instruction("    const-string v1, \"hard example: v2\"\n"))
+    assert(is_valid_instruction("    fake-op v1, v2\n") == False)
+    
+    
+    assert(get_num_register_parameters("const-string") == 1)
+    assert(get_num_register_parameters("if-eq") == 2)
 
     print("ALL TESTS PASSED")
 

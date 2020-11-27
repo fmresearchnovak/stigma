@@ -22,6 +22,7 @@
 # Should the new class be a child of MOVE-RESULT?
 
 # Here are some of the "abstract" parent classes
+# _MOVE_INSTRUCTION
 # _SINGLE_REGISTER_INSTRUCTION
 # _SINGLE_DEST_REGISTER_INSTRUCTION
 # _PARAMETER_LIST_INSTRUCTION
@@ -36,162 +37,6 @@
 # _TWO_REGISTER_BINARY_INSTRUCTION
 # _TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION
 
-import StigmaStringParsingLib
-
-        
-def _build_move_type_hash_map_frl(signature, num_local_params):
-    mt_hashmap = {}
-    
-    for key in signature.parameter_type_map:
-        #print("key: " + str(key) + "  value: " + str(signature.parameter_type_map[key]))
-        p_reg = key
-        reg_type = signature.parameter_type_map[key]
-        v_reg = StigmaStringParsingLib._get_v_from_p(p_reg, num_local_params)
-        
-        if reg_type in ["THIS", "L", "ARRAY"]:
-            mt_hashmap[v_reg] = MOVE_OBJECT_16
-            
-        elif reg_type in ["J", "D"]:
-            mt_hashmap[v_reg] = MOVE_WIDE_16
-            
-        elif reg_type in ["Z", "B", "S", "C", "I", "F"]:
-            mt_hashmap[v_reg] = MOVE_16
-            
-        elif reg_type in ["J2", "D2"]:
-            mt_hashmap[v_reg] = "2"
-            
-        else:
-            raise RuntimeError("cannot assign register type for: " + str(reg_type))
-        
-    return mt_hashmap
-    
-def get_move_type(opcode):
-    if opcode in StigmaStringParsingLib.WORD_MOVE_LIST:
-        return MOVE_16
-    
-    elif opcode in StigmaStringParsingLib.WIDE_MOVE_LIST:
-        return MOVE_WIDE_16
-        
-    elif opcode in StigmaStringParsingLib.OBJECT_MOVE_LIST:
-        return MOVE_OBJECT_16
-    
-    else:
-        return None
-
-def _update_mt_hashmap_frl(move_type_hashmap, cur_line):
-    #print("update_mt_hashmap(" + repr(cur_line) + ")")
-    
-    if(not StigmaStringParsingLib.is_valid_instruction(cur_line)):
-        return None
-
-    # "update move-type hashmap"
-    # this creates a hashmap that indicates for each register
-    # what the corresponding move instruction must be used
-    # in order to move that register (assuming that register
-    # will be used on the RIGHT hand side of the move
-    #
-    # e.g., suppose v0 is a long, we should use move-wide/16 vx, v0
-    
-    # In order to know that v0 is a long, there must have been
-    # an instruction that writes a long value to v0 
-    # (that is, v0 is the destination register in such an instruction)
-    # All such instructions are in WIDE_MOVE_LIST
-    
-    # This function is called on every (original) instruction
-    # of smali code
-    opcode = StigmaStringParsingLib.break_into_tokens(cur_line)[0]
-    
-    best_move_type = get_move_type(opcode)
-
-    if best_move_type is None:
-
-        return move_type_hashmap
-        
-    key_reg = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)[0]
-    move_type_hashmap[key_reg] = best_move_type
-    
-    if best_move_type == MOVE_WIDE_16:
-        key_reg_num = int(key_reg[1:])
-        new_key_reg = "v" + str(key_reg_num + 1)
-        move_type_hashmap[new_key_reg] = "2"
-
-@staticmethod
-def _create_before_move_block_frl(shadow_map, move_type_map):
-    #print("shadow map: " + str(shadow_map))
-    #print("move_type_map: " + str(move_type_map))
-    # move map says things like: {"v0", smali.MOVE_WIDE_16}
-    # shadow map says
-    
-    # We will use the move_type_map to create a block with the
-    # correct MOVE instructions (MOVE_16, MOVE_WIDE_16, MOVE_OBJECT_16)
-    # for the register being moved.
-    
-    # the move map is created in "_update_mt_map_frl()", Step 5.5
-    
-    #Step 4
-    #mv shadow corr
-    #mv corr high
-    block = [smali.COMMENT("FRL MOVE ADDED BY STIGMA"),
-    smali.BLANK_LINE()]
-    for t in shadow_map.tuples:
-        reg = t[0]
-        
-        corr_reg = shadow_map.get_corresponding(reg)
-        shad_reg = shadow_map.get_shadow(reg)
-        high_reg = reg
-        if(corr_reg in move_type_map):
-            move1 = move_type_map[corr_reg]
-            move1 = move1(shad_reg, corr_reg)
-
-            
-            block.append(move1)
-            block.append(smali.BLANK_LINE())
-
-        if(high_reg not in move_type_map):
-            raise RuntimeError("Could not find high reg: " + str(high_reg) + " in move_type_map!")
-
-## Think about this problem
-        move2 = move_type_map[high_reg]
-        if move2 != "2":
-            move2 = move2(corr_reg, high_reg)
-            block.append(move2)
-            block.append(smali.BLANK_LINE())
-            
-    return block
-
-@staticmethod
-def _create_after_move_block_frl(shadow_map, move_type_map):
-    #print("create_after_move_block()")
-    #print("shad map: " + str(shadow_map))
-    #print("move_type_map: " + str(move_type_map))
-    #Step 6
-    #mv high corr
-    #mv corr shadow (if corr found in mt_map)
-    
-    block = [smali.BLANK_LINE()]
-    for t in shadow_map.tuples:
-        reg = t[0]
-                    
-        corr_reg = shadow_map.get_corresponding(reg)
-        shad_reg = shadow_map.get_shadow(reg)
-        high_reg = reg
-        
-        move2 = move_type_map[corr_reg]
-        move2 = move2(high_reg, corr_reg)
-
-        block.append(move2)
-        block.append(smali.BLANK_LINE())
-        
-        if(shad_reg in move_type_map):
-            move1 = move_type_map[shad_reg]
-            move1 = move1(corr_reg, shad_reg)
-
-            block.append(move1)
-            block.append(smali.BLANK_LINE())
-  
-    block += [smali.COMMENT("FRL MOVE ADDED BY STIGMA END")]
-    
-    return block
 
 
 class SmaliAssemblyInstruction():
@@ -205,50 +50,17 @@ class SmaliAssemblyInstruction():
     def get_p_registers(self):
         return list(filter(lambda x : x[0] == "p", get_registers))
 
+    def register_move_type_array(self):
+        return []
+        
+    def fix_register_limit(self):
+        return [str(self)]
+
     def __eq__(self, other):
         return repr(self) == repr(other)
-    
-    def get_move(self):
-        return MOVE_16
-
-    def fix_register_limit(self, shadow_map, mt_map):
-
-        # move v20 v1
-        # move v1 v22
-
-        # move v19 v0
-        # move v0 v21
-        # isinstance v0(v21), v1(v22), lsome/some_id;
-        # move v21 v0
-        # move v0 v19
-
-        # move-object v22 v1
-        # move v1 v20
-        pass
 
 
-class NormalMovable():
-      def get_move(self):
-        return MOVE_16
-
-class WideMovable():
-    def get_move(self):
-        return MOVE_WIDE_16
-
-class ObjectMovable():
-    def get_move(self):
-        return MOVE_OBJECT16
-    
-class VaryingMovable():
-    def get_move(self):
-        raise NotImplementedError("get_move() not implemented by VaryingMovable")
-        
-class NonMovable():
-    def get_move(self):
-        raise ValueError("get_move() called on NoneMovable")
-    
-
-class NOP(SmaliAssemblyInstruction, NonMovable):
+class NOP(SmaliAssemblyInstruction):
     def __init__(self):
         pass
 
@@ -259,7 +71,7 @@ class NOP(SmaliAssemblyInstruction, NonMovable):
         return "nop"
         
 
-class INVOKE_DIRECT_EMPY(NOP):
+class INVOKE_DIRECT_EMPTY(NOP):
     # could not find any instance of this instruction
     # in our APK files
     # From the documentation:
@@ -270,7 +82,7 @@ class INVOKE_DIRECT_EMPY(NOP):
         return "invoke-direct-empty"
 
 
-class BLANK_LINE(SmaliAssemblyInstruction, NonMovable):
+class BLANK_LINE(SmaliAssemblyInstruction):
     def __init__(self):
         pass
 
@@ -278,7 +90,7 @@ class BLANK_LINE(SmaliAssemblyInstruction, NonMovable):
         return ""
 
 
-class COMMENT(SmaliAssemblyInstruction, NonMovable):
+class COMMENT(SmaliAssemblyInstruction):
     def __init__(self, line):
         self.l = line
 
@@ -286,72 +98,87 @@ class COMMENT(SmaliAssemblyInstruction, NonMovable):
         return "# " + self.l
 
 
-class MOVE(SmaliAssemblyInstruction, NormalMovable):
+class _MOVE_INSTRUCTION(SmaliAssemblyInstruction):
+    # A parent class that should never be instantiated directly.
     def __init__(self, reg1, reg2):
         self.reg1 = reg1
         self.reg2 = reg2
-
+        
     def get_registers(self):
         if(self.reg1 == ""):
             raise UnboundLocalError("reg1")
         if(self.reg2 == ""):
             raise UnboundLocalError("reg2")
         return [self.reg1, self.reg2]
-        
+    
+    def fix_register_limit(self, shadows=None, reg_pool=None):
+        return [self]
+    
+    def __repr__(self):
+        return self.opcode() + " " + str(self.reg1) + ", " + str(self.reg2)
+
+
+
+class MOVE(_MOVE_INSTRUCTION):
     def opcode(self):
         return "move"
+        
+    def fix_register_limit(self, shadows=None, reg_pool=None):
+        return [COMMENT("FRL instrumentation"),
+            BLANK_LINE(),
+            MOVE_16(self.reg1, self.reg2),
+            BLANK_LINE(),
+            COMMENT("END FRL instrumentation")]
 
-    def __repr__(self):
-        return self.opcode() + " " + str(self.reg1) + ", " + str(self.reg2)
-
-
-class MOVE_16(MOVE, NormalMovable):
+class MOVE_16(_MOVE_INSTRUCTION):
     # this might not exist
     # I couldn't find any occurrences in the smali of leaks
-    
     def opcode(self):
         return "move/16"
-    
-    def __repr__(self):
-        return self.opcode() + " " + str(self.reg1) + ", " + str(self.reg2)
 
-# This is a problem
-# I need the class name to be MOVE/FROM16
-# but "/" is not a valid character in a class name
-class MOVE_FROM16(MOVE, NormalMovable):
-    
+class MOVE_FROM16(_MOVE_INSTRUCTION):
     def opcode(self):
         return "move/from16"
-    
-    def __repr__(self):
-        return self.opcode() + " " + str(self.reg1) + ", " + str(self.reg2)
 
-# This is a problem
-# I need the class name to be MOVE-WIDE
-# but "-" is not a valid character in a class name
-class MOVE_WIDE(MOVE, WideMovable):
+class MOVE_WIDE(_MOVE_INSTRUCTION):
     def opcode(self):
         return "move-wide"
+        
+    def fix_register_limit(self, shadows=None, reg_pool=None):
+        return [COMMENT("FRL instrumentation"),
+            BLANK_LINE(),
+            MOVE_WIDE_16(self.reg1, self.reg2),
+            BLANK_LINE(),
+            COMMENT("END FRL instrumentation")]
     
-class MOVE_WIDE_FROM16(MOVE, WideMovable):
+class MOVE_WIDE_FROM16(_MOVE_INSTRUCTION):
     def opcode(self):
         return "move-wide/from16"
 
-class MOVE_WIDE_16(MOVE, WideMovable):
+class MOVE_WIDE_16(_MOVE_INSTRUCTION):
     def opcode(self):
         return "move-wide/16"
 
-class MOVE_OBJECT(MOVE, ObjectMovable):
+class MOVE_OBJECT(_MOVE_INSTRUCTION):
     def opcode(self):
         return "move-object"
         
-class MOVE_OBJECT_FROM16(MOVE, ObjectMovable):
+    def fix_register_limit(self, shadows=None, reg_pool=None):
+        return [COMMENT("FRL instrumentation"),
+            BLANK_LINE(),
+            MOVE_OBJECT_16(self.reg1, self.reg2),
+            BLANK_LINE(),
+            COMMENT("END FRL instrumentation")]
+        
+class MOVE_OBJECT_FROM16(_MOVE_INSTRUCTION):
     def opcode(self):
         return "move-object/from16"
 
-class MOVE_OBJECT_16(MOVE, ObjectMovable):
+class MOVE_OBJECT_16(MOVE):
     def opcode(self):
         return "move-object/16"
+
+
 
 class _SINGLE_REGISTER_INSTRUCTION(SmaliAssemblyInstruction):
     def __init__(self, reg_dest):
@@ -363,95 +190,6 @@ class _SINGLE_REGISTER_INSTRUCTION(SmaliAssemblyInstruction):
     def __repr__(self):
         return self.opcode() + " " + str(self.rd)
 
-    def fix_register_limit(self, shadow_map, mt_map):
-        #print("shadow map: " + str(shadow_map))
-        #print("move_type_map: " + str(move_type_map))
-        # move map says things like: {"v0", smali.MOVE_WIDE_16}
-        
-        # We will use the move_type_map to create a block with the
-        # correct MOVE instructions (MOVE_16, MOVE_WIDE_16, MOVE_OBJECT_16)
-        # for the register being moved.
-
-        # consider the following example:
-        # move-result v0
-
-        #     shad  corr
-        #1 move v17, v0
-        #
-        #    corr  high
-        #2 move v0, v21 
-        #
-        #  move-result v0
-        #
-        #3 move v21, v0
-        #
-        #4 move v0, v17
-        #
-        # the second move (v21 to v0) is 
-        # actually _NOT_ necessary because 
-        # the instruction does not actually READ
-        # the value of the register, it
-        # only writes to it.
-
-        # optimally, we can only update the mt_map
-        # with move #3
-        #mv shadow corr
-        #mv corr high
-        block = [COMMENT("FRL MOVE ADDED BY STIGMA")]
-        block.append(BLANK_LINE())
-        
-        # for this instruction there will be
-        # only 1 tuple since this instruction has
-        # only one register
-        
-        high_reg = shadow_map.tuples[0][0]
-        corr_reg = shadow_map.get_corresponding(high_reg)
-        shad_reg = shadow_map.get_shadow(high_reg)
-        
-        # move 1
-        if(corr_reg in mt_map):
-            move1 = mt_map[corr_reg]
-            move1 = move1(shad_reg, corr_reg)
-            _update_mt_hashmap_frl(mt_map, str(move1))
-            block.append(move1)
-            block.append(BLANK_LINE())
-           
-        if(high_reg in mt_map):
-            move2 = mt_map[high_reg]
-            move2 = move2(corr_reg, high_reg)
-            block.append(move2)
-            block.append(BLANK_LINE())
-            _update_mt_hashmap_frl(mt_map, str(move2))
-        
-        
-        # replace with correct register so
-        # that instruction has small-numbered
-        # registers only
-        instr = self.__class__(corr_reg)
-        _update_mt_hashmap_frl(mt_map, str(instr))
-        block.append(instr)
-        block.append(BLANK_LINE())
-       
-
-        # move 3
-        move3 = get_move_type(instr.opcode())
-        move3 = move3(high_reg, corr_reg)
-        _update_mt_hashmap_frl(mt_map, str(move3))
-        block.append(move3)
-        block.append(BLANK_LINE())
-
-        # move 4
-        if(corr_reg in mt_map):
-            move4 = mt_map[shad_reg]
-            move4 = move4(corr_reg, shad_reg)
-            _update_mt_hashmap_frl(mt_map, str(move4))
-            block.append(move4)
-            block.append(BLANK_LINE())
-
-        block.append(COMMENT("END OF FRL MOVE ADDED BY STIGMA"))
-        block.append(BLANK_LINE())
-
-        return block
 
 class _SINGLE_DEST_REGISTER_INSTRUCTION(SmaliAssemblyInstruction):
     # A parent class that should never be instantiated directly.
@@ -463,119 +201,58 @@ class _SINGLE_DEST_REGISTER_INSTRUCTION(SmaliAssemblyInstruction):
 
     def get_registers(self):
         return [self.rd]
-
         
     def __repr__(self):
         return self.opcode() + " " + str(self.rd) + ", " + str(self.value_arg)
+       
+    # Might Need This!    
+    '''
+    def find_high_numbered_regs(self):
+        # Guarantees that the contents of regs are unique elements
+        # only.  This is important for an instruction like
+        # add-int v0, v2, v2  which has duplicates
+        regs = SmaliMethodDef._unique_frl(StigmaStringParsingLib.get_v_and_p_numbers(cur_line))
+        shadow_map = SmaliMethodDef.RegShadowMap(regs, remaining_shadows, mt_map)
 
-    def fix_register_limit(self, shadow_map, mt_map):
+        # note: regs should should be only v registers
+        # because of the de-reference p that happenened
+        # earlier (in step 2)
+        for reg in regs:
+            v_num = int(reg[1:]) # Get number from v string
+            if v_num > 15:
+                shadow_map.insert(reg)
         #print("shadow map: " + str(shadow_map))
-        #print("move_type_map: " + str(move_type_map))
-        # move map says things like: {"v0", smali.MOVE_WIDE_16}
+     ''' 
         
-        # We will use the move_type_map to create a block with the
-        # correct MOVE instructions (MOVE_16, MOVE_WIDE_16, MOVE_OBJECT_16)
-        # for the register being moved.
-
-        # consider the following example:
-        # const-string v21, "hello!"
-
-        #     shad  corr
-        #1 move v17, v0
-        #
-        #    corr  high
-        #2 move v0, v21   <--- unnecessary
-        #
-        #  const-string v0, "hello!"
-        #
-        #3 move-object/16 v21, v0
-        #
-        #4 move v0, v17
-        #
-        # the second move (v21 to v0) is 
-        # actually _NOT_ necessary because 
-        # the instruction does not actually READ
-        # the value of the register, it
-        # only writes to it.
-
-        # optimally, we can only update the mt_map
-        # with move #3
-        #mv shadow corr
-        #mv corr high
-        block = [COMMENT("FRL MOVE ADDED BY STIGMA")]
-        block.append(BLANK_LINE())
-        
-        # for this instruction there will be
-        # only 1 tuple since this instruction has
-        # only one register
-        
-        high_reg = shadow_map.tuples[0][0]
-        corr_reg = shadow_map.get_corresponding(high_reg)
-        shad_reg = shadow_map.get_shadow(high_reg)
-        
-        # move 1
-        if(corr_reg in mt_map):
-            move1 = mt_map[corr_reg]
-            move1 = move1(shad_reg, corr_reg)
-            _update_mt_hashmap_frl(mt_map, str(move1))
-            block.append(move1)
-            block.append(BLANK_LINE())
-
-        
-        # replace with correct register so
-        # that instruction has small-numbered
-        # registers only
-        instr = self.__class__(corr_reg, self.value_arg)
-        block.append(instr)
-        block.append(BLANK_LINE())
-
-        # move 3
-        move3 = get_move_type(instr.opcode())
-        move3 = move3(high_reg, corr_reg)
-        _update_mt_hashmap_frl(mt_map, str(move3))
-        block.append(move3)
-        block.append(BLANK_LINE())
-
-        # move 4
-        if(corr_reg in mt_map):
-            move4 = mt_map[shad_reg]
-            move4 = move4(corr_reg, shad_reg)
-            block.append(move4)
-            block.append(BLANK_LINE())
-
-        block.append(COMMENT("END OF FRL MOVE ADDED BY STIGMA"))
-        block.append(BLANK_LINE())
-
-        return block
 
 
-
-class MOVE_RESULT(_SINGLE_REGISTER_INSTRUCTION, NormalMovable):
+class MOVE_RESULT(_SINGLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "move-result"
+        
 
-class MOVE_RESULT_WIDE(_SINGLE_REGISTER_INSTRUCTION, WideMovable):
+class MOVE_RESULT_WIDE(_SINGLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "move-result-wide"
 
-class MOVE_RESULT_OBJECT(_SINGLE_REGISTER_INSTRUCTION, ObjectMovable):
+class MOVE_RESULT_OBJECT(_SINGLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "move-result-object"
 
-class MOVE_EXCEPTION(_SINGLE_REGISTER_INSTRUCTION, ObjectMovable):
+class MOVE_EXCEPTION(_SINGLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "move-exception"
 
 
 
-class RETURN_VOID(SmaliAssemblyInstruction, NonMovable):
+class RETURN_VOID(SmaliAssemblyInstruction):
     def opcode(self):
         return "return-void"
         
     def __repr__(self):
         return self.opcode()
 
-class RETURN(_SINGLE_REGISTER_INSTRUCTION, NormalMovable):
+class RETURN(_SINGLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "return"
 
@@ -601,33 +278,33 @@ class CONST(_SINGLE_DEST_REGISTER_INSTRUCTION):
         return "const"
 
 
-class CONST_4(CONST):
+class CONST_4(_SINGLE_DEST_REGISTER_INSTRUCTION):
     def opcode(self):
         return "const/4"
 
-class CONST_16(CONST):
+class CONST_16(_SINGLE_DEST_REGISTER_INSTRUCTION):
     def opcode(self):
         return "const/16"
 
-class CONST_HIGH16(CONST):
+class CONST_HIGH16(_SINGLE_DEST_REGISTER_INSTRUCTION):
     def opcode(self):
         return "const/high16"
 
     def fix_register_limit(self, shadow_map = None, mt_map = None):
         return [self]
 
-class CONST_WIDE(CONST):
+class CONST_WIDE(_SINGLE_DEST_REGISTER_INSTRUCTION):
     def opcode(self):
         return "const-wide"
 
     def fix_register_limit(self, shadow_map = None, mt_map = None):
         return [CONST_WIDE_16(self.rd, self.value_arg)]
 
-class CONST_WIDE_16(CONST_WIDE):
+class CONST_WIDE_16(_SINGLE_DEST_REGISTER_INSTRUCTION):
     def opcode(self):
         return "const-wide/16"
 
-class CONST_WIDE_32(CONST_WIDE):
+class CONST_WIDE_32(_SINGLE_DEST_REGISTER_INSTRUCTION):
     def opcode(self):
         return "const-wide/32"
 
@@ -635,14 +312,14 @@ class CONST_WIDE_32(CONST_WIDE):
         return [self]
 
 
-class CONST_WIDE_HIGH16(CONST):
+class CONST_WIDE_HIGH16(_SINGLE_DEST_REGISTER_INSTRUCTION):
     def opcode(self):
         return "const-wide/high16"
 
     def fix_register_limit(self, shadow_map = None, mt_map = None):
         return [self]
 
-class CONST_STRING(_SINGLE_DEST_REGISTER_INSTRUCTION, ObjectMovable):
+class CONST_STRING(_SINGLE_DEST_REGISTER_INSTRUCTION):
     
     def opcode(self):
         return "const-string"
@@ -654,7 +331,7 @@ class CONST_STRING_JUMBO(SmaliAssemblyInstruction):
         pass
         
 
-class CONST_CLASS(_SINGLE_DEST_REGISTER_INSTRUCTION, ObjectMovable):
+class CONST_CLASS(_SINGLE_DEST_REGISTER_INSTRUCTION):
 
     def opcode(self):
         return "const-class"
@@ -666,6 +343,7 @@ class CONST_CLASS(_SINGLE_DEST_REGISTER_INSTRUCTION, ObjectMovable):
 class MONITOR_ENTER(_SINGLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "monitor-enter"
+        
         
 class MONITOR_EXIT(_SINGLE_REGISTER_INSTRUCTION):
     def opcode(self):
