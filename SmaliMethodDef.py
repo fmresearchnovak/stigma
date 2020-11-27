@@ -481,6 +481,8 @@ def tests():
     #print(reg_pool.pretty_string(0, 22))
     ans_block = asm_obj.fix_register_limit(None, reg_pool)
     soln_block = [smali.MOVE_RESULT("v15")]
+    #print(ans_block)
+    #print(soln_block)
     assert(ans_block == soln_block)
     
     asm_obj = smali.parse_line("    move-result-object v16")
@@ -502,7 +504,7 @@ def tests():
     for line in ans_block:
         reg_pool.update(line)
     
-    print(reg_pool.pretty_string(0, 22))
+    #print(reg_pool.pretty_string(0, 22))
     asm_obj = smali.parse_line("    move-result-wide v17")
     ans_block = asm_obj.fix_register_limit(None, reg_pool)
     soln_block = [smali.COMMENT("FRL instrumentation"), 
@@ -521,7 +523,25 @@ def tests():
     
     for line in ans_block:
         reg_pool.update(line)
-    print(reg_pool.pretty_string(0, 21))
+    #print(reg_pool.pretty_string(0, 21))
+    
+    
+    
+    print("\tfix_register_limit() return...")
+    asm_obj = smali.parse_line("   return-void\n")
+    ans_block = asm_obj.fix_register_limit(None, reg_pool)
+    soln_block = [smali.RETURN_VOID()]
+    #print(ans_block)
+    #print(soln_block)
+    assert(ans_block == soln_block)
+    
+    asm_obj = smali.parse_line("    return-wide v17")
+    ans_block = asm_obj.fix_register_limit(None, reg_pool)
+    soln_block = [smali.COMMENT("FRL instrumentation"), 
+            smali.BLANK_LINE(),
+            smali.MOVE_WIDE_16("v3", "v17"),
+            smali.BLANK_LINE(),
+            smali.RETURN_WIDE("v3")]
 
     '''
     print("\t_build_shadow_map_frl...")

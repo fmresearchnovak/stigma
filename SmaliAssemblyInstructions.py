@@ -24,6 +24,7 @@
 # Here are some of the "abstract" parent classes
 # _MOVE_INSTRUCTION
 # _MOVE_RESULT_INSTRUCTION
+# _RETURN_INSTRUCTION
 # _SINGLE_REGISTER_INSTRUCTION
 # _SINGLE_DEST_REGISTER_INSTRUCTION  (only one argument, 
 # _PARAMETER_LIST_INSTRUCTION
@@ -54,8 +55,8 @@ class SmaliAssemblyInstruction():
     def register_move_type_array(self):
         return []
         
-    def fix_register_limit(self):
-        return [str(self)]
+    def fix_register_limit(self, shadows=None, reg_pool = None):
+        return [self]
 
     def __eq__(self, other):
         return repr(self) == repr(other)
@@ -309,28 +310,82 @@ class MOVE_EXCEPTION(_MOVE_RESULT_INSTRUCTION):
         return MOVE_OBJECT_16
 
 
+class _RETURN_INSTRUCTION(SmaliAssemblyInstruction):
+    # A parent class that should never be instantiated directly.
+    def __init__(self, reg_arg):
+        self.ra = reg_arg
+        
+    def get_registers(self):
+        return [self.ra]
+    
+    def __repr__(self):
+        return self.opcode() + " " + str(self.ra)
+        
+    @staticmethod
+    def get_move_inst():
+        return MOVE_16
+        
+    def get_empty_reg(self, reg_pool):
+        return reg_pool.get_empty_small_numbered_reg()
+        
+    def should_skip(self):
+        num = int(self.ra[1:])
+        if(num < 16):
+            return True
+     
+    def fix_register_limit(self, shadows, reg_pool):
+        if(self.should_skip()):
+            return [self]
+        
+        free_reg = self.get_empty_reg(reg_pool)
+        CUSTOM_MOVE = self.get_move_inst()
+        
+        ans_block = [COMMENT("FRL instrumentation"),
+            BLANK_LINE(),
+            CUSTOM_MOVE(free_reg, self.ra),
+            BLANK_LINE(),
+            self.__class__(free_reg),
+            BLANK_LINE()]
+        
+        return ans_block
+        
+
+class RETURN(_RETURN_INSTRUCTION):
+    def opcode(self):
+        return "return"
+        
+
+class RETURN_WIDE(_RETURN_INSTRUCTION):
+    def opcode(self):
+        return "return-wide"
+        
+    def get_empty_reg(self, reg_pool):
+        return reg_pool.get_empty_small_numbered_reg_wide()
+        
+    def get_move_inst(self):
+        return MOVE_WIDE_16
+        
+        
+class RETURN_OBJECT(_RETURN_INSTRUCTION):
+    def opcode(self):
+        return "return-object"
+        
+    def get_move_inst(self):
+        return MOVE_OBJECT_16
+
 
 class RETURN_VOID(SmaliAssemblyInstruction):
+    # This instruction is so different the other 
+    # return-x instructions
+    def __init__(self):
+        pass
+        
     def opcode(self):
         return "return-void"
         
     def __repr__(self):
         return self.opcode()
-
-class RETURN(_SINGLE_REGISTER_INSTRUCTION):
-    def opcode(self):
-        return "return"
         
-
-class RETURN_WIDE(_SINGLE_REGISTER_INSTRUCTION):
-    def opcode(self):
-        return "return-wide"
-
-class RETURN_OBJECT(_SINGLE_REGISTER_INSTRUCTION):
-    def opcode(self):
-        return "return-object"
-
-
 
 class CONST(_SINGLE_DEST_REGISTER_INSTRUCTION):
     def fix_register_limit(self, shadow_map = None, mt_map = None):
