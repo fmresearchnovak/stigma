@@ -457,7 +457,7 @@ def tests():
 
 
 
-    print("\t_fix_register_limit() move...")
+    print("\tfix_register_limit() move...")
     asm_obj = smali.parse_line("    move v20, v21\n")
     #print(test2_shadow_map)
     ans_block = asm_obj.fix_register_limit()
@@ -471,6 +471,57 @@ def tests():
     ans_block = ans_obj.fix_register_limit()
     soln_block = [smali.MOVE_16("v20", "v21")]
     assert(ans_block == soln_block)
+    
+    
+    print("\tfix_register_limit() move-result...")
+    import VRegisterPool as VRP
+    asm_obj = smali.parse_line("    move-result v15")
+    signature = SmaliMethodSignature(".method private calculatePageOffsets(Landroidx/viewpager/widget/ViewPager$ItemInfo;ILandroidx/viewpager/widget/ViewPager$ItemInfo;J)V")
+    reg_pool = VRP.VRegisterPool(signature, 13)
+    #print(reg_pool.pretty_string(0, 22))
+    ans_block = asm_obj.fix_register_limit(None, reg_pool)
+    soln_block = [smali.MOVE_RESULT("v15")]
+    assert(ans_block == soln_block)
+    
+    asm_obj = smali.parse_line("    move-result-object v16")
+    ans_block = asm_obj.fix_register_limit(None, reg_pool)
+    soln_block = [smali.COMMENT("FRL instrumentation"), 
+            smali.BLANK_LINE(),
+            smali.MOVE_OBJECT_16("v0", "v16"),
+            smali.BLANK_LINE(),
+            smali.MOVE_RESULT_OBJECT("v0"),
+            smali.BLANK_LINE(),
+            smali.MOVE_OBJECT_16("v16", "v0"),
+            smali.BLANK_LINE(),
+            smali.COMMENT("END FRL instrumentation"),
+            smali.BLANK_LINE()]
+    #print(ans_block)
+    #print(soln_block)
+    assert(ans_block == soln_block)
+    
+    for line in ans_block:
+        reg_pool.update(line)
+    
+    print(reg_pool.pretty_string(0, 22))
+    asm_obj = smali.parse_line("    move-result-wide v17")
+    ans_block = asm_obj.fix_register_limit(None, reg_pool)
+    soln_block = [smali.COMMENT("FRL instrumentation"), 
+            smali.BLANK_LINE(),
+            smali.MOVE_WIDE_16("v1", "v17"),
+            smali.BLANK_LINE(),
+            smali.MOVE_RESULT_WIDE("v1"),
+            smali.BLANK_LINE(),
+            smali.MOVE_WIDE_16("v17", "v1"),
+            smali.BLANK_LINE(),
+            smali.COMMENT("END FRL instrumentation"),
+            smali.BLANK_LINE()]
+    #print(ans_block)
+    #print(soln_block)
+    assert(ans_block == soln_block)
+    
+    for line in ans_block:
+        reg_pool.update(line)
+    print(reg_pool.pretty_string(0, 21))
 
     '''
     print("\t_build_shadow_map_frl...")

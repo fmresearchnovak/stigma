@@ -23,8 +23,9 @@
 
 # Here are some of the "abstract" parent classes
 # _MOVE_INSTRUCTION
+# _MOVE_RESULT_INSTRUCTION
 # _SINGLE_REGISTER_INSTRUCTION
-# _SINGLE_DEST_REGISTER_INSTRUCTION
+# _SINGLE_DEST_REGISTER_INSTRUCTION  (only one argument, 
 # _PARAMETER_LIST_INSTRUCTION
 # _TRIPLE_REGISTER_INSTRUCTION
 # _TWO_REG_EQ
@@ -223,25 +224,89 @@ class _SINGLE_DEST_REGISTER_INSTRUCTION(SmaliAssemblyInstruction):
                 shadow_map.insert(reg)
         #print("shadow map: " + str(shadow_map))
      ''' 
+
+
+
+class _MOVE_RESULT_INSTRUCTION(SmaliAssemblyInstruction):
+    # A parent class that should never be instantiated directly.
+    def __init__(self, reg_dest):
+        self.rd = reg_dest
         
+    def get_registers(self):
+        return [self.rd]
+    
+    def __repr__(self):
+        return self.opcode() + " " + str(self.rd)
+        
+    @staticmethod
+    def get_move_inst():
+        return MOVE_16
+        
+    def get_empty_reg(self, reg_pool):
+        return reg_pool.get_empty_small_numbered_reg()
+        
+    def should_skip(self):
+        num = int(self.rd[1:])
+        if(num < 16):
+            return True
+     
+    def fix_register_limit(self, shadows, reg_pool):
+        
+        if(self.should_skip()):
+            return [self]
+            
+        CUSTOM_MOVE = self.get_move_inst()
+        free_reg = self.get_empty_reg(reg_pool)
+        
+        ans_block = [COMMENT("FRL instrumentation"),
+            BLANK_LINE(),
+            CUSTOM_MOVE(free_reg, self.rd),
+            BLANK_LINE(),
+            self.__class__(free_reg),
+            BLANK_LINE(),
+            CUSTOM_MOVE(self.rd, free_reg),
+            BLANK_LINE(),
+            COMMENT("END FRL instrumentation"),
+            BLANK_LINE()]
+            
+        return ans_block
 
 
-class MOVE_RESULT(_SINGLE_REGISTER_INSTRUCTION):
+class MOVE_RESULT(_MOVE_RESULT_INSTRUCTION):
     def opcode(self):
         return "move-result"
-        
 
-class MOVE_RESULT_WIDE(_SINGLE_REGISTER_INSTRUCTION):
+
+class MOVE_RESULT_WIDE(_MOVE_RESULT_INSTRUCTION):
     def opcode(self):
         return "move-result-wide"
+        
+    def should_skip(self):
+        num = int(self.rd[1:])
+        if(num < 15):
+            return True
 
-class MOVE_RESULT_OBJECT(_SINGLE_REGISTER_INSTRUCTION):
+    def get_move_inst(self):
+        return MOVE_WIDE_16
+        
+    def get_empty_reg(self, reg_pool):
+        return reg_pool.get_empty_small_numbered_reg_wide()
+        
+
+class MOVE_RESULT_OBJECT(_MOVE_RESULT_INSTRUCTION):
     def opcode(self):
         return "move-result-object"
+        
+    def get_move_inst(self):
+        return MOVE_OBJECT_16
 
-class MOVE_EXCEPTION(_SINGLE_REGISTER_INSTRUCTION):
+
+class MOVE_EXCEPTION(_MOVE_RESULT_INSTRUCTION):
     def opcode(self):
         return "move-exception"
+        
+    def get_move_inst(self):
+        return MOVE_OBJECT_16
 
 
 
@@ -255,6 +320,7 @@ class RETURN_VOID(SmaliAssemblyInstruction):
 class RETURN(_SINGLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "return"
+        
 
 class RETURN_WIDE(_SINGLE_REGISTER_INSTRUCTION):
     def opcode(self):
