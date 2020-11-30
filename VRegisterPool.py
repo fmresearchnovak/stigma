@@ -5,11 +5,7 @@ import SmaliAssemblyInstructions as smali
 
 
 
-TYPE_CODE_WORD = 0
-TYPE_CODE_WIDE = 1
-TYPE_CODE_OBJ_REF = 2
 
-MOVE_TYPE_LIST = [smali.MOVE_16, smali.MOVE_WIDE_16, smali.MOVE_OBJECT_16]
 
 class VRegisterPool():
 	# A register pool only exists inside a method
@@ -20,17 +16,17 @@ class VRegisterPool():
 	
 	def __init__(self, signature, num_local_params):
 		
-		# mt_map stands for "move-type hashmap"
-		self.mt_map = {}
+		# type_map
+		self.type_map = {}
 		
-		# Initiate move_type_hashmap with parameters of funciton
+		# Initiate type_hashmap with parameters of funciton
 		# -- Example -- MyMethod(JI)  .locals = 17
-		# p0 = v22 type: object reference ("this") => smali.MOVE_OBJECT_16
-		# p1 = v23 type: long => smali.MOVE_WIDE_16
-		# p2 = v24 type: long2
-		# p3 = v25 type: int => smali.MOVE_16
-		# key: register name (v's only)
-		# value: smali.MOVE corresponding to register type
+		# p0 = v22 type: object reference ("this")
+		# p1 = v23 type: long
+		# p2 = v24 type: long2 ("remaining")
+		# p3 = v25 type: int
+		# key: register name (v's only), a string
+		# value: register type
 		
 		for key in signature.parameter_type_map:
 			#print("key: " + str(key) + "  value: " + str(signature.parameter_type_map[key]))
@@ -38,20 +34,21 @@ class VRegisterPool():
 			reg_type = signature.parameter_type_map[key]
 			v_reg = StigmaStringParsingLib.get_v_from_p(p_reg, num_local_params)
 			
-			if reg_type in ["THIS", "L", "ARRAY"]:
-				self.mt_map[v_reg] = smali.MOVE_OBJECT_16
+			
+			if reg_type in smali.TYPE_LIST_WORD:
+				self.type_map[v_reg] = smali.TYPE_CODE_WORD
 				
-			elif reg_type in ["J", "D"]:
-				self.mt_map[v_reg] = smali.MOVE_WIDE_16
+			elif reg_type in smali.TYPE_LIST_WIDE:
+				self.type_map[v_reg] = smali.TYPE_CODE_WIDE
 				
-			elif reg_type in ["Z", "B", "S", "C", "I", "F"]:
-				self.mt_map[v_reg] = smali.MOVE_16
+			elif reg_type in smali.TYPE_LIST_WIDE_REMAINING:
+				self.type_map[v_reg] = smali.TYPE_CODE_WIDE_REMAINING
 				
-			elif reg_type in ["J2", "D2"]:
-				self.mt_map[v_reg] = "2"
+			elif reg_type in smali.TYPE_LIST_OBJECT_REF:
+				self.type_map[v_reg] = smali.TYPE_CODE_OBJ_REF
 				
 			else:
-				raise RuntimeError("cannot assign register type for: " + str(reg_type))
+				raise ValueError("Invalid Type: " + str(reg_type))
 
 
 	def update(self, instruction):
@@ -85,9 +82,9 @@ class VRegisterPool():
 
 
 		opcode = StigmaStringParsingLib.break_into_tokens(instruction)[0]
-		best_move_type = VRegisterPool.get_move_type(opcode)
+		data_type_written = VRegisterPool._get_type_written(opcode)
 
-		if best_move_type is None:
+		if data_type_written is None:
 			return
 			
 		key_reg = StigmaStringParsingLib.get_v_and_p_numbers(instruction)[0]
@@ -95,62 +92,54 @@ class VRegisterPool():
 		#print("key reg: " + str(key_reg))
 		#print("current map: " + str(self.mt_map))
 		#print("mt_map[key_reg}: " + str(self.mt_map[key_reg]))
-		if(key_reg in self.mt_map):
-			if(self.mt_map[key_reg] == "2"):
+		if(key_reg in self.type_map):
+			if(self.type_map[key_reg] == smali.TYPE_CODE_WIDE_REMAINING):
 				raise ValueError("You have tried to clobber the second 1/2 of a wide value!\n\treg: " + str(key_reg) + "\n\tinstruction: " + str(instruction))
-			if(self.mt_map[key_reg] == smali.MOVE_WIDE_16):
-				print("Warning!!! You have clobbered the first 1/2 of a wide value!\n\treg: " + str(key_reg) + "\n\tinstruction: " + str(instruction))
+			
+		self.type_map[key_reg] = data_type_written
 		
-		self.mt_map[key_reg] = best_move_type
-		
-		if best_move_type == smali.MOVE_WIDE_16:
+		if data_type_written == smali.TYPE_CODE_WIDE:
 			key_reg_num = int(key_reg[1:])
 			new_key_reg = "v" + str(key_reg_num + 1)
-			self.mt_map[new_key_reg] = "2"
+			self.type_map[new_key_reg] = smali.TYPE_CODE_WIDE_REMAINING
 	
-	
+
 	@staticmethod
-	def get_move_type(opcode):
-		# Gives the move-type indicated by the provided opcode
-		# e.g., int-to-long vx vy indicates a double (because the
-		# destination register vx will be a long)
+	def _get_type_written(opcode):
 		if opcode in StigmaStringParsingLib.WORD_MOVE_LIST:
-			return smali.MOVE_16
-		
+			return smali.TYPE_CODE_WORD
 		elif opcode in StigmaStringParsingLib.WIDE_MOVE_LIST:
-			return smali.MOVE_WIDE_16
-			
+			return smali.TYPE_CODE_WIDE
 		elif opcode in StigmaStringParsingLib.OBJECT_MOVE_LIST:
-			return smali.MOVE_OBJECT_16
-		
+			return smali.TYPE_CODE_OBJ_REF
 		else:
 			return None
-			
-	
+		
+		
 	def __getitem__(self, key):
 		# just a pass-through so you can directly
 		# address the underlying dictionary
-		return self.mt_map[key]
+		return self.type_map[key]
 		
 	def __contains__(self, key):
 		# Just a pass-through so you can directly
 		# check if key is inside the underlying dictionary
-		return key in self.mt_map
+		return key in self.type_map
 		
 		
 	def __eq__(self, other):
 		# pass-through so you can directly check
 		# if this pool is equal to a dictionary matching
 		# the mt_map dictionary
-		return self.mt_map == other
+		return self.type_map == other
 		
 	def __str__(self):
-		return str(self.mt_map)
+		return str(self.type_map)
 		
 		
-	def get_without_error(self, key):
-		if(key in self.mt_map):
-			return self.mt_map[key]
+	def getitem_without_error(self, key):
+		if(key in self.type_map):
+			return self.type_map[key]
 		return None
 		
 		
@@ -158,7 +147,7 @@ class VRegisterPool():
 		s = ""
 		for i in range(start_val, stop_val):
 			reg = "v" + str(i)
-			move = self.get_without_error(reg)
+			move = self.getitem_without_error(reg)
 			s = s + str(reg) + ": " + str(move) + "\n"
 		return s
 	
@@ -167,7 +156,7 @@ class VRegisterPool():
 		# returns a register that does not appear to have a type
 		for i in range(16):
 			v_num = "v" + str(i)
-			if(v_num not in self.mt_map):
+			if(v_num not in self.type_map):
 				return v_num
 		return None
 		
@@ -176,17 +165,8 @@ class VRegisterPool():
 		for i in range(15):
 			v_num = "v" + str(i)
 			v_num_next = "v" + str(i+1)
-			if(v_num not in self.mt_map and v_num_next not in self.mt_map):
+			if(v_num not in self.type_map and v_num_next not in self.type_map):
 				return v_num
-		return None
-		
-		
-	def get_small_numbered_reg(self, TYPE_CODE):
-		for i in range(16):
-			v_num = "v" + str(i)
-			if(v_num in self.mt_map):
-				if(self.mt_map[v_num] == MOVE_TYPE_LIST[TYPE_CODE]):
-					return v_num
 		return None
 		
 	
@@ -201,13 +181,13 @@ def main():
 	print("\tConstructor...")
 	signature = SmaliMethodDef.SmaliMethodSignature(".method private calculatePageOffsets(Landroidx/viewpager/widget/ViewPager$ItemInfo;ILandroidx/viewpager/widget/ViewPager$ItemInfo;)V")
 	pool = VRegisterPool(signature, 13)
-	soln = {"v13": smali.MOVE_OBJECT_16, "v14": smali.MOVE_OBJECT_16, "v15": smali.MOVE_16, "v16": smali.MOVE_OBJECT_16}
+	soln = {"v13": smali.TYPE_CODE_OBJ_REF, "v14": smali.TYPE_CODE_OBJ_REF, "v15": smali.TYPE_CODE_WORD, "v16": smali.TYPE_CODE_OBJ_REF}
 	#print(soln)
-	#print(result)
+	#print(pool)
 	assert(pool == soln)
 	signature = SmaliMethodDef.SmaliMethodSignature(".method private calculatePageOffsets(Landroidx/viewpager/widget/ViewPager$ItemInfo;ILandroidx/viewpager/widget/ViewPager$ItemInfo;J)V")
 	pool = VRegisterPool(signature, 13)
-	soln = {"v13": smali.MOVE_OBJECT_16, "v14": smali.MOVE_OBJECT_16, "v15": smali.MOVE_16, "v16": smali.MOVE_OBJECT_16, "v17" : smali.MOVE_WIDE_16, "v18" : "2"}
+	soln = {"v13": smali.TYPE_CODE_OBJ_REF, "v14": smali.TYPE_CODE_OBJ_REF, "v15": smali.TYPE_CODE_WORD, "v16": smali.TYPE_CODE_OBJ_REF, "v17" : smali.TYPE_CODE_WIDE, "v18" : smali.TYPE_CODE_WIDE_REMAINING}
 	#print(soln)
 	#print(result)
 	assert(pool == soln)
@@ -221,16 +201,16 @@ def main():
 		pass
 		
 	pool.update("    const-wide/16 v23, 0x1\n")
-	soln["v23"] = smali.MOVE_WIDE_16
-	soln["v24"] = "2"
+	soln["v23"] = smali.TYPE_CODE_WIDE
+	soln["v24"] = smali.TYPE_CODE_WIDE_REMAINING
 	assert(pool == soln)
 	
 	pool.update("    const-string v19, \"hello\"\n")
-	soln["v19"] = smali.MOVE_OBJECT_16
+	soln["v19"] = smali.TYPE_CODE_OBJ_REF
 	assert(pool == soln)
 	
 	pool.update("    array-length v16, v21\n")
-	soln["v16"] = smali.MOVE_16
+	soln["v16"] = smali.TYPE_CODE_WORD
 	# this following can be inferred, but our code doesn't 
 	# update based on inferences, only definitives
 	#soln["v21"] = smali.MOVE_OBJECT_16
@@ -241,15 +221,15 @@ def main():
 	
 	
 	print("\tget_move_type()...")
-	move_obj = VRegisterPool.get_move_type("array-length")
-	assert(move_obj == smali.MOVE_16)
-	move_obj = VRegisterPool.get_move_type("no-op")
-	assert(move_obj == None)
+	type_code = VRegisterPool._get_type_written("array-length")
+	assert(type_code == smali.TYPE_CODE_WORD)
+	type_code = VRegisterPool._get_type_written("no-op")
+	assert(type_code == None)
 	
 	
 	print("\t__getitem__()...")
-	move_obj = pool["v16"]
-	assert(move_obj == smali.MOVE_16)
+	type_code = pool["v16"]
+	assert(type_code == smali.TYPE_CODE_WORD)
 	
 	print("\t__contains__()...")
 	assert("v16" in pool)
@@ -264,20 +244,11 @@ def main():
 	assert(reg == "v1")
 	
 	
-	print("\tget_small_numbered_reg()...")
-	reg = pool.get_small_numbered_reg(TYPE_CODE_WORD)
-	assert(reg == "v0")
-	reg = pool.get_small_numbered_reg(TYPE_CODE_WIDE)
-	assert(reg == None)
-	pool.update("    const-wide/16 v2 0x1\n")
-	reg = pool.get_small_numbered_reg(TYPE_CODE_WIDE)
-	assert(reg == "v2")
-	assert(pool["v3"] == "2")
 	
-	
+	print("\tget_empty_small_numbered_reg_wide()...")
 	reg = pool.get_empty_small_numbered_reg_wide()
 	#print(pool.pretty_string(0, 32))
-	assert(reg == "v4")
+	assert(reg == "v1")
 		
 		
 	print("All Tests PASSED!")
