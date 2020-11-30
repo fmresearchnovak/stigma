@@ -14,12 +14,10 @@ class VRegisterPool():
 	# update("const/4 v1, 0x8")  sets the type of v1 to be TYPE_CODE_WORD
 	# self.type_map 
 	# [] and "in" supported (keys in self.type_map)
-	# getitem_without_error is like [] but returns None if key not found
+	# 	the __getitem__ operator returns None if key not found
 	# pretty_string()
-	# 
-	# -- Maybe Not Useful --
-	# get_empty_small_numbered_reg
-	# get_empty_small_numbered_reg_wide
+	# get_spot()  gives a register of matching type or a free / empty register (can handle wide)
+	#
 	
 	def __init__(self, signature, num_local_params):
 		
@@ -124,9 +122,12 @@ class VRegisterPool():
 		
 		
 	def __getitem__(self, key):
-		# just a pass-through so you can directly
-		# address the underlying dictionary
-		return self.type_map[key]
+		# allows using [] on this object and avoids
+		# the exception raised when key is not in self.type_map
+		# dictionary
+		if(key in self.type_map):
+			return self.type_map[key]
+		return None
 		
 	def __contains__(self, key):
 		# Just a pass-through so you can directly
@@ -144,39 +145,43 @@ class VRegisterPool():
 		return str(self.type_map)
 		
 		
-	def getitem_without_error(self, key):
-		if(key in self.type_map):
-			return self.type_map[key]
-		return None
-		
 		
 	def pretty_string(self, start_val, stop_val):
 		s = ""
 		for i in range(start_val, stop_val):
 			reg = "v" + str(i)
-			move = self.getitem_without_error(reg)
-			s = s + str(reg) + ": " + str(move) + "\n"
+			type_code = self[reg]
+			s = s + str(reg) + ": " + smali.type_code_name(type_code) + "\n"
 		return s
-	
-	
-	def get_empty_small_numbered_reg(self):
-		# returns a register that does not appear to have a type
-		for i in range(16):
-			v_num = "v" + str(i)
-			if(v_num not in self.type_map):
-				return v_num
-		return None
 		
 		
-	def get_empty_small_numbered_reg_wide(self):
-		for i in range(15):
-			v_num = "v" + str(i)
-			v_num_next = "v" + str(i+1)
-			if(v_num not in self.type_map and v_num_next not in self.type_map):
-				return v_num
-		return None
+	def get_spot(self, max_val, type_code):
+		# Look for empty spot to use
+		for i in range(max_val):
+			reg_name = "v" + str(i)
+			
+			if(self[reg_name] == None):
+				if(type_code == smali.TYPE_CODE_WIDE):
+					adjacent_reg_name = "v" + str(i+1)
+					if(self[adjacent_reg_name] == None):
+						return reg_name
+					else:
+						continue
+						
+				else:
+					return reg_name
+					
+		# Look for a spot matching in type
+		for i in range(max_val):
+			reg_name = "v" + str(i)
+			if(type_code == self[reg_name]):
+				return reg_name
 		
-	
+		# theoretically possible if user is looking for TYPE_CODE_OBJ_REF
+		# and max value is X and all registers below X are TYPE_CODE_WORD
+		raise ValueError("Could not find a spot for type: " + smali.type_code_name(type_code) + " in first " + str(max_val) + " registers.")
+		#return None
+		
 	
 	
 def main():
@@ -237,27 +242,39 @@ def main():
 	print("\t__getitem__()...")
 	type_code = pool["v16"]
 	assert(type_code == smali.TYPE_CODE_WORD)
+	type_code = pool["v35"]
+	assert(type_code == None)
 	
 	print("\t__contains__()...")
 	assert("v16" in pool)
 	assert("v30" not in pool)
 	
 	
-	print("\tget_empty_small_numbered_reg()...")
-	reg = pool.get_empty_small_numbered_reg()
-	assert(reg == "v0")
-	pool.update("    const/16 v0, 0x1\n")
-	reg = pool.get_empty_small_numbered_reg()
-	assert(reg == "v1")
 	
-	
-	
-	print("\tget_empty_small_numbered_reg_wide()...")
-	reg = pool.get_empty_small_numbered_reg_wide()
 	#print(pool.pretty_string(0, 32))
+	print("\tget_spot()...")
+	pool.update("    const/16 v0, 0x1\n")
+	try:
+		reg = pool.get_spot(1, smali.TYPE_CODE_OBJ_REF)
+		assert(False)
+	except:
+		pass
+	reg = pool.get_spot(14, smali.TYPE_CODE_OBJ_REF)
 	assert(reg == "v1")
-		
-		
+	reg = pool.get_spot(14, None)
+	assert(reg == "v1")
+	pool.update("    const v2, 0x1")
+	reg = pool.get_spot(5, smali.TYPE_CODE_WIDE)
+	assert(reg == "v3")
+	reg = pool.get_spot(5, smali.TYPE_CODE_OBJ_REF)
+	assert(reg == "v1")
+	reg = pool.get_spot(15, smali.TYPE_CODE_WORD)
+	assert(reg == "v1")
+	pool.update("    sget-boolean v1, Lclass;->field:Z");
+	reg = pool.get_spot(15, smali.TYPE_CODE_OBJ_REF)
+	assert(reg == "v3")
+	
+	#print(pool.pretty_string(0, 32))
 	print("All Tests PASSED!")
 
 if __name__ == "__main__":
