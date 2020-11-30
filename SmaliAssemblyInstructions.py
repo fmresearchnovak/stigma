@@ -58,161 +58,6 @@ TYPE_LIST_ALL = TYPE_LIST_OBJECT_REF \
                     + TYPE_LIST_WORD
 
 
-        
-def _build_move_type_hash_map_frl(signature, num_local_params):
-    mt_hashmap = {}
-    
-    for key in signature.parameter_type_map:
-        #print("key: " + str(key) + "  value: " + str(signature.parameter_type_map[key]))
-        p_reg = key
-        reg_type = signature.parameter_type_map[key]
-        v_reg = StigmaStringParsingLib._get_v_from_p(p_reg, num_local_params)
-        
-        if reg_type in ["THIS", "L", "ARRAY"]:
-            mt_hashmap[v_reg] = MOVE_OBJECT_16
-            
-        elif reg_type in ["J", "D"]:
-            mt_hashmap[v_reg] = MOVE_WIDE_16
-            
-        elif reg_type in ["Z", "B", "S", "C", "I", "F"]:
-            mt_hashmap[v_reg] = MOVE_16
-            
-        elif reg_type in ["J2", "D2"]:
-            mt_hashmap[v_reg] = "2"
-            
-        else:
-            raise RuntimeError("cannot assign register type for: " + str(reg_type))
-        
-    return mt_hashmap
-    
-def get_move_type(opcode):
-    if opcode in StigmaStringParsingLib.WORD_MOVE_LIST:
-        return MOVE_16
-    
-    elif opcode in StigmaStringParsingLib.WIDE_MOVE_LIST:
-        return MOVE_WIDE_16
-        
-    elif opcode in StigmaStringParsingLib.OBJECT_MOVE_LIST:
-        return MOVE_OBJECT_16
-    
-    else:
-        return None
-
-def _update_mt_hashmap_frl(move_type_hashmap, cur_line):
-    #print("update_mt_hashmap(" + repr(cur_line) + ")")
-    
-    if(not StigmaStringParsingLib.is_valid_instruction(cur_line)):
-        return None
-
-    # "update move-type hashmap"
-    # this creates a hashmap that indicates for each register
-    # what the corresponding move instruction must be used
-    # in order to move that register (assuming that register
-    # will be used on the RIGHT hand side of the move
-    #
-    # e.g., suppose v0 is a long, we should use move-wide/16 vx, v0
-    
-    # In order to know that v0 is a long, there must have been
-    # an instruction that writes a long value to v0 
-    # (that is, v0 is the destination register in such an instruction)
-    # All such instructions are in WIDE_MOVE_LIST
-    
-    # This function is called on every (original) instruction
-    # of smali code
-    opcode = StigmaStringParsingLib.break_into_tokens(cur_line)[0]
-    
-    best_move_type = get_move_type(opcode)
-
-    if best_move_type is None:
-
-        return move_type_hashmap
-        
-    key_reg = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)[0]
-    move_type_hashmap[key_reg] = best_move_type
-    
-    if best_move_type == MOVE_WIDE_16:
-        key_reg_num = int(key_reg[1:])
-        new_key_reg = "v" + str(key_reg_num + 1)
-        move_type_hashmap[new_key_reg] = "2"
-
-@staticmethod
-def _create_before_move_block_frl(shadow_map, move_type_map):
-    #print("shadow map: " + str(shadow_map))
-    #print("move_type_map: " + str(move_type_map))
-    # move map says things like: {"v0", smali.MOVE_WIDE_16}
-    # shadow map says
-    
-    # We will use the move_type_map to create a block with the
-    # correct MOVE instructions (MOVE_16, MOVE_WIDE_16, MOVE_OBJECT_16)
-    # for the register being moved.
-    
-    # the move map is created in "_update_mt_map_frl()", Step 5.5
-    
-    #Step 4
-    #mv shadow corr
-    #mv corr high
-    block = [smali.COMMENT("FRL MOVE ADDED BY STIGMA"),
-    smali.BLANK_LINE()]
-    for t in shadow_map.tuples:
-        reg = t[0]
-        
-        corr_reg = shadow_map.get_corresponding(reg)
-        shad_reg = shadow_map.get_shadow(reg)
-        high_reg = reg
-        if(corr_reg in move_type_map):
-            move1 = move_type_map[corr_reg]
-            move1 = move1(shad_reg, corr_reg)
-
-            
-            block.append(move1)
-            block.append(smali.BLANK_LINE())
-
-        if(high_reg not in move_type_map):
-            raise RuntimeError("Could not find high reg: " + str(high_reg) + " in move_type_map!")
-
-## Think about this problem
-        move2 = move_type_map[high_reg]
-        if move2 != "2":
-            move2 = move2(corr_reg, high_reg)
-            block.append(move2)
-            block.append(smali.BLANK_LINE())
-            
-    return block
-
-@staticmethod
-def _create_after_move_block_frl(shadow_map, move_type_map):
-    #print("create_after_move_block()")
-    #print("shad map: " + str(shadow_map))
-    #print("move_type_map: " + str(move_type_map))
-    #Step 6
-    #mv high corr
-    #mv corr shadow (if corr found in mt_map)
-    
-    block = [smali.BLANK_LINE()]
-    for t in shadow_map.tuples:
-        reg = t[0]
-                    
-        corr_reg = shadow_map.get_corresponding(reg)
-        shad_reg = shadow_map.get_shadow(reg)
-        high_reg = reg
-        
-        move2 = move_type_map[corr_reg]
-        move2 = move2(high_reg, corr_reg)
-
-        block.append(move2)
-        block.append(smali.BLANK_LINE())
-        
-        if(shad_reg in move_type_map):
-            move1 = move_type_map[shad_reg]
-            move1 = move1(corr_reg, shad_reg)
-
-            block.append(move1)
-            block.append(smali.BLANK_LINE())
-  
-    block += [smali.COMMENT("FRL MOVE ADDED BY STIGMA END")]
-    
-    return block
-
 
 class SmaliAssemblyInstruction():
 
@@ -224,6 +69,9 @@ class SmaliAssemblyInstruction():
 
     def get_p_registers(self):
         return list(filter(lambda x : x[0] == "p", get_registers))
+        
+    def get_implicit_registers(self):
+        return []
 
     def __eq__(self, other):
         return repr(self) == repr(other)
@@ -231,21 +79,19 @@ class SmaliAssemblyInstruction():
     def get_move(self):
         return MOVE_16
 
-    def fix_register_limit(self, shadow_map, mt_map):
 
-        # move v20 v1
-        # move v1 v22
-
-        # move v19 v0
-        # move v0 v21
-        # isinstance v0(v21), v1(v22), lsome/some_id;
-        # move v21 v0
-        # move v0 v19
-
-        # move-object v22 v1
-        # move v1 v20
-        pass
-
+class ImplicitRegistersInstruction():
+    def get_implicit_registers(self):
+        ans = []
+        for reg in self.get_registers():
+            implicit_reg = "v" + str(int(reg[1:])+ 1)
+            ans.append(implicit_reg)
+        return ans
+        
+class ImplicitFirstRegisterInstruction():
+    def get_implicit_registers(self):
+        regs = self.get_registers()
+        return ["v" + str(int(regs[0][1:])+1)]
 
 class NormalMovable():
       def get_move(self):
@@ -349,15 +195,15 @@ class MOVE_FROM16(MOVE, NormalMovable):
 # This is a problem
 # I need the class name to be MOVE-WIDE
 # but "-" is not a valid character in a class name
-class MOVE_WIDE(MOVE, WideMovable):
+class MOVE_WIDE(ImplicitRegistersInstruction, MOVE, WideMovable):
     def opcode(self):
         return "move-wide"
     
-class MOVE_WIDE_FROM16(MOVE, WideMovable):
+class MOVE_WIDE_FROM16(ImplicitRegistersInstruction, MOVE, WideMovable):
     def opcode(self):
         return "move-wide/from16"
 
-class MOVE_WIDE_16(MOVE, WideMovable):
+class MOVE_WIDE_16(ImplicitRegistersInstruction, MOVE, WideMovable):
     def opcode(self):
         return "move-wide/16"
 
@@ -383,95 +229,6 @@ class _SINGLE_REGISTER_INSTRUCTION(SmaliAssemblyInstruction):
     def __repr__(self):
         return self.opcode() + " " + str(self.rd)
 
-    def fix_register_limit(self, shadow_map, mt_map):
-        #print("shadow map: " + str(shadow_map))
-        #print("move_type_map: " + str(move_type_map))
-        # move map says things like: {"v0", smali.MOVE_WIDE_16}
-        
-        # We will use the move_type_map to create a block with the
-        # correct MOVE instructions (MOVE_16, MOVE_WIDE_16, MOVE_OBJECT_16)
-        # for the register being moved.
-
-        # consider the following example:
-        # move-result v0
-
-        #     shad  corr
-        #1 move v17, v0
-        #
-        #    corr  high
-        #2 move v0, v21 
-        #
-        #  move-result v0
-        #
-        #3 move v21, v0
-        #
-        #4 move v0, v17
-        #
-        # the second move (v21 to v0) is 
-        # actually _NOT_ necessary because 
-        # the instruction does not actually READ
-        # the value of the register, it
-        # only writes to it.
-
-        # optimally, we can only update the mt_map
-        # with move #3
-        #mv shadow corr
-        #mv corr high
-        block = [COMMENT("FRL MOVE ADDED BY STIGMA")]
-        block.append(BLANK_LINE())
-        
-        # for this instruction there will be
-        # only 1 tuple since this instruction has
-        # only one register
-        
-        high_reg = shadow_map.tuples[0][0]
-        corr_reg = shadow_map.get_corresponding(high_reg)
-        shad_reg = shadow_map.get_shadow(high_reg)
-        
-        # move 1
-        if(corr_reg in mt_map):
-            move1 = mt_map[corr_reg]
-            move1 = move1(shad_reg, corr_reg)
-            _update_mt_hashmap_frl(mt_map, str(move1))
-            block.append(move1)
-            block.append(BLANK_LINE())
-           
-        if(high_reg in mt_map):
-            move2 = mt_map[high_reg]
-            move2 = move2(corr_reg, high_reg)
-            block.append(move2)
-            block.append(BLANK_LINE())
-            _update_mt_hashmap_frl(mt_map, str(move2))
-        
-        
-        # replace with correct register so
-        # that instruction has small-numbered
-        # registers only
-        instr = self.__class__(corr_reg)
-        _update_mt_hashmap_frl(mt_map, str(instr))
-        block.append(instr)
-        block.append(BLANK_LINE())
-       
-
-        # move 3
-        move3 = get_move_type(instr.opcode())
-        move3 = move3(high_reg, corr_reg)
-        _update_mt_hashmap_frl(mt_map, str(move3))
-        block.append(move3)
-        block.append(BLANK_LINE())
-
-        # move 4
-        if(corr_reg in mt_map):
-            move4 = mt_map[shad_reg]
-            move4 = move4(corr_reg, shad_reg)
-            _update_mt_hashmap_frl(mt_map, str(move4))
-            block.append(move4)
-            block.append(BLANK_LINE())
-
-        block.append(COMMENT("END OF FRL MOVE ADDED BY STIGMA"))
-        block.append(BLANK_LINE())
-
-        return block
 
 class _SINGLE_DEST_REGISTER_INSTRUCTION(SmaliAssemblyInstruction):
     # A parent class that should never be instantiated directly.
@@ -488,93 +245,12 @@ class _SINGLE_DEST_REGISTER_INSTRUCTION(SmaliAssemblyInstruction):
     def __repr__(self):
         return self.opcode() + " " + str(self.rd) + ", " + str(self.value_arg)
 
-    def fix_register_limit(self, shadow_map, mt_map):
-        #print("shadow map: " + str(shadow_map))
-        #print("move_type_map: " + str(move_type_map))
-        # move map says things like: {"v0", smali.MOVE_WIDE_16}
-        
-        # We will use the move_type_map to create a block with the
-        # correct MOVE instructions (MOVE_16, MOVE_WIDE_16, MOVE_OBJECT_16)
-        # for the register being moved.
-
-        # consider the following example:
-        # const-string v21, "hello!"
-
-        #     shad  corr
-        #1 move v17, v0
-        #
-        #    corr  high
-        #2 move v0, v21   <--- unnecessary
-        #
-        #  const-string v0, "hello!"
-        #
-        #3 move-object/16 v21, v0
-        #
-        #4 move v0, v17
-        #
-        # the second move (v21 to v0) is 
-        # actually _NOT_ necessary because 
-        # the instruction does not actually READ
-        # the value of the register, it
-        # only writes to it.
-
-        # optimally, we can only update the mt_map
-        # with move #3
-        #mv shadow corr
-        #mv corr high
-        block = [COMMENT("FRL MOVE ADDED BY STIGMA")]
-        block.append(BLANK_LINE())
-        
-        # for this instruction there will be
-        # only 1 tuple since this instruction has
-        # only one register
-        
-        high_reg = shadow_map.tuples[0][0]
-        corr_reg = shadow_map.get_corresponding(high_reg)
-        shad_reg = shadow_map.get_shadow(high_reg)
-        
-        # move 1
-        if(corr_reg in mt_map):
-            move1 = mt_map[corr_reg]
-            move1 = move1(shad_reg, corr_reg)
-            _update_mt_hashmap_frl(mt_map, str(move1))
-            block.append(move1)
-            block.append(BLANK_LINE())
-
-        
-        # replace with correct register so
-        # that instruction has small-numbered
-        # registers only
-        instr = self.__class__(corr_reg, self.value_arg)
-        block.append(instr)
-        block.append(BLANK_LINE())
-
-        # move 3
-        move3 = get_move_type(instr.opcode())
-        move3 = move3(high_reg, corr_reg)
-        _update_mt_hashmap_frl(mt_map, str(move3))
-        block.append(move3)
-        block.append(BLANK_LINE())
-
-        # move 4
-        if(corr_reg in mt_map):
-            move4 = mt_map[shad_reg]
-            move4 = move4(corr_reg, shad_reg)
-            block.append(move4)
-            block.append(BLANK_LINE())
-
-        block.append(COMMENT("END OF FRL MOVE ADDED BY STIGMA"))
-        block.append(BLANK_LINE())
-
-        return block
-
-
 
 class MOVE_RESULT(_SINGLE_REGISTER_INSTRUCTION, NormalMovable):
     def opcode(self):
         return "move-result"
 
-class MOVE_RESULT_WIDE(_SINGLE_REGISTER_INSTRUCTION, WideMovable):
+class MOVE_RESULT_WIDE(ImplicitRegistersInstruction, _SINGLE_REGISTER_INSTRUCTION, WideMovable):
     def opcode(self):
         return "move-result-wide"
 
@@ -599,7 +275,7 @@ class RETURN(_SINGLE_REGISTER_INSTRUCTION, NormalMovable):
     def opcode(self):
         return "return"
 
-class RETURN_WIDE(_SINGLE_REGISTER_INSTRUCTION):
+class RETURN_WIDE(ImplicitRegistersInstruction, _SINGLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "return-wide"
 
@@ -610,12 +286,6 @@ class RETURN_OBJECT(_SINGLE_REGISTER_INSTRUCTION):
 
 
 class CONST(_SINGLE_DEST_REGISTER_INSTRUCTION):
-    def fix_register_limit(self, shadow_map = None, mt_map = None):
-        # this instruction doesn't use the shadow map
-        # or the move_type_hashmap
-        # others likely will
-        block = [str(CONST_16(self.rd, self.value_arg))]
-        return block
         
     def opcode(self):
         return "const"
@@ -633,15 +303,9 @@ class CONST_HIGH16(CONST):
     def opcode(self):
         return "const/high16"
 
-    def fix_register_limit(self, shadow_map = None, mt_map = None):
-        return [self]
-
-class CONST_WIDE(CONST):
+class CONST_WIDE(ImplicitRegistersInstruction, CONST):
     def opcode(self):
         return "const-wide"
-
-    def fix_register_limit(self, shadow_map = None, mt_map = None):
-        return [CONST_WIDE_16(self.rd, self.value_arg)]
 
 class CONST_WIDE_16(CONST_WIDE):
     def opcode(self):
@@ -651,16 +315,10 @@ class CONST_WIDE_32(CONST_WIDE):
     def opcode(self):
         return "const-wide/32"
 
-    def fix_register_limit(self, shadow_map = None, mt_map = None):
-        return [self]
-
-
-class CONST_WIDE_HIGH16(CONST):
+class CONST_WIDE_HIGH16(ImplicitRegistersInstruction, CONST):
     def opcode(self):
         return "const-wide/high16"
 
-    def fix_register_limit(self, shadow_map = None, mt_map = None):
-        return [self]
 
 class CONST_STRING(_SINGLE_DEST_REGISTER_INSTRUCTION, ObjectMovable):
     
@@ -759,6 +417,8 @@ class NEW_ARRAY(SmaliAssemblyInstruction):
         return self.opcode() + " " + str(self.rd) + ", " + str(self.rs) + ", " + str(self.type_id)     
 
 class _PARAMETER_LIST_INSTRUCTION(SmaliAssemblyInstruction):
+    # Not a ImplicitRegistersInstruction because both registers
+    # for a wide-type will be explicitly listed in the parameter list
     def __init__(self, element_list, type_id):
         self.register_list = element_list
         self.type_id = type_id
@@ -850,13 +510,37 @@ class CMPL_DOUBLE(_TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "cmpl-double"
         
+    def get_implicit_registers(self):
+        regs = self.get_registers()
+        ans = []
+        for reg in regs[1:]:
+            implicit_reg = "v" + str(int(reg[1:])+1)
+            ans.append(implicit_reg)
+        return ans
+        
 class CMPG_DOUBLE(_TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "cmpg-double"
+    
+    def get_implicit_registers(self):
+        regs = self.get_registers()
+        ans = []
+        for reg in regs[1:]:
+            implicit_reg = "v" + str(int(reg[1:])+1)
+            ans.append(implicit_reg)
+        return ans
         
 class CMP_LONG(_TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "cmp-long"
+        
+    def get_implicit_registers(self):
+        regs = self.get_registers()
+        ans = []
+        for reg in regs[1:]:
+            implicit_reg = "v" + str(int(reg[1:])+1)
+            ans.append(implicit_reg)
+        return ans
         
 class _TWO_REG_EQ(SmaliAssemblyInstruction):
     # A parent class that should never be instantiated directly
@@ -952,9 +636,10 @@ class AGET(_TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "aget"
 
-class AGET_WIDE(_TRIPLE_REGISTER_INSTRUCTION):
+class AGET_WIDE(ImplicitFirstRegisterInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "aget-wide"
+
 
 class AGET_OBJECT(_TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
@@ -981,7 +666,7 @@ class APUT(_TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "aput"
 
-class APUT_WIDE(_TRIPLE_REGISTER_INSTRUCTION):
+class APUT_WIDE(ImplicitFirstRegisterInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "aput-wide"
 
@@ -1034,7 +719,7 @@ class IGET(_I_INSTRUCTION):
         return "iget"
 
         
-class IGET_WIDE(_I_INSTRUCTION):
+class IGET_WIDE(ImplicitFirstRegisterInstruction, _I_INSTRUCTION):
     def opcode(self):
         return "iget-wide"
         
@@ -1062,7 +747,7 @@ class IPUT(_I_INSTRUCTION):
     def opcode(self):
         return "iput"
         
-class IPUT_WIDE(_I_INSTRUCTION):
+class IPUT_WIDE(ImplicitFirstRegisterInstruction, _I_INSTRUCTION):
     def opcode(self):
         return "iput-wide"
         
@@ -1110,7 +795,7 @@ class SGET(_S_INSTRUCTION):
     def opcode(self):
         return "sget"
 
-class SGET_WIDE(_S_INSTRUCTION):
+class SGET_WIDE(ImplicitRegistersInstruction, _S_INSTRUCTION):
     def opcode(self):
         return "sget-wide"
         
@@ -1138,7 +823,7 @@ class SPUT(_S_INSTRUCTION):
     def opcode(self):
         return "sput"
         
-class SPUT_WIDE(_S_INSTRUCTION):
+class SPUT_WIDE(ImplicitRegistersInstruction, _S_INSTRUCTION):
     def opcode(self):
         return "sput-wide"
         
@@ -1254,7 +939,7 @@ class NEG_INT(_TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "neg-int"
 
-class NEG_LONG(_TWO_REGISTER_UNARY_INSTRUCTION):
+class NEG_LONG(ImplicitRegistersInstruction, _TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "neg-long"
 
@@ -1262,11 +947,11 @@ class NEG_FLOAT(_TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "neg-float"
 
-class NEG_DOUBLE(_TWO_REGISTER_UNARY_INSTRUCTION):
+class NEG_DOUBLE(ImplicitRegistersInstruction, _TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "neg-double"
 
-class INT_TO_LONG(_TWO_REGISTER_UNARY_INSTRUCTION):
+class INT_TO_LONG(ImplicitFirstRegisterInstruction, _TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "int-to-long"
 
@@ -1274,7 +959,7 @@ class INT_TO_FLOAT(_TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "int-to-float"
 
-class INT_TO_DOUBLE(_TWO_REGISTER_UNARY_INSTRUCTION):
+class INT_TO_DOUBLE(ImplicitFirstRegisterInstruction, _TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "int-to-double"
 
@@ -1282,37 +967,54 @@ class LONG_TO_INT(_TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "long-to-int"
 
+    def get_implicit_registers(self):
+        regs = self.get_registers()
+        return ["v" + str(int(regs[1][1:])+1)]
+
 class LONG_TO_FLOAT(_TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "long-to-float"
+        
+    def get_implicit_registers(self):
+        regs = self.get_registers()
+        return ["v" + str(int(regs[1][1:])+1)]
 
-class LONG_TO_DOUBLE(_TWO_REGISTER_UNARY_INSTRUCTION):
+class LONG_TO_DOUBLE(ImplicitRegistersInstruction, _TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "long-to-double"
+
 
 class FLOAT_TO_INT(_TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "float-to-int"
 
-class FLOAT_TO_LONG(_TWO_REGISTER_UNARY_INSTRUCTION):
+class FLOAT_TO_LONG(ImplicitFirstRegisterInstruction, _TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "float-to-long"
 
-class FLOAT_TO_DOUBLE(_TWO_REGISTER_UNARY_INSTRUCTION):
+class FLOAT_TO_DOUBLE(ImplicitFirstRegisterInstruction, _TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "float-to-double"
 
 class DOUBLE_TO_INT(_TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "double-to-int"
+        
+    def get_implicit_registers(self):
+        regs = self.get_registers()
+        return ["v" + str(int(regs[1][1:])+1)]
 
-class DOUBLE_TO_LONG(_TWO_REGISTER_UNARY_INSTRUCTION):
+class DOUBLE_TO_LONG(ImplicitRegistersInstruction, _TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "double-to-long"
 
 class DOUBLE_TO_FLOAT(_TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "double-to-float"
+        
+    def get_implicit_registers(self):
+        regs = self.get_registers()
+        return ["v" + str(int(regs[1][1:])+1)]
 
 class INT_TO_BYTE(_TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
@@ -1370,47 +1072,47 @@ class USHR_INT(_TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "ushr-int"
 
-class ADD_LONG(_TRIPLE_REGISTER_INSTRUCTION):
+class ADD_LONG(ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "add-long"
 
-class SUB_LONG(_TRIPLE_REGISTER_INSTRUCTION):
+class SUB_LONG(ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "sub-long"
 
-class MUL_LONG(_TRIPLE_REGISTER_INSTRUCTION):
+class MUL_LONG(ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "mul-long"
 
-class DIV_LONG(_TRIPLE_REGISTER_INSTRUCTION):
+class DIV_LONG(ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "div-long"
 
-class REM_LONG(_TRIPLE_REGISTER_INSTRUCTION):
+class REM_LONG(ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "rem-long"
 
-class AND_LONG(_TRIPLE_REGISTER_INSTRUCTION):
+class AND_LONG(ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "and-long"
 
-class OR_LONG(_TRIPLE_REGISTER_INSTRUCTION):
+class OR_LONG(ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "or-long"
 
-class XOR_LONG(_TRIPLE_REGISTER_INSTRUCTION):
+class XOR_LONG(ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "xor-long"
 
-class SHL_LONG(_TRIPLE_REGISTER_INSTRUCTION):
+class SHL_LONG(ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "shl-long"
 
-class SHR_LONG(_TRIPLE_REGISTER_INSTRUCTION):
+class SHR_LONG(ImplicitRegistersInstruction,_TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "shr-long"
 
-class USHR_LONG(_TRIPLE_REGISTER_INSTRUCTION):
+class USHR_LONG(ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "ushr-long"
 
@@ -1434,23 +1136,23 @@ class REM_FLOAT(_TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "rem-float"
 
-class ADD_DOUBLE(_TRIPLE_REGISTER_INSTRUCTION):
+class ADD_DOUBLE(ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "add-double"
 
-class SUB_DOUBLE(_TRIPLE_REGISTER_INSTRUCTION):
+class SUB_DOUBLE(ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "sub-double"
 
-class MUL_DOUBLE(_TRIPLE_REGISTER_INSTRUCTION):
+class MUL_DOUBLE(ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "mul-double"
 
-class DIV_DOUBLE(_TRIPLE_REGISTER_INSTRUCTION):
+class DIV_DOUBLE(ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "div-double"
 
-class REM_DOUBLE(_TRIPLE_REGISTER_INSTRUCTION):
+class REM_DOUBLE(ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "rem-double"
 
@@ -1514,47 +1216,47 @@ class USHR_INT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "ushr-int/2addr"
             
-class ADD_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+class ADD_LONG_2ADDR(ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "add-long/2addr"
 
-class SUB_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+class SUB_LONG_2ADDR(ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "sub-long/2addr"
 
-class MUL_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+class MUL_LONG_2ADDR(ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "mul-long/2addr"
 
-class DIV_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+class DIV_LONG_2ADDR(ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "div-long/2addr"
         
-class REM_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+class REM_LONG_2ADDR(ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "rem-long/2addr"
 
-class AND_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+class AND_LONG_2ADDR(ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "and-long/2addr"
         
-class OR_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+class OR_LONG_2ADDR(ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "or-long/2addr"
 
-class XOR_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+class XOR_LONG_2ADDR(ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "xor-long/2addr"
 
-class SHL_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+class SHL_LONG_2ADDR(ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "shl-long/2addr"
 
-class SHR_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+class SHR_LONG_2ADDR(ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "shr-long/2addr"
 
-class USHR_LONG_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+class USHR_LONG_2ADDR(ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "ushr-long/2addr"
 
@@ -1578,23 +1280,23 @@ class REM_FLOAT_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "rem-float/2addr"
         
-class ADD_DOUBLE_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+class ADD_DOUBLE_2ADDR(ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "add-double/2addr"
         
-class SUB_DOUBLE_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+class SUB_DOUBLE_2ADDR(ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "sub-double/2addr"
         
-class MUL_DOUBLE_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+class MUL_DOUBLE_2ADDR(ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "mul-double/2addr"
         
-class DIV_DOUBLE_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+class DIV_DOUBLE_2ADDR(ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "div-double/2addr"
         
-class REM_DOUBLE_2ADDR(_TWO_REGISTER_BINARY_INSTRUCTION):
+class REM_DOUBLE_2ADDR(ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "rem-double/2addr"
         
@@ -1712,9 +1414,10 @@ class IGET_QUICK(_I_INSTRUCTION_QUICK):
     def opcode(self):
         return "iget-quick"
 
-class IGET_WIDE_QUICK(_I_INSTRUCTION_QUICK):
+class IGET_WIDE_QUICK(ImplicitFirstRegisterInstruction, _I_INSTRUCTION_QUICK):
     def opcode(self):
         return "iget-wide-quick"
+        
         
 class IGET_OBJECT_QUICK(_I_INSTRUCTION_QUICK):
     def opcode(self):
@@ -1724,7 +1427,7 @@ class IPUT_QUICK(_I_INSTRUCTION_QUICK):
     def opcode(self):
         return "iput-quick"
         
-class IPUT_WIDE_QUICK(_I_INSTRUCTION_QUICK):
+class IPUT_WIDE_QUICK(ImplicitFirstRegisterInstruction, _I_INSTRUCTION_QUICK):
     def opcode(self):
         return "iput-wide-quick"
         
@@ -1966,6 +1669,7 @@ def main():
     ]
 
 
+    print("constructor tests...")
     for cur_line in TESTS:
         print("\t" + cur_line.strip())
         obj = parse_line(cur_line)
@@ -1973,6 +1677,42 @@ def main():
         assert(str(obj) == cur_line)
         
 
+
+    print("implicit registers tests...")
+    asm_obj = parse_line("    move-wide v0, v15\n")
+    #print(asm_obj)
+    #print(asm_obj.get_registers())
+    #print(asm_obj.get_implicit_registers())
+    assert(asm_obj.get_registers() == ["v0", "v15"])
+    assert(asm_obj.get_implicit_registers() == ["v1", "v16"])
+    
+    asm_obj = parse_line("    cmpl-double v0, v1, v15\n")
+    assert(asm_obj.get_registers() == ["v0", "v1", "v15"])
+    assert(asm_obj.get_implicit_registers() == ["v2", "v16"])
+    
+    asm_obj = parse_line("    cmp-long v2, v3, v5")
+    assert(asm_obj.get_registers() == ["v2", "v3", "v5"])
+    assert(asm_obj.get_implicit_registers() == ["v4", "v6"])
+    
+    asm_obj = parse_line("    aget-wide v15, v1, v2\n")
+    assert(asm_obj.get_registers() == ["v15", "v1", "v2"])
+    assert(asm_obj.get_implicit_registers() == ["v16"])
+    
+    asm_obj = parse_line("    iput-wide v2, v4, Ljava/lang/String;")
+    assert(asm_obj.get_registers() == ["v2", "v4"])
+    assert(asm_obj.get_implicit_registers() == ["v3"])
+    
+    asm_obj = parse_line("    sget-wide v2, Ljava/lang/String;->length:J")
+    assert(asm_obj.get_registers() == ["v2"])
+    assert(asm_obj.get_implicit_registers() == ["v3"])
+    
+    asm_obj = parse_line("    int-to-long v2, v4\n")
+    assert(asm_obj.get_registers() == ["v2", "v4"])
+    assert(asm_obj.get_implicit_registers() == ["v3"])
+    
+    asm_obj = parse_line("    long-to-int v0, v15\n")
+    assert(asm_obj.get_registers() == ["v0", "v15"])
+    assert(asm_obj.get_implicit_registers() == ["v16"])
 
     print("ALL TESTS PASSED!")
 

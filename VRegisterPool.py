@@ -3,16 +3,23 @@ import StigmaStringParsingLib
 import SmaliAssemblyInstructions as smali
 
 
-
-
-
-
 class VRegisterPool():
 	# A register pool only exists inside a method
 	# It is a collection of all "v" registers
 	# It knows the type of every register
 	# It knows which registers are not containing
 	# any data (yet)
+	
+	# Primary API
+	# update("const/4 v1, 0x8")  sets the type of v1 to be TYPE_CODE_WORD
+	# self.type_map 
+	# [] and "in" supported (keys in self.type_map)
+	# getitem_without_error is like [] but returns None if key not found
+	# pretty_string()
+	# 
+	# -- Maybe Not Useful --
+	# get_empty_small_numbered_reg
+	# get_empty_small_numbered_reg_wide
 	
 	def __init__(self, signature, num_local_params):
 		
