@@ -39,6 +39,10 @@ class SmaliRegister():
 		
 	def update_type(self, reg_type):
 		self.type = None
+		
+		if(reg_type == None):
+			return
+		
 		if reg_type in smali.TYPE_LIST_ALL:
 			
 			if reg_type in smali.TYPE_LIST_WORD:

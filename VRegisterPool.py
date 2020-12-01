@@ -155,10 +155,13 @@ class VRegisterPool():
 		return s
 		
 		
-	def get_spot(self, max_val, type_code):
+	def get_spot(self, max_val, type_code, exclude_list = []):
 		# Look for empty spot to use
 		for i in range(max_val):
 			reg_name = "v" + str(i)
+			
+			if(reg_name in exclude_list):
+				continue
 			
 			if(self[reg_name] == None):
 				if(type_code == smali.TYPE_CODE_WIDE):
@@ -174,6 +177,10 @@ class VRegisterPool():
 		# Look for a spot matching in type
 		for i in range(max_val):
 			reg_name = "v" + str(i)
+			
+			if(reg_name in exclude_list):
+				continue
+				
 			if(type_code == self[reg_name]):
 				return reg_name
 		
