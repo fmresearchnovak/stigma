@@ -39,7 +39,6 @@ class SmaliRegister():
 		
 	def update_type(self, reg_type):
 		self.type = None
-		
 		if(reg_type == None):
 			return
 		
