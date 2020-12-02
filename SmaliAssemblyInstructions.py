@@ -81,7 +81,7 @@ class SmaliAssemblyInstruction():
         return []
 
     def get_p_registers(self):
-        return list(filter(lambda x : x[0] == "p", get_registers))
+        return list(filter(lambda x : x[0] == "p", self.get_registers()))
         
     def get_implicit_registers(self):
         return []
@@ -91,6 +91,13 @@ class SmaliAssemblyInstruction():
     
     def get_move(self):
         return MOVE_16
+
+    def get_unique_registers(self):
+        ans = []
+        for item in self.get_registers():
+            if(item not in ans):
+                ans.append(item)
+        return ans
 
 
 class ImplicitRegistersInstruction():
@@ -740,7 +747,7 @@ class IGET_OBJECT(_I_INSTRUCTION):
     def opcode(self):
         return "iget-object"
 
-class IGET_BOOLEN(_I_INSTRUCTION):
+class IGET_BOOLEAN(_I_INSTRUCTION):
     def opcode(self):
         return "iget-boolean"
 
@@ -768,7 +775,7 @@ class IPUT_OBJECT(_I_INSTRUCTION):
     def opcode(self):
         return "iput-object"
 
-class IPUT_BOOLEN(_I_INSTRUCTION):
+class IPUT_BOOLEAN(_I_INSTRUCTION):
     def opcode(self):
         return "iput-boolean"
 
@@ -1562,7 +1569,7 @@ def parse_line(line):
         smali_assembly_instruction_obj = eval(eval_string)
         return smali_assembly_instruction_obj
     except Exception as e:
-        print("e: " + str(e))
+        print("Excpetion in eval, parse_line(): " + str(e))
 
     return None
 
