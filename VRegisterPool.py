@@ -4,6 +4,12 @@ import SmaliAssemblyInstructions as smali
 
 
 class VRegisterPool():
+	# TO-DO:
+	# Let's say v2 v3 is a double
+	# If program overwrites first part of a double (v2), now the second part (v3)
+	# Is a free register. It can override v3 in the future for further use.
+	# We should handle that case and update VRegisterPool appropriately.
+
 	# A register pool only exists inside a method
 	# It is a collection of all "v" registers
 	# It knows the type of every register
@@ -97,9 +103,9 @@ class VRegisterPool():
 		#print("key reg: " + str(key_reg))
 		#print("current map: " + str(self.mt_map))
 		#print("mt_map[key_reg}: " + str(self.mt_map[key_reg]))
-		if(key_reg in self.type_map):
-			if(self.type_map[key_reg] == smali.TYPE_CODE_WIDE_REMAINING):
-				raise ValueError("You have tried to clobber the second 1/2 of a wide value!\n\treg: " + str(key_reg) + "\n\tinstruction: " + str(instruction))
+		#if(key_reg in self.type_map):
+		#	if(self.type_map[key_reg] == smali.TYPE_CODE_WIDE_REMAINING):
+		#		raise ValueError("You have tried to clobber the second 1/2 of a wide value!\n\treg: " + str(key_reg) + "\n\tinstruction: " + str(instruction))
 			
 		self.type_map[key_reg] = data_type_written
 		
@@ -129,6 +135,13 @@ class VRegisterPool():
 			return self.type_map[key]
 		return None
 		
+	def __setitem__(self, key, value):
+		# allows using [] on this object and avoids
+		# the exception raised when key is not in self.type_map
+		# dictionary
+		self.type_map[key] = value
+
+
 	def __contains__(self, key):
 		# Just a pass-through so you can directly
 		# check if key is inside the underlying dictionary
