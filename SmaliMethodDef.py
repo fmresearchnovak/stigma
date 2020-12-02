@@ -1,6 +1,8 @@
 import re
 import SmaliAssemblyInstructions as smali
 import StigmaStringParsingLib
+import VRegisterPool as vregpool
+import SmaliRegister
 
         
 class SmaliMethodSignature:
@@ -412,12 +414,12 @@ class SmaliMethodDef:
         # "v4" and other register-like strings in instructions
         # such as: const-string v4, "edge v2 case p0 string v4\n"
         for reg in p_regs:
-            v_name = StigmaStringParsingLib._get_v_from_p(reg, locals_num)
+            v_name = StigmaStringParsingLib.get_v_from_p(reg, locals_num)
             cur_line = cur_line.replace(reg, v_name)
         return cur_line
 
 
-    
+    @staticmethod
     def _unique_frl(elements):
         ans = []
         for item in elements:
@@ -450,6 +452,108 @@ class SmaliMethodDef:
             #print("new_line: " + new_line)
         return cur_line
     
+
+    @staticmethod
+    def fix_register_limit_for_line(line, shadows, reg_pool):
+        asm_obj = smali.parse_line(line)
+        
+        original_registers = asm_obj.get_registers() + asm_obj.get_implicit_registers()
+        new_line = line # will be used for the re-write
+        
+        # before block
+        before_block = []
+        after_block = []
+        shadow_idx = 0
+        for reg_high_name in asm_obj.get_unique_registers():
+            reg_high = SmaliRegister.SmaliRegister(reg_high_name, reg_pool[reg_high_name])
+            if(reg_high.is_high_numbered()):
+                
+                is_wide = (reg_high.type == smali.TYPE_CODE_WIDE)
+                
+                reg_corr_name = reg_pool.get_spot(15, reg_high.type, exclude_list = original_registers)
+                reg_corr = SmaliRegister.SmaliRegister(reg_corr_name, reg_pool[reg_corr_name])
+                
+                
+                corr_previous_type = reg_corr.type
+
+                if(corr_previous_type != None):
+                    # corresponding register might be empty in which case
+                    # we should not do a move on it
+                    reg_shad_name = shadows[idx]
+                    reg_shad = SmaliRegister.SmaliRegister(reg_shad_name, reg_pool[reg_shad_name])
+                    
+                    if(is_wide):
+                        shadow_idx += 2
+                    else:
+                        shadow_idx += 1
+                
+                    custom_move_corr_shad = reg_corr.move_instr
+                    CUSTOM_MOVE_B = custom_move_corr_shad(reg_shad_name, reg_corr_name)
+                    before_block.append(CUSTOM_MOVE_B)
+                    before_block.append(smali.BLANK_LINE())
+
+                    reg_pool.update(str(CUSTOM_MOVE_B))
+                    reg_shad.update_type(reg_pool[reg_shad_name])
+                    
+                    
+                    
+                
+                if(reg_high.type != None):
+                    # high register might be empty / might not exist / might have type "None"
+                    # for example in const v32, 0x1 
+                    # v32 might not contain any data before this instruction
+                    # in such a situation it's appropriate to not do any move on it
+                    # before, but it is still necessary to do a move after
+                    custom_move_high_corr = reg_high.move_instr
+                    CUSTOM_MOVE_B = custom_move_high_corr(reg_corr_name, reg_high_name)
+                    before_block.append(CUSTOM_MOVE_B)
+                    before_block.append(smali.BLANK_LINE())
+
+                    reg_pool.update(str(CUSTOM_MOVE_B))
+                    reg_corr.update_type(reg_pool[reg_corr_name])
+                
+                
+                # the "1" at the end here means that only 1 occurrence will be replaced
+                # I'm thinking this works for const-string v16, "nasty v16 example"
+                # But I'm thinking it won't work for add-int v16, v16, v5
+                # of course add-int v16, v16, v5 should probably be add-int/2addr v16, v5
+                occurrences = asm_obj.get_registers().count(reg_high_name)
+
+                new_line = new_line.replace(reg_high_name, reg_corr_name, occurrences)
+                
+
+                # Reason, Bug:
+                # v0 is int, v21 is obje
+                # move-obj v0, v21
+                # const/4 v0(v21)
+                # move-int v21, v0
+                reg_pool.update(new_line)
+
+                reg_corr.update_type(reg_pool[reg_corr_name])
+
+
+                custom_move_high_corr = reg_corr.move_instr
+
+                CUSTOM_MOVE_A = custom_move_high_corr(reg_high_name, reg_corr_name)
+                after_block.append(CUSTOM_MOVE_A)
+                after_block.append(smali.BLANK_LINE())
+
+                reg_pool.update(str(CUSTOM_MOVE_A))
+                reg_high.update_type(reg_pool[reg_high_name])
+
+                if(corr_previous_type != None):
+                    custom_move_corr_shad = reg_shad.move_instr
+                    CUSTOM_MOVE_A2 = custom_move_corr_shad(reg_corr_name, reg_shad_name)
+                    after_block.append(CUSTOM_MOVE_A2)
+                    after_block.append(smali.BLANK_LINE())
+
+                    reg_pool.update(str(CUSTOM_MOVE_A2))
+                    reg_corr.update_type(reg_pool[reg_corr_name])
+                
+     
+            
+        ans_block = before_block + [new_line, smali.BLANK_LINE()] + after_block
+        return ans_block
             
     def fix_register_limit(self):
         print("fix_register_limit(" + str(self.signature) + ")")
@@ -468,7 +572,7 @@ class SmaliMethodDef:
         # v17 up to v21 are the shadow registers (free temp registers) that we can use as general purpose
         # The 'corresponding' registers are lower numberd registers that will be used temporarily
         # for a specific instruction
-        remaining_shadows = []
+        shadows = []
         # The number of remanining shadows is number of high-num registers * 2 because
         # Each of the high-num registers could be a word (single-registered  type)
         # While each of the corresponding could store a wide (double-registered type)
@@ -476,7 +580,7 @@ class SmaliMethodDef:
         # 2 times the number of higher-numbered registers
         for i in range((self.get_num_registers() - 16) * 2): 
             #print("creating shadow register: " + str(i))
-            remaining_shadows.append(self.make_new_reg())
+            shadows.append(self.make_new_reg())
         
         #print("remaining shadows: " + str(self.remaining_shadows))
 
@@ -488,7 +592,7 @@ class SmaliMethodDef:
         # p3 = v25 type: int => smali.MOVE_16
         # key: register name (v's only)
         # value: smali.MOVE corresponding to register type
-        move_type_hashmap = smali._build_move_type_hash_map_frl(self.signature, self.get_locals_directive_num())
+        reg_pool = vregpool.VRegisterPool(self.signature, self.get_locals_directive_num())
         
         #print(self)
         
@@ -507,8 +611,7 @@ class SmaliMethodDef:
             self.raw_text[line_num] = cur_line
             
             # Step 4: Update move_type_hashmap with this instruction
-            smali._update_mt_hashmap_frl(move_type_hashmap, cur_line)
-            
+            reg_pool.update(cur_line)
             
             # identify lines that should be skipped for the rest of this
             if(SmaliMethodDef._should_skip_line_frl(cur_line)):
@@ -516,10 +619,6 @@ class SmaliMethodDef:
                 continue
                     
             #Step 5: build shadow map
-            shadow_map = SmaliMethodDef._build_shadow_map_frl(cur_line, remaining_shadows)
-            if len(shadow_map.tuples) == 0:
-                line_num += 1
-                continue
             
             
             #print("cur_line: " + str(cur_line))
@@ -559,18 +658,15 @@ class SmaliMethodDef:
             
             '''
 
-            smali_asm_obj = smali.parse_line(cur_line)
-            block = smali_asm_obj.fix_register_limit()
-            self.embed_block_with_replace(block, line_num)
+            ans_block = SmaliMethodDef.fix_register_limit_for_line(cur_line, shadows, reg_pool)
+
+            self.embed_block_with_replace(line_num, ans_block)
 
 
             # go to next line!
-            line_num += len(block)
+            line_num += len(ans_block)
             
             
-            
-           
-        
 
     def __repr__(self):
         return self.get_signature()
