@@ -41,6 +41,9 @@ def main():
         print("Overwriting: " + str(class_smali_file))
         scd.write_to_file(class_smali_file)
 
-
+    if "-o" in flags:
+        file_name = flags[flags.index("-o") + 1]
+        print("Writing to: " + str(file_name))
+        scd.write_to_file(file_name)
 if __name__ == "__main__":
     main()
