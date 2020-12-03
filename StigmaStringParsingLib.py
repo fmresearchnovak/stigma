@@ -204,7 +204,7 @@ WORD_MOVE_LIST = ["move", "move/from16", "move/16", "return",
 WIDE_MOVE_LIST = ["move-wide", "move-wide/from16", "move-wide/16", 
     "move-result-wide", "return-wide", "const-wide/16", 
     "const-wide/32", "const-wide", "const-wide/high16", "cmpl-double",
-    "cmpg-double", "cmp-long", "aget-wide", "aget-object", "aput-wide",
+    "cmpg-double", "cmp-long", "aget-wide", "aput-wide",
     "iget-wide", "iput-wide", "sget-wide", "sput-wide", "neg-long", 
     "not-long", "neg-double", "int-to-long", "int-to-double", 
     "long-to-double", "float-to-long", "float-to-double", 
@@ -223,7 +223,7 @@ OBJECT_MOVE_LIST = ["move-object", "move-object/from16", "move-object/16",
     "move-result-object", "move-exception", "return-object",
     "const-string", "const-string-jumbo", "const-class", 
     "monitor-enter", "check-cast", "new-instance", "new-array", 
-    "throw", "aput-object", "iget-object", "iput-object", "sget-object",
+    "throw", "aput-object", "aget-object", "iget-object", "iput-object", "sget-object",
     "sput-object", "iput-object-quick", "iget-object-quick"]
     
 
