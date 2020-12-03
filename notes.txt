@@ -1,6 +1,0 @@
-invoke-super
-invoke-static
-invoke-interface
-
-invoke-virtual (private, or constructor methods)
-invoke-direct (private and constructor methods)
