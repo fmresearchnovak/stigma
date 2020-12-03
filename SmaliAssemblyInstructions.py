@@ -72,6 +72,7 @@ def type_code_name(type_code):
     else:
         raise ValueError("Invalid Type Code: " + str(type_code))
 
+
 class SmaliAssemblyInstruction():
 
     def __str__(self):
@@ -113,28 +114,8 @@ class ImplicitFirstRegisterInstruction():
         regs = self.get_registers()
         return ["v" + str(int(regs[0][1:])+1)]
 
-class NormalMovable():
-      def get_move(self):
-        return MOVE_16
 
-class WideMovable():
-    def get_move(self):
-        return MOVE_WIDE_16
-
-class ObjectMovable():
-    def get_move(self):
-        return MOVE_OBJECT16
-    
-class VaryingMovable():
-    def get_move(self):
-        raise NotImplementedError("get_move() not implemented by VaryingMovable")
-        
-class NonMovable():
-    def get_move(self):
-        raise ValueError("get_move() called on NoneMovable")
-    
-
-class NOP(SmaliAssemblyInstruction, NonMovable):
+class NOP(SmaliAssemblyInstruction):
     def __init__(self):
         pass
 
@@ -156,7 +137,7 @@ class INVOKE_DIRECT_EMPY(NOP):
         return "invoke-direct-empty"
 
 
-class BLANK_LINE(SmaliAssemblyInstruction, NonMovable):
+class BLANK_LINE(SmaliAssemblyInstruction):
     def __init__(self):
         pass
 
@@ -164,7 +145,7 @@ class BLANK_LINE(SmaliAssemblyInstruction, NonMovable):
         return ""
 
 
-class COMMENT(SmaliAssemblyInstruction, NonMovable):
+class COMMENT(SmaliAssemblyInstruction):
     def __init__(self, line):
         self.l = line
 
@@ -172,7 +153,7 @@ class COMMENT(SmaliAssemblyInstruction, NonMovable):
         return "# " + self.l
 
 
-class MOVE(SmaliAssemblyInstruction, NormalMovable):
+class MOVE(SmaliAssemblyInstruction):
     def __init__(self, reg1, reg2):
         self.reg1 = reg1
         self.reg2 = reg2
@@ -191,7 +172,7 @@ class MOVE(SmaliAssemblyInstruction, NormalMovable):
         return self.opcode() + " " + str(self.reg1) + ", " + str(self.reg2)
 
 
-class MOVE_16(MOVE, NormalMovable):
+class MOVE_16(MOVE):
     # this might not exist
     # I couldn't find any occurrences in the smali of leaks
     
@@ -204,7 +185,7 @@ class MOVE_16(MOVE, NormalMovable):
 # This is a problem
 # I need the class name to be MOVE/FROM16
 # but "/" is not a valid character in a class name
-class MOVE_FROM16(MOVE, NormalMovable):
+class MOVE_FROM16(MOVE):
     
     def opcode(self):
         return "move/from16"
@@ -215,27 +196,27 @@ class MOVE_FROM16(MOVE, NormalMovable):
 # This is a problem
 # I need the class name to be MOVE-WIDE
 # but "-" is not a valid character in a class name
-class MOVE_WIDE(ImplicitRegistersInstruction, MOVE, WideMovable):
+class MOVE_WIDE(ImplicitRegistersInstruction, MOVE):
     def opcode(self):
         return "move-wide"
     
-class MOVE_WIDE_FROM16(ImplicitRegistersInstruction, MOVE, WideMovable):
+class MOVE_WIDE_FROM16(ImplicitRegistersInstruction, MOVE):
     def opcode(self):
         return "move-wide/from16"
 
-class MOVE_WIDE_16(ImplicitRegistersInstruction, MOVE, WideMovable):
+class MOVE_WIDE_16(ImplicitRegistersInstruction, MOVE):
     def opcode(self):
         return "move-wide/16"
 
-class MOVE_OBJECT(MOVE, ObjectMovable):
+class MOVE_OBJECT(MOVE):
     def opcode(self):
         return "move-object"
         
-class MOVE_OBJECT_FROM16(MOVE, ObjectMovable):
+class MOVE_OBJECT_FROM16(MOVE):
     def opcode(self):
         return "move-object/from16"
 
-class MOVE_OBJECT_16(MOVE, ObjectMovable):
+class MOVE_OBJECT_16(MOVE):
     def opcode(self):
         return "move-object/16"
 
@@ -266,32 +247,32 @@ class _SINGLE_DEST_REGISTER_INSTRUCTION(SmaliAssemblyInstruction):
         return self.opcode() + " " + str(self.rd) + ", " + str(self.value_arg)
 
 
-class MOVE_RESULT(_SINGLE_REGISTER_INSTRUCTION, NormalMovable):
+class MOVE_RESULT(_SINGLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "move-result"
 
-class MOVE_RESULT_WIDE(ImplicitRegistersInstruction, _SINGLE_REGISTER_INSTRUCTION, WideMovable):
+class MOVE_RESULT_WIDE(ImplicitRegistersInstruction, _SINGLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "move-result-wide"
 
-class MOVE_RESULT_OBJECT(_SINGLE_REGISTER_INSTRUCTION, ObjectMovable):
+class MOVE_RESULT_OBJECT(_SINGLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "move-result-object"
 
-class MOVE_EXCEPTION(_SINGLE_REGISTER_INSTRUCTION, ObjectMovable):
+class MOVE_EXCEPTION(_SINGLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "move-exception"
 
 
 
-class RETURN_VOID(SmaliAssemblyInstruction, NonMovable):
+class RETURN_VOID(SmaliAssemblyInstruction):
     def opcode(self):
         return "return-void"
         
     def __repr__(self):
         return self.opcode()
 
-class RETURN(_SINGLE_REGISTER_INSTRUCTION, NormalMovable):
+class RETURN(_SINGLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "return"
 
@@ -340,7 +321,7 @@ class CONST_WIDE_HIGH16(ImplicitRegistersInstruction, CONST):
         return "const-wide/high16"
 
 
-class CONST_STRING(_SINGLE_DEST_REGISTER_INSTRUCTION, ObjectMovable):
+class CONST_STRING(_SINGLE_DEST_REGISTER_INSTRUCTION):
     
     def opcode(self):
         return "const-string"
@@ -352,7 +333,7 @@ class CONST_STRING_JUMBO(SmaliAssemblyInstruction):
         pass
         
 
-class CONST_CLASS(_SINGLE_DEST_REGISTER_INSTRUCTION, ObjectMovable):
+class CONST_CLASS(_SINGLE_DEST_REGISTER_INSTRUCTION):
 
     def opcode(self):
         return "const-class"
@@ -370,8 +351,7 @@ class MONITOR_EXIT(_SINGLE_REGISTER_INSTRUCTION):
         return "monitor-exit"
     
     
-class CHECK_CAST(_SINGLE_DEST_REGISTER_INSTRUCTION):
-        
+class CHECK_CAST(_SINGLE_DEST_REGISTER_INSTRUCTION): 
     def opcode(self):
         return "check-cast"
          
@@ -391,6 +371,7 @@ class INSTANCE_OF(SmaliAssemblyInstruction):
     def __repr__(self):
         return self.opcode() + " " + str(self.rr) + ", " + str(self.ra) + ", " + str(self.type_id)
         
+
 class NEW_INSTANCE(SmaliAssemblyInstruction):
     def __init__(self, reg_dest, type_id):
         self.rd = reg_dest
@@ -927,7 +908,7 @@ class INVOKE_STATIC_RANGE(SmaliAssemblyInstruction):
     # support higher-numbered registers
     pass
 
-class INVOKE_INTERFACEERFACEERFACE_RANGE(SmaliAssemblyInstruction):
+class INVOKE_INTERFACE_RANGE(SmaliAssemblyInstruction):
     # doesn't need to be implemented
     # because "range" instructions
     # support higher-numbered registers
