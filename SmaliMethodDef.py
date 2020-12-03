@@ -2,7 +2,6 @@ import re
 import SmaliAssemblyInstructions as smali
 import StigmaStringParsingLib
 import VRegisterPool as vregpool
-import SmaliRegister
 
         
 class SmaliMethodSignature:
@@ -322,6 +321,7 @@ class SmaliMethodDef:
         # corr <-- high
 
         # low/corr, shadow, high
+
         asm_obj = smali.parse_line(line)
         
         original_registers = asm_obj.get_registers() + asm_obj.get_implicit_registers()
@@ -337,53 +337,45 @@ class SmaliMethodDef:
         before_block = []
         after_block = []
         shadow_idx = 0
+        #print(line)
         for reg_high_name in asm_obj.get_unique_registers():
-            reg_high = SmaliRegister.SmaliRegister(reg_high_name, reg_pool[reg_high_name])
-            if(reg_high.is_high_numbered()):
+            if(reg_pool.is_high_numbered(reg_high_name)):
                 
-                is_wide = (reg_high.type == smali.TYPE_CODE_WIDE)
+                is_wide = (reg_pool[reg_high_name] == smali.TYPE_CODE_WIDE)
                 
-                reg_corr_name = reg_pool.get_spot(15, reg_high.type, exclude_list = original_registers)
-                reg_corr = SmaliRegister.SmaliRegister(reg_corr_name, reg_pool[reg_corr_name])
+                reg_corr_name = reg_pool.get_spot(15, reg_pool[reg_high_name], exclude_list = original_registers)
                 
-                
-                corr_previous_type = reg_corr.type
+                corr_previous_type = reg_pool[reg_corr_name]
 
                 if(corr_previous_type != None):
                     # corresponding register might be empty in which case
                     # we should not do a move on it
-                    reg_shad_name = shadows[idx]
-                    reg_shad = SmaliRegister.SmaliRegister(reg_shad_name, reg_pool[reg_shad_name])
+                    reg_shad_name = shadows[shadow_idx]
                     
                     if(is_wide):
                         shadow_idx += 2
                     else:
                         shadow_idx += 1
                 
-                    custom_move_corr_shad = reg_corr.move_instr
+                    custom_move_corr_shad = reg_pool.get_move_instr(reg_corr_name)
                     CUSTOM_MOVE_B = custom_move_corr_shad(reg_shad_name, reg_corr_name)
                     before_block.append(CUSTOM_MOVE_B)
                     before_block.append(smali.BLANK_LINE())
 
                     reg_pool.update(str(CUSTOM_MOVE_B))
-                    reg_shad.update_type(reg_pool[reg_shad_name])
-                    
-                    
-                    
                 
-                if(reg_high.type != None):
+                if(reg_pool[reg_high_name] != None):
                     # high register might be empty / might not exist / might have type "None"
                     # for example in const v32, 0x1 
                     # v32 might not contain any data before this instruction
                     # in such a situation it's appropriate to not do any move on it
                     # before, but it is still necessary to do a move after
-                    custom_move_high_corr = reg_high.move_instr
+                    custom_move_high_corr = reg_pool.get_move_instr(reg_high_name)
                     CUSTOM_MOVE_B = custom_move_high_corr(reg_corr_name, reg_high_name)
                     before_block.append(CUSTOM_MOVE_B)
                     before_block.append(smali.BLANK_LINE())
 
                     reg_pool.update(str(CUSTOM_MOVE_B))
-                    reg_corr.update_type(reg_pool[reg_corr_name])
                 
                 
                 # the "1" at the end here means that only 1 occurrence will be replaced
@@ -401,26 +393,21 @@ class SmaliMethodDef:
                 # const/4 v0(v21)
                 # move-int v21, v0
                 reg_pool.update(new_line)
-                reg_corr.update_type(reg_pool[reg_corr_name])
 
-
-                custom_move_high_corr = reg_corr.move_instr
+                custom_move_high_corr = reg_pool.get_move_instr(reg_corr_name)
                 CUSTOM_MOVE_A = custom_move_high_corr(reg_high_name, reg_corr_name)
                 after_block.append(CUSTOM_MOVE_A)
                 after_block.append(smali.BLANK_LINE())
 
                 reg_pool.update(str(CUSTOM_MOVE_A))
-                reg_high.update_type(reg_pool[reg_high_name])
 
                 if(corr_previous_type != None):
-                    custom_move_corr_shad = reg_shad.move_instr
+                    custom_move_corr_shad = reg_pool.get_move_instr(reg_shad_name)
                     CUSTOM_MOVE_A2 = custom_move_corr_shad(reg_corr_name, reg_shad_name)
                     after_block.append(CUSTOM_MOVE_A2)
                     after_block.append(smali.BLANK_LINE())
 
                     reg_pool.update(str(CUSTOM_MOVE_A2))
-                    reg_corr.update_type(reg_pool[reg_corr_name])
-                
      
             
         ans_block = before_block + [new_line, smali.BLANK_LINE()] + after_block
@@ -482,6 +469,7 @@ class SmaliMethodDef:
             self.raw_text[line_num] = cur_line
             
             # Step 4: Update move_type_hashmap with this instruction
+            print(cur_line)
             reg_pool.update(cur_line)
             
             # identify lines that should be skipped for the rest of this
@@ -490,7 +478,9 @@ class SmaliMethodDef:
                 continue
                     
            
+            # Step 5: Call algorithm to fix each line
             ans_block = SmaliMethodDef.fix_register_limit_for_line(cur_line, shadows, reg_pool)
+            
             self.embed_block_with_replace(line_num, ans_block)
 
 
