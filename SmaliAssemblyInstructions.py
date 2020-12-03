@@ -805,7 +805,7 @@ class SGET_OBJECT(_S_INSTRUCTION):
     def opcode(self):
         return "sget-object"
 
-class SGET_BOOLEN(_S_INSTRUCTION):
+class SGET_BOOLEAN(_S_INSTRUCTION):
     def opcode(self):
         return "sget-boolean"
 
@@ -858,7 +858,7 @@ class _INVOKE_INSTRUCTION(_PARAMETER_LIST_INSTRUCTION):
         # I found it in the "old" implementation
         # of this instruction, which I think
         # wasn't actually executed or tested anywhere
-        self.calling_object = element_list[0] 
+        #self.calling_object = element_list[0] 
 
 
 class INVOKE_VIRTUAL(_INVOKE_INSTRUCTION):
@@ -1500,6 +1500,14 @@ def parse_line(line):
     # and convert it to the appropriate SmaliAssemblyInstruction
     line = line.strip("\n")
     
+
+    if(line.strip().startswith("#")):
+        return COMMENT(line)
+
+    hash_pos = line.find("#")
+    if hash_pos != -1:
+        line = line[:hash_pos]
+
     tokens = line.split(" ")
     tokens = list(filter(lambda x: x != "", tokens)) # removes ""
     #print("tokens: " + str(tokens))
@@ -1509,8 +1517,6 @@ def parse_line(line):
 
     opcode = tokens[0]
     
-    if(opcode.startswith("#")):
-        return COMMENT(line)
 
     if(opcode == "const-string"):
         return CONST_STRING(tokens[1].strip(","), "\"" + line.split("\"")[1] + "\"")
@@ -1520,8 +1526,14 @@ def parse_line(line):
         start = line.index("{")
         end = line.index("}")
         args = line[start+1:end]
-        args = args.split(" ")
-        args = str(list(map(lambda x : x.strip(","), args)))
+        #print("HERE")
+        #print(args)
+        if args == "":
+            args = "[]"
+        else:
+            args = args.split(" ")
+            args = str(list(map(lambda x : x.strip(","), args)))
+        
         args = [ args ]
         args.append("\"" + tokens[-1] + "\"")
         #print("args before: " + str(args))
