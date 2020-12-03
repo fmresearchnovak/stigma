@@ -162,6 +162,7 @@ class SmaliMethodDef:
     def get_signature(self):
         return self.raw_text[0].strip()
 
+
     def get_name(self):
         # kinda hacky!  Sorry 'bout that!
         s = self.get_signature()
@@ -171,6 +172,7 @@ class SmaliMethodDef:
         name = s[-1]
         # print("name: " + str(name))
         return name
+
 
     def make_new_reg(self):
         self.reg_number_float += 1
@@ -215,8 +217,8 @@ class SmaliMethodDef:
 
 
     def embed_block_with_replace(self, position, block):
-
         self.raw_text = self.raw_text[:position] + block + self.raw_text[position + 1:]
+
 
     def embed_block(self, position, block):
         # put the code in this block just before the position
@@ -234,125 +236,8 @@ class SmaliMethodDef:
         # for i in range(position-5, position+len(block) + 5):
         # print(self.raw_text[i], end="")
         # print("\n\n")
-        
     
-    
-        
-        
-        
-    class RegShadowMap:
-        # This class is an inner-class of SmaliMethodDef 
-        # It is not a child-class!
-        # Any Innerclass design allows this class to 
-        # access all of the instance variables / state
-        # of the SmaliMethod without directly inheriting
-        # This is useful for things like the constructor
-        # which should not be inherited because the two classes are
-        # so different.
 
-        # At the same time, this class is never used for any other
-        # purpose besides in the context of a method
-
-        # For these reasons it should be an inner class.
-
-        def __init__(self, instruction_regs, rem_shadows, mt_map):
-            #3-tuple format: (high, shadow, corr)
-            self.tuples = []
-
-            # deep copy is provided by the slice
-            # but I think it's unnecessary since
-            # this list was passed into this function
-            self.new_remaining_shadows = rem_shadows[:]
-            self.instruction_regs = instruction_regs 
-            self.mt_map = mt_map
-            self.corr_candidates = list(range(16))
-
-         
-        def insert(self, reg):
-            #If reg type = wide
-            # This is two algorithms entangled to find both the shadow and coor registers
-            shadow = self.new_remaining_shadows.pop() #Create shadow
-
-            # Case 0: High_Num is Word and Corr is Word
-
-            # Case 1: High_Num is Wide and Corr is Wide
-            # Case 2: High_Num is Wide and Corr is Word
-            # Case 3: High_Num is Word and Corr is Wide
-          
-
-            # Create corr
-            # note: we will probably never reach v15
-            # since such an instruction will not be instrumented
-            # select cooresponding registers that (a) are not used in another tuple
-            # and (b) are not used in the instruction
-            i = 0
-            test_v_num = "v" + str(self.corr_candidates[i])
-            while (test_v_num in self.instruction_regs) and (i < (len(self.corr_candidates) - 1)):
-                test_v_num = "v" + str(self.corr_candidates[i])
-
-            if(i == len(self.corr_candidates)): #Should never logically happen
-                raise ValueError("No low numbered registers available in insert() RegShadowMap")
-
-            corr = test_v_num
-            print(self.corr_candidates)
-            print("Removing: " + str(self.corr_candidates[i]))
-            self.corr_candidates.remove(self.corr_candidates[i])
-
-            # if case 1, 2, or 3
-            if((corr in self.mt_map) and (self.mt_map[corr] == smali.MOVE_WIDE_16)):
-                self.corr_candidates.remove(corr.candidates[i + 1])
-
-            if((reg in self.mt_map) and (self.mt_map[reg] == smali.MOVE_WIDE_16)):
-                self.new_remaining_shadows.pop()
-                    
-
-            self.tuples.append((reg, shadow, corr))
-
-
-        def _get(self, reg, idx):
-            for t in self.tuples:
-                if(t[0] == reg):
-                    return t[idx]
-            
-            raise ValueError("Register (" + str(reg) + ") not found in RegShadowMap")
-
-
-        def get_shadow(self, reg):
-            return self._get(reg, 1)
-
-            
-        def get_corresponding(self, reg):
-            return self._get(reg, 2)
-            
-        def __str__(self):
-            return str(self.tuples)
-
-        def __eq__(self, other):
-            parta = (self.tuples == other.tuples)
-            partb = (self.new_remaining_shadows == other.new_remaining_shadows)
-            partc = (self.instruction_regs == other.instruction_regs)
-            return parta and partb and partc
-
-
-    @staticmethod
-
-    def _build_shadow_map_frl(cur_line, remaining_shadows, mt_map):
-        # Guarantees that the contents of regs are unique elements
-        # only.  This is important for an instruction like
-        # add-int v0, v2, v2  which has duplicates
-        regs = SmaliMethodDef._unique_frl(StigmaStringParsingLib.get_v_and_p_numbers(cur_line))
-        shadow_map = SmaliMethodDef.RegShadowMap(regs, remaining_shadows, mt_map)
-
-        # note: regs should should be only v registers
-        # because of the de-reference p that happenened
-        # earlier (in step 2)
-        for reg in regs:
-            v_num = int(reg[1:]) # Get number from v string
-            if v_num > 15:
-                shadow_map.insert(reg)
-        #print("shadow map: " + str(shadow_map))
-
-        return shadow_map
 
     @staticmethod
     def _should_skip_line_frl(cur_line):
@@ -405,51 +290,16 @@ class SmaliMethodDef:
         #         p0, p1, p2
         # even if p1 is a long, there will still be a p2
         # and it will still correspond to v4
-
         p_regs = StigmaStringParsingLib.get_p_numbers(cur_line)
         
         # because this loops through the registers found
-        # and str.replace() replaces only the first occurence
+        # and str.replace(x, y, 1) replaces only the first occurence
         # this little algoritm will not replace instances of
         # "v4" and other register-like strings in instructions
         # such as: const-string v4, "edge v2 case p0 string v4\n"
         for reg in p_regs:
             v_name = StigmaStringParsingLib.get_v_from_p(reg, locals_num)
-            cur_line = cur_line.replace(reg, v_name)
-        return cur_line
-
-
-    @staticmethod
-    def _unique_frl(elements):
-        ans = []
-        for item in elements:
-            if(item not in ans):
-                ans.append(item)
-        return ans
-        
-        
-   
-    
-    @staticmethod
-    def _rewrite_instruction_frl(shadow_map, cur_line):
-        #Step 5
-        #Replace high numbered with corresponding in instruction
-        
-        tokens = StigmaStringParsingLib.break_into_tokens(cur_line)
-        
-        for t in shadow_map.tuples:
-            reg = t[0]
-            #print(shadow_map.tuples)
-            
-            number_registers = StigmaStringParsingLib.get_num_registers(cur_line)
-            
-            # tokens is everything, we only process up until number_registers
-            for idx in range(number_registers):
-                tokens[idx+1] = tokens[idx+1].replace(reg, shadow_map.get_corresponding(reg))
-                
-            cur_line = "    " + " ".join(tokens) + "\n"
-            #print("cur_line: " + cur_line)
-            #print("new_line: " + new_line)
+            cur_line = cur_line.replace(reg, v_name, 1)
         return cur_line
     
 
@@ -458,6 +308,12 @@ class SmaliMethodDef:
         asm_obj = smali.parse_line(line)
         
         original_registers = asm_obj.get_registers() + asm_obj.get_implicit_registers()
+        # implicit registers are necessary for example:
+        # int-to-long v0, v18
+        # v18 is a long, v0 is currently undefined / open
+        # the corresponding register should NOT be v0 and it should NOT be v1
+        # yet both v0 and v1 will be listed in the reg_pool as None
+
         new_line = line # will be used for the re-write
         
         # before block
@@ -528,12 +384,10 @@ class SmaliMethodDef:
                 # const/4 v0(v21)
                 # move-int v21, v0
                 reg_pool.update(new_line)
-
                 reg_corr.update_type(reg_pool[reg_corr_name])
 
 
                 custom_move_high_corr = reg_corr.move_instr
-
                 CUSTOM_MOVE_A = custom_move_high_corr(reg_high_name, reg_corr_name)
                 after_block.append(CUSTOM_MOVE_A)
                 after_block.append(smali.BLANK_LINE())
@@ -584,14 +438,14 @@ class SmaliMethodDef:
         
         #print("remaining shadows: " + str(self.remaining_shadows))
 
-        # Step 2: Initiate move_type_hashmap with parameters of funciton
+        # Step 2: Initiate reg_pool with parameters of funciton
         # -- Example -- MyMethod(JI)  .locals = 17
-        # p0 = v22 type: object reference ("this") => smali.MOVE_OBJECT_16
-        # p1 = v23 type: long => smali.MOVE_WIDE_16
-        # p2 = v24 type: long2
-        # p3 = v25 type: int => smali.MOVE_16
+        # p0 = v22 type: object reference ("this") => TYPE_CODE_OBJ_REF
+        # p1 = v23 type: long => TYPE_CODE_WIDE
+        # p2 = v24 type: long2 => TYPE_CODE_WIDE_REM
+        # p3 = v25 type: int => TYPE_CODE_WORD
         # key: register name (v's only)
-        # value: smali.MOVE corresponding to register type
+        # value: smali.TYPE_CODE corresponding to register type
         reg_pool = vregpool.VRegisterPool(self.signature, self.get_locals_directive_num())
         
         #print(self)
@@ -618,48 +472,8 @@ class SmaliMethodDef:
                 line_num += 1
                 continue
                     
-            #Step 5: build shadow map
-            
-            
-            #print("cur_line: " + str(cur_line))
-            #print("shadow_map: " + str(shadow_map))
-            #print("move_type_hashmap: " + str(move_type_hashmap))
-            
-            # Step 6: move block before instruction
-            '''before_block = SmaliMethodDef._create_before_move_block_frl(shadow_map, move_type_hashmap)
-            self.embed_block(line_num, before_block)
-            line_num = line_num + len(before_block)
-            
-            
-            # Step 7: re-write this instruction
-            cur_line = SmaliMethodDef._rewrite_instruction_frl(shadow_map, cur_line)
-            self.raw_text[line_num] = cur_line
-            
-            
-            # Step 6.5: update move_type_hash_map
-            # I think it's necessary to update
-            # the move-type-map with the newly added 
-            # mv instructions (created in _create_before_move_block_frl())
-            # and also on the line that was re-written in step 7
-            for b_block_line in before_block:
-                move_type_hashmap = smali._update_mt_hashmap_frl(move_type_hashmap, str(b_block_line))
-            move_type_hashmap = smali._update_mt_hashmap_frl(move_type_hashmap, cur_line)
-            
-            
-            # Step 8: move block after instruction
-            after_block = SmaliMethodDef._create_after_move_block_frl(shadow_map, move_type_hashmap)
-            self.embed_block(line_num+1, after_block)
-            line_num = line_num + len(after_block)
-            
-            
-            # Step 8.5: update move_type_hash_map
-            for a_block_line in after_block:
-                move_type_hashmap = smali._update_mt_hashmap_frl(move_type_hashmap, str(a_block_line))
-            
-            '''
-
+           
             ans_block = SmaliMethodDef.fix_register_limit_for_line(cur_line, shadows, reg_pool)
-
             self.embed_block_with_replace(line_num, ans_block)
 
 
@@ -701,10 +515,10 @@ def tests():
 
 
     print("\tStigmaStringParsingLib._get_v_from_p...")
-    assert(StigmaStringParsingLib._get_v_from_p("p2", 2) == "v4")
-    assert(StigmaStringParsingLib._get_v_from_p("p0", 5) == "v5")
-    assert(StigmaStringParsingLib._get_v_from_p("p0", 0) == "v0")
-    assert(StigmaStringParsingLib._get_v_from_p("p3", 0) == "v3")
+    assert(StigmaStringParsingLib.get_v_from_p("p2", 2) == "v4")
+    assert(StigmaStringParsingLib.get_v_from_p("p0", 5) == "v5")
+    assert(StigmaStringParsingLib.get_v_from_p("p0", 0) == "v0")
+    assert(StigmaStringParsingLib.get_v_from_p("p3", 0) == "v3")
 
 
     print("\t_dereference_p_registers_frl...")
@@ -712,120 +526,9 @@ def tests():
     assert(SmaliMethodDef._dereference_p_registers_frl("    throw p1\n", 16) == "    throw v17\n")
     assert(SmaliMethodDef._dereference_p_registers_frl("    filled-new-array {p0, p1, p2}, [Ljava/lang/String;\n", 2) == "    filled-new-array {v2, v3, v4}, [Ljava/lang/String;\n")
     assert(SmaliMethodDef._dereference_p_registers_frl("    if-eqz p3, :cond_6\n", 13) == "    if-eqz v16, :cond_6\n")
-
-
-    print("\t_build_shadow_map_frl...")
-    # originally .locals = 16 and there is 1 parameters  (p0 = v16)
-    remaining_shadows = ["v16"]
-    soln_shadow_map = SmaliMethodDef.RegShadowMap(["v17"], remaining_shadows, {})
-    soln_shadow_map.tuples = [("v17", "v16", "v0")]
-    soln_shadow_map.new_remaining_shadows.pop()
-    test1_shadow_map = SmaliMethodDef._build_shadow_map_frl("    throw v17\n", remaining_shadows, {})
-    print(test1_shadow_map)
-    print(soln_shadow_map)
-    assert(test1_shadow_map == soln_shadow_map)
-    
-    
-    
-    print("\t_unique_frl...")
-    assert(SmaliMethodDef._unique_frl([4, 5, 4]) == [4, 5])
-    
-    
-    # originally .locals = 17 and there is 2 parameter (p0 = v17 and p1 = v18)
-    remaining_shadows = [ "v17", "v18", "v19"]
-    soln_shadow_map = SmaliMethodDef.RegShadowMap(["v16", "v21"], remaining_shadows, {})
-    soln_shadow_map.tuples = [("v16", "v19", "v0"),("v21", "v18", "v1")]
-    soln_shadow_map.new_remaining_shadows.pop()
-    soln_shadow_map.new_remaining_shadows.pop()
-    test2_shadow_map = SmaliMethodDef._build_shadow_map_frl("    array-length v16, v21\n", remaining_shadows, {})
-    #print(test2_shadow_map)
-    assert(test2_shadow_map == soln_shadow_map)
-    
-    
-    
-    print("\tsmali._build_move_type_hash_map_frl...")
-    signature = SmaliMethodSignature(".method private calculatePageOffsets(Landroidx/viewpager/widget/ViewPager$ItemInfo;ILandroidx/viewpager/widget/ViewPager$ItemInfo;)V")
-    result = smali._build_move_type_hash_map_frl(signature, 13)
-    soln = {"v13": smali.MOVE_OBJECT_16, "v14": smali.MOVE_OBJECT_16, "v15": smali.MOVE_16, "v16": smali.MOVE_OBJECT_16}
-    #print(soln)
-    #print(result)
-    assert(result == soln)
-    signature = SmaliMethodSignature(".method private calculatePageOffsets(Landroidx/viewpager/widget/ViewPager$ItemInfo;ILandroidx/viewpager/widget/ViewPager$ItemInfo;J)V")
-    result = smali._build_move_type_hash_map_frl(signature, 13)
-    soln = {"v13": smali.MOVE_OBJECT_16, "v14": smali.MOVE_OBJECT_16, "v15": smali.MOVE_16, "v16": smali.MOVE_OBJECT_16, "v17" : smali.MOVE_WIDE_16, "v18" : "2"}
-    #print(soln)
-    #print(result)
-    assert(result == soln)
-    
-    
-    print("\tsmali_update_mt_hashmap_frl...")
-    res_map = {}
-    smali._update_mt_hashmap_frl(res_map, "    const-wide/16 v18, 0x1\n")
-    soln_map = {"v18": smali.MOVE_WIDE_16, "v19": "2"}
-    #print("res: " + str(res_map) + "   soln: " + str(soln_map))
-    assert(res_map == soln_map)
-    res_map = {"v21": smali.MOVE_OBJECT_16}
-    smali._update_mt_hashmap_frl(res_map, "    array-length v16, v21\n")
-    soln_map = {"v16": smali.MOVE_16, "v21": smali.MOVE_OBJECT_16}
-    assert(res_map == soln_map)
-    smali._update_mt_hashmap_frl(res_map, "    return-void\n")
-    assert(res_map == soln_map)
-    
-    
-    
-    ''' 
-    print("\t_create_before_move_block_frl...")
-    sol_before_block = [smali.COMMENT("FRL MOVE ADDED BY STIGMA"), 
-    smali.BLANK_LINE(), 
-    smali.MOVE_16("v0", "v16"),
-    smali.BLANK_LINE(), 
-    smali.MOVE_OBJECT_16("v1", "v21"),
-    smali.BLANK_LINE()]
-    #print(sol_before_block)
-    #print(SmaliMethodDef._create_before_move_block_frl(test2_shadow_map, res_map))
-    assert(SmaliMethodDef._create_before_move_block_frl(test2_shadow_map, res_map) == sol_before_block)
+    assert(SmaliMethodDef._dereference_p_registers_frl("    const-string p2, \"nasty p2 example\"\n", 2) == "    const-string v4, \"nasty p2 example\"\n")
     
 
-    res_map["v0"] = smali.MOVE_16
-    sol2_before_block = [smali.COMMENT("FRL MOVE ADDED BY STIGMA"), 
-    smali.BLANK_LINE(), 
-    smali.MOVE_16("v19", "v0"),
-    smali.BLANK_LINE(),
-    smali.MOVE_16("v0", "v16"),
-    smali.BLANK_LINE(), 
-    smali.MOVE_OBJECT_16("v1", "v21"),
-    smali.BLANK_LINE()]
-    ans2 = SmaliMethodDef._create_before_move_block_frl(test2_shadow_map, res_map)
-    #print("soln: " + str(sol2_before_block))
-    #print("ans2: " + str(ans2))
-    assert(ans2 == sol2_before_block)
-    
-    
-    
-    print("\t_rewrite_instruction_frl...")
-    test2_shadow_map = SmaliMethodDef._build_shadow_map_frl("    array-length v16, v21\n", remaining_shadows, {})
-    assert(SmaliMethodDef._rewrite_instruction_frl(test2_shadow_map, "    array-length v16, v21\n") == "    array-length v0, v1\n")
-    
-    
-    print("\t_create_after_move_block_frl...")
-    sol_after_block = [ 
-    smali.BLANK_LINE(), 
-    smali.MOVE_16("v16", "v0"), 
-    smali.BLANK_LINE(), 
-    smali.MOVE_16("v0", "v19"),
-    smali.BLANK_LINE(), 
-    smali.MOVE_OBJECT_16("v21", "v1"), 
-    smali.BLANK_LINE(), 
-    smali.COMMENT("FRL MOVE ADDED BY STIGMA END")]
-    
-    # the move_type_map needs to be updated with 
-    # the moves we did in the before block
-    res_map["v0"] = smali.MOVE_16
-    res_map["v1"] = smali.MOVE_OBJECT_16
-    res_map["v19"] = smali.MOVE_16
-    #print(sol_after_block)
-    #print(SmaliMethodDef._create_after_move_block_frl(test2_shadow_map, res_map))
-    assert(SmaliMethodDef._create_after_move_block_frl(test2_shadow_map, res_map) == sol_after_block)
     '''
     
     print("\tfix_register_limit()...")
@@ -927,7 +630,7 @@ def tests():
     #print(ans_block)
     #print(soln_block)
     assert(ans_block == soln_block)
-    
+    '''
     
 
     print("ALL TESTS PASSED!")
