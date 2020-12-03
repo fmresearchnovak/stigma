@@ -305,6 +305,23 @@ class SmaliMethodDef:
 
     @staticmethod
     def fix_register_limit_for_line(line, shadows, reg_pool):
+        
+        # imagine...
+
+        # reg_pool =
+        # v0: TYPE_CODE_OBJ_REF
+        # v1: TYPE_CODE_WIDE
+        # ...
+
+        # line  = "    instance-of v3, v16, Ljava/lang/String;\n"
+
+        # shadow_registers = ["v16", "v17", "v18"]
+
+
+        # shad <- corr
+        # corr <-- high
+
+        # low/corr, shadow, high
         asm_obj = smali.parse_line(line)
         
         original_registers = asm_obj.get_registers() + asm_obj.get_implicit_registers()
@@ -528,6 +545,56 @@ def tests():
     assert(SmaliMethodDef._dereference_p_registers_frl("    if-eqz p3, :cond_6\n", 13) == "    if-eqz v16, :cond_6\n")
     assert(SmaliMethodDef._dereference_p_registers_frl("    const-string p2, \"nasty p2 example\"\n", 2) == "    const-string v4, \"nasty p2 example\"\n")
     
+
+    print("\tfix_register_limit_for_line...")
+
+    # foo(I)
+    # .locals 16
+    # v0, v1, v2, ... v15, v16, v17
+    #                     shad,  p0
+    line = "    iget v0, v17, LMyObject->num1:I\n"
+    shadows = ["v16"]
+    signature = SmaliMethodSignature(".method private foo()V")
+    reg_pool = vregpool.VRegisterPool(signature, 17)
+    reg_pool["v17"] = smali.TYPE_CODE_OBJ_REF
+
+    #print(reg_pool.pretty_string(0, 20))
+    code_block = SmaliMethodDef.fix_register_limit_for_line(line, shadows, reg_pool)
+    soln = [smali.MOVE_OBJECT_16("v1", "v17"),
+        smali.BLANK_LINE(),
+        str(smali.IGET("v0", "v1", "LMyObject->num1:I")),
+        smali.BLANK_LINE(),
+        smali.MOVE_OBJECT_16("v17", "v1"),
+        smali.BLANK_LINE()]
+    assert(code_block == soln)
+    #print(reg_pool.pretty_string(0, 20))
+    
+    line = "    iget v1, v17, LMyObject->num2:I\n"
+    code_block = SmaliMethodDef.fix_register_limit_for_line(line, shadows, reg_pool)
+    soln = [smali.MOVE_OBJECT_16("v2", "v17"),
+        smali.BLANK_LINE(),
+        str(smali.IGET("v1", "v2", "LMyObject->num2:I")),
+        smali.BLANK_LINE(),
+        smali.MOVE_OBJECT_16("v17", "v2"),
+        smali.BLANK_LINE()]
+    assert(code_block == soln)
+    
+    
+    line = "    const/16 v3, 0x5\n"
+    code_block = SmaliMethodDef.fix_register_limit_for_line(line, shadows, reg_pool)
+    soln = [str(smali.CONST_16("v3", "0x5")),
+        smali.BLANK_LINE()]
+    assert(code_block == soln)
+
+    line = "    iget v17, v17, Lblahblah->somefield:I\n"
+    code_block = SmaliMethodDef.fix_register_limit_for_line(line, shadows, reg_pool)
+    soln = [smali.MOVE_OBJECT_16("v3", "v17"),
+        smali.BLANK_LINE(),
+        str(smali.IGET("v3", "v3", "Lblahblah->somefield:I")),
+        smali.BLANK_LINE(),
+        smali.MOVE_16("v17", "v3"),
+        smali.BLANK_LINE()]
+    assert(code_block == soln)
 
     '''
     
