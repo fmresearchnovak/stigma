@@ -71,7 +71,7 @@ class VRegisterPool():
 				self[v_reg] = smali.TYPE_CODE_WIDE
 				
 			elif reg_type in smali.TYPE_LIST_WIDE_REMAINING:
-				self[v_reg] = smali.TYPE_CODE_WIDE_REMAINING
+				pass
 				
 			elif reg_type in smali.TYPE_LIST_OBJECT_REF:
 				self[v_reg] = smali.TYPE_CODE_OBJ_REF
@@ -219,6 +219,11 @@ class VRegisterPool():
 		#		raise ValueError("You have tried to clobber the second 1/2 of a wide value!\n\treg: " + str(key_reg) + "\n\tinstruction: " + str(instruction))
 
 		existing_type = self[reg_name]
+		if existing_type == smali.TYPE_CODE_WIDE_REMAINING:
+			left_adjoining_reg = "v" + str(VRegisterPool.get_number(reg_name) - 1)
+			VRegisterPool.check_name(left_adjoining_reg)
+			self.type_map[left_adjoining_reg] = None
+
 		#print("existing type: " + smali.type_code_name(existing_type))
 		if(existing_type == smali.TYPE_CODE_WIDE and 
 			type_code != smali.TYPE_CODE_WIDE):
@@ -227,6 +232,7 @@ class VRegisterPool():
 			self.type_map[adjoining_reg] = None
 
 		self.type_map[reg_name] = type_code
+
 		if type_code == smali.TYPE_CODE_WIDE:
 			self.type_map[adjoining_reg] = smali.TYPE_CODE_WIDE_REMAINING
 
@@ -294,6 +300,8 @@ class VRegisterPool():
 		# 3
 		# theoretically possible if user is looking for TYPE_CODE_OBJ_REF
 		# and max value is X and all registers below X are TYPE_CODE_WORD
+
+		print(self.pretty_string(0, 20))
 		raise ValueError("Could not find a spot for type: " + smali.type_code_name(type_code) + " in first " + str(max_val) + " registers.")
 		#return None
 		
@@ -313,6 +321,7 @@ def main():
 	#print(soln)
 	#print(pool)
 	assert(pool == soln)
+
 	signature = SmaliMethodDef.SmaliMethodSignature(".method private calculatePageOffsets(Landroidx/viewpager/widget/ViewPager$ItemInfo;ILandroidx/viewpager/widget/ViewPager$ItemInfo;J)V")
 	pool = VRegisterPool(signature, 13)
 	soln = {"v13": smali.TYPE_CODE_OBJ_REF, "v14": smali.TYPE_CODE_OBJ_REF, "v15": smali.TYPE_CODE_WORD, "v16": smali.TYPE_CODE_OBJ_REF, "v17" : smali.TYPE_CODE_WIDE, "v18" : smali.TYPE_CODE_WIDE_REMAINING}
@@ -366,6 +375,12 @@ def main():
 		pass
 	assert(pool["v15"] == smali.TYPE_CODE_OBJ_REF)
 	
+	try:
+		pool["v18"] = smali.TYPE_CODE_WIDE_REMAINING
+		assert(False)
+	except:
+		pass
+	assert(pool["v18"] == smali.TYPE_CODE_WIDE_REMAINING)
 	
 	print("\t__contains__()...")
 	assert("v16" in pool)
