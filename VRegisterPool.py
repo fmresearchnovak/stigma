@@ -4,12 +4,6 @@ import SmaliAssemblyInstructions as smali
 
 
 class VRegisterPool():
-	# TO-DO:
-	# Let's say v2 v3 is a double
-	# If program overwrites first part of a double (v2), now the second part (v3)
-	# Is a free register. It can override v3 in the future for further use.
-	# We should handle that case and update VRegisterPool appropriately.
-
 	# A register pool only exists inside a method
 	# It is a collection of all "v" registers
 	# It knows the type of every register
@@ -67,9 +61,10 @@ class VRegisterPool():
 		
 		# "update move-type hashmap"
 		# this updates the hashmap that indicates for each register
-		# what the corresponding move instruction must be used
-		# in order to move that register (assuming that register
-		# will be used on the RIGHT hand side of the move)
+		# what the data type is.  This information is used most directly
+		# by helping us identify the corresponding move instruction 
+		# must be used in order to move that register (assuming that 
+		# register will be used on the RIGHT hand side of the move).
 		#
 		# e.g., suppose v0 is a long, we should use move-wide/16 vx, v0
 		
@@ -91,7 +86,6 @@ class VRegisterPool():
 		if(not StigmaStringParsingLib.is_valid_instruction(instruction)):
 			return
 
-
 		opcode = StigmaStringParsingLib.break_into_tokens(instruction)[0]
 		data_type_written = VRegisterPool._get_type_written(opcode)
 
@@ -99,6 +93,7 @@ class VRegisterPool():
 			return
 			
 		key_reg = StigmaStringParsingLib.get_v_and_p_numbers(instruction)[0]
+		adjoining_reg = "v" + str(int(key_reg[1:]) + 1)
 		
 		#print("key reg: " + str(key_reg))
 		#print("current map: " + str(self.mt_map))
@@ -106,14 +101,19 @@ class VRegisterPool():
 		#if(key_reg in self.type_map):
 		#	if(self.type_map[key_reg] == smali.TYPE_CODE_WIDE_REMAINING):
 		#		raise ValueError("You have tried to clobber the second 1/2 of a wide value!\n\treg: " + str(key_reg) + "\n\tinstruction: " + str(instruction))
-			
+
+		existing_type = self[key_reg]
+		#print("existing type: " + smali.type_code_name(existing_type))
+		if(existing_type == smali.TYPE_CODE_WIDE and 
+			data_type_written != smali.TYPE_CODE_WIDE):
+			# clear the other register if this WIDE is overwritten 
+			# with something else.
+			self.type_map[adjoining_reg] = None
+
 		self.type_map[key_reg] = data_type_written
-		
 		if data_type_written == smali.TYPE_CODE_WIDE:
-			key_reg_num = int(key_reg[1:])
-			new_key_reg = "v" + str(key_reg_num + 1)
-			self.type_map[new_key_reg] = smali.TYPE_CODE_WIDE_REMAINING
-	
+			self.type_map[adjoining_reg] = smali.TYPE_CODE_WIDE_REMAINING
+
 
 	@staticmethod
 	def _get_type_written(opcode):
@@ -154,9 +154,9 @@ class VRegisterPool():
 		# the mt_map dictionary
 		return self.type_map == other
 		
+
 	def __str__(self):
 		return str(self.type_map)
-		
 		
 		
 	def pretty_string(self, start_val, stop_val):
@@ -170,6 +170,11 @@ class VRegisterPool():
 		
 	def get_spot(self, max_val, type_code, exclude_list = []):
 		# Look for empty spot to use
+		# 1) empty spots prioritized
+		# 2) spots of the matching type
+		# 3) a convenient spot cannot be found: raise an exception
+
+		# 1
 		for i in range(max_val):
 			reg_name = "v" + str(i)
 			
@@ -187,7 +192,7 @@ class VRegisterPool():
 				else:
 					return reg_name
 					
-		# Look for a spot matching in type
+		# 2
 		for i in range(max_val):
 			reg_name = "v" + str(i)
 			
@@ -197,6 +202,7 @@ class VRegisterPool():
 			if(type_code == self[reg_name]):
 				return reg_name
 		
+		# 3
 		# theoretically possible if user is looking for TYPE_CODE_OBJ_REF
 		# and max value is X and all registers below X are TYPE_CODE_WORD
 		raise ValueError("Could not find a spot for type: " + smali.type_code_name(type_code) + " in first " + str(max_val) + " registers.")
@@ -226,12 +232,6 @@ def main():
 	
 	
 	print("\tupdate()...")
-	try:
-		pool.update("    const-wide/16 v18, 0x1\n")
-		assert(False)
-	except ValueError:
-		pass
-		
 	pool.update("    const-wide/16 v23, 0x1\n")
 	soln["v23"] = smali.TYPE_CODE_WIDE
 	soln["v24"] = smali.TYPE_CODE_WIDE_REMAINING
@@ -293,9 +293,15 @@ def main():
 	pool.update("    sget-boolean v1, Lclass;->field:Z");
 	reg = pool.get_spot(15, smali.TYPE_CODE_OBJ_REF)
 	assert(reg == "v3")
+
+	pool.update("    const/16 v17, 0x1\n")
+	assert(pool["v17"] == smali.TYPE_CODE_WORD)
+	assert(pool["v18"] == None)
 	
 	#print(pool.pretty_string(0, 32))
 	print("All Tests PASSED!")
+
+
 
 if __name__ == "__main__":
 	main()
