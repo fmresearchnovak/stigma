@@ -25,14 +25,14 @@ class SmaliMethodSignature:
         # https://github.com/JesusFreke/smali/wiki/TypesMethodsAndFields
         while i < len(parameter_raw):
             self.no_of_parameters += 1
-             
-            if parameter_raw[i] != "D" and parameter_raw[i] != "J" and parameter_raw[i] != "L" and parameter_raw[i] != "[":
+            
+            if parameter_raw[i] in smali.TYPE_LIST_WORD: 
                 self.no_of_parameter_registers += 1
                 p_name = "p" + str(p_idx)
                 self.parameter_type_map[p_name] = parameter_raw[i]
                 
                 
-            elif parameter_raw[i] == "J" or parameter_raw[i] == "D": # long or double
+            elif parameter_raw[i] in smali.TYPE_LIST_WIDE: # long or double
                 self.no_of_parameter_registers += 2
                 p_name = "p" + str(p_idx)
                 self.parameter_type_map[p_name] = parameter_raw[i]
