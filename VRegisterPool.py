@@ -1,6 +1,7 @@
 
 import StigmaStringParsingLib
 import SmaliAssemblyInstructions as smali
+import re
 
 
 class VRegisterPool():
@@ -8,16 +9,36 @@ class VRegisterPool():
 	# It is a collection of all "v" registers
 	# It knows the type of every register
 	# It knows which registers are not containing
-	# any data (yet)
+	# any data (yet), it has static methods to work with register names
 	
-	# Primary API
-	# update("const/4 v1, 0x8")  sets the type of v1 to be TYPE_CODE_WORD
-	# self.type_map 
-	# [] and "in" supported (keys in self.type_map)
-	# 	the __getitem__ operator returns None if key not found
-	# pretty_string()
-	# get_spot()  gives a register of matching type or a free / empty register (can handle wide)
+	# Primary API #
 	#
+	# update("const/4 v1, 0x8")  sets the type of v1 to be TYPE_CODE_WORD
+	#
+	# self.type_map 
+	#
+	# [] and "in" supported (keys in self.type_map)
+	# 		the __getitem__ operator returns None if key not found
+	#
+	# pretty_string()
+	#
+	# get_spot()  gives a register of matching type or 
+	#		a free / empty register (can handle wide)
+	#
+	# is_high_numbered()  takes a register name and returns True/False.  
+	# 		It looks at the type of the register because v15 = WIDE means
+	#		that V16 is WIDE_REMAINING and so v15 can be considered "high"
+	#
+	# get_move_instr()	takes a register name and returns the corresponding
+	#		move instruction (e.g., if v0 is TYPE_CODE_WIDE, this function
+	#		will return MOVE_WIDE_16)
+	#		Note: the returned object is uninstantiated, it's like a 
+	#		reference to the constructor function
+	#
+	# static get_number(reg_name)
+	# static get_letter(reg_name)
+	# static check_name(reg_name)  throws exception on invalid name
+	# static check_type(type_code) throws exception on invalid type_code
 	
 	def __init__(self, signature, num_local_params):
 		
@@ -38,19 +59,22 @@ class VRegisterPool():
 			p_reg = key
 			reg_type = signature.parameter_type_map[key]
 			v_reg = StigmaStringParsingLib.get_v_from_p(p_reg, num_local_params)
+			VRegisterPool.check_name(v_reg)
 			
 			
+			# Note: using self[v_reg] below which invokes
+			# __setitem__() which does extra checks on valid values
 			if reg_type in smali.TYPE_LIST_WORD:
-				self.type_map[v_reg] = smali.TYPE_CODE_WORD
+				self[v_reg] = smali.TYPE_CODE_WORD
 				
 			elif reg_type in smali.TYPE_LIST_WIDE:
-				self.type_map[v_reg] = smali.TYPE_CODE_WIDE
+				self[v_reg] = smali.TYPE_CODE_WIDE
 				
 			elif reg_type in smali.TYPE_LIST_WIDE_REMAINING:
-				self.type_map[v_reg] = smali.TYPE_CODE_WIDE_REMAINING
+				self[v_reg] = smali.TYPE_CODE_WIDE_REMAINING
 				
 			elif reg_type in smali.TYPE_LIST_OBJECT_REF:
-				self.type_map[v_reg] = smali.TYPE_CODE_OBJ_REF
+				self[v_reg] = smali.TYPE_CODE_OBJ_REF
 				
 			else:
 				raise ValueError("Invalid Type: " + str(reg_type))
@@ -93,26 +117,30 @@ class VRegisterPool():
 			return
 			
 		key_reg = StigmaStringParsingLib.get_v_and_p_numbers(instruction)[0]
-		adjoining_reg = "v" + str(int(key_reg[1:]) + 1)
+		VRegisterPool.check_name(key_reg)
 		
-		#print("key reg: " + str(key_reg))
-		#print("current map: " + str(self.mt_map))
-		#print("mt_map[key_reg}: " + str(self.mt_map[key_reg]))
-		#if(key_reg in self.type_map):
-		#	if(self.type_map[key_reg] == smali.TYPE_CODE_WIDE_REMAINING):
-		#		raise ValueError("You have tried to clobber the second 1/2 of a wide value!\n\treg: " + str(key_reg) + "\n\tinstruction: " + str(instruction))
-
-		existing_type = self[key_reg]
-		#print("existing type: " + smali.type_code_name(existing_type))
-		if(existing_type == smali.TYPE_CODE_WIDE and 
-			data_type_written != smali.TYPE_CODE_WIDE):
-			# clear the other register if this WIDE is overwritten 
-			# with something else.
-			self.type_map[adjoining_reg] = None
-
-		self.type_map[key_reg] = data_type_written
-		if data_type_written == smali.TYPE_CODE_WIDE:
-			self.type_map[adjoining_reg] = smali.TYPE_CODE_WIDE_REMAINING
+		# this does more checks and is thorough
+		self[key_reg] = data_type_written
+		
+		
+	def get_move_instr(self, reg_name):
+		VRegisterPool.check_name(reg_name)
+		type_code = self[reg_name]
+		
+		move_instr = None
+		if type_code == smali.TYPE_CODE_WORD:
+			move_instr = smali.MOVE_16
+			
+		elif type_code == smali.TYPE_CODE_WIDE:
+			move_instr = smali.MOVE_WIDE_16
+			
+		elif type_code == smali.TYPE_CODE_WIDE_REMAINING:
+			move_instr = None
+			
+		elif type_code == smali.TYPE_CODE_OBJ_REF:
+			move_instr = smali.MOVE_OBJECT_16
+			
+		return move_instr		
 
 
 	@staticmethod
@@ -125,7 +153,45 @@ class VRegisterPool():
 			return smali.TYPE_CODE_OBJ_REF
 		else:
 			return None
+			
+	def is_high_numbered(self, reg_name):
+		VRegisterPool.check_name(reg_name)
+		letter = VRegisterPool.get_letter(reg_name)
+		number = VRegisterPool.get_number(reg_name)
 		
+		if(letter != "v"):
+			raise ValueError("Cannot determine if register is high numbered: " + str(self))
+		
+		#print("self[" + str(reg_name) + "]: " + smali.type_code_name(self[reg_name]))
+		if(self[reg_name] == smali.TYPE_CODE_WIDE):
+			return (number > 14)
+			
+		# if the type is unknown or the type is NOT wide
+		# then we can use the "word boundary" of 15
+		return (number > 15)
+		
+	@staticmethod
+	def get_number(reg_name):
+		VRegisterPool.check_name(reg_name)
+		return int(reg_name[1:])
+	
+	@staticmethod
+	def get_letter(reg_name):
+		VRegisterPool.check_name(reg_name)
+		return str(reg_name[0])
+		
+	@staticmethod
+	def check_name(reg_name):
+		VALID_REG_REGEX = r"^[v][0-9]+$"
+		result = re.search(VALID_REG_REGEX, reg_name)
+		if(not result):
+			raise ValueError("Invalid Register: " + str(reg_name))
+		
+	@staticmethod	
+	def check_type(type_code):
+		if type_code not in smali.TYPE_CODE_ALL:
+			raise ValueError("Invalid Type: " + str(type_code))
+			
 		
 	def __getitem__(self, key):
 		# allows using [] on this object and avoids
@@ -135,11 +201,34 @@ class VRegisterPool():
 			return self.type_map[key]
 		return None
 		
-	def __setitem__(self, key, value):
+	def __setitem__(self, reg_name, type_code):
 		# allows using [] on this object and avoids
 		# the exception raised when key is not in self.type_map
 		# dictionary
-		self.type_map[key] = value
+		VRegisterPool.check_type(type_code)
+		VRegisterPool.check_name(reg_name)
+		adjoining_reg = "v" + str(VRegisterPool.get_number(reg_name) + 1)
+		VRegisterPool.check_name(adjoining_reg)
+		
+		
+		#print("key reg: " + str(key_reg))
+		#print("current map: " + str(self.mt_map))
+		#print("mt_map[key_reg}: " + str(self.mt_map[key_reg]))
+		#if(key_reg in self.type_map):
+		#	if(self.type_map[key_reg] == smali.TYPE_CODE_WIDE_REMAINING):
+		#		raise ValueError("You have tried to clobber the second 1/2 of a wide value!\n\treg: " + str(key_reg) + "\n\tinstruction: " + str(instruction))
+
+		existing_type = self[reg_name]
+		#print("existing type: " + smali.type_code_name(existing_type))
+		if(existing_type == smali.TYPE_CODE_WIDE and 
+			type_code != smali.TYPE_CODE_WIDE):
+			# clear the other register if this WIDE is overwritten 
+			# with something else.
+			self.type_map[adjoining_reg] = None
+
+		self.type_map[reg_name] = type_code
+		if type_code == smali.TYPE_CODE_WIDE:
+			self.type_map[adjoining_reg] = smali.TYPE_CODE_WIDE_REMAINING
 
 
 	def __contains__(self, key):
@@ -210,6 +299,7 @@ class VRegisterPool():
 		
 	
 	
+	
 def main():
 	print("Testing VRegisterPool")
 	
@@ -265,6 +355,18 @@ def main():
 	type_code = pool["v35"]
 	assert(type_code == None)
 	
+	
+	print("\t__setitem__()...")
+	pool["v15"] = smali.TYPE_CODE_OBJ_REF
+	assert(pool["v15"] == smali.TYPE_CODE_OBJ_REF)
+	try:
+		pool["v15"] = "boolean" # not a valid type_code
+		assert(False)
+	except:
+		pass
+	assert(pool["v15"] == smali.TYPE_CODE_OBJ_REF)
+	
+	
 	print("\t__contains__()...")
 	assert("v16" in pool)
 	assert("v30" not in pool)
@@ -297,10 +399,65 @@ def main():
 	pool.update("    const/16 v17, 0x1\n")
 	assert(pool["v17"] == smali.TYPE_CODE_WORD)
 	assert(pool["v18"] == None)
+	#print(pool.pretty_string(0, 32))
+	
+	
+	
+	print("\tcheck_name()...")
+	VRegisterPool.check_name("v2")
+	assert(True)
+	try:
+		VRegisterPool.check_name("vp2")
+		assert(False)
+	except:
+		pass
+	
+	try:
+		VRegisterPool.check_name("p1")
+		assert(False)
+	except:
+		pass
+	
+
+	print("\tget_number()...")
+	assert(VRegisterPool.get_number("v3") == 3)
+	assert(VRegisterPool.get_letter("v3") == "v")
+	try:
+		ans = VRegisterPool.get_letter("v-2")
+		assert(ans == "v")
+		assert(False)
+	except:
+		pass
+		
+	
+	
+	print("\tis_high_numbered()...")
+	assert(pool.is_high_numbered("v2") == False)
+	assert(pool.is_high_numbered("v21") == True)
+	try:
+		pool.is_high_numbered("p2")
+		assert(False)
+	except ValueError:
+		pass
+	assert(pool.is_high_numbered("v15") == False)
+	pool["v15"] = smali.TYPE_CODE_WIDE
+	assert(pool.is_high_numbered("v15") == True)
+	
+	
 	
 	#print(pool.pretty_string(0, 32))
-	print("All Tests PASSED!")
+	print("\tget_move_instr()...")
+	assert(pool.get_move_instr("v0") == smali.MOVE_16)
+	assert(pool.get_move_instr("v15") == smali.MOVE_WIDE_16)
+	assert(pool.get_move_instr("v16") == None)
+	assert(pool.get_move_instr("v52") == None)
+	try:
+		pool.get_move_instr("52")
+		assert(False)
+	except:
+		pass
 
+	print("All Tests PASSED!")
 
 
 if __name__ == "__main__":
