@@ -536,6 +536,7 @@ def tests():
     assert(SmaliMethodDef._should_skip_line_frl("    move-object v1, v0 \n") == False)
     assert(SmaliMethodDef._should_skip_line_frl("    invoke-super-quick/range {v0..v5}"))
     assert(SmaliMethodDef._should_skip_line_frl("    invoke-super {v12, v13, v14, v15, v16}, Landroid/view/ViewGroup;->drawChild(Landroid/graphics/Canvas;Landroid/view/View;J)Z\n") == False)
+    assert(SmaliMethodDef._should_skip_line_frl("    move-object v0, p1\n") == False)
 
 
     print("\tStigmaStringParsingLib._get_v_from_p...")
@@ -554,7 +555,6 @@ def tests():
     
 
     print("\tfix_register_limit_for_line...")
-
     # foo(I)
     # .locals 16
     # v0, v1, v2, ... v15, v16, v17
