@@ -1,7 +1,7 @@
 import re
 import SmaliAssemblyInstructions as smali
 import StigmaStringParsingLib
-import VRegisterPool as vregpool
+import VRegisterPool
 
         
 class SmaliMethodSignature:
@@ -25,13 +25,13 @@ class SmaliMethodSignature:
         while i < len(parameter_raw):
             self.no_of_parameters += 1
             
-            if parameter_raw[i] in smali.TYPE_LIST_WORD: 
+            if parameter_raw[i] in VRegisterPool.TYPE_LIST_WORD: 
                 self.no_of_parameter_registers += 1
                 p_name = "p" + str(p_idx)
                 self.parameter_type_map[p_name] = parameter_raw[i]
                 
                 
-            elif parameter_raw[i] in smali.TYPE_LIST_WIDE: # long or double
+            elif parameter_raw[i] in VRegisterPool.TYPE_LIST_WIDE: # long or double
                 self.no_of_parameter_registers += 2
                 p_name = "p" + str(p_idx)
                 self.parameter_type_map[p_name] = parameter_raw[i]
@@ -341,7 +341,7 @@ class SmaliMethodDef:
         for reg_high_name in asm_obj.get_unique_registers():
             if(reg_pool.is_high_numbered(reg_high_name)):
                 
-                is_wide = (reg_pool[reg_high_name] == smali.TYPE_CODE_WIDE)
+                is_wide = (reg_pool[reg_high_name] == VRegisterPool.TYPE_CODE_WIDE)
                 
                 reg_corr_name = reg_pool.get_spot(15, reg_pool[reg_high_name], exclude_list = original_registers)
                 
@@ -545,8 +545,8 @@ def tests():
     line = "    iget v0, v17, LMyObject->num1:I\n"
     shadows = ["v16"]
     signature = SmaliMethodSignature(".method private foo()V")
-    reg_pool = vregpool.VRegisterPool(signature, 17)
-    reg_pool["v17"] = smali.TYPE_CODE_OBJ_REF
+    reg_pool = VRegisterPool.VRegisterPool(signature, 17)
+    reg_pool["v17"] = VRegisterPool.TYPE_CODE_OBJ_REF
 
     #print(reg_pool.pretty_string(0, 20))
     code_block = SmaliMethodDef.fix_register_limit_for_line(line, shadows, reg_pool)

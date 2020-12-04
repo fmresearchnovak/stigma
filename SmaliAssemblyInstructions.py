@@ -39,39 +39,6 @@
 import StigmaStringParsingLib
 
 
-TYPE_CODE_WORD = 0
-TYPE_CODE_WIDE = 1
-TYPE_CODE_WIDE_REMAINING = 2
-TYPE_CODE_OBJ_REF = 3
-
-TYPE_CODE_ALL = [TYPE_CODE_WORD, TYPE_CODE_WIDE, 
-    TYPE_CODE_WIDE_REMAINING, TYPE_CODE_OBJ_REF]
-
-# https://github.com/JesusFreke/smali/wiki/TypesMethodsAndFields
-TYPE_LIST_OBJECT_REF = ["THIS", "L", "ARRAY"]
-TYPE_LIST_WIDE = ["J", "D"]
-TYPE_LIST_WIDE_REMAINING = ["J2", "D2"]
-TYPE_LIST_WORD = ["Z", "B", "S", "C", "I", "F"]
-
-TYPE_LIST_ALL = TYPE_LIST_OBJECT_REF \
-                    + TYPE_LIST_WIDE \
-                    + TYPE_LIST_WIDE_REMAINING \
-                    + TYPE_LIST_WORD
-
-
-def type_code_name(type_code):
-    if(type_code == None):
-        return "None"
-    elif(type_code == TYPE_CODE_WORD):
-        return "TYPE_WORD"
-    elif(type_code == TYPE_CODE_OBJ_REF):
-        return "TYPE_OBJ_REF"
-    elif(type_code == TYPE_CODE_WIDE):
-        return "TYPE_WIDE"
-    elif(type_code == TYPE_CODE_WIDE_REMAINING):
-        return "TYPE_WIDE_REM"
-    else:
-        raise ValueError("Invalid Type Code: " + str(type_code))
 
 
 class SmaliAssemblyInstruction():
