@@ -301,6 +301,16 @@ class SmaliMethodDef:
             cur_line = cur_line.replace(reg, v_name, 1)
         return cur_line
     
+    @staticmethod
+    def _append_move_instr_frl(block, reg_pool, to_reg_name, from_reg_name):
+        custom_move = reg_pool.get_move_instr(from_reg_name)
+        print("from_reg_name: " + str(from_reg_name))
+        print("move: " + str(custom_move))
+        CUSTOM_MOVE = custom_move(to_reg_name, from_reg_name)
+        block.append(CUSTOM_MOVE)
+        block.append(smali.BLANK_LINE())
+
+        reg_pool.update(str(CUSTOM_MOVE))
 
     @staticmethod
     def fix_register_limit_for_line(line, shadows, reg_pool):
@@ -337,32 +347,49 @@ class SmaliMethodDef:
         before_block = []
         after_block = []
         shadow_idx = 0
-        #print(line)
+        
+        print("\n")
+        print("line: " + str(line).strip())
         for reg_high_name in asm_obj.get_unique_registers():
             if(reg_pool.is_high_numbered(reg_high_name)):
-                
-                is_wide = (reg_pool[reg_high_name] == VRegisterPool.TYPE_CODE_WIDE)
-                
-                reg_corr_name = reg_pool.get_spot(15, reg_pool[reg_high_name], exclude_list = original_registers)
-                
-                corr_previous_type = reg_pool[reg_corr_name]
+                print("fixing reg: " + str(reg_high_name))
 
-                if(corr_previous_type != None):
-                    # corresponding register might be empty in which case
-                    # we should not do a move on it
-                    reg_shad_name = shadows[shadow_idx]
+                is_wide = (reg_pool[reg_high_name] == VRegisterPool.TYPE_CODE_WIDE)
+
+        
+                try:
+                    reg_corr_name = reg_pool.get_spot(15, reg_pool[reg_high_name], exclude_list = original_registers)
+                
+                except ValueError:
+                    # this happens when there is no appropriate spot
+                    # to be given.  e.g., a WIDE is needed, but all
+                    # low numbered registers are filled with WORD and/or OBJ_REF
+                    pair = reg_pool.get_consecutive_non_wide_reg_pair(15, exclude_list = original_registers)
+                    #print("self.scd.file_name: " + str(self.scd.file_name))
+                    print("pair: " + str(pair))
+                    print("shadows: " + str(shadows))
+                    print("shadow_idx: " + str(shadow_idx))
+                    reg_corr_name = pair[0]
+                    reg_corr_name_second = pair[1]
+                    reg_shad_name_second = shadows[shadow_idx+1]
                     
+                    SmaliMethodDef._append_move_instr_frl(before_block, reg_pool, reg_shad_name_second, reg_corr_name_second)
+
+                # corresponding register might be empty in which case
+                # we should not do a move on it
+                # the "previous" is referring to the fact that this is
+                # the type held in the register BEFORE the instruction 
+                # on line is executed.  For example instruction might be
+                # add-int corr, vx, vy wherein corr has type OBJ_REF before
+                # instruction, it will have type WORD after this instruction
+                corr_previous_type = reg_pool[reg_corr_name]
+                if(corr_previous_type != None and corr_previous_type != VRegisterPool.TYPE_CODE_WIDE_REMAINING):
+                    reg_shad_name = shadows[shadow_idx]
                     if(is_wide):
                         shadow_idx += 2
                     else:
                         shadow_idx += 1
-                
-                    custom_move_corr_shad = reg_pool.get_move_instr(reg_corr_name)
-                    CUSTOM_MOVE_B = custom_move_corr_shad(reg_shad_name, reg_corr_name)
-                    before_block.append(CUSTOM_MOVE_B)
-                    before_block.append(smali.BLANK_LINE())
-
-                    reg_pool.update(str(CUSTOM_MOVE_B))
+                    SmaliMethodDef._append_move_instr_frl(before_block, reg_pool, reg_shad_name, reg_corr_name)
                 
                 if(reg_pool[reg_high_name] != None):
                     # high register might be empty / might not exist / might have type "None"
@@ -370,20 +397,11 @@ class SmaliMethodDef:
                     # v32 might not contain any data before this instruction
                     # in such a situation it's appropriate to not do any move on it
                     # before, but it is still necessary to do a move after
-                    custom_move_high_corr = reg_pool.get_move_instr(reg_high_name)
-                    CUSTOM_MOVE_B = custom_move_high_corr(reg_corr_name, reg_high_name)
-                    before_block.append(CUSTOM_MOVE_B)
-                    before_block.append(smali.BLANK_LINE())
-
-                    reg_pool.update(str(CUSTOM_MOVE_B))
+                    SmaliMethodDef._append_move_instr_frl(before_block, reg_pool, reg_corr_name, reg_high_name)
                 
                 
-                # the "1" at the end here means that only 1 occurrence will be replaced
-                # I'm thinking this works for const-string v16, "nasty v16 example"
-                # But I'm thinking it won't work for add-int v16, v16, v5
-                # of course add-int v16, v16, v5 should probably be add-int/2addr v16, v5
+                # the "occurrences" at the end here means that only X occurrences will be replaced
                 occurrences = asm_obj.get_registers().count(reg_high_name)
-
                 new_line = new_line.replace(reg_high_name, reg_corr_name, occurrences)
                 
 
@@ -394,26 +412,20 @@ class SmaliMethodDef:
                 # move-int v21, v0
                 reg_pool.update(new_line)
 
-                custom_move_high_corr = reg_pool.get_move_instr(reg_corr_name)
-                CUSTOM_MOVE_A = custom_move_high_corr(reg_high_name, reg_corr_name)
-                after_block.append(CUSTOM_MOVE_A)
-                after_block.append(smali.BLANK_LINE())
-
-                reg_pool.update(str(CUSTOM_MOVE_A))
+                SmaliMethodDef._append_move_instr_frl(after_block, reg_pool, reg_high_name, reg_corr_name)
 
                 if(corr_previous_type != None):
-                    custom_move_corr_shad = reg_pool.get_move_instr(reg_shad_name)
-                    CUSTOM_MOVE_A2 = custom_move_corr_shad(reg_corr_name, reg_shad_name)
-                    after_block.append(CUSTOM_MOVE_A2)
-                    after_block.append(smali.BLANK_LINE())
+                    SmaliMethodDef._append_move_instr_frl(after_block, reg_pool, reg_corr_name, reg_shad_name)
 
-                    reg_pool.update(str(CUSTOM_MOVE_A2))
      
             
         ans_block = before_block + [new_line, smali.BLANK_LINE()] + after_block
+        print("block produced: " + str(ans_block))
+        print("\n")
         return ans_block
             
     def fix_register_limit(self):
+        print("self.scd.file_name: " + str(self.scd.file_name))
         print("fix_register_limit(" + str(self.signature) + ")")
 
         # Step 1: Initiate shadow registers
@@ -450,7 +462,7 @@ class SmaliMethodDef:
         # p3 = v25 type: int => TYPE_CODE_WORD
         # key: register name (v's only)
         # value: smali.TYPE_CODE corresponding to register type
-        reg_pool = vregpool.VRegisterPool(self.signature, self.get_locals_directive_num())
+        reg_pool = VRegisterPool.VRegisterPool(self.signature, self.get_locals_directive_num())
         
         #print(self)
         
@@ -478,6 +490,7 @@ class SmaliMethodDef:
                 continue
                     
            
+            
             # Step 5: Call algorithm to fix each line
             ans_block = SmaliMethodDef.fix_register_limit_for_line(cur_line, shadows, reg_pool)
             

@@ -301,7 +301,10 @@ class VRegisterPool():
 		# Look for empty spot to use
 		# 1) empty spots prioritized
 		# 2) spots of the matching type
-		# 3) a convenient spot cannot be found: raise an exception
+		# 3) a convenient spot cannot be found:
+		#		just return a spot of different type
+		# 4) if the requested type is WIDE and a convenient
+		#		spot cannot be found: raise an exception
 
 		# 1
 		for i in range(max_val):
@@ -330,18 +333,45 @@ class VRegisterPool():
 				
 			if(type_code == self[reg_name]):
 				return reg_name
-		
-		# 3
+
+		# conclusions 3 and 4
 		# theoretically possible if user is looking for TYPE_CODE_OBJ_REF
 		# and max value is X and all registers below X are TYPE_CODE_WORD
 
-		#print(self.pretty_string(0, 20))
-		raise ValueError("Could not find a spot for type: " + TYPE_code_name(type_code) + " in first " + str(max_val) + " registers.")
-		#return None
+		# 4
+		if type_code == TYPE_CODE_WIDE:
+			#print(self.pretty_string(0, 20))
+			raise ValueError("Could not find a spot for type: " + type_code_name(type_code) + " in first " + str(max_val) + " registers.")	
+
+		# 3
+		for i in range(max_val):
+			reg_name = "v" + str(i)
+
+			if(reg_name in exclude_list):
+				continue
+
+			# this might return a TYPE_WIDE when user
+			# is actually looking for a TYPE_WORD
+			# but that should be ok, bigger problem
+			# is when user is looking for WIDE and can't
+			# get one, that is resolved by conclusion 4
+			return reg_name
 		
+		#return None
+
+	def get_consecutive_non_wide_reg_pair(self, max_val, exclude_list = []):
+		for i in range(max_val):
+			reg_name = "v" + str(i)
+			reg_name_adjoining = "v" + str(i+1)
+
+			if(reg_name in exclude_list):
+				continue
+
+			if(self[reg_name] != TYPE_CODE_WIDE and
+				self[reg_name] != TYPE_CODE_WIDE_REMAINING):
+				return (reg_name, reg_name_adjoining)
 	
-	
-	
+
 def main():
 	print("Testing VRegisterPool")
 	
@@ -507,6 +537,13 @@ def main():
 	except:
 		pass
 
+
+	print("\tget_consecutive_non_wide_registers()...")
+	pair = pool.get_consecutive_non_wide_reg_pair(15, exclude_list = ["v0"])
+	#print("pair: "+ str(pair))
+	assert(pair == ("v1", "v2"))
+
+	#print(pool.pretty_string(0, 25))
 	print("All Tests PASSED!")
 
 
