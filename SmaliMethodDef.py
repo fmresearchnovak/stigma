@@ -304,13 +304,15 @@ class SmaliMethodDef:
     @staticmethod
     def _append_move_instr_frl(block, reg_pool, to_reg_name, from_reg_name):
         custom_move = reg_pool.get_move_instr(from_reg_name)
-        print("from_reg_name: " + str(from_reg_name))
-        print("move: " + str(custom_move))
-        CUSTOM_MOVE = custom_move(to_reg_name, from_reg_name)
-        block.append(CUSTOM_MOVE)
-        block.append(smali.BLANK_LINE())
+        
+        # this happens when the register has None type or WIDE_REM type
+        if(custom_move != None):
+            CUSTOM_MOVE = custom_move(to_reg_name, from_reg_name)
+            block.append(CUSTOM_MOVE)
+            block.append(smali.BLANK_LINE())
 
-        reg_pool.update(str(CUSTOM_MOVE))
+            reg_pool.update(str(CUSTOM_MOVE))
+
 
     @staticmethod
     def fix_register_limit_for_line(line, shadows, reg_pool):
@@ -348,11 +350,9 @@ class SmaliMethodDef:
         after_block = []
         shadow_idx = 0
         
-        print("\n")
-        print("line: " + str(line).strip())
         for reg_high_name in asm_obj.get_unique_registers():
             if(reg_pool.is_high_numbered(reg_high_name)):
-                print("fixing reg: " + str(reg_high_name))
+                #print("fixing reg: " + str(reg_high_name))
 
                 is_wide = (reg_pool[reg_high_name] == VRegisterPool.TYPE_CODE_WIDE)
 
@@ -366,14 +366,18 @@ class SmaliMethodDef:
                     # low numbered registers are filled with WORD and/or OBJ_REF
                     pair = reg_pool.get_consecutive_non_wide_reg_pair(15, exclude_list = original_registers)
                     #print("self.scd.file_name: " + str(self.scd.file_name))
-                    print("pair: " + str(pair))
-                    print("shadows: " + str(shadows))
-                    print("shadow_idx: " + str(shadow_idx))
+                    #print("pair: " + str(pair))
+                    #print("shadows: " + str(shadows))
+                    #print("shadow_idx: " + str(shadow_idx))
+                    #print("reg_pool: " + reg_pool.pretty_string(0, 21))
                     reg_corr_name = pair[0]
                     reg_corr_name_second = pair[1]
                     reg_shad_name_second = shadows[shadow_idx+1]
                     
                     SmaliMethodDef._append_move_instr_frl(before_block, reg_pool, reg_shad_name_second, reg_corr_name_second)
+                    SmaliMethodDef._append_move_instr_frl(after_block, reg_pool, reg_corr_name_second, reg_shad_name_second)
+                    
+                    # it goes right here!!
 
                 # corresponding register might be empty in which case
                 # we should not do a move on it
@@ -383,7 +387,7 @@ class SmaliMethodDef:
                 # add-int corr, vx, vy wherein corr has type OBJ_REF before
                 # instruction, it will have type WORD after this instruction
                 corr_previous_type = reg_pool[reg_corr_name]
-                if(corr_previous_type != None and corr_previous_type != VRegisterPool.TYPE_CODE_WIDE_REMAINING):
+                if(corr_previous_type != None):
                     reg_shad_name = shadows[shadow_idx]
                     if(is_wide):
                         shadow_idx += 2
@@ -420,8 +424,8 @@ class SmaliMethodDef:
      
             
         ans_block = before_block + [new_line, smali.BLANK_LINE()] + after_block
-        print("block produced: " + str(ans_block))
-        print("\n")
+        #print("block produced: " + str(ans_block))
+        #print("\n\n")
         return ans_block
             
     def fix_register_limit(self):
@@ -481,7 +485,7 @@ class SmaliMethodDef:
             self.raw_text[line_num] = cur_line
             
             # Step 4: Update move_type_hashmap with this instruction
-            print(cur_line)
+            #print("line: " + cur_line)
             reg_pool.update(cur_line)
             
             # identify lines that should be skipped for the rest of this
@@ -598,6 +602,47 @@ def tests():
         smali.MOVE_16("v17", "v3"),
         smali.BLANK_LINE()]
     assert(code_block == soln)
+    
+    
+    line = "    invoke-super {v12, v13, v14, v15, v16}, Landroid/view/ViewGroup;->drawChild(Landroid/graphics/Canvas;Landroid/view/View;J)Z\n"
+    shadows = ["v10", "v11"]
+    reg_pool.type_map = {"v0": VRegisterPool.TYPE_CODE_OBJ_REF, 
+        "v1": VRegisterPool.TYPE_CODE_WORD,
+        "v2": VRegisterPool.TYPE_CODE_WORD,
+        "v3": VRegisterPool.TYPE_CODE_WORD,
+        "v4": VRegisterPool.TYPE_CODE_OBJ_REF,
+        "v5": VRegisterPool.TYPE_CODE_WORD,
+        "v6": VRegisterPool.TYPE_CODE_WORD,
+        "v7": VRegisterPool.TYPE_CODE_WORD,
+        "v8": VRegisterPool.TYPE_CODE_WORD,
+        "v9": VRegisterPool.TYPE_CODE_OBJ_REF,
+        "v10": VRegisterPool.TYPE_CODE_WORD,
+        "v11": VRegisterPool.TYPE_CODE_WORD,
+        "v12": VRegisterPool.TYPE_CODE_OBJ_REF,
+        "v13": VRegisterPool.TYPE_CODE_OBJ_REF,
+        "v14": VRegisterPool.TYPE_CODE_OBJ_REF,
+        "v15": VRegisterPool.TYPE_CODE_WIDE,
+        "v16": VRegisterPool.TYPE_CODE_WIDE_REMAINING}
+    code_block = SmaliMethodDef.fix_register_limit_for_line(line, shadows, reg_pool)
+    soln_block = [smali.MOVE_16("v11", "v1"),  # shad <-- corr
+        smali.BLANK_LINE(),
+        smali.MOVE_OBJECT_16("v10", "v0"), # shad <-- corr
+        smali.BLANK_LINE(),
+        smali.MOVE_WIDE_16("v0", "v15"), # corr <-- high
+        smali.BLANK_LINE(),
+        str(smali.INVOKE_SUPER(["v12", "v13", "v14", "v0", "v1"], "Landroid/view/ViewGroup;->drawChild(Landroid/graphics/Canvas;Landroid/view/View;J)Z")),
+        smali.BLANK_LINE(),
+        smali.MOVE_16("v1", "v11"),
+        smali.BLANK_LINE(),
+        smali.MOVE_WIDE_16("v15", "v0"),
+        smali.BLANK_LINE(),
+        smali.MOVE_OBJECT_16("v0", "v10"), # missing v1 <-- v11
+        smali.BLANK_LINE()]
+        
+    #for line in code_block:
+    #    print(line)
+    assert(code_block == soln_block)
+        
 
     '''
     
