@@ -9,30 +9,51 @@ class SmaliMethodSignature:
     # This should maybe be an inner-class of SmaliMethodDef
     
     def __init__(self, sig_line):
-        
         self.sig_line = sig_line
+        
+        sig_tokens = sig_line.split(" ")
+        #print("\n\n" + str(sig_tokens))
+        assert(sig_tokens[0] == ".method")
+        
+        name = sig_tokens[-1]
+        self.name = name.split("(")[0]
+        
+        modifiers = sig_tokens[1:-1]
+        self.is_static = False
+        if "static" in modifiers:
+            self.is_static = True
+        
+        #print("name: " + str(self.name))
+        #print("static: " + str(self.is_static))
         
         self.parameter_type_map = {}
         self.parameter_type_map["p0"] = "THIS" # not really but that's ok
         
-        self.no_of_parameters = 1 # starts with a 1 because of the implicit "this"
-        self.no_of_parameter_registers = 1
+        
+        self.num_of_parameters = 0 
+        self.num_of_parameter_registers = 0
+        
+        if(self.is_static):
+            # starts with a 1 because of the implicit "this" register p0
+            self.num_of_parameters = 1
+            self.num_of_parameter_registers = 1
+        
         parameter_raw = re.search(StigmaStringParsingLib.PARAMETERS, sig_line).group(1)
       
         i = 0
         p_idx = 1
         # https://github.com/JesusFreke/smali/wiki/TypesMethodsAndFields
         while i < len(parameter_raw):
-            self.no_of_parameters += 1
+            self.num_of_parameters += 1
             
             if parameter_raw[i] in VRegisterPool.TYPE_LIST_WORD: 
-                self.no_of_parameter_registers += 1
+                self.num_of_parameter_registers += 1
                 p_name = "p" + str(p_idx)
                 self.parameter_type_map[p_name] = parameter_raw[i]
                 
                 
             elif parameter_raw[i] in VRegisterPool.TYPE_LIST_WIDE: # long or double
-                self.no_of_parameter_registers += 2
+                self.num_of_parameter_registers += 2
                 p_name = "p" + str(p_idx)
                 self.parameter_type_map[p_name] = parameter_raw[i]
                 p_idx+=1
@@ -41,7 +62,7 @@ class SmaliMethodSignature:
                 
                 
             elif parameter_raw[i] == "L": # some object
-                self.no_of_parameter_registers += 1
+                self.num_of_parameter_registers += 1
                 p_name = "p" + str(p_idx)
                 self.parameter_type_map[p_name] = parameter_raw[i]
 
@@ -65,7 +86,7 @@ class SmaliMethodSignature:
                     # this skips forward past the primitive letter
                     # i += 1
             
-                self.no_of_parameter_registers += 1
+                self.num_of_parameter_registers += 1
                 p_name = "p" + str(p_idx)
                 self.parameter_type_map[p_name] = "ARRAY"
 
@@ -154,7 +175,8 @@ class SmaliMethodDef:
             return 0
             
     def get_num_registers(self):
-        ans = self.get_locals_directive_num() + self.signature.no_of_parameter_registers
+        # +1 at the end is necessary to account for p0 ("this") reference
+        ans = self.get_locals_directive_num() + self.signature.num_of_parameter_registers + 1
         return ans
         
 
@@ -174,20 +196,20 @@ class SmaliMethodDef:
 
 
     def make_new_reg(self):
+        # Do not allow the system to push any register (even pX) 
+        # over the "v15" barrier (v0 .. v15 = 16 total registers)
+        if(self.get_num_registers() >= 16):
+            # if there are currently 16 registers we cannot
+            # allocate another one.
+            raise RuntimeError("Register limit is 16")
+        
         self.reg_number_float += 1
-
-       # if self.reg_number_float > 15:
-       #     raise Exception("cannot request register > 15, apktool might be mad!")
-        # It is possible depending on the instruction
-        # see comment for free_reg
 
         directive = self.get_locals_directive_num()
         if self.reg_number_float > directive:
             self.set_locals_directive(self.reg_number_float)
-
-        # When there are three registers in use, the float will be at 3
-        # but that means v0, v1, and v2, so the v number is the float - 1
-        return "v" + str(self.reg_number_float - 1)
+            
+        return "v" + str(self.reg_number_float -1)
 
     # Only v0 - v16 registers are allowed for general purpose use.
     # This is enforced by apktool.  The documentation indicates that
@@ -429,8 +451,8 @@ class SmaliMethodDef:
         return ans_block
             
     def fix_register_limit(self):
-        print("self.scd.file_name: " + str(self.scd.file_name))
-        print("fix_register_limit(" + str(self.signature) + ")")
+        #print("self.scd.file_name: " + str(self.scd.file_name))
+        #print("fix_register_limit(" + str(self.signature) + ")")
 
         # Step 1: Initiate shadow registers
         # -- Example --  MyMethod(JI)  .locals = 17

@@ -62,8 +62,12 @@ class Instrumenter:
         block = []
 
         # 1, 2
-        tmp_reg1_for_merging = m.make_new_reg()
-        tmp_reg2_for_merging = m.make_new_reg()
+        try:
+            tmp_reg1_for_merging = m.make_new_reg()
+            tmp_reg2_for_merging = m.make_new_reg()
+        except RuntimeError:
+            return block
+            
         block.append(smali.BLANK_LINE())
         block.append(smali.CONST_16(tmp_reg1_for_merging, "0x0"))
         block.append(smali.BLANK_LINE())
@@ -96,7 +100,11 @@ class Instrumenter:
         # taint_result_location = scd.create_taint_field(m.get_name(), reg_dest)
 
         #1
-        tmp_reg = m.make_new_reg()
+        try:
+            tmp_reg = m.make_new_reg()
+        except RuntimeError:
+            return []
+            
         block = [smali.BLANK_LINE(),
                  smali.CONST_16(tmp_reg, "0x0"),
                  smali.BLANK_LINE(),
@@ -108,29 +116,6 @@ class Instrumenter:
 
         return block
 
-    '''
-    @staticmethod
-    def make_simple_assign_from_field_block(scd, reg_dest, field):
-        # this function makes an "assign-block"
-        # the value in the taint-tag for field will be assigned
-        # to the taint-tag for reg_dest
-
-        taint_src_location = field
-        taint_result_location = scd.create_taint_field(m.get_name(), reg_dest)
-
-        #1
-        tmp_reg = m.make_new_reg()
-        block = [smali.BLANK_LINE(),
-                 smali.CONST_4(tmp_reg, "0x0"),
-                 smali.BLANK_LINE(),
-                 smali.SGET(tmp_reg, scd.class_name, taint_src_location),
-                 smali.BLANK_LINE(),
-                 smali.SPUT(tmp_reg, scd.class_name, taint_result_location)]
-
-        m.free_reg() #1
-
-        return block
-    '''
 
     @staticmethod
     def make_comment_block(comment_detail=""):
@@ -373,7 +358,10 @@ class Instrumenter:
 
         taint_location = scd.create_taint_field(m.get_name(), reg)
         # 1
-        tmp_reg_for_constant = m.make_new_reg()
+        try:
+            tmp_reg_for_constant = m.make_new_reg()
+        except RuntimeError:
+            return []
 
         block = [smali.BLANK_LINE(),
                  smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for getDeviceID()"),
@@ -412,9 +400,12 @@ class Instrumenter:
 
 
         # 1, 2, and 3
-        tmp_reg_for_tag = m.make_new_reg()
-        tmp_reg_for_msg = m.make_new_reg()
-        tmp_reg_for_compare = m.make_new_reg()
+        try:
+            tmp_reg_for_tag = m.make_new_reg()
+            tmp_reg_for_msg = m.make_new_reg()
+            tmp_reg_for_compare = m.make_new_reg()
+        except RuntimeError:
+            return []
 
         # This is a smali.LABEL
         jmp_label = m.make_new_jump_label()
@@ -466,10 +457,13 @@ class Instrumenter:
 
         taint_loc = scd.create_taint_field(m.get_name(), target_reg)
 
-               # 1, 2, and 3
-        tmp_reg_for_tag = m.make_new_reg()
-        tmp_reg_for_msg = m.make_new_reg()
-        tmp_reg_for_compare = m.make_new_reg()
+        # 1, 2, and 3
+        try:
+            tmp_reg_for_tag = m.make_new_reg()
+            tmp_reg_for_msg = m.make_new_reg()
+            tmp_reg_for_compare = m.make_new_reg()
+        except RuntimeError:
+            return []
 
         # This is a smali.LABEL
         jmp_label = m.make_new_jump_label()

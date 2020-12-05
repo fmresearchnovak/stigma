@@ -153,6 +153,12 @@ class SmaliClassDef:
     def instrument(self):
         for m in self.methods:
 
+            # not really necessary, just an optimization to avoid
+            # processing methods when they have more than 16 registers
+            # before any instrumentation
+            if(m.get_num_registers() > 16):
+                continue
+                
             idx = 0
             while idx < len(m.raw_text):
                 # print("line: " + m.raw_text[idx])
@@ -163,17 +169,6 @@ class SmaliClassDef:
                     idx = self._do_instrumentation_plugins(m, idx)
 
                 idx = idx + 1
-           
-
-            # Consider a function that has 20 parameters total, and 6 parameter registers
-            # v0, v1, ... v14, v15, v16, v17, v18, v19
-            #              p0   p1   p2   p3   p4   p5
-            # if we add e.g., 2 registers, we push p0 and p1 from
-            # small numbered to large number registers.  Therefore,
-            # keeping AND ORIGINAL_NUM_REGISTERS < 16 in the below
-            # if statement is NOT correct 
-            if(m.get_num_registers() > 16):
-                m.fix_register_limit() #iterates through whole method
 
 
 
