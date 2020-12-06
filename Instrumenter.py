@@ -56,7 +56,7 @@ class Instrumenter:
     def make_merge_register_block(scd, m, registers, taint_loc_result):
         # This function creates a "merge block"
         # A merge block takes every one of the registers in the 
-        # registers parameter, and performs an OR operation on their
+        # registers parameter (a list), and performs an OR operation on their
         # values storing the result in taint_loc_result
 
         block = []
@@ -93,11 +93,11 @@ class Instrumenter:
     @staticmethod
     def make_simple_assign_block(scd, m, taint_field_dest, taint_field_src):
         # this function makes an "assign-block"
-        # the value in the taint-tag for reg_src will be assigned
-        # to the taint-tag for reg_dest
+        # the value in the taint_field_src 
+        # will be assigned to taint_field_dest
 
-        # taint_src_location = scd.create_taint_field(m.get_name(), reg_src)
-        # taint_result_location = scd.create_taint_field(m.get_name(), reg_dest)
+        # taint_field_src = scd.create_taint_field(m.get_name(), reg_src)
+        # taint_field_dest = scd.create_taint_field(m.get_name(), reg_dest)
 
         #1
         try:
@@ -246,32 +246,48 @@ class Instrumenter:
     
     @staticmethod
     def IPUT_instrumentation(scd, m, line_num):
-        '''
+        
+        # iput vx, vy, field_id puts the data in vx into the field
+        # specified by field_id (vy is the instance / OBJ_REF)
         cur_line = m.raw_text[line_num]
+        
         search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_IPUT, cur_line)
-
         if search_object is None:
             return 0
-
+            
+        # the field being referenced may be in another class
+        # for now, instrument only same class fields
+        class_name = re.search(StigmaStringParsingLib.CLASS_NAME, cur_line).group(1)
+        if class_name != scd.class_name:
+            return 0
+        
+        # only apply this to local references for now (now iputs to 
+        # fields in external classes.  It might make sense to 
+        # include the taint-value of regs[1] into the propagation
+        # but right now we are forcing regs[1] to be "p0" so
+        # I don't think it's important.
         regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
-
-        second_reg = cur_line.split(", ")[1]
-        if second_reg != 'p0':
+        if(regs[1] != "p0"):
             return 0
 
-        field_name = re.search("->(.+):", cur_line).group(1)
+        
+        # get field base name and create corresponding taint field (taint_src)
+        # iput-object v0, v1, Ledu/fandm/enovak/leaks/Main;->TAG:Ljava/lang/String;
+        # field_base_name = "TAG"
+        # taint_field_dest = "Ledu/fandm/enovak/leaks/Main;->TAG_TAINT:I;"
+        field_base_name = re.search(StigmaStringParsingLib.FIELD_NAME, cur_line).group(1)
+        taint_field_dest = scd.create_taint_field(field_base_name)
 
-        taint_result = scd.create_taint_field(field_name)
-
-        block = [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for IPUT")] + \
-                Instrumenter.assign_taint_from_registers(scd, m, [regs[0]], taint_result) + \
-                [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for IPUT")]
+        taint_field_src = scd.create_taint_field(m.get_name(), regs[0])
+                
+        block = Instrumenter.make_comment_block("for SPUT")
+        block = block + Instrumenter.make_simple_assign_block(scd, m, taint_field_dest, taint_field_src)
+        block = block + Instrumenter.make_comment_block("for SPUT")
 
         m.embed_block(line_num, block)
-
+        
         return len(block)
-        '''
-        return 0
+        
     
     @staticmethod
     def IGET_instrumentation(scd, m, line_num):
