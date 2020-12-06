@@ -146,7 +146,7 @@ cython_debug/
 #apkTesting
 apk/
 apkOutput/
-#*.apk
+*.apk
 
 # The keystore
-my-release-key.keystore
+*.keystore
