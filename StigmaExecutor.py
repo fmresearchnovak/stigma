@@ -22,6 +22,7 @@ def getNewAPKName():
 def dumpApk():
     #dump apk files
     start_time = time.time()
+    # https://docs.python.org/3/library/tempfile.html
     p = Popen("apktool d " + getOriginalAPKName() + " -o apkOutput -f", stdin=PIPE, shell=True)
     p.communicate(b'\n')
     print("Apk unpacked in " + str(time.time() - start_time) + " seconds")
@@ -214,25 +215,36 @@ def rebuildApk():
 
 
 def signApk():
-    p4 = Popen("keytool -genkey -v -keystore my-release-key.keystore -alias alias_name -keyalg RSA -validity 10000", stdin=PIPE, shell=True)
-    # WHAT?
-    p4.stdin.write(b"Shaamyl\n")
-    p4.stdin.write(b"Shaamyl\n")
-    p4.stdin.write(b"Shaamyl\n")
-    p4.stdin.write(b"Shaamyl\n")
-    p4.stdin.write(b"Shaamyl\n")
-    p4.stdin.write(b"Shaamyl\n")
-    p4.stdin.write(b"Shaamyl\n")
-    p4.stdin.write(b"Sh\n")
-    p4.stdin.write(b"y\n")
-    p4.communicate(b"\n")
+    password = "MzJiY2ZjNjY5Z"
+    password_bytes = (password+"\n").encode("utf-8")
+    #print(password_bytes)
+    keystore_name = "stigma-keys.keystore"
+    stigma_alias = "stigma_keystore_alias"
+    
+    if(not os.path.exists(keystore_name)):
+        # keytool -genkey -v -keystore my-release-key.keystore -alias alias_name -keyalg RSA -validity 10000
+        cmd = ["keytool", "-genkey", "-keystore", keystore_name, "-alias", stigma_alias, "-keyalg", "RSA", "-validity", "10000"]
+        proc = Popen(" ".join(cmd), stdin=PIPE, shell=True)
+        
+        proc.stdin.write(password_bytes)
+        proc.stdin.write(password_bytes)
+        proc.stdin.write(b"\n")
+        proc.stdin.write(b"\n")
+        proc.stdin.write(b"\n")
+        proc.stdin.write(b"\n")
+        proc.stdin.write(b"\n")
+        proc.stdin.write(b"\n")
+        proc.stdin.write(b"y\n")
+        proc.communicate(b"\n")
 
-    print("Here")
-    newName = getNewAPKName()
-    p5 = Popen("jarsigner -verbose -keystore my-release-key.keystore " + newName + " alias_name", stdin=PIPE, shell=True)
-    p5.communicate(b"Shaamyl\n")
-    #keytool -genkey -v -keystore my-release-key.keystore -alias alias_name -keyalg RSA -validity 10000
-    #jarsigner -verbose -keystore my-release-key.keystore ./Leaks/dist/Leaks.apk alias_name
+    #print("Signing...")
+    newAppName = getNewAPKName()
+    # jarsigner -verbose -keystore my-release-key.keystore ./Leaks/dist/Leaks.apk alias_name
+    cmd = ["jarsigner", "-keystore", keystore_name, "-storepass", password, newAppName, stigma_alias]
+    completedProcess = subprocess.run(cmd)
+    completedProcess.check_returncode()
+
+
 
 
 def deleteFiles():
@@ -258,3 +270,5 @@ if __name__ == '__main__':
     rebuildApk()
     signApk()
     #deleteFiles()
+    
+    print("Result: " + os.path.abspath(getNewAPKName()))
