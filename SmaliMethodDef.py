@@ -134,7 +134,7 @@ class SmaliMethodDef:
         self.scd = scd # smali class definition
         
         self.signature = SmaliMethodSignature(self.raw_text[0])
-        #print(self.signature)
+        # print("created: " + str(self.signature))
 
         self.ORIGINAL_NUM_REGISTERS = self.get_num_registers()
 

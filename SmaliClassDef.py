@@ -47,22 +47,18 @@ class SmaliClassDef:
                 while match_object is None:
                     # print(str(idx) + "    " + lines[idx])
                     method_code.append(lines[idx])
-                    del lines[idx]
                     match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_END_METHOD, lines[idx])
-
-                # Eat the final ".end method" line
-                method_code.append(lines[idx])
-
-                del lines[idx]
-                idx -= 1
+                    idx += 1
 
                 # print(str(match_object) + " in line: " + lines[idx])
                 smd = SmaliMethodDef(method_code, self)
                 self.methods.append(smd)
             
-            #if all file is eaten up
-            if idx == -1:
+            #if all file is eaten up (eating last method)
+            if idx >= len(lines):
+                #print("stopping!")
                 break
+                
             if "# static fields\n" == lines[idx]:
                 cur_dest = self.static_fields
 
@@ -74,8 +70,6 @@ class SmaliClassDef:
 
             if pre_methods:
                 cur_dest.append(lines[idx])
-                del lines[idx]
-                idx = idx - 1
             # debugging left in
             # print("\n")
             # print(lines)
