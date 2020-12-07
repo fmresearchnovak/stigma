@@ -8,6 +8,12 @@ class SmaliMethodSignature:
 
     # This should maybe be an inner-class of SmaliMethodDef
     
+    # self.name
+    # self.is_static
+    # self.parameter_type_map
+    # self.num_of_parameters
+    # self.num_of_parameter_registers
+    
     def __init__(self, sig_line):
         self.sig_line = sig_line
         
@@ -27,21 +33,25 @@ class SmaliMethodSignature:
         #print("static: " + str(self.is_static))
         
         self.parameter_type_map = {}
-        self.parameter_type_map["p0"] = "THIS" # not really but that's ok
-        
         
         self.num_of_parameters = 0 
         self.num_of_parameter_registers = 0
         
-        if(self.is_static):
-            # starts with a 1 because of the implicit "this" register p0
+        if(not self.is_static):
+            # the implicit "this" register p0
+            # The first parameter for non-static methods is always 
+            # the object that the method is being invoked on,
+            # p0 holds the object reference and p1 the second 
+            # parameter register.  # For a static method invocation p1 
+            # is the first parameter register.
+            self.parameter_type_map["p0"] = "THIS" # not really but that's ok
             self.num_of_parameters = 1
             self.num_of_parameter_registers = 1
         
         parameter_raw = re.search(StigmaStringParsingLib.PARAMETERS, sig_line).group(1)
       
         i = 0
-        p_idx = 1
+        p_idx = 1 # p1 is ALWAYS the "first" function parameter
         # https://github.com/JesusFreke/smali/wiki/TypesMethodsAndFields
         while i < len(parameter_raw):
             self.num_of_parameters += 1
@@ -112,7 +122,7 @@ class SmaliMethodSignature:
       
       
     def __str__(self):
-        return str(self.sig_line) + str(self.parameter_type_map)
+        return str(self.sig_line) + " " + str(self.parameter_type_map)
 
         
 
@@ -548,7 +558,39 @@ class SmaliMethodDef:
 
 
 def tests():
-    print("Testing SmaliMethodDef Functions")
+    print("Testing SmaliMethodDef")
+    
+    
+    print("\tSmaliMethodSignature...")
+    sig = SmaliMethodSignature(".method public setBackgroundResource(I)V")
+    assert(sig.name == "setBackgroundResource")
+    assert(sig.is_static == False)
+    assert(sig.parameter_type_map == {"p0": "THIS", "p1": "I"})
+    assert(sig.num_of_parameters == 2)
+    assert(sig.num_of_parameter_registers == 2)
+    
+    sig = SmaliMethodSignature(".method private constructor <init>(Ljava/lang/String;I)V")
+    assert(sig.name == "<init>")
+    assert(sig.is_static == False)
+    assert(sig.parameter_type_map == {"p0": "THIS", "p1": "L", "p2": "I"})
+    assert(sig.num_of_parameters == 3)
+    assert(sig.num_of_parameter_registers == 3)
+    
+    sig = SmaliMethodSignature(".method private prefetchInnerRecyclerViewWithDeadline(Landroid/support/v7/widget/RecyclerView;J)V")
+    assert(sig.name == "prefetchInnerRecyclerViewWithDeadline")
+    assert(sig.is_static == False)
+    assert(sig.parameter_type_map == {"p0": "THIS", "p1": "L", "p2": "J", "p3": "J2"})
+    assert(sig.num_of_parameters == 3)
+    assert(sig.num_of_parameter_registers == 4)
+    
+    sig = SmaliMethodSignature(".method public static reverseTransit(I)I")
+    assert(sig.name == "reverseTransit")
+    assert(sig.is_static)
+    assert(sig.parameter_type_map == {"p1": "I"})
+    assert(sig.num_of_parameters == 1)
+    assert(sig.num_of_parameter_registers == 1)
+
+
 
     print("\t_should_skip_line_frl...")
     assert(SmaliMethodDef._should_skip_line_frl("    .locals 3\n"))
@@ -559,6 +601,7 @@ def tests():
     assert(SmaliMethodDef._should_skip_line_frl("    invoke-super-quick/range {v0..v5}"))
     assert(SmaliMethodDef._should_skip_line_frl("    invoke-super {v12, v13, v14, v15, v16}, Landroid/view/ViewGroup;->drawChild(Landroid/graphics/Canvas;Landroid/view/View;J)Z\n") == False)
     assert(SmaliMethodDef._should_skip_line_frl("    move-object v0, p1\n") == False)
+
 
 
     print("\tStigmaStringParsingLib._get_v_from_p...")
