@@ -36,22 +36,22 @@ class SmaliMethodSignature:
         
         self.num_of_parameters = 0 
         self.num_of_parameter_registers = 0
+        p_idx = 0 # number for "pX" notation
         
         if(not self.is_static):
             # the implicit "this" register p0
             # The first parameter for non-static methods is always 
             # the object that the method is being invoked on,
             # p0 holds the object reference and p1 the second 
-            # parameter register.  # For a static method invocation p1 
-            # is the first parameter register.
+            # parameter register.
             self.parameter_type_map["p0"] = "THIS" # not really but that's ok
             self.num_of_parameters = 1
             self.num_of_parameter_registers = 1
+            p_idx = 1
+
         
         parameter_raw = re.search(StigmaStringParsingLib.PARAMETERS, sig_line).group(1)
-      
         i = 0
-        p_idx = 1 # p1 is ALWAYS the "first" function parameter
         # https://github.com/JesusFreke/smali/wiki/TypesMethodsAndFields
         while i < len(parameter_raw):
             self.num_of_parameters += 1
@@ -586,7 +586,7 @@ def tests():
     sig = SmaliMethodSignature(".method public static reverseTransit(I)I")
     assert(sig.name == "reverseTransit")
     assert(sig.is_static)
-    assert(sig.parameter_type_map == {"p1": "I"})
+    assert(sig.parameter_type_map == {"p0": "I"})
     assert(sig.num_of_parameters == 1)
     assert(sig.num_of_parameter_registers == 1)
 
