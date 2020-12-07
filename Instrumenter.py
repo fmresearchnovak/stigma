@@ -377,7 +377,7 @@ class Instrumenter:
         try:
             tmp_reg_for_constant = m.make_new_reg()
         except RuntimeError:
-            return []
+            return 0
 
         block = [smali.BLANK_LINE(),
                  smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for getDeviceID()"),
@@ -421,7 +421,7 @@ class Instrumenter:
             tmp_reg_for_msg = m.make_new_reg()
             tmp_reg_for_compare = m.make_new_reg()
         except RuntimeError:
-            return []
+            return 0
 
         # This is a smali.LABEL
         jmp_label = m.make_new_jump_label()
@@ -479,7 +479,7 @@ class Instrumenter:
             tmp_reg_for_msg = m.make_new_reg()
             tmp_reg_for_compare = m.make_new_reg()
         except RuntimeError:
-            return []
+            return 0
 
         # This is a smali.LABEL
         jmp_label = m.make_new_jump_label()
