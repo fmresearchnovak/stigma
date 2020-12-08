@@ -3,29 +3,39 @@ import time
 import sys
 from os import listdir
 import subprocess
-import multiprocessing
+#import multiprocessing
 from subprocess import Popen, PIPE
 import shutil
 import glob
-import re
-from SmaliClassDef import SmaliClassDef
+import SmaliClassDef
+import tempfile
 
 
-def getOriginalAPKName():
+# https://docs.python.org/3/library/tempfile.html
+temp_file = tempfile.TemporaryDirectory(prefix="apkOutput_")
+
+def getOriginalAPKPath():
+    if(not os.path.exists(sys.argv[1])):
+        raise ValueError("Input file (" + sys.argv[1] + ") was not found or was not readable.")
     return sys.argv[1]
 
 
 def getNewAPKName():
-    return "Tracked" + getOriginalAPKName()
+    name = os.path.basename(getOriginalAPKPath())
+    return "Tracked" + name
 
 
 def dumpApk():
     #dump apk files
     start_time = time.time()
-    # https://docs.python.org/3/library/tempfile.html
-    p = Popen("apktool d " + getOriginalAPKName() + " -o apkOutput -f", stdin=PIPE, shell=True)
-    p.communicate(b'\n')
-    print("Apk unpacked in " + str(time.time() - start_time) + " seconds")
+    # -f is necessary since temp_file already exists (apktool doesn't like that) 
+    # -f means "force"
+    cmd = ["apktool", "d", getOriginalAPKPath(), "-o", temp_file.name, "-f"]
+    completed_process = subprocess.run(cmd)
+    completed_process.check_returncode()
+    print("Apk unpacked in %.1f seconds" % (time.time() - start_time))
+    
+    
 
 
 def getFiles():
@@ -60,7 +70,7 @@ def getFiles():
     # This gets all the files that end in ".smali" from the entire
     # application.  This assumes all of the framework files
     # as well as any files authored by the app developer.
-    relevantFilePaths = glob.glob("./apkOutput" + '/**/*.smali', recursive=True)
+    relevantFilePaths = glob.glob(temp_file.name + '/**/*.smali', recursive=True)
     #print(relevantFilePaths)
     # end of second chunk
 
@@ -107,7 +117,7 @@ def runStigma():
         completedProcess = subprocess.run(["python3", "Stigma.py", "-wo", path])
         completedProcess.check_returncode() # raises an exception on any error
 
-    print("Stigma ran in " + str(time.time() - start_time2) + " seconds")
+    print("Stigma ran in %.1f seconds" % (time.time() - start_time2))
 
 
 
@@ -158,7 +168,7 @@ def splitSmali():
     s = 0
     e = 0
     for idx, smaliFile in enumerate(smaliFiles):
-        scd = SmaliClassDef(smaliFile)
+        scd = SmaliClassDef.SmaliClassDef(smaliFile)
         num = scd.get_num_fields()
         
         if(num > THRESH):
@@ -177,11 +187,11 @@ def splitSmali():
         else:
             fieldCount+=num
 
-    print(str(len(resultLists)) + " groups")
+    #print(str(len(resultLists)) + " groups")
     for idx, group in enumerate(resultLists):
-        path = "./apkOutput/smali/"
+        path = os.path.join(temp_file.name, "smali")
         if(idx > 0):
-            path = "./apkOutput/smali_classes" + str(idx+1) + "/"
+            path = os.path.join(temp_file.name, "smali_classes" + str(idx+1) + "/")
             os.makedirs(path, exist_ok=True)
 
         for smaliFile in group:
@@ -202,16 +212,15 @@ def splitSmali():
                 completedProcess = subprocess.run(mvCMD)
                 completedProcess.check_returncode()
 
-
 #rebuild apk
 def rebuildApk():
     # dumps the apk file in current working directory
     start_time = time.time()
     newName = getNewAPKName()
-    rebuildCMD = ["apktool", "b", "./apkOutput", "-o", getNewAPKName()]
+    rebuildCMD = ["apktool", "b", temp_file.name, "-o", getNewAPKName()]
     completedProcess = subprocess.run(rebuildCMD)
     completedProcess.check_returncode()
-    print("Apk packed in " + str(time.time() - start_time) + " seconds")
+    print("Apk packed in %.1f seconds" % (time.time() - start_time))
 
 
 def signApk():
@@ -247,28 +256,24 @@ def signApk():
 
 
 
-def deleteFiles():
-    if os.path.exists("./instrumentedApk2"):
-        shutil.rmtree("./instrumentedApk2")
-        os.mkdir("./instrumentedApk2")
-    else:
-        os.mkdir("./instrumentedApk2")
-    pathOneMillion = "./apkOutput/dist/"
-    shutil.move("./apkOutput/dist/" + listdir(pathOneMillion)[0], "./instrumentedApk2")
-    #if os.path.exists("my-release-key.keystore"):
-    #    os.remove("my-release-key.keystore")
-    shutil.rmtree("./apkOutput")
 
 
 if __name__ == '__main__':
     # we need a better interface haha!
     # Also ./apk should be a sys.argv param to the location of an APK file
 
+    start = time.time()
+    
     dumpApk()
     runStigma()
     splitSmali()
     rebuildApk()
     signApk()
-    #deleteFiles()
+    
+    temp_file.cleanup()
+    
+    end = time.time()
+    
+    print("Finished in %.1f seconds" % (end - start))
     
     print("Result: " + os.path.abspath(getNewAPKName()))
