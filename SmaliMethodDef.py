@@ -813,7 +813,7 @@ def tests():
     '''
     
 
-    print("ALL TESTS PASSED!")
+    print("ALL SmaliMethodDef TESTS PASSED!")
 
 
 

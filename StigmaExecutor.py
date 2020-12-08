@@ -22,7 +22,7 @@ def getOriginalAPKPath():
 
 def getNewAPKName():
     name = os.path.basename(getOriginalAPKPath())
-    return "Tracked" + name
+    return "Tracked_" + name
 
 
 def dumpApk():
@@ -34,8 +34,6 @@ def dumpApk():
     completed_process = subprocess.run(cmd)
     completed_process.check_returncode()
     print("Apk unpacked in %.1f seconds" % (time.time() - start_time))
-    
-    
 
 
 def getFiles():

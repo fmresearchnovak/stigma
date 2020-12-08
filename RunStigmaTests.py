@@ -3,7 +3,7 @@ import os
 import time
 import io
 import re
-import StigmaRegEx
+
 
 
 STIGMA_GENERATED_MESSAGE = "LEAK via LOGD OCCURING!" # message stigma generates when it detects a leak
@@ -12,10 +12,41 @@ END_REACHED_FLAG = "endstigmatestapp" # StigmaTestApp Logs this to help detect e
 
 
 
+def internal_tests():
+
+	cmd = ["python3", "VRegisterPool.py"]
+	finished_proc = subprocess.run(cmd)
+	finished_proc.check_returncode()
+
+	cmd = ["python3", "StigmaStringParsingLib.py"]
+	finished_proc = subprocess.run(cmd)
+	finished_proc.check_returncode()
+
+	cmd = ["python3", "SmaliMethodDef.py"]
+	finished_proc = subprocess.run(cmd)
+	finished_proc.check_returncode()
+
+	# no tests in SmaliClassDef, I included it for robustness
+	cmd = ["python3", "SmaliClassDef.py"]
+	finished_proc = subprocess.run(cmd)
+	finished_proc.check_returncode()
+
+	cmd = ["python3", "SmaliAssemblyInstructions.py"]
+	finished_proc = subprocess.run(cmd)
+	finished_proc.check_returncode()
+
+	# no tests in Instrumenter.py, I included it for robustness
+	cmd = ["python3", "Instrumenter.py"]
+	finished_proc = subprocess.run(cmd)
+	finished_proc.check_returncode()
+
+	print("\n--FINISHED RUNNING TESTS!--\n")
+
 def main():
 	
+	internal_tests()
 	
-	print(StigmaRegEx.get_v_and_p_numbers("    iget v12, p6, Landroid/graphics/Rect;->bottom:I"))
+	#print(StigmaRegEx.get_v_and_p_numbers("    iget v12, p6, Landroid/graphics/Rect;->bottom:I"))
 
 	## Note: run emulator before running test
 

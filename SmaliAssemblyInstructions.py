@@ -1695,7 +1695,7 @@ def main():
     assert(asm_obj.get_registers() == ["v0", "v15"])
     assert(asm_obj.get_implicit_registers() == ["v16"])
 
-    print("ALL TESTS PASSED!")
+    print("ALL SmaliAssemblyInstructions TESTS PASSED!")
 
 # Do nothing if this file is called directly
 # this is only a library

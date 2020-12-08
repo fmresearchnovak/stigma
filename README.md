@@ -1,12 +1,9 @@
 # Stigma
 Stigma instruments the Smali assembly code of commodity Android applications in order to implement dynamic information flow tracking. It is intended to be used as a sandbox for modifying android apps to test, amongst other things, a novel approach to implicit information flow tracking.
 
-# Usage (Testing Stage)
-py StigmaExecutor.py
+# Usage
+`python3 StigmaExecutor.py /path/to/application.apk`
 
-Target apk should be in "apk" folder of the stigma directory
-Consider modifiying the final lines in the "main" portion of StigmaExecutor to 
-configure which aspects of Stigma you would like to execute.
 
 
 ### Necessary Dependencies
@@ -22,6 +19,8 @@ configure which aspects of Stigma you would like to execute.
 
 
 # Troubleshooting
+
+### APKTOOL issues
 Suppose when re-building (apktool b) there is an error of this nature:
 
 ```
@@ -37,3 +36,17 @@ Suppose when re-building (apktool b) there is an error of this nature:
 Then you should do: 
 
 `rm -r ~/.local/share/apktool/`
+
+Also, it maybe be necessary to NOT use the Ubuntu provided version of apktool.  Use the publically available one instead: https://ibotpeaches.github.io/Apktool/
+
+### Advanced Usage
+Consider modifiying the final lines in the "main" portion of StigmaExecutor.py to configure which aspects of Stigma you would like to execute.
+
+The Stigma.py program can be used to parse and instrument a single smali file.  This can be used to instrument a single class, for debugging, or for research purposes.
+
+`python3 Stigma.py /path/to/file.smali`
+
+Command line flags for Stigma.py include
+
+* __`-wo`__ "write-out" over-writes the input file with the instrumented version.
+* __`-o`__  "output file" (e.g., `python3 Stigma.py -o result.smali input.smali`) outputs the instrumented version of the input to the specified path.  Note: input file must be the final argument given on the command line.

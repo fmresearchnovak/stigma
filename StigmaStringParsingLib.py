@@ -242,7 +242,7 @@ def main():
     assert(_param_list_len("filled-new-array {v0, v1, v2}, [Ljava/lang/String;\n") == 3)
     assert(get_num_registers("const-string v1, \"hard example: v2\"\n") == 1)
 
-    print("ALL TESTS PASSED")
+    print("ALL StringParsingLib TESTS PASSED")
 
 
 

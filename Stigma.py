@@ -45,5 +45,6 @@ def main():
         file_name = flags[flags.index("-o") + 1]
         print("Writing to: " + str(file_name))
         scd.write_to_file(file_name)
+        
 if __name__ == "__main__":
     main()

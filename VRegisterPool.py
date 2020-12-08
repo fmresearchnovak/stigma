@@ -544,7 +544,7 @@ def main():
 	assert(pair == ("v1", "v2"))
 
 	#print(pool.pretty_string(0, 25))
-	print("All Tests PASSED!")
+	print("All VRegister Tests PASSED!")
 
 
 if __name__ == "__main__":
