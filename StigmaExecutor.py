@@ -187,7 +187,7 @@ def splitSmali():
 
     #print(str(len(resultLists)) + " groups")
     for idx, group in enumerate(resultLists):
-        path = os.path.join(temp_file.name, "smali")
+        path = os.path.join(temp_file.name, "smali/")
         if(idx > 0):
             path = os.path.join(temp_file.name, "smali_classes" + str(idx+1) + "/")
             os.makedirs(path, exist_ok=True)
@@ -268,8 +268,9 @@ if __name__ == '__main__':
     rebuildApk()
     signApk()
     
-    temp_file.cleanup()
+    input("Press Enter to Continue: ")
     
+    temp_file.cleanup()
     end = time.time()
     
     print("Finished in %.1f seconds" % (end - start))

@@ -126,6 +126,37 @@ class SmaliClassDef:
             self.static_fields.append("\n") # because entire list will be appended to output file
 
         return static_f_name
+        
+        
+    def create_taint_field_smart(self, calling_method, reg_name=""):
+        # Currently not called anywhere in the program.  This method
+        # might be useful in the future if we decide that the taint
+        # tags need to be instance fields and not always static
+        # That decision would require substantial changes to the instrumenters
+        
+        # See comments in create_taint_field()
+        identifier = calling_method.get_name()
+        identifier = identifier.replace("<", "")
+        identifier = identifier.replace(">", "")
+        
+        # might have two consecutive under-scores but who cares
+        name = "_".join([identifier, reg_name, "TAINT:T"])
+        
+        if(calling_method.is_static()):
+            full_name = ".field public static " + name + "\n"
+            fields_list = self.static_fields
+
+        else:
+            full_name = ".field public " + name + "\n"
+            fields_list = self.instance_fields
+
+        # could be more efficient as a hash map instead of a list but that might change the order
+        # AND, the number of items is small (probably < 50) so it doesn't really matter
+        if full_name not in fields_list:
+            fields_list.append(full_name)
+            fields_list.append("\n") # because entire list will be appended to output file
+
+        return name
 
 
     def is_internal_function(self, line):
