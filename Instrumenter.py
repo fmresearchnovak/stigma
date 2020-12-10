@@ -21,9 +21,8 @@ class Instrumenter:
     def __init__(self):
         self.instrumentation_methods = [Instrumenter.SPUT_instrumentation, Instrumenter.SGET_instrumentation,
                                         Instrumenter.IPUT_instrumentation, Instrumenter.IGET_instrumentation,
-                                        Instrumenter.APUT_instrumentation, Instrumenter.AGET_instrumentation,
-                                        Instrumenter.ARRAY_LENGTH_instrumentation, Instrumenter.NEW_ARRAY_instrumentation,
-                                        Instrumenter.IMEI_instrumentation,Instrumenter.LOGD_instrumentation,
+                                        Instrumenter.IMEI_instrumentation, Instrumenter.LOGD_instrumentation,
+                                        Instrumenter.MOVE_instrumentation, Instrumenter.CONST_instrumentation,
                                         Instrumenter.WRITE_instrumentation, 
                                         Instrumenter.BINARYOP_instrumenter,
                                         Instrumenter.EXTERNAL_FUNCTION_instrumentation,
@@ -39,17 +38,6 @@ class Instrumenter:
         # other developers could add instrumentation
         if new_method not in self.instrumentation_methods:
             self.instrumentation_methods.append(new_method)
-
-
-    @staticmethod
-    def registers_tainted(scd, m, registers):
-
-        registers = [r for r in registers if scd.get_taint_field(m.get_name(), r) is not None]
-
-        if len(registers) == 0:
-            return False
-
-        return True
 
 
     @staticmethod
@@ -123,54 +111,7 @@ class Instrumenter:
           return block
 
 
-
-    @staticmethod
-    def NEW_ARRAY_instrumentation(scd, m, line_num):
-        # new-array vx,vy,type_id 
-        # puts the reference to the array into vx.
-        
-        cur_line = m.raw_text[line_num]
-
-        search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_NEW_ARRAY, cur_line)
-        if search_object is None:
-            return 0
-
-        regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
-        
-        # create taint field for simple_assign_block() parameters
-        taint_field_src = scd.create_taint_field(m.get_name(), regs[1])
-        taint_field_dest = scd.create_taint_field(m.get_name(), regs[0])
-
-        block = Instrumenter.make_comment_block("for NEW ARRAY")
-        block = block + Instrumenter.make_simple_assign_block(scd, m, taint_field_dest, taint_field_src)
-        block = block + Instrumenter.make_comment_block("for NEW ARRAY")
-
-        m.embed_block(line_num, block)
-
-        return len(block)
-
-    @staticmethod
-    def ARRAY_LENGTH_instrumentation(scd, m, line_num):
-        # array-length vx,vy 
-        # puts the length value into vx.
-        
-        cur_line = m.raw_text[line_num]
-
-        search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_ARRAY_LENGTH, cur_line)
-        if search_object is None:
-            return 0
-            
-        regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line) 
-
-        taint_field_src = scd.create_taint_field(m.get_name(), regs[1])
-        taint_field_dest = scd.create_taint_field(m.get_name(), regs[0])
-
-        block = Instrumenter.make_comment_block("for ARRAY LENGTH")
-        block = block + Instrumenter.make_simple_assign_block(scd, m, taint_field_dest, taint_field_src)
-        block = block + Instrumenter.make_comment_block("for ARRAY LENGTH")
-        m.embed_block(line_num, block)
-
-        return len(block)
+    
 
     
     @staticmethod
@@ -246,7 +187,6 @@ class Instrumenter:
     
     @staticmethod
     def IPUT_instrumentation(scd, m, line_num):
-        
         # iput vx, vy, field_id puts the data in vx into the field
         # specified by field_id (vy is the instance / OBJ_REF)
         cur_line = m.raw_text[line_num]
@@ -261,11 +201,8 @@ class Instrumenter:
         if class_name != scd.class_name:
             return 0
         
-        # only apply this to local references for now (now iputs to 
-        # fields in external classes.  It might make sense to 
-        # include the taint-value of regs[1] into the propagation
-        # but right now we are forcing regs[1] to be "p0" so
-        # I don't think it's important.
+        # only apply this to local references for now (instead of iputs to 
+        # fields in external classes).
         regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
         if(regs[1] != "p0"):
             return 0
@@ -278,11 +215,12 @@ class Instrumenter:
         field_base_name = re.search(StigmaStringParsingLib.FIELD_NAME, cur_line).group(1)
         taint_field_dest = scd.create_taint_field(field_base_name)
 
+        # didn't include taint status of "p0", maybe I should have
         taint_field_src = scd.create_taint_field(m.get_name(), regs[0])
                 
-        block = Instrumenter.make_comment_block("for SPUT")
+        block = Instrumenter.make_comment_block("for IPUT")
         block = block + Instrumenter.make_simple_assign_block(scd, m, taint_field_dest, taint_field_src)
-        block = block + Instrumenter.make_comment_block("for SPUT")
+        block = block + Instrumenter.make_comment_block("for IPUT")
 
         m.embed_block(line_num, block)
         
@@ -291,76 +229,42 @@ class Instrumenter:
     
     @staticmethod
     def IGET_instrumentation(scd, m, line_num):
-        '''
+        #iget vx, vy field_id
+        #gets data from field in instance vy and places data in vx
+        #EXAMPLE: iget v1, p2, Landroid/graphics/Rect;->left:I
+        
         cur_line = m.raw_text[line_num]
+
         search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_IGET, cur_line)
         if search_object is None:
             return 0
 
-        regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
-
-        second_reg = cur_line.split(", ")[1]
-
-        if second_reg != 'p0':
+        # the field being referenced may be in another class
+        # for now, instrument only same class fields
+        class_name = re.search(StigmaStringParsingLib.CLASS_NAME, cur_line).group(1)
+        if class_name != scd.class_name:
             return 0
+            
+        regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
+        
+        # get field base name and create corresponding taint field (taint_src)
+        # sput-object v0, Ledu/fandm/enovak/leaks/Main;->TAG:Ljava/lang/String;
+        # field_base_name = "TAG"
+        # taint_field_dest = "Ledu/fandm/enovak/leaks/Main;->TAG_TAINT:I;"
+        field_base_name = re.search(StigmaStringParsingLib.FIELD_NAME, cur_line).group(1)
+        taint_field_src = scd.create_taint_field(field_base_name)
 
-        field_name = re.search("->(.+):", cur_line).group(1)
-
-        taint_result = scd.create_taint_field(m.get_name(), regs[0])
-
-        block = [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for IGET")] + \
-                Instrumenter.assign_taint_from_fields(scd, m, [field_name], taint_result) + \
-                [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for IGET")]
+        # maybe we should be using the second register as well?  make_merge_register_block
+        # isn't setup to do that though.
+        taint_field_dest = scd.create_taint_field(m.get_name(), regs[0])
+                
+        block = Instrumenter.make_comment_block("for IGET")
+        block = block + Instrumenter.make_simple_assign_block(scd, m, taint_field_dest, taint_field_src)
+        block = block + Instrumenter.make_comment_block("for IGET")
 
         m.embed_block(line_num, block)
-
+        
         return len(block)
-
-        '''
-        return 0
-
-    @staticmethod
-    def AGET_instrumentation(scd, m, line_num):
-        '''
-        cur_line = m.raw_text[line_num]
-
-        search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_AGET, cur_line)
-        if search_object is None:
-            return 0
-
-        regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
-        taint_result = scd.create_taint_field(m.get_name(), regs[0])
-
-        block = make_comment_block("for AGET")
-        block = block + make_merge_register_block(m, [regs[1], regs[2]], taint_result)
-        block = block + make_comment_block("for AGET")
-
-        m.embed_block(line_num, block)
-
-        return len(block)
-        '''
-        return 0
-
-    @staticmethod
-    def APUT_instrumentation(scd, m, line_num):
-        '''
-        cur_line = m.raw_text[line_num]
-        search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_APUT, cur_line)
-        if search_object is None:
-            return 0
-
-        regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
-        taint_result = scd.create_taint_field(m.get_name(), regs[1])
-
-        block = make_comment_block("for APUT")
-        block = block + make_merge_register_block(m, [regs[0], regs[2]], taint_result)
-        block = block + make_comment_block("for APUT")
-
-        m.embed_block(line_num, block)
-
-        return len(block)
-        '''
-        return 0
     
     @staticmethod
     def IMEI_instrumentation(scd, m, line_num):  # IMEI sources
@@ -437,7 +341,7 @@ class Instrumenter:
                  smali.BLANK_LINE(),
                  smali.CONST_STRING(tmp_reg_for_tag, "\"STIGMA\""),
                  smali.BLANK_LINE(),
-                 smali.CONST_STRING(tmp_reg_for_msg, "\"IMEI LEAK OCCURING!\""),
+                 smali.CONST_STRING(tmp_reg_for_msg, "\"LEAK via WRITE() OCCURING!\""),
                  smali.BLANK_LINE(),
                  smali.LOG_D(tmp_reg_for_tag, tmp_reg_for_msg),
                  smali.BLANK_LINE(),
@@ -495,7 +399,7 @@ class Instrumenter:
                  smali.BLANK_LINE(),
                  smali.CONST_STRING(tmp_reg_for_tag, "\"STIGMA\""),
                  smali.BLANK_LINE(),
-                 smali.CONST_STRING(tmp_reg_for_msg, "\"LEAK via LOGD OCCURING!\""),
+                 smali.CONST_STRING(tmp_reg_for_msg, "\"LEAK via LOGD() OCCURING!\""),
                  smali.BLANK_LINE(),
                  smali.LOG_D(tmp_reg_for_tag, tmp_reg_for_msg),
                  smali.BLANK_LINE(),
@@ -701,6 +605,73 @@ class Instrumenter:
         block.append(smali.BLANK_LINE())
 
         m.embed_block(line_num, block)
-        lines_embedded = len(block)
 
-        return lines_embedded
+        return len(block)
+        
+        
+    @staticmethod
+    def MOVE_instrumentation(scd, m, line_num):
+        # move vx vy
+        
+        cur_line = m.raw_text[line_num]
+        
+        
+        search_object_move = re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE, cur_line)
+        search_object_move_result = re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, cur_line)
+        search_object_move_exception = re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_EXCEPTION, cur_line)
+        if(search_object_move_result):
+            return 0
+            
+        if(search_object_move_exception):
+            return 0
+        
+        if(not search_object_move):
+            return 0
+            
+        regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
+        
+        #print("cur line: " + str(cur_line) + "   regs: " + str(regs))
+        taint_field_dest = scd.create_taint_field(m.get_name(), regs[0])
+        taint_field_src = scd.create_taint_field(m.get_name(), regs[1])
+        
+        block = Instrumenter.make_comment_block("for MOVE")
+        block = block + Instrumenter.make_simple_assign_block(scd, m, taint_field_dest, taint_field_src)
+        block = block + Instrumenter.make_comment_block("for MOVE")
+
+        m.embed_block(line_num, block)
+        
+        return len(block)
+        
+    @staticmethod
+    def CONST_instrumentation(scd, m, line_num):
+        # const v0, 0x2
+        cur_line = m.raw_text[line_num]
+        
+        search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_CONST, cur_line)
+        if(search_object is None):
+            return 0
+            
+        regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
+        
+        taint_field_loc = scd.create_taint_field(m.get_name(), regs[0])
+        try:
+            reg_for_zero = m.make_new_reg() #1
+        except RuntimeError:
+            return 0
+        
+        block = Instrumenter.make_comment_block("for CONST")
+        block.append(smali.CONST(reg_for_zero, "0x0"))
+        block.append(smali.BLANK_LINE())
+        block.append(smali.SPUT(reg_for_zero, scd.class_name, taint_field_loc))
+        block.append(smali.BLANK_LINE())
+        block = block + Instrumenter.make_comment_block("for CONST")
+        
+        m.embed_block(line_num, block)
+        
+        m.free_reg() #1
+        
+        return len(block)
+        
+            
+        
+        

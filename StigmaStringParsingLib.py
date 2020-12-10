@@ -15,7 +15,10 @@ PARAMETERS = "[(](.*)[)]"
 
 
 BEGINS_WITH_INVOKE = r"^\s*invoke-"
-BEGINS_WITH_MOVE_RESULT = r"^\s*move-result-"
+BEGINS_WITH_MOVE_RESULT = r"^\s*move-result"
+BEGINS_WITH_MOVE_EXCEPTION = r"^\s*move-exception"
+BEGINS_WITH_MOVE = r"^\s*move"
+BEGINS_WITH_CONST = r"^\s*const"
 
 BEGINS_WITH_ADD = r"^\s*add-"
 BEGINS_WITH_SUB = r"^\s*sub-"

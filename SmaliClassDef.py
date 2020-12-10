@@ -101,18 +101,6 @@ class SmaliClassDef:
         return (static_f_name, full_name)
 
 
-    def get_taint_field(self, identifier, reg_name=""):
-        # Gets a taint_storage field if it exists in this class already
-
-        static_f_name, full_name = self._get_taint_storage_name_pair(identifier, reg_name)
-
-        # could be more efficient as a hash map instead of a list but that might change the order
-        # AND, the number of items is small (probably < 50) so it doesn't really matter
-        if full_name not in self.static_fields:
-            return None
-
-        return static_f_name
-
 
     def create_taint_field(self, identifier, reg_name=""):
         # Makes a new taint_storage field in this class
