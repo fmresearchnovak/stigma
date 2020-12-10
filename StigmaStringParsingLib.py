@@ -19,11 +19,21 @@ BEGINS_WITH_MOVE_RESULT = r"^\s*move-result"
 BEGINS_WITH_MOVE_EXCEPTION = r"^\s*move-exception"
 BEGINS_WITH_MOVE = r"^\s*move"
 BEGINS_WITH_CONST = r"^\s*const"
+BEGINS_WITH_NEG = r"^\s*neg-"
 
 BEGINS_WITH_ADD = r"^\s*add-"
 BEGINS_WITH_SUB = r"^\s*sub-"
 BEGINS_WITH_MUL = r"^\s*mul-"
 BEGINS_WITH_DIV = r"^\s*div-"
+BEGINS_WITH_REM = r"^\s*rem-"
+BEGINS_WITH_AND = r"^\s*and-"
+BEGINS_WITH_OR = r"^\s*or-"
+BEGINS_WITH_XOR = r"^\s*xor-"
+BEGINS_WITH_SHL = r"^\s*shl-"
+BEGINS_WITH_SHR = r"^\s*shr-"
+BEGINS_WITH_USHR = r"^\s*ushr-"
+
+
 
 BEGINS_WITH_IPUT = r"^\s*iput"
 BEGINS_WITH_IGET = r"^\s*iget"
@@ -230,6 +240,12 @@ OBJECT_MOVE_LIST = ["move-object", "move-object/from16", "move-object/16",
     "sput-object", "iput-object-quick", "iget-object-quick"]
     
 
+
+CONVERTER_INSTRUCTION_LIST = ["int-to-long",  "int-to-float", 
+ "int-to-double",  "long-to-int",  "long-to-float", "long-to-double",
+ "float-to-int",  "float-to-long", "float-to-double",  "double-to-int",
+ "double-to-long",  "double-to-float",  "int-to-byte",  "int-to-char",
+ "int-to-short"]
     
         
 def main():

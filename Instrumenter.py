@@ -23,6 +23,7 @@ class Instrumenter:
                                         Instrumenter.IPUT_instrumentation, Instrumenter.IGET_instrumentation,
                                         Instrumenter.IMEI_instrumentation, Instrumenter.LOGD_instrumentation,
                                         Instrumenter.MOVE_instrumentation, Instrumenter.CONST_instrumentation,
+                                        Instrumenter.NEG_instrumentation, Instrumenter.CONVERTER_instrumentation,
                                         Instrumenter.WRITE_instrumentation, 
                                         Instrumenter.BINARYOP_instrumenter,
                                         Instrumenter.EXTERNAL_FUNCTION_instrumentation,
@@ -578,6 +579,27 @@ class Instrumenter:
             search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_DIV, cur_line)
             instruction = 'DIV'
         if search_object is None:
+            search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_REM, cur_line)
+            instruction = 'REM'
+        if search_object is None:
+            search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_AND, cur_line)
+            instruction = 'AND'
+        if search_object is None:
+            search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_OR, cur_line)
+            instruction = 'OR'
+        if search_object is None:
+            search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_XOR, cur_line)
+            instruction = 'XOR'
+        if search_object is None:
+            search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_SHL, cur_line)
+            instruction = 'SHL'
+        if search_object is None:
+            search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_SHR, cur_line)
+            instruction = 'SHR'
+        if search_object is None:
+            search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_USHR, cur_line)
+            instruction = 'USHR'
+        if search_object is None:
             return 0
 
         # should this be REGEX_V_AND_P_NUMBERS?
@@ -596,7 +618,7 @@ class Instrumenter:
         taint_loc_result = scd.create_taint_field(m.get_name(), regs[0])
 
         # this should probably not merge in the destination register (only the parameter registers)
-        blockquette = Instrumenter.make_merge_register_block(scd, m, regs, taint_loc_result)
+        blockquette = Instrumenter.make_merge_register_block(scd, m, regs[1:], taint_loc_result)
 
         block = block + blockquette
 
@@ -671,6 +693,58 @@ class Instrumenter:
         m.free_reg() #1
         
         return len(block)
+        
+    @staticmethod
+    def NEG_instrumentation(scd, m, line_num):
+        cur_line = m.raw_text[line_num]
+        
+        search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_NEG, cur_line)
+        if(search_object is None):
+            return 0
+        
+
+        regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
+        
+        taint_field_src = scd.create_taint_field(m.get_name(), regs[1])
+        taint_field_dest = scd.create_taint_field(m.get_name(), regs[0])
+        
+        block = Instrumenter.make_comment_block("for NEG")
+        block = block + Instrumenter.make_simple_assign_block(scd, m, taint_field_dest, taint_field_src)
+        block = block + Instrumenter.make_comment_block("for NEG")
+        
+        m.embed_block(line_num, block)
+        
+        return len(block)
+        
+    @staticmethod
+    def CONVERTER_instrumentation(scd, m, line_num):
+        cur_line = m.raw_text[line_num]
+        
+        try:
+            opcode = StigmaStringParsingLib.break_into_tokens(cur_line)[0]
+        except:
+            return 0
+            
+        if(opcode not in StigmaStringParsingLib.CONVERTER_INSTRUCTION_LIST):
+            return 0
+            
+        regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
+        if(regs[0] == regs[1]):
+            # int-to-float v1, v1
+            # this is very common and requires no instrumentation
+            return 0
+        
+        taint_field_src = scd.create_taint_field(m.get_name(), regs[1])
+        taint_field_dst = scd.create_taint_field(m.get_name(), regs[0])
+        
+        block = Instrumenter.make_comment_block("for CONVERTER: " + str(opcode))
+        block = block + Instrumenter.make_simple_assign_block(scd, m, taint_field_dst, taint_field_src)
+        block = block + Instrumenter.make_comment_block("for CONVERTER: " + str(opcode))
+        
+        m.embed_block(line_num, block)
+        
+        return len(block)
+        
         
             
         
