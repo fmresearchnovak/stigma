@@ -267,12 +267,12 @@ if __name__ == '__main__':
     splitSmali()
     rebuildApk()
     signApk()
-    
-    input("Press Enter to Continue: ")
-    
-    temp_file.cleanup()
     end = time.time()
     
+    # this input is here because it is helpful to keep the temporary files
+    # around for debugging purposes.  In final release maybe remove it.
+    input("Press Enter to Continue: ")
+    temp_file.cleanup()
+
     print("Finished in %.1f seconds" % (end - start))
-    
     print("Result: " + os.path.abspath(getNewAPKName()))

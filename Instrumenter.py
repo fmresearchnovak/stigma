@@ -8,6 +8,7 @@ import re
 
 # A more complete listing of these sort of things can be found in ./SourcesAndSinks.txt
 STRING_IMEI_FUNCTION = "Landroid/telephony/TelephonyManager;->getDeviceId()Ljava/lang/String;"
+STRING_PHONE_NUM_FUNCTION = "Landroid/telephony/TelephonyManager;->getLine1Number()Ljava/lang/String;"
 STRING_STREAM_WRITE_FUNCTION = "Ljava/io/OutputStreamWriter;->write(Ljava/lang/String;II)V"
 STRING_LOGD_FUNCTION = "Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I"
 
@@ -22,6 +23,7 @@ class Instrumenter:
         self.instrumentation_methods = [Instrumenter.SPUT_instrumentation, Instrumenter.SGET_instrumentation,
                                         Instrumenter.IPUT_instrumentation, Instrumenter.IGET_instrumentation,
                                         Instrumenter.IMEI_instrumentation, Instrumenter.LOGD_instrumentation,
+                                        Instrumenter.PHONE_NUM_instrumentation, 
                                         Instrumenter.MOVE_instrumentation, Instrumenter.CONST_instrumentation,
                                         Instrumenter.NEG_instrumentation, Instrumenter.CONVERTER_instrumentation,
                                         Instrumenter.WRITE_instrumentation, 
@@ -110,8 +112,6 @@ class Instrumenter:
     def make_comment_block(comment_detail=""):
           block = [smali.BLANK_LINE(), smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA " + comment_detail)]
           return block
-
-
     
 
     
@@ -301,6 +301,36 @@ class Instrumenter:
 
 
         return lines_embedded
+        
+        
+    def PHONE_NUM_instrumentation(scd, m, line_num):
+        if STRING_PHONE_NUM_FUNCTION not in m.raw_text[line_num]:
+            return 0
+            
+        result_line = m.raw_text[line_num + 2]
+        reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
+        taint_loc = scd.create_taint_field(m.get_name(), reg)
+        
+        # 1
+        try:
+            tmp_reg_for_constant = m.make_new_reg()
+        except RuntimeError:
+            return 0
+            
+        block = Instrumenter.make_comment_block("for getLine1Number()")
+        
+        block.append(smali.BLANK_LINE())
+        block.append(smali.CONST_16(tmp_reg_for_constant, "0x1"))
+        block.append(smali.BLANK_LINE())
+        block.append(smali.SPUT(tmp_reg_for_constant, scd.class_name, taint_loc))
+        
+        block = block + Instrumenter.make_comment_block("for getLine1Number()")
+        
+        m.embed_block(line_num, block)
+        m.free_reg() # 1
+        return len(block)
+        
+            
 
     @staticmethod
     def WRITE_instrumentation(scd, m, line_num):  # "write()" sinks
