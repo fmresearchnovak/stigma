@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import sys
 from SmaliClassDef import SmaliClassDef
 
@@ -13,6 +12,7 @@ def main():
     class_smali_file = sys.argv[-1]
     #print("File: " + class_smali_file)
     scd = SmaliClassDef(class_smali_file)
+    num_lines_before = scd.get_num_lines()
 
     flags = sys.argv[1:-1]
     #print("main flags: " + str(flags))
@@ -37,7 +37,7 @@ def main():
     #print(scd.class_name)
     # scd.verbose()
     # Write out to file if flags specify to do so
-    if "-wo" in flags:
+    if "-ow" in flags:
         print("Overwriting: " + str(class_smali_file))
         scd.write_to_file(class_smali_file)
 
@@ -45,6 +45,13 @@ def main():
         file_name = flags[flags.index("-o") + 1]
         print("Writing to: " + str(file_name))
         scd.write_to_file(file_name)
+        
+    if "-a" in flags:
+        num_lines_after = scd.get_num_lines()
+        file_name = flags[flags.index("-a") + 1]
+        fh = open(file_name, "a")
+        fh.write(str(scd.file_name) + ", " + str(num_lines_before) + ", " + str(num_lines_after) + ", " + str(num_lines_after - num_lines_before) + "\n")
+        fh.close()
         
 if __name__ == "__main__":
     main()

@@ -25,6 +25,7 @@ class SmaliClassDef:
         self.instrumenter = inst.Instrumenter()
 
         self.file_name = file_name
+        
         fh = open(file_name, "r")
         lines = fh.readlines()
         fh.close()
@@ -222,6 +223,14 @@ class SmaliClassDef:
 
         fh.close()
 
+
+    def get_num_lines(self):
+        total_lines = len(self.header) + len(self.static_fields) + len(self.instance_fields)
+        for m in self.methods:
+            total_lines = total_lines + len(m.raw_text)
+        return total_lines
+        
+        
 
     def verbose(self):
         for line in self.header + self.static_fields + self.instance_fields:

@@ -7,6 +7,8 @@ Stigma instruments the Smali assembly code of commodity Android applications in 
 
 
 ### Necessary Dependencies
+* Linux or MacOS environment.  Code should be compatible on Windows as well, but it is untested.
+* python3
 * apktool (available in Ubuntu repository and here: https://ibotpeaches.github.io/Apktool/)
 * openjdk-11-jdk
   * keytool (provided by above Ubuntu package)
@@ -48,5 +50,6 @@ The Stigma.py program can be used to parse and instrument a single smali file.  
 
 Command line flags for Stigma.py include
 
-* __`-wo`__ "write-out" over-writes the input file with the instrumented version.
+* __`-ow`__ "over-write" over-writes the input file with the instrumented version.
 * __`-o`__  "output file" (e.g., `python3 Stigma.py -o result.smali input.smali`) outputs the instrumented version of the input to the specified path.  Note: input file must be the final argument given on the command line.
+* __`-a`__ "analytics" output analytics such as lines of code before and after Stigma instrumentation.  All information is sent to analytics.dat in temporary directory.

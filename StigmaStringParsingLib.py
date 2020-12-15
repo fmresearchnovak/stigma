@@ -143,7 +143,7 @@ def has_one_register_parameters(instr):
     return instr in ["move-result", "move-exception", "move-result-wide", "move-result-object", "move-result-exception",
         "return", "return-wide", "return-object", "const/4",
         "const/16", "const", "const/high16", "const-wide/16", "const-wide/32",
-        "const-wide", "const-wide/high16", "const-string", "const-string-jumbo",
+        "const-wide", "const-wide/high16", "const-string", "const-string/jumbo",
         "const-class", "monitor-enter", "monitor-exit", "check-cast",
         "new-instance", "fill-array-data", "throw", "packed-switch", "sparse-switch",
         "if-eqz", "if-nez", "if-ltz", "if-gez", "if-gtz", "if-lez", "sget",

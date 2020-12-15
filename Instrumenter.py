@@ -703,6 +703,7 @@ class Instrumenter:
         if(search_object is None):
             return 0
             
+        
         regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
         
         taint_field_loc = scd.create_taint_field(m.get_name(), regs[0])

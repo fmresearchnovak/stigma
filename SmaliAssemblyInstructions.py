@@ -1,4 +1,4 @@
-    #!/usr/bin/env python3
+
 
 # SmaliAssemblyInstructions.py
 #
@@ -296,8 +296,10 @@ class CONST_STRING(_SINGLE_DEST_REGISTER_INSTRUCTION):
 
 class CONST_STRING_JUMBO(SmaliAssemblyInstruction):
     # https://stackoverflow.com/questions/19991833/in-dalvik-what-expression-will-generate-instructions-not-int-and-const-strin
+    # found one in com.amazon.avod.thirdpartyclient.apk 
+    #       const-string/jumbo v5, "stackTrace"
     def __init__(self, ):
-        print("not yet implemented: const-string-jumbo")
+        print("not yet implemented: const-string/jumbo")
         pass
         
 

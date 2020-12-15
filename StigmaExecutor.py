@@ -91,6 +91,7 @@ def wrapString(string, wrapper):
 def runStigma():
 
     relevantFilePaths = getFiles()
+    analytics_path = os.path.join(temp_file.name, getNewAPKName() + "_analytics.dat")
 
     #run stigma on all file paths
     #print("CPUS: " + str(multiprocessing.cpu_count()))
@@ -99,22 +100,20 @@ def runStigma():
     for path in relevantFilePaths:
         #print("path: " + str(path))
 
-        # This is necessary because some characters need to be 
+        # Some characters need to be 
         # escaped in bash shell.  For example
         # smali_classes2/edu/fandm/enovak/leaks/Main$1.smali
         # the $1 will be treated like a variable in bash unless
         # it is escaped or wrapped in quotes
-        # path = wrapString(path, "'")
-
-
         # refactored according to https://docs.python.org/3/library/subprocess.html
         # shell = true means things like "*" and "~" will be expanded in the shell
         # I DID NOT include shell=true, which means that shell=false.  
-        # This means that the string wrapping of the path with single-quotes
-        # is unnecessary.
-        completedProcess = subprocess.run(["python3", "Stigma.py", "-wo", path])
+        # This means that single-quotes or escaping $ is unnecessary.
+        completedProcess = subprocess.run(["python3", "Stigma.py", "-a", analytics_path, "-ow", path])
         completedProcess.check_returncode() # raises an exception on any error
 
+    completedProcess = subprocess.run(["cp", analytics_path, os.getcwd()])
+    completedProcess.check_returncode() # raises an exception on any error
     print("Stigma ran in %.1f seconds" % (time.time() - start_time2))
 
 
