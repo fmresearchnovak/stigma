@@ -13,7 +13,7 @@ STRING_STREAM_WRITE_FUNCTION = "Ljava/io/OutputStreamWriter;->write(Ljava/lang/S
 STRING_LOGD_FUNCTION = "Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I"
 
 class Instrumenter:
-
+    ##TEST
 
     # The structure of the constructor and the register_instrumentation_method functions
     # are an attempt to make this a "plugin" style application where others can write
