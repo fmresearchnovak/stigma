@@ -83,6 +83,15 @@ def getFiles():
 
     return relevantFilePaths
 
+def count_non_blank_lines_of_code():
+    paths = getFiles()
+    num = 0
+    for path in paths:
+        fh = open(path, "r")
+        for line in fh.readlines():
+            if not line.isspace():
+                num += 1
+    return num
 
 def wrapString(string, wrapper):
     return wrapper + str(string) + wrapper
@@ -251,6 +260,8 @@ def signApk():
     completedProcess.check_returncode()
 
 
+def deleteFiles():
+    temp_file.cleanup()
 
 
 
@@ -260,7 +271,6 @@ if __name__ == '__main__':
     # Also ./apk should be a sys.argv param to the location of an APK file
 
     start = time.time()
-    
     dumpApk()
     runStigma()
     splitSmali()
@@ -268,10 +278,13 @@ if __name__ == '__main__':
     signApk()
     end = time.time()
     
+
+    
+    
     # this input is here because it is helpful to keep the temporary files
     # around for debugging purposes.  In final release maybe remove it.
     input("Press Enter to Continue: ")
-    temp_file.cleanup()
+    deleteFiles()
 
     print("Finished in %.1f seconds" % (end - start))
     print("Result: " + os.path.abspath(getNewAPKName()))
