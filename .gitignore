@@ -149,3 +149,7 @@ apk/
 
 # The keystore
 *.keystore
+
+
+# The data files
+*.dat

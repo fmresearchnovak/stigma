@@ -97,8 +97,6 @@ class Instrumenter:
             return []
             
         block = [smali.BLANK_LINE(),
-                 smali.CONST_16(tmp_reg, "0x0"),
-                 smali.BLANK_LINE(),
                  smali.SGET(tmp_reg, scd.class_name, taint_field_src),
                  smali.BLANK_LINE(),
                  smali.SPUT(tmp_reg, scd.class_name, taint_field_dest)]
@@ -450,54 +448,75 @@ class Instrumenter:
 
     @staticmethod
     def INTERNAL_FUNCTION_instrumentation(scd, m, line_num):
+          
+        # inside the method bar this is this instruction:
+        # invoke-direct {p0, v2} Lcom/example/ThisClass;->foo(I)C
+        # 
+        # we need to create:
+        #   foo_p0_TAINT:I
+        #   foo_p1_TAINT:I
+        #
+        # and they need to be given the taint-values from p0 and v2
+        # respectively.  Note: there are multiple "p0" the one in bar
+        # the one in foo.  They are coincidentally the same value
+        # in this example.
+          
+        # I'm not sure if this works for a child class calling a function
+        # defined in it's own parent.  Maybe that should be
+        # considered not "internal"
+        
         search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_INVOKE, m.raw_text[line_num])
         if search_object is None:
             return 0
 
         invoke_line = m.raw_text[line_num]
-        # check that the class does not match the current file's class name
-        # print(search_object)
-        parts = invoke_line.split(" ")
-        parts = [x for x in parts if x != ""]
-        # print("parts: " + str(parts))
-        name = parts[-1]
-        # print("name: " + name)
-        class_name_part = name.split("->")[0]
-        if class_name_part != scd.class_name: # change here for Internal
+
+        tokens = StigmaStringParsingLib.break_into_tokens(invoke_line)
+        method_sig = tokens[-1]
+        
+        parts = method_sig.split("->")
+        class_name = parts[0]
+        method_name = parts[1].split("(")[0]
+        
+        
+        if class_name != scd.class_name: # change here for Internal
             return 0
-
         # It's internal!
+        
+        param_regs = StigmaStringParsingLib.get_v_and_p_numbers(invoke_line)
+        #print("\nline: " + str(invoke_line.strip()))
+        #print("signature: " + str(method_sig))
+        #print("class_name: "+ str(class_name))
+        #print("method_name: "+ str(method_name))
+        #print("param_regs: " + str(param_regs))
 
-
+        block = Instrumenter.make_comment_block("for INTERNAL METHOD")
+        idx = 0
+        for reg in param_regs:
+            taint_loc_dest = scd.create_taint_field(method_name, "p" + str(idx))
+            taint_loc_src = scd.create_taint_field(m.get_name(), reg)
+            block = block + Instrumenter.make_simple_assign_block(scd, m, taint_loc_dest, taint_loc_src)
+            idx = idx + 1
+            
+        block = block + Instrumenter.make_comment_block("for INTERNAL METHOD")
+        
+        m.embed_block(line_num, block)
+        
+        return len(block)
+        
+        # I'm not sure what to do about the move-result line.
+        # I would like to get the taint-tag of the register that was 
+        # returned from the method call.  BUT, the function may have multiple
+        # returns and I don't know which return was executed.
+        '''
         # get result line
         result_line = m.raw_text[line_num + 2]
         match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
         if match_obj is None:
             return 0
-
-        # print("There is a result line!")
-        # print(result_line)
-
-        param_regs = StigmaStringParsingLib.get_v_and_p_numbers(invoke_line)
-        # print("param registers: " + str(param_regs))
-
-        result_regs = StigmaStringParsingLib.get_v_and_p_numbers(result_line)
-        # print("result registers: " + str(result_regs))
-
-        taint_loc_result = scd.create_taint_field(m.get_name(), result_regs[0])
-
-        wrapper_comment = smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for external method call")
-        block = [smali.BLANK_LINE(), wrapper_comment]
-
-        blockquette = Instrumenter.make_merge_register_block(scd, m, param_regs, taint_loc_result)
-        block = block + blockquette
-
-        block.append(wrapper_comment)
-
-        m.embed_block(line_num, block)
-        lines_embedded = len(block)
-
-        return lines_embedded
+        print("result line: " + str(result_line))
+        result_regs = StigmaStringParsingLib.get_v_and_p_numbers(result_line) ?
+        '''
 
     @staticmethod
     def EXTERNAL_FUNCTION_instrumentation(scd, m, line_num):
