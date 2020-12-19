@@ -59,7 +59,7 @@ def main():
 	# Reinstall instrumented StigmaTestApp (Note: Needs to be installed manually once)
 
 
-	path = "./TrackedStigmaTestApp.apk" # Change this path to instrumented StigmaTestApp APK
+	path = "./Tracked_StigmaTestApp.apk" # Change this path to instrumented StigmaTestApp APK
 
 	# the -r means "re-install" it also means that
 	# the permissions for the app are not wiped
