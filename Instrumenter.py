@@ -20,7 +20,10 @@ class Instrumenter:
     # more instrumentation functions.  I'm not sure it's 100% there and maybe this
     # attempt just makes the code uglier for no benefit.
     def __init__(self):
-        self.instrumentation_methods = [Instrumenter.SPUT_instrumentation, Instrumenter.SGET_instrumentation,
+        self.instrumentation_methods = [Instrumenter.FILLED_NEW_ARRAY_instrumentation,
+                                        Instrumenter.ARRAY_LENGTH_instrumentation, Instrumenter.NEW_ARRAY_instrumentation,
+                                        Instrumenter.AGET_instrumentation, Instrumenter.APUT_instrumentation,
+                                        Instrumenter.SPUT_instrumentation, Instrumenter.SGET_instrumentation,
                                         Instrumenter.IPUT_instrumentation, Instrumenter.IGET_instrumentation,
                                         Instrumenter.IMEI_instrumentation, Instrumenter.LOGD_instrumentation,
                                         Instrumenter.PHONE_NUM_instrumentation, 
@@ -84,6 +87,7 @@ class Instrumenter:
     @staticmethod
     def make_simple_assign_block(scd, m, taint_field_dest, taint_field_src):
         # make a two class assign block where src class and dest class are the same class (scd)
+        # Useful generalization! - Shaamyl
         return Instrumenter.make_two_class_assign_block(scd, scd, m, taint_field_dest, taint_field_src)
         
     @staticmethod
@@ -117,6 +121,80 @@ class Instrumenter:
           return block
     
 
+    @staticmethod
+    def SIMPLE_instrumentation(scd, m, line_num, regex, dest_num, source_num, comment_string):
+        cur_line = m.raw_text[line_num]
+
+        search_object = re.search(regex, cur_line)
+
+        if search_object is None:
+            return 0
+
+        regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
+
+
+        taint_field_src = scd.create_taint_field(m.get_name(), regs[source_num])
+        taint_field_dest = scd.create_taint_field(m.get_name(), regs[dest_num])
+
+        block = Instrumenter.make_comment_block(comment_string)
+        block = block + make_simple_assign_block(scd, m, taint_field_dest, taint_field_src)
+        block = block + Instrumenter.make_comment_block(comment_string)
+        
+        m.embed_block(line_num, block)
+
+        return len(block)
+
+
+    @staticmethod
+    def FILLED_NEW_ARRAY_instrumentation(scd, m, line_num):
+        #filled-new-array {parameters},type_id ; new array reference goten by move line
+        cur_line = m.raw_text[line_num]
+
+        search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_FILLED_NEW_ARRAY, cur_line)
+
+        if search_object is None:
+            return 0
+
+        regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
+
+        #Assuming move-result is 1 line later
+        result_line = m.raw_text[line_num + 2]
+        match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
+
+        if match_obj == None:
+            return 0
+      
+        result_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)
+
+        taint_loc_result = scd.create_taint_field(m.get_name(), result_reg)
+
+        block = Instrumenter.make_comment_block("for FILLED-NEW-ARRAY")
+        block = block + make_merge_register_block(scd, m, regs, taint_loc_result)
+        block = block + Instrumenter.make_comment_block("for FILLED-NEW-ARRAY")
+
+        m.embed_block(line_num, block)
+
+        return len(block)
+
+    @staticmethod
+    def NEW_ARRAY_instrumentation(scd, m, line_num):
+        #new-array vx,vy,type_id ; puts length vy array into vx
+        return Instrumenter.SIMPLE_instrumentation(scd, m, line_num, StigmaStringParsingLib.BEGINS_WITH_NEW_ARRAY, 0, 1, "for NEW-ARRAY")
+
+    @staticmethod
+    def ARRAY_LENGTH_instrumentation(scd, m, line_num):
+        #array-length vx,vy ; puts length of array vy into vx
+        return Instrumenter.SIMPLE_instrumentation(scd, m, line_num, StigmaStringParsingLib.BEGINS_WITH_ARRAY_LENGTH, 0, 1, "for ARRAY-LENGTH")
+
+    @staticmethod
+    def AGET_instrumentation(scd, m, line_num):
+        #aget vx,vy, vz ; gets data of array vy into register vx
+        return Instrumenter.SIMPLE_instrumentation(scd, m, line_num, StigmaStringParsingLib.BEGINS_WITH_AGET, 0, 1, "for AGET")
+
+    @staticmethod
+    def APUT_instrumentation(scd, m, line_num):
+        #aput vx,vy, vz ; puts data of register vx into array vy
+        return Instrumenter.SIMPLE_instrumentation(scd, m, line_num, StigmaStringParsingLib.BEGINS_WITH_APUT, 1, 0, "for APUT")
     
     @staticmethod
     def SGET_instrumentation(scd, m, line_num):
@@ -139,7 +217,7 @@ class Instrumenter:
         # field_base_name = "TAG"
         # taint_field_src = "Ledu/fandm/enovak/leaks/Main;->TAG_TAINT:I;"
         field_base_name = re.search(StigmaStringParsingLib.FIELD_NAME, cur_line).group(1)
-        taint_field_src = scd.create_taint_field(field_base_name)
+        taint_field_src = scd.create_taint_field(field_base_name) #Fix?
 
         taint_field_dest = scd.create_taint_field(m.get_name(), regs[0])
                 

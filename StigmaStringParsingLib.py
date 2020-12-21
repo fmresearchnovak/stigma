@@ -44,6 +44,7 @@ BEGINS_WITH_AGET = r"^\s*aget"
 BEGINS_WITH_APUT = r"^\s*aput"
 BEGINS_WITH_ARRAY_LENGTH = r"^\s*array-length"
 BEGINS_WITH_NEW_ARRAY = r"^\s*new-array"
+BEGINS_WITH_FILLED_NEW_ARRAY = r"^\s*filled-new-array"
 
 
 BEGINS_WITH_MOVE = r"^\s*move"
