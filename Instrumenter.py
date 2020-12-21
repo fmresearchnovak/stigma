@@ -202,9 +202,17 @@ class Instrumenter:
         
         # only apply this to local references for now (instead of iputs to 
         # fields in external classes).
+
+        if(m.signature.is_static):
+            # If calling method is static, the instance MUST be external
+            return 0
+
+
         regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
         if(regs[1] != "p0"):
             return 0
+
+
 
         
         # get field base name and create corresponding taint field (taint_src)
@@ -212,7 +220,7 @@ class Instrumenter:
         # field_base_name = "TAG"
         # taint_field_dest = "Ledu/fandm/enovak/leaks/Main;->TAG_TAINT:I;"
         field_base_name = re.search(StigmaStringParsingLib.FIELD_NAME, cur_line).group(1)
-        taint_field_dest = scd.create_taint_field(field_base_name)
+        taint_field_dest = scd.create_taint_field(field_base_name, regs[1])
 
         # didn't include taint status of "p0", maybe I should have
         taint_field_src = scd.create_taint_field(m.get_name(), regs[0])
@@ -247,11 +255,11 @@ class Instrumenter:
         regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
         
         # get field base name and create corresponding taint field (taint_src)
-        # sput-object v0, Ledu/fandm/enovak/leaks/Main;->TAG:Ljava/lang/String;
-        # field_base_name = "TAG"
-        # taint_field_dest = "Ledu/fandm/enovak/leaks/Main;->TAG_TAINT:I;"
+        # iget v1, p2, Landroid/graphics/Rect;->left:I
+        # field_base_name = "left"
+        # taint_field_dest = "Ledu/fandm/enovak/leaks/Main;->left_p2_TAINT:I;"
         field_base_name = re.search(StigmaStringParsingLib.FIELD_NAME, cur_line).group(1)
-        taint_field_src = scd.create_taint_field(field_base_name)
+        taint_field_src = scd.create_taint_field(field_base_name, regs[1])
 
         # maybe we should be using the second register as well?  make_merge_register_block
         # isn't setup to do that though.
