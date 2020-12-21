@@ -101,6 +101,11 @@ def is_valid_instruction(line):
     # only happens once (not sure if 
     # this is truely necessary)
     tokens = break_into_tokens(line)
+    
+    ## Have not parsed range syntax correctly yet
+    if 'range' in tokens[0]:
+        return False
+
     if(tokens == []):
         return False
         

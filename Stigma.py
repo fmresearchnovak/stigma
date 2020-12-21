@@ -109,14 +109,14 @@ def runStigma():
     print("...Parsing all class files")
     for path in relevantFilePaths:
         #print("Parsing: " + str(path))
-        scd = SmaliClassDef.SmaliClassDef(path, other_scds = scd_list)
+        scd = SmaliClassDef.SmaliClassDef(path)
         scd_list.append(scd)
-
 
     print("...Instrumenting all class files")
     for scd in scd_list:
         # Do the actual instrumentation
         #print("Instrumenting: " + str(class_smali_file))
+        scd.other_scds = scd_list
         scd.instrument()
         
     

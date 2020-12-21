@@ -6,7 +6,6 @@ from SmaliMethodDef import SmaliMethodDef
 
 
 class SmaliClassDef:
-    
     # self.other_scds: a list of other SmaliClassDef objects for this project / app
     # self.header: a list of strings, lines from the beginning of the file
     # self.static_fields: a list of strings, the static fields in this class
@@ -23,9 +22,10 @@ class SmaliClassDef:
         match_object = re.match(StigmaStringParsingLib.REGEX_BEGINS_WITH_INVOKE, line)
         return match_object is not None
 
-    def __init__(self, file_name, other_scds = []):
+    def __init__(self, file_name):
         # These are just lists of strings
-        self.other_scds = other_scds
+        # Should be filled in before instrument
+        self.other_scds = []
         
         self.header = []
         self.static_fields = []
@@ -178,6 +178,9 @@ class SmaliClassDef:
 
 
     def instrument(self):
+        if self.other_scds == []:
+            raise ValueError("Other SCDs list not passed to scd")
+
         for m in self.methods:
 
             # not really necessary, just an optimization to avoid
@@ -193,7 +196,9 @@ class SmaliClassDef:
                 # the lines of code that are existing already will be type string
                 # So, this check prevents us from instrumenting our new, additional code
                 if not isinstance(m.raw_text[idx], smali.SmaliAssemblyInstruction):
-                    idx = self._do_instrumentation_plugins(m, idx)
+                    # Only do instrumentation if line is a valid instruction
+                    if StigmaStringParsingLib.is_valid_instruction(m.raw_text[idx]):
+                        idx = self._do_instrumentation_plugins(m, idx)
 
                 idx = idx + 1
 

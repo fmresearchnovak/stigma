@@ -217,7 +217,7 @@ class Instrumenter:
         # field_base_name = "TAG"
         # taint_field_src = "Ledu/fandm/enovak/leaks/Main;->TAG_TAINT:I;"
         field_base_name = re.search(StigmaStringParsingLib.FIELD_NAME, cur_line).group(1)
-        taint_field_src = scd.create_taint_field(field_base_name) #Fix?
+        taint_field_src = scd.create_taint_field(field_base_name)
 
         taint_field_dest = scd.create_taint_field(m.get_name(), regs[0])
                 
