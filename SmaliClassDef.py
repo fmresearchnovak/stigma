@@ -88,6 +88,17 @@ class SmaliClassDef:
         # <init> and v2 as input => init_v2_TAINT:I
         # assert("init_v2_TAINT:I" in scd.static_fields)
 
+        # add-int v2, v3, v4
+        # foo_v2_Taint:I <- foo_v3_taint:I OR foo_v4_taint:I
+        # 
+        # 
+        # Some bug here?
+        # iput v2, p1, someclass->somefield
+        # iget v3, p2, someclass->somefield
+        # 
+        # somefield_p1_TAINT:I <- foo_v2_taint:I
+        # 
+
         # identifier = method name or instance field name
         # most method names are expected: "getIMEI(0", "leakSomething())"
         # edge case 1: constructors show up as  <init> and <cinit>
