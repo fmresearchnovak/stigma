@@ -13,14 +13,17 @@ STRING_STREAM_WRITE_FUNCTION = "Ljava/io/OutputStreamWriter;->write(Ljava/lang/S
 STRING_LOGD_FUNCTION = "Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I"
 
 class Instrumenter:
-    ##TEST
+    
 
     # The structure of the constructor and the register_instrumentation_method functions
     # are an attempt to make this a "plugin" style application where others can write
     # more instrumentation functions.  I'm not sure it's 100% there and maybe this
     # attempt just makes the code uglier for no benefit.
     def __init__(self):
-        self.instrumentation_methods = [Instrumenter.SPUT_instrumentation, Instrumenter.SGET_instrumentation,
+        self.instrumentation_methods = [Instrumenter.FILLED_NEW_ARRAY_instrumentation,
+                                        Instrumenter.ARRAY_LENGTH_instrumentation, Instrumenter.NEW_ARRAY_instrumentation,
+                                        Instrumenter.AGET_instrumentation, Instrumenter.APUT_instrumentation,
+                                        Instrumenter.SPUT_instrumentation, Instrumenter.SGET_instrumentation,
                                         Instrumenter.IPUT_instrumentation, Instrumenter.IGET_instrumentation,
                                         Instrumenter.IMEI_instrumentation, Instrumenter.LOGD_instrumentation,
                                         Instrumenter.PHONE_NUM_instrumentation, 
@@ -83,6 +86,12 @@ class Instrumenter:
 
     @staticmethod
     def make_simple_assign_block(scd, m, taint_field_dest, taint_field_src):
+        # make a two class assign block where src class and dest class are the same class (scd)
+        # Useful generalization! - Shaamyl
+        return Instrumenter.make_two_class_assign_block(scd, scd, m, taint_field_dest, taint_field_src)
+        
+    @staticmethod
+    def make_two_class_assign_block(scd_dest, scd_src, m, taint_field_dest, taint_field_src):
         # this function makes an "assign-block"
         # the value in the taint_field_src 
         # will be assigned to taint_field_dest
@@ -97,9 +106,9 @@ class Instrumenter:
             return []
             
         block = [smali.BLANK_LINE(),
-                 smali.SGET(tmp_reg, scd.class_name, taint_field_src),
+                 smali.SGET(tmp_reg, scd_src.class_name, taint_field_src),
                  smali.BLANK_LINE(),
-                 smali.SPUT(tmp_reg, scd.class_name, taint_field_dest)]
+                 smali.SPUT(tmp_reg, scd_dest.class_name, taint_field_dest)]
 
         m.free_reg() #1
 
@@ -112,6 +121,80 @@ class Instrumenter:
           return block
     
 
+    @staticmethod
+    def SIMPLE_instrumentation(scd, m, line_num, regex, dest_num, source_num, comment_string):
+        cur_line = m.raw_text[line_num]
+
+        search_object = re.search(regex, cur_line)
+
+        if search_object is None:
+            return 0
+
+        regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
+
+
+        taint_field_src = scd.create_taint_field(m.get_name(), regs[source_num])
+        taint_field_dest = scd.create_taint_field(m.get_name(), regs[dest_num])
+
+        block = Instrumenter.make_comment_block(comment_string)
+        block = block + make_simple_assign_block(scd, m, taint_field_dest, taint_field_src)
+        block = block + Instrumenter.make_comment_block(comment_string)
+        
+        m.embed_block(line_num, block)
+
+        return len(block)
+
+
+    @staticmethod
+    def FILLED_NEW_ARRAY_instrumentation(scd, m, line_num):
+        #filled-new-array {parameters},type_id ; new array reference goten by move line
+        cur_line = m.raw_text[line_num]
+
+        search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_FILLED_NEW_ARRAY, cur_line)
+
+        if search_object is None:
+            return 0
+
+        regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
+
+        #Assuming move-result is 1 line later
+        result_line = m.raw_text[line_num + 2]
+        match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
+
+        if match_obj == None:
+            return 0
+      
+        result_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)
+
+        taint_loc_result = scd.create_taint_field(m.get_name(), result_reg)
+
+        block = Instrumenter.make_comment_block("for FILLED-NEW-ARRAY")
+        block = block + make_merge_register_block(scd, m, regs, taint_loc_result)
+        block = block + Instrumenter.make_comment_block("for FILLED-NEW-ARRAY")
+
+        m.embed_block(line_num, block)
+
+        return len(block)
+
+    @staticmethod
+    def NEW_ARRAY_instrumentation(scd, m, line_num):
+        #new-array vx,vy,type_id ; puts length vy array into vx
+        return Instrumenter.SIMPLE_instrumentation(scd, m, line_num, StigmaStringParsingLib.BEGINS_WITH_NEW_ARRAY, 0, 1, "for NEW-ARRAY")
+
+    @staticmethod
+    def ARRAY_LENGTH_instrumentation(scd, m, line_num):
+        #array-length vx,vy ; puts length of array vy into vx
+        return Instrumenter.SIMPLE_instrumentation(scd, m, line_num, StigmaStringParsingLib.BEGINS_WITH_ARRAY_LENGTH, 0, 1, "for ARRAY-LENGTH")
+
+    @staticmethod
+    def AGET_instrumentation(scd, m, line_num):
+        #aget vx,vy, vz ; gets data of array vy into register vx
+        return Instrumenter.SIMPLE_instrumentation(scd, m, line_num, StigmaStringParsingLib.BEGINS_WITH_AGET, 0, 1, "for AGET")
+
+    @staticmethod
+    def APUT_instrumentation(scd, m, line_num):
+        #aput vx,vy, vz ; puts data of register vx into array vy
+        return Instrumenter.SIMPLE_instrumentation(scd, m, line_num, StigmaStringParsingLib.BEGINS_WITH_APUT, 1, 0, "for APUT")
     
     @staticmethod
     def SGET_instrumentation(scd, m, line_num):
@@ -457,17 +540,24 @@ class Instrumenter:
     @staticmethod
     def INTERNAL_FUNCTION_instrumentation(scd, m, line_num):
           
-        # inside the method bar this is this instruction:
-        # invoke-direct {p0, v2} Lcom/example/ThisClass;->foo(I)C
+        # Imagine we are in a Class "ClassA"
+        # inside this class is a method bar()
+        # and in method bar() is this instruction:
+        #
+        # invoke-direct {p0, v2} Lcom/example/ClassB;->foo(I)C
         # 
-        # we need to create:
+        # we need to create the following inside ClassB:
         #   foo_p0_TAINT:I
         #   foo_p1_TAINT:I
         #
+        # 
         # and they need to be given the taint-values from p0 and v2
-        # respectively.  Note: there are multiple "p0" the one in bar
-        # the one in foo.  They are coincidentally the same value
+        # respectively.  Note: there are multiple "p0" the one in bar()
+        # the one in foo().  They are coincidentally the same value
         # in this example.
+        # Note, static functions are not an issue since all parameters
+        # are always passed and p0 is always used.  Sometimes p0 is "this"
+        # but for static methods it is simply something else.
           
         # I'm not sure if this works for a child class calling a function
         # defined in it's own parent.  Maybe that should be
@@ -477,6 +567,7 @@ class Instrumenter:
         if search_object is None:
             return 0
 
+        #print("list of other SCDs: " + str(scd.other_scds))
         invoke_line = m.raw_text[line_num]
 
         tokens = StigmaStringParsingLib.break_into_tokens(invoke_line)
@@ -487,9 +578,13 @@ class Instrumenter:
         method_name = parts[1].split("(")[0]
         
         
-        if class_name != scd.class_name: # change here for Internal
+        other_class = scd.get_other_class(class_name)
+        if(other_class is None):
             return 0
-        # It's internal!
+        # At this point it is known that both this class (ClassA)
+        # and the other class (ClassB) are both inside this project.
+        # We call this an "internal" method
+        
         
         param_regs = StigmaStringParsingLib.get_v_and_p_numbers(invoke_line)
         #print("\nline: " + str(invoke_line.strip()))
@@ -501,9 +596,9 @@ class Instrumenter:
         block = Instrumenter.make_comment_block("for INTERNAL METHOD")
         idx = 0
         for reg in param_regs:
-            taint_loc_dest = scd.create_taint_field(method_name, "p" + str(idx))
+            taint_loc_dest = other_class.create_taint_field(method_name, "p" + str(idx))
             taint_loc_src = scd.create_taint_field(m.get_name(), reg)
-            block = block + Instrumenter.make_simple_assign_block(scd, m, taint_loc_dest, taint_loc_src)
+            block = block + Instrumenter.make_two_class_assign_block(other_class, scd, m, taint_loc_dest, taint_loc_src)
             idx = idx + 1
             
         block = block + Instrumenter.make_comment_block("for INTERNAL METHOD")
@@ -512,19 +607,18 @@ class Instrumenter:
         
         return len(block)
         
-        # I'm not sure what to do about the move-result line.
-        # I would like to get the taint-tag of the register that was 
-        # returned from the method call.  BUT, the function may have multiple
-        # returns and I don't know which return was executed.
-        '''
-        # get result line
-        result_line = m.raw_text[line_num + 2]
-        match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
-        if match_obj is None:
-            return 0
-        print("result line: " + str(result_line))
-        result_regs = StigmaStringParsingLib.get_v_and_p_numbers(result_line) ?
-        '''
+        # I know how to handle move-result lines.
+        # 1) Make a globally accessible tag storage location
+        # 2) At every "return" instruction, copy the tag value into that location
+        # 3) At every "move-result" instruction, copy the tag value from that location
+        # 4) ???
+        # 5) Profit!
+        
+        # Note: a function may have multiple returns and I
+        # don't know which return was executed.  I THINK the algorithm
+        # described above solves this problem.
+        
+
 
     @staticmethod
     def EXTERNAL_FUNCTION_instrumentation(scd, m, line_num):

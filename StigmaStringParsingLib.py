@@ -44,6 +44,7 @@ BEGINS_WITH_AGET = r"^\s*aget"
 BEGINS_WITH_APUT = r"^\s*aput"
 BEGINS_WITH_ARRAY_LENGTH = r"^\s*array-length"
 BEGINS_WITH_NEW_ARRAY = r"^\s*new-array"
+BEGINS_WITH_FILLED_NEW_ARRAY = r"^\s*filled-new-array"
 
 
 BEGINS_WITH_MOVE = r"^\s*move"
@@ -100,6 +101,11 @@ def is_valid_instruction(line):
     # only happens once (not sure if 
     # this is truely necessary)
     tokens = break_into_tokens(line)
+    
+    ## Have not parsed range syntax correctly yet
+    if 'range' in tokens[0]:
+        return False
+
     if(tokens == []):
         return False
         

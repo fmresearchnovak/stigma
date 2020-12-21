@@ -6,6 +6,15 @@ from SmaliMethodDef import SmaliMethodDef
 
 
 class SmaliClassDef:
+    # self.other_scds: a list of other SmaliClassDef objects for this project / app
+    # self.header: a list of strings, lines from the beginning of the file
+    # self.static_fields: a list of strings, the static fields in this class
+    # self.instance_fields: a list of strings, the instance fields in this class
+    # self.methods: a list of SmaliMethodDef objects in this class
+    # self.instrumenter: don't touch it yo!
+    # self.file_name: the (absolute?) path to the file
+    # self.class_name: extracted from the first line of the smali file
+    #       example: Lcom/google/android/material/animation/AnimationUtils;
 
     @staticmethod
     def is_function(line):
@@ -15,9 +24,13 @@ class SmaliClassDef:
 
     def __init__(self, file_name):
         # These are just lists of strings
+        # Should be filled in before instrument
+        self.other_scds = []
+        
         self.header = []
         self.static_fields = []
         self.instance_fields = []
+        
 
         # This is a list of SmaliMethodDef (as seen above) which aids instrumentation later
         self.methods = []
@@ -176,6 +189,9 @@ class SmaliClassDef:
 
 
     def instrument(self):
+        if self.other_scds == []:
+            raise ValueError("Other SCDs list not passed to scd")
+
         for m in self.methods:
 
             # not really necessary, just an optimization to avoid
@@ -191,7 +207,9 @@ class SmaliClassDef:
                 # the lines of code that are existing already will be type string
                 # So, this check prevents us from instrumenting our new, additional code
                 if not isinstance(m.raw_text[idx], smali.SmaliAssemblyInstruction):
-                    idx = self._do_instrumentation_plugins(m, idx)
+                    # Only do instrumentation if line is a valid instruction
+                    if StigmaStringParsingLib.is_valid_instruction(m.raw_text[idx]):
+                        idx = self._do_instrumentation_plugins(m, idx)
 
                 idx = idx + 1
 
@@ -233,6 +251,9 @@ class SmaliClassDef:
             fh.write("\n")
 
         fh.close()
+        
+    def overwrite_to_file(self):
+        self.write_to_file(self.file_name)
 
 
     def get_num_lines(self):
@@ -273,7 +294,17 @@ class SmaliClassDef:
     def get_num_instance_fields(self):
         return self._count_fields(self.instance_fields)
         
+    def get_other_class(self, other_class_name):
+        #print("\nget_other_class(" + str(other_class_name) + ")")
+        for scd in self.other_scds:
+            if(scd.class_name == other_class_name):
+                return scd
+        return None
+        
     def __str__(self):
         return str(self.file_name)
+        
+    def __eq__(self, other):
+        return self.class_name == other.class_name
 
 

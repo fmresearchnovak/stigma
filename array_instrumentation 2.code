@@ -1,0 +1,89 @@
+'''
+    @staticmethod
+    def NEW_ARRAY_instrumentation(scd, m, line_num):
+        # new-array vx,vy,type_id 
+        # puts the reference to the array into vx.
+        
+        cur_line = m.raw_text[line_num]
+
+        search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_NEW_ARRAY, cur_line)
+        if search_object is None:
+            return 0
+
+        regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
+        
+        # create taint field for simple_assign_block() parameters
+        taint_field_src = scd.create_taint_field(m.get_name(), regs[1])
+        taint_field_dest = scd.create_taint_field(m.get_name(), regs[0])
+
+        block = Instrumenter.make_comment_block("for NEW ARRAY")
+        block = block + Instrumenter.make_simple_assign_block(scd, m, taint_field_dest, taint_field_src)
+        block = block + Instrumenter.make_comment_block("for NEW ARRAY")
+
+        m.embed_block(line_num, block)
+
+        return len(block)
+
+    @staticmethod
+    def ARRAY_LENGTH_instrumentation(scd, m, line_num):
+        # array-length vx,vy 
+        # puts the length value into vx.
+        
+        cur_line = m.raw_text[line_num]
+
+        search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_ARRAY_LENGTH, cur_line)
+        if search_object is None:
+            return 0
+            
+        regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line) 
+
+        taint_field_src = scd.create_taint_field(m.get_name(), regs[1])
+        taint_field_dest = scd.create_taint_field(m.get_name(), regs[0])
+
+        block = Instrumenter.make_comment_block("for ARRAY LENGTH")
+        block = block + Instrumenter.make_simple_assign_block(scd, m, taint_field_dest, taint_field_src)
+        block = block + Instrumenter.make_comment_block("for ARRAY LENGTH")
+        m.embed_block(line_num, block)
+
+        return len(block)
+        
+    @staticmethod
+    def AGET_instrumentation(scd, m, line_num):
+        '''
+        cur_line = m.raw_text[line_num]
+
+        search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_AGET, cur_line)
+        if search_object is None:
+            return 0
+
+        regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
+        taint_result = scd.create_taint_field(m.get_name(), regs[0])
+
+        block = make_comment_block("for AGET")
+        block = block + make_merge_register_block(m, [regs[1], regs[2]], taint_result)
+        block = block + make_comment_block("for AGET")
+
+        m.embed_block(line_num, block)
+
+        return len(block)
+        '''
+        return 0
+
+    @staticmethod
+    def APUT_instrumentation(scd, m, line_num):
+        
+        cur_line = m.raw_text[line_num]
+        search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_APUT, cur_line)
+        if search_object is None:
+            return 0
+
+        regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
+        taint_result = scd.create_taint_field(m.get_name(), regs[1])
+
+        block = make_comment_block("for APUT")
+        block = block + make_merge_register_block(m, [regs[0], regs[2]], taint_result)
+        block = block + make_comment_block("for APUT")
+
+        m.embed_block(line_num, block)
+
+        return len(block)
