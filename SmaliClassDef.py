@@ -6,6 +6,16 @@ from SmaliMethodDef import SmaliMethodDef
 
 
 class SmaliClassDef:
+    
+    # self.other_scds: a list of other SmaliClassDef objects for this project / app
+    # self.header: a list of strings, lines from the beginning of the file
+    # self.static_fields: a list of strings, the static fields in this class
+    # self.instance_fields: a list of strings, the instance fields in this class
+    # self.methods: a list of SmaliMethodDef objects in this class
+    # self.instrumenter: don't touch it yo!
+    # self.file_name: the (absolute?) path to the file
+    # self.class_name: extracted from the first line of the smali file
+    #       example: Lcom/google/android/material/animation/AnimationUtils;
 
     @staticmethod
     def is_function(line):
@@ -13,11 +23,14 @@ class SmaliClassDef:
         match_object = re.match(StigmaStringParsingLib.REGEX_BEGINS_WITH_INVOKE, line)
         return match_object is not None
 
-    def __init__(self, file_name):
+    def __init__(self, file_name, other_scds = []):
         # These are just lists of strings
+        self.other_scds = other_scds
+        
         self.header = []
         self.static_fields = []
         self.instance_fields = []
+        
 
         # This is a list of SmaliMethodDef (as seen above) which aids instrumentation later
         self.methods = []
@@ -222,6 +235,9 @@ class SmaliClassDef:
             fh.write("\n")
 
         fh.close()
+        
+    def overwrite_to_file(self):
+        self.write_to_file(self.file_name)
 
 
     def get_num_lines(self):
@@ -262,7 +278,17 @@ class SmaliClassDef:
     def get_num_instance_fields(self):
         return self._count_fields(self.instance_fields)
         
+    def get_other_class(self, other_class_name):
+        #print("\nget_other_class(" + str(other_class_name) + ")")
+        for scd in self.other_scds:
+            if(scd.class_name == other_class_name):
+                return scd
+        return None
+        
     def __str__(self):
         return str(self.file_name)
+        
+    def __eq__(self, other):
+        return self.class_name == other.class_name
 
 
