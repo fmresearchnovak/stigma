@@ -20,6 +20,7 @@ BEGINS_WITH_MOVE_EXCEPTION = r"^\s*move-exception"
 BEGINS_WITH_MOVE = r"^\s*move"
 BEGINS_WITH_CONST = r"^\s*const"
 BEGINS_WITH_NEG = r"^\s*neg-"
+BEGINS_WITH_RETURN = r"^\s*return"
 
 BEGINS_WITH_ADD = r"^\s*add-"
 BEGINS_WITH_SUB = r"^\s*sub-"
@@ -101,12 +102,12 @@ def is_valid_instruction(line):
     # only happens once (not sure if 
     # this is truely necessary)
     tokens = break_into_tokens(line)
-    
-    ## Have not parsed range syntax correctly yet
-    if 'range' in tokens[0]:
-        return False
 
     if(tokens == []):
+        return False
+        
+    ## Have not parsed range syntax correctly yet
+    if 'range' in tokens[0]:
         return False
         
     opcode = tokens[0]

@@ -29,10 +29,9 @@ class Instrumenter:
                                         Instrumenter.PHONE_NUM_instrumentation, 
                                         Instrumenter.MOVE_instrumentation, Instrumenter.CONST_instrumentation,
                                         Instrumenter.NEG_instrumentation, Instrumenter.CONVERTER_instrumentation,
-                                        Instrumenter.WRITE_instrumentation, 
-                                        Instrumenter.BINARYOP_instrumenter,
-                                        Instrumenter.EXTERNAL_FUNCTION_instrumentation,
-                                        Instrumenter.INTERNAL_FUNCTION_instrumentation]
+                                        Instrumenter.WRITE_instrumentation,  Instrumenter.INTERNAL_FUNCTION_instrumentation,
+                                        Instrumenter.BINARYOP_instrumenter, Instrumenter.RETURN_instrumentation,
+                                        Instrumenter.EXTERNAL_FUNCTION_instrumentation]
 
 
 
@@ -137,7 +136,7 @@ class Instrumenter:
         taint_field_dest = scd.create_taint_field(m.get_name(), regs[dest_num])
 
         block = Instrumenter.make_comment_block(comment_string)
-        block = block + make_simple_assign_block(scd, m, taint_field_dest, taint_field_src)
+        block = block + Instrumenter.make_simple_assign_block(scd, m, taint_field_dest, taint_field_src)
         block = block + Instrumenter.make_comment_block(comment_string)
         
         m.embed_block(line_num, block)
@@ -537,6 +536,60 @@ class Instrumenter:
 
         return lines_embedded
 
+    @staticmethod
+    def RETURN_instrumentation(scd, m, line_num):
+        # return-object v2
+        cur_line = m.raw_text[line_num]
+        
+        search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_RETURN, cur_line)
+        if search_object is None:
+            return 0
+            
+        block = Instrumenter.make_comment_block("for RETURN")
+            
+        # When a function returns
+        # we cannot easily see where it will return to
+        # The callee (the function returning) and caller
+        # must both be able to access to the same tag location / field
+        # without actually coordinating anything with each other.
+        # 
+        # solution: choose an arbitrary class to store this special
+        # tag location.  But, also use the same one.  In this case
+        # arbitrary location is the first class in the other_scds list
+        dest_class = scd.other_scds[0]
+        taint_field_dest = dest_class.create_taint_field("return", "field")
+        
+        regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
+        if(regs == []):
+            # this probably happened because the line is "return-void"
+            
+            try:
+                reg_for_zero = m.make_new_reg() # 1
+            except RuntimeError:
+                return 0
+            
+            block.append(smali.CONST(reg_for_zero, "0x0"))
+            block.append(smali.BLANK_LINE())
+            block.append(smali.SPUT(reg_for_zero, dest_class.class_name, taint_field_dest))
+            block.append(smali.BLANK_LINE())
+            
+            m.free_reg() # 1
+            
+        else:
+            taint_field_src = scd.create_taint_field(m.get_name(), regs[0])
+            block = block + Instrumenter.make_two_class_assign_block(dest_class, scd, m, taint_field_dest, taint_field_src)
+            
+        block = block + Instrumenter.make_comment_block("for RETURN")
+        
+        m.embed_block(line_num, block)
+        
+        return len(block)
+            
+            
+        
+        
+        
+        
     @staticmethod
     def INTERNAL_FUNCTION_instrumentation(scd, m, line_num):
           

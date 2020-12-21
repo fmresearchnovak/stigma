@@ -286,6 +286,7 @@ if __name__ == '__main__':
     # Also ./apk should be a sys.argv param to the location of an APK file
 
     start = time.time()
+    print("Working In: " + str(temp_file.name))
     dumpApk()
     runStigma()
     splitSmali()
