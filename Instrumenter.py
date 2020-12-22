@@ -61,7 +61,6 @@ class Instrumenter:
         except RuntimeError:
             return block
             
-        block.append(smali.BLANK_LINE())
         block.append(smali.CONST_16(tmp_reg1_for_merging, "0x0"))
         block.append(smali.BLANK_LINE())
         block.append(smali.CONST_16(tmp_reg2_for_merging, "0x0"))
@@ -104,8 +103,7 @@ class Instrumenter:
         except RuntimeError:
             return []
             
-        block = [smali.BLANK_LINE(),
-                 smali.SGET(tmp_reg, scd_src.class_name, taint_field_src),
+        block = [smali.SGET(tmp_reg, scd_src.class_name, taint_field_src),
                  smali.BLANK_LINE(),
                  smali.SPUT(tmp_reg, scd_dest.class_name, taint_field_dest)]
 
@@ -116,7 +114,7 @@ class Instrumenter:
 
     @staticmethod
     def make_comment_block(comment_detail=""):
-          block = [smali.BLANK_LINE(), smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA " + comment_detail)]
+          block = [smali.BLANK_LINE(), smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA " + comment_detail), smali.BLANK_LINE()]
           return block
     
 
@@ -134,6 +132,7 @@ class Instrumenter:
 
         taint_field_src = scd.create_taint_field(m.get_name(), regs[source_num])
         taint_field_dest = scd.create_taint_field(m.get_name(), regs[dest_num])
+
 
         block = Instrumenter.make_comment_block(comment_string)
         block = block + Instrumenter.make_simple_assign_block(scd, m, taint_field_dest, taint_field_src)
@@ -163,12 +162,12 @@ class Instrumenter:
         if match_obj == None:
             return 0
       
-        result_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)
+        result_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
 
         taint_loc_result = scd.create_taint_field(m.get_name(), result_reg)
 
         block = Instrumenter.make_comment_block("for FILLED-NEW-ARRAY")
-        block = block + make_merge_register_block(scd, m, regs, taint_loc_result)
+        block = block + Instrumenter.make_merge_register_block(scd, m, regs, taint_loc_result)
         block = block + Instrumenter.make_comment_block("for FILLED-NEW-ARRAY")
 
         m.embed_block(line_num, block)
@@ -407,7 +406,6 @@ class Instrumenter:
             
         block = Instrumenter.make_comment_block("for getLine1Number()")
         
-        block.append(smali.BLANK_LINE())
         block.append(smali.CONST_16(tmp_reg_for_constant, "0x1"))
         block.append(smali.BLANK_LINE())
         block.append(smali.SPUT(tmp_reg_for_constant, scd.class_name, taint_loc))
@@ -553,11 +551,19 @@ class Instrumenter:
         # must both be able to access to the same tag location / field
         # without actually coordinating anything with each other.
         # 
-        # solution: choose an arbitrary class to store this special
-        # tag location.  But, also use the same one.  In this case
-        # arbitrary location is the first class in the other_scds list
-        dest_class = scd.other_scds[0]
-        taint_field_dest = dest_class.create_taint_field("return", "field")
+        # solution idea #1 (doesn't work): choose an arbitrary class 
+        # to store this special tag location.  But, also use the 
+        # same one.  In this case arbitrary location is the first 
+        # class in the other_scds list (other_scds[0])
+        # this doesn't work becuase the class may be in another package
+        # or may otherwise be in-accessible from here.
+        #
+        # solution idea #2
+        # taint tag is in callee, so caller must pull it from "here"
+        # this is necessary because the tag must be in a package
+        # that the caller class can access.  This is not easy to know
+        # when looking only at smali code
+        taint_field_dest = scd.create_taint_field("return", "field")
         
         regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
         if(regs == []):
@@ -570,14 +576,13 @@ class Instrumenter:
             
             block.append(smali.CONST(reg_for_zero, "0x0"))
             block.append(smali.BLANK_LINE())
-            block.append(smali.SPUT(reg_for_zero, dest_class.class_name, taint_field_dest))
-            block.append(smali.BLANK_LINE())
+            block.append(smali.SPUT(reg_for_zero, scd.class_name, taint_field_dest))
             
             m.free_reg() # 1
             
         else:
             taint_field_src = scd.create_taint_field(m.get_name(), regs[0])
-            block = block + Instrumenter.make_two_class_assign_block(dest_class, scd, m, taint_field_dest, taint_field_src)
+            block = block + Instrumenter.make_simple_assign_block(scd, m, taint_field_dest, taint_field_src)
             
         block = block + Instrumenter.make_comment_block("for RETURN")
         
@@ -592,7 +597,8 @@ class Instrumenter:
         
     @staticmethod
     def INTERNAL_FUNCTION_instrumentation(scd, m, line_num):
-          
+        # Part 1, instrumentation for the invoke-* line
+        
         # Imagine we are in a Class "ClassA"
         # inside this class is a method bar()
         # and in method bar() is this instruction:
@@ -627,49 +633,82 @@ class Instrumenter:
         method_sig = tokens[-1]
         
         parts = method_sig.split("->")
-        class_name = parts[0]
-        method_name = parts[1].split("(")[0]
+        callee_class_name = parts[0]
+        callee_method_name = parts[1].split("(")[0]
         
         
-        other_class = scd.get_other_class(class_name)
-        if(other_class is None):
+        callee_class_obj = scd.get_other_class(callee_class_name)
+        if(callee_class_obj is None):
             return 0
         # At this point it is known that both this class (ClassA)
-        # and the other class (ClassB) are both inside this project.
+        # and the callee class (ClassB) are both inside this project.
         # We call this an "internal" method
         
         
         param_regs = StigmaStringParsingLib.get_v_and_p_numbers(invoke_line)
-        #print("\nline: " + str(invoke_line.strip()))
-        #print("signature: " + str(method_sig))
-        #print("class_name: "+ str(class_name))
-        #print("method_name: "+ str(method_name))
-        #print("param_regs: " + str(param_regs))
+
 
         block = Instrumenter.make_comment_block("for INTERNAL METHOD")
         idx = 0
         for reg in param_regs:
-            taint_loc_dest = other_class.create_taint_field(method_name, "p" + str(idx))
+            taint_loc_dest = callee_class_obj.create_taint_field(callee_method_name, "p" + str(idx))
             taint_loc_src = scd.create_taint_field(m.get_name(), reg)
-            block = block + Instrumenter.make_two_class_assign_block(other_class, scd, m, taint_loc_dest, taint_loc_src)
+            block = block + Instrumenter.make_two_class_assign_block(callee_class_obj, scd, m, taint_loc_dest, taint_loc_src)
+            block.append(smali.BLANK_LINE())
             idx = idx + 1
             
         block = block + Instrumenter.make_comment_block("for INTERNAL METHOD")
         
         m.embed_block(line_num, block)
         
+        
+        
+        '''
+        # this point (for some reason) this stuff is causing the java verifier
+        # to reject classes and I don't know why
+        
+        ## Part 2, instrumentation for move-result line (if one is present)
+        
+        # note: I will be inserting these lines AFTER, the move-result 
+        # this is highly unusual but I think necessary for two reasons
+        # 1) We have to grab the data AFTER the function has completed
+        # since the "return" instrumentation needs to have run
+        # 2) We cannot add code between a invoke line and the corresponding
+        # move-result line
+
+        result_line = m.raw_text[line_num + len(block) + 2]
+        match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
+        if match_obj is None:
+            return len(block)
+        
+        #print("file: " + scd.file_name)
+        #print("invoke-line: " + str(invoke_line))
+        #print("result line: " + str(result_line))
+        
+        reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
+        
+        # taint tag is in callee, so caller must pull out of it
+        # this is necessary because the tag must be in a package
+        # that the caller class can access.  This is not easy to know
+        # when looking only at smali code
+        taint_loc_src = callee_class_obj.create_taint_field("return", "field")
+        taint_loc_dest = scd.create_taint_field(m.get_name(), reg)
+        
+        result_block = Instrumenter.make_comment_block("for MOVE-RESULT")
+        result_block = result_block + Instrumenter.make_two_class_assign_block(scd, callee_class_obj, m, taint_loc_dest, taint_loc_src)
+        result_block = result_block + Instrumenter.make_comment_block("for MOVE-RESULT")
+        
+        m.embed_block(line_num + len(block) + 3, result_block) 
+        
+        #print("line_num: " + str(line_num))
+        #print("returning: " + str((len(block) + len(result_block) + 3)))
+        #print("line 4 + 19:" + str(m.raw_text[line_num + 19]))
+        #print("line 4 + 19 + 1: " + str(m.raw_text[line_num + 19 + 1]))
+        
+        return (len(block) + len(result_block) + 3)
+        '''
+        
         return len(block)
-        
-        # I know how to handle move-result lines.
-        # 1) Make a globally accessible tag storage location
-        # 2) At every "return" instruction, copy the tag value into that location
-        # 3) At every "move-result" instruction, copy the tag value from that location
-        # 4) ???
-        # 5) Profit!
-        
-        # Note: a function may have multiple returns and I
-        # don't know which return was executed.  I THINK the algorithm
-        # described above solves this problem.
         
 
 
@@ -698,11 +737,6 @@ class Instrumenter:
 
         # print("EXTERNAL_FUNCTION_instrumentation")
 
-        # determine that this is an EXTERNAL method call and is therefore
-        # necessary for this instrumentation
-
-        # print("line_num: " + str(line_num) )#+ "   line: " + str(m.raw_text[line_num]))
-        # find lines that are "invoke" instructions
         search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_INVOKE, m.raw_text[line_num])
         if search_object is None:
             return 0
@@ -718,50 +752,39 @@ class Instrumenter:
         # print("parts: " + str(parts))
         name = parts[-1]
         # print("name: " + name)
-        class_name_part = name.split("->")[0]
-        if class_name_part == scd.class_name:
+        callee_class_name = name.split("->")[0]
+        
+        callee_class_obj = scd.get_other_class(callee_class_name)
+        if(callee_class_obj is not None):
             return 0
-
-
-        # It's external!
+        # At this point it is known that the callee class (ClassB) 
+        # is outside this project.
+        # We call this an "external" method
         # print("\n\n\nEXTERNAL METHOD!")
-        # print("name: " + name)
 
         param_regs = StigmaStringParsingLib.get_v_and_p_numbers(invoke_line)
-        # print("param registers: " + str(param_regs))
-
-        # get result line
+        
         result_line = m.raw_text[line_num + 2]
         match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
-
         if match_obj == None:
             return 0
             # if match_obj is None then the 
             # only data flow possible is "side-effects"
             # and calls to other external function
 
-            # Maybe we should consider tainting the "this" reference?
-
-
-            # print("result registers: " + str(result_regs))
+            # Maybe we should consider tainting the "this" reference
+            # if it is present?
       
         result_regs = StigmaStringParsingLib.get_v_and_p_numbers(result_line)
-        
         taint_loc_result = scd.create_taint_field(m.get_name(), result_regs[0])
-
-        wrapper_comment = smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for external method call")
-        block = [smali.BLANK_LINE(), wrapper_comment]
-
-        blockquette = Instrumenter.make_merge_register_block(scd, m, param_regs, taint_loc_result)
-        block = block + blockquette
-
-        block.append(smali.BLANK_LINE())
-        block.append(wrapper_comment)
-
+        
+        block = Instrumenter.make_comment_block("for EXTERNAL METHOD")
+        block = block + Instrumenter.make_merge_register_block(scd, m, param_regs, taint_loc_result)
+        block = block + Instrumenter.make_comment_block("for EXTERNAL METHOD")
+        
         m.embed_block(line_num, block)
-        lines_embedded = len(block)
 
-        return lines_embedded
+        return len(block)
 
 
     @staticmethod
@@ -890,7 +913,6 @@ class Instrumenter:
         block.append(smali.CONST(reg_for_zero, "0x0"))
         block.append(smali.BLANK_LINE())
         block.append(smali.SPUT(reg_for_zero, scd.class_name, taint_field_loc))
-        block.append(smali.BLANK_LINE())
         block = block + Instrumenter.make_comment_block("for CONST")
         
         m.embed_block(line_num, block)

@@ -148,6 +148,7 @@ def extractPathParts(path, begin, end):
     return ans
 
 def splitSmali():
+    print("Re-arranging Smali Files")
     # Our stigma instrumentation will add many fields to each class
     # unfortunately, for a single smali_classesX folder there can only be 
     # so many fields in all the classes combined.  We typically break that limit
@@ -204,7 +205,8 @@ def splitSmali():
             os.makedirs(path, exist_ok=True)
 
         for smaliFile in group:
-            newFolderPath = path + extractPathParts(smaliFile, 3, -1)
+            newFolderPath = path + extractPathParts(smaliFile, 4, -1)
+            #print("newFolderPath: " + str(newFolderPath))
             #print("newFolderPath: " + newFolderPath)
             os.makedirs(newFolderPath, exist_ok=True)
 
@@ -294,7 +296,8 @@ if __name__ == '__main__':
     signApk()
     end = time.time()
     
-
+    print("Finished in %.1f seconds" % (end - start))
+    print("Result: " + os.path.abspath(getNewAPKName()))
     
     
     # this input is here because it is helpful to keep the temporary files
@@ -302,5 +305,4 @@ if __name__ == '__main__':
     input("Press Enter to Continue: ")
     deleteFiles()
 
-    print("Finished in %.1f seconds" % (end - start))
-    print("Result: " + os.path.abspath(getNewAPKName()))
+
