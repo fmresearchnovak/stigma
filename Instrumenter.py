@@ -117,6 +117,25 @@ class Instrumenter:
           block = [smali.BLANK_LINE(), smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA " + comment_detail), smali.BLANK_LINE()]
           return block
     
+    @staticmethod
+    def create_logd_block(m, tag, message):
+        try:
+            tmp_reg_for_tag = m.make_new_reg()
+            tmp_reg_for_msg = m.make_new_reg()
+        except RuntimeError:
+            return 0
+
+        block = [smali.CONST_STRING(tmp_reg_for_tag, tag),
+                smali.BLANK_LINE(),
+                smali.CONST_STRING(tmp_reg_for_msg, message),
+                smali.BLANK_LINE(),
+                smali.LOG_D(tmp_reg_for_tag, tmp_reg_for_msg),
+                smali.BLANK_LINE()]
+
+        m.free_reg()
+        m.free_reg()
+        
+        return block
 
     @staticmethod
     def SIMPLE_instrumentation(scd, m, line_num, regex, dest_num, source_num, comment_string):
@@ -371,6 +390,8 @@ class Instrumenter:
         except RuntimeError:
             return 0
 
+        logBlock = Instrumenter.create_logd_block(m, "\"STIGMAAA\"", "\"IMEI Num Entered\"")
+
         block = [smali.BLANK_LINE(),
                  smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for getDeviceID()"),
                  smali.BLANK_LINE(),
@@ -379,6 +400,8 @@ class Instrumenter:
                  smali.SPUT(tmp_reg_for_constant, scd.class_name, taint_location),
                  smali.BLANK_LINE(),
                  smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for getDeviceID()")]
+
+        block = logBlock + block
 
         m.embed_block(line_num, block)
         lines_embedded = len(block)
@@ -389,7 +412,7 @@ class Instrumenter:
 
         return lines_embedded
         
-        
+    @staticmethod    
     def PHONE_NUM_instrumentation(scd, m, line_num):
         if STRING_PHONE_NUM_FUNCTION not in m.raw_text[line_num]:
             return 0
@@ -404,19 +427,22 @@ class Instrumenter:
         except RuntimeError:
             return 0
             
+        
+        logBlock = Instrumenter.create_logd_block(m, "\"STIGMAAB\"", "\"Phone Num Entered\"")
+        
         block = Instrumenter.make_comment_block("for getLine1Number()")
         
+     
+        block.append(smali.BLANK_LINE())
         block.append(smali.CONST_16(tmp_reg_for_constant, "0x1"))
         block.append(smali.BLANK_LINE())
         block.append(smali.SPUT(tmp_reg_for_constant, scd.class_name, taint_loc))
         
-        block = block + Instrumenter.make_comment_block("for getLine1Number()")
+        block = logBlock + block + Instrumenter.make_comment_block("for getLine1Number()")
         
         m.embed_block(line_num, block)
         m.free_reg() # 1
         return len(block)
-        
-            
 
     @staticmethod
     def WRITE_instrumentation(scd, m, line_num):  # "write()" sinks
@@ -456,7 +482,7 @@ class Instrumenter:
                  smali.BLANK_LINE(),
                  smali.IF_EQZ(tmp_reg_for_compare, jmp_label),
                  smali.BLANK_LINE(),
-                 smali.CONST_STRING(tmp_reg_for_tag, "\"STIGMA\""),
+                 smali.CONST_STRING(tmp_reg_for_tag, "\"STIGMAZZ\""),
                  smali.BLANK_LINE(),
                  smali.CONST_STRING(tmp_reg_for_msg, "\"LEAK via WRITE() OCCURING!\""),
                  smali.BLANK_LINE(),
@@ -514,7 +540,7 @@ class Instrumenter:
                  smali.BLANK_LINE(),
                  smali.IF_EQZ(tmp_reg_for_compare, jmp_label),
                  smali.BLANK_LINE(),
-                 smali.CONST_STRING(tmp_reg_for_tag, "\"STIGMA\""),
+                 smali.CONST_STRING(tmp_reg_for_tag, "\"STIGMAZY\""),
                  smali.BLANK_LINE(),
                  smali.CONST_STRING(tmp_reg_for_msg, "\"LEAK via LOGD() OCCURING!\""),
                  smali.BLANK_LINE(),

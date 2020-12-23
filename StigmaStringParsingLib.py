@@ -105,6 +105,10 @@ def is_valid_instruction(line):
 
     if(tokens == []):
         return False
+
+    ## Have not parsed range syntax correctly yet
+    if 'range' in tokens[0]:
+        return False
         
     ## Have not parsed range syntax correctly yet
     if 'range' in tokens[0]:
