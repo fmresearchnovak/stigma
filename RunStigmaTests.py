@@ -45,7 +45,7 @@ def internal_tests():
 def main():
 	
 	internal_tests()
-	
+	input("continue? ")
 	#print(StigmaRegEx.get_v_and_p_numbers("    iget v12, p6, Landroid/graphics/Rect;->bottom:I"))
 
 	## Note: run emulator before running test
