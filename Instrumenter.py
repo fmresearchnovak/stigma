@@ -123,7 +123,7 @@ class Instrumenter:
             tmp_reg_for_tag = m.make_new_reg()
             tmp_reg_for_msg = m.make_new_reg()
         except RuntimeError:
-            return 0
+            return []
 
         block = [smali.CONST_STRING(tmp_reg_for_tag, tag),
                 smali.BLANK_LINE(),
