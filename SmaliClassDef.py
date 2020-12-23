@@ -203,6 +203,16 @@ class SmaliClassDef:
             idx = 0
             while idx < len(m.raw_text):
                 # print("line: " + m.raw_text[idx])
+                
+                # we need to know if we are in a try block so we can avoid
+                # the one type of instrumentation where that matters
+                # internal-function move-result lines
+                if(m.raw_text[idx].startswith("    :try_start_")):
+                    m.is_in_try_block = True
+                    
+                if(m.raw_text[idx].startswith("    :try_end_")):
+                    m.is_in_try_block = False
+                
                 # The lines of code that we add (instrument) will be instances of smali.SmaliAssemblyInstruction
                 # the lines of code that are existing already will be type string
                 # So, this check prevents us from instrumenting our new, additional code

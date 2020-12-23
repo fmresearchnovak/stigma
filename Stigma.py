@@ -302,7 +302,7 @@ if __name__ == '__main__':
     
     # this input is here because it is helpful to keep the temporary files
     # around for debugging purposes.  In final release maybe remove it.
-    input("Press Enter to Continue: ")
+    input("Press Enter to Delete Temporary Files: ")
     deleteFiles()
 
 
