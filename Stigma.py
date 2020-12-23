@@ -113,10 +113,15 @@ def runStigma():
         scd_list.append(scd)
 
     print("...Instrumenting all class files")
+    counter = 1
+    total_files = len(scd_list)
     for scd in scd_list:
         # Do the actual instrumentation
         #print("Instrumenting: " + str(class_smali_file))
         scd.other_scds = scd_list
+        #Progress bar
+        print(f'...{str(counter)}/{str(total_files)}', end = '\r')
+        counter += 1
         scd.instrument()
         
     
@@ -170,6 +175,7 @@ def splitSmali():
 
     THRESH = 16384 # probably isn't the correct threshold
 
+    print("...Creating appropriate sized dex files")
     smaliFiles = getFiles()
 
     fieldCount = 0
@@ -269,6 +275,8 @@ def signApk():
 
     #print("Signing...")
     newAppName = getNewAPKName()
+    #jarsigner -keystore stigma-keys.keystore -storepass MzJiY2ZjNjY5Z ./leak_detect_test/Tracked_StigmaTest.apk stigma_keystore_alias
+
     # jarsigner -verbose -keystore my-release-key.keystore ./Leaks/dist/Leaks.apk alias_name
     cmd = ["jarsigner", "-keystore", keystore_name, "-storepass", password, newAppName, stigma_alias]
     completedProcess = subprocess.run(cmd)
