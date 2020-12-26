@@ -15,6 +15,7 @@ END_REACHED_FLAG = "endstigmatestapp" # StigmaTestApp Logs this to help detect e
 sourceDict = {}
 sourceDict['A'] = "IMEI"
 sourceDict['B'] = "Phone Number"
+sourceDict['C'] = "Location"
 
 sinkDict = {}
 sinkDict['Z'] = "Write"
