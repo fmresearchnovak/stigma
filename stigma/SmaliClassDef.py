@@ -203,6 +203,7 @@ class SmaliClassDef:
             if(m.get_num_registers() > 16):
                 continue
                 
+                
             idx = 0
             while idx < len(m.raw_text):
                 # print("line: " + m.raw_text[idx])
@@ -215,15 +216,26 @@ class SmaliClassDef:
                     
                 if(m.raw_text[idx].startswith("    :try_end_")):
                     m.is_in_try_block = False
+                    
                 
                 # The lines of code that we add (instrument) will be instances of smali.SmaliAssemblyInstruction
                 # the lines of code that are existing already will be type string
                 # So, this check prevents us from instrumenting our new, additional code
                 if not isinstance(m.raw_text[idx], smali.SmaliAssemblyInstruction):
-                    # Only do instrumentation if line is a valid instruction
-                    #print(m.raw_text[idx])
-                    if StigmaStringParsingLib.is_valid_instruction(m.raw_text[idx]):
-                        idx = self._do_instrumentation_plugins(m, idx)
+                    
+                    # If we are in a try block, then adding instructions
+                    # may affect the control flow / type checking done 
+                    # by the verifier.  This causes java.lang.VerifyError
+                    # with  messages like this:
+                    # [0x35] register v0 has type Precise Reference: java.lang.String[] but expected Long
+                    # https://github.com/JesusFreke/smali/issues/797
+                    if not m.is_in_try_block:
+                    
+                        # Only do instrumentation if line is a valid instruction
+                        #print(m.raw_text[idx])
+                        if StigmaStringParsingLib.is_valid_instruction(m.raw_text[idx]):
+                            
+                            idx = self._do_instrumentation_plugins(m, idx)
 
                 idx = idx + 1
 

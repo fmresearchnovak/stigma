@@ -825,13 +825,6 @@ class Instrumenter:
         match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
         if match_obj is None:
             return len(block)
-            
-        # We must not do this instrumentation, because it occurs
-        # AFTER the line in question, which may affect the control
-        # flow / type checking done by the verifier
-        # https://github.com/JesusFreke/smali/issues/797
-        if(m.is_in_try_block):
-            return len(block)
         
         #print("file: " + scd.file_name)
         #print("invoke-line: " + str(invoke_line))
