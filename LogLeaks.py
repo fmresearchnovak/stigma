@@ -108,8 +108,8 @@ def ReadLogCat(logcatProcess, inputPath):
     #Z = Sink
 
     #2nd Pos:
-    #A-N for sources
-    #O-Z for sinks
+    #A-Z for sources
+    #A-Z for sinks
 
     #A = IMEI
     #B = Phone Number
