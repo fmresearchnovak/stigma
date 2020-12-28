@@ -52,7 +52,7 @@ BEGINS_WITH_MOVE = r"^\s*move"
 
 
 
-valid_instructions_list = [x.strip() for x in open("./valid_smali_instructions.txt", "r").readlines()]
+valid_instructions_set = set([x.strip() for x in open("./valid_smali_instructions.txt", "r").readlines()])
 
 
 def get_v_from_p(p_register, locals_num):
@@ -96,7 +96,7 @@ def break_into_tokens(line):
     return tokens
     
 def is_valid_instruction(line):
-    global valid_instructions_list
+    global valid_instructions_set
     # valid_instructions_list 
     # is global so reading from file 
     # only happens once (not sure if 
@@ -105,17 +105,13 @@ def is_valid_instruction(line):
 
     if(tokens == []):
         return False
-
-    ## Have not parsed range syntax correctly yet
-    if 'range' in tokens[0]:
-        return False
         
     ## Have not parsed range syntax correctly yet
     if 'range' in tokens[0]:
         return False
         
     opcode = tokens[0]
-    return opcode in valid_instructions_list
+    return opcode in valid_instructions_set
 
 def get_num_register_parameters(instr):
     #print("calling get num register parameters on: " + instr)

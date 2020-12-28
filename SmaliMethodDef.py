@@ -15,6 +15,7 @@ class SmaliMethodSignature:
     # self.num_of_parameter_registers
     
     def __init__(self, sig_line):
+        
         self.sig_line = sig_line
         
         sig_tokens = sig_line.split(" ")
@@ -135,6 +136,7 @@ class SmaliMethodDef:
         # should be a list of strings (lines)
         # starting from ".method..." and ending in "... .end method"
         self.raw_text = text
+        self.is_in_try_block = False
 
         self.num_jumps = 0 # not used except for a sanity check
 

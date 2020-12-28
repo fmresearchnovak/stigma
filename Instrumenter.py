@@ -11,6 +11,9 @@ STRING_IMEI_FUNCTION = "Landroid/telephony/TelephonyManager;->getDeviceId()Ljava
 STRING_PHONE_NUM_FUNCTION = "Landroid/telephony/TelephonyManager;->getLine1Number()Ljava/lang/String;"
 STRING_STREAM_WRITE_FUNCTION = "Ljava/io/OutputStreamWriter;->write(Ljava/lang/String;II)V"
 STRING_LOGD_FUNCTION = "Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I"
+STRING_GET_LAST_KNOWN_LOCATION_FUNCTION = "Landroid/location/LocationManager;->getLastKnownLocation(Ljava/lang/String;)Landroid/location/Location;"
+STRING_GET_LATITUDE = "Landroid/location/Location;->getLatitude()D"
+STRING_GET_LONGITUDE = "Landroid/location/Location;->getLongitude()D"
 
 class Instrumenter:
     
@@ -26,7 +29,8 @@ class Instrumenter:
                                         Instrumenter.SPUT_instrumentation, Instrumenter.SGET_instrumentation,
                                         Instrumenter.IPUT_instrumentation, Instrumenter.IGET_instrumentation,
                                         Instrumenter.IMEI_instrumentation, Instrumenter.LOGD_instrumentation,
-                                        Instrumenter.PHONE_NUM_instrumentation, 
+                                        Instrumenter.PHONE_NUM_instrumentation, Instrumenter.LOCATION_instrumentation,
+                                        Instrumenter.LONGITUDE_instrumentation, Instrumenter.LATITUDE_instrumentation,
                                         Instrumenter.MOVE_instrumentation, Instrumenter.CONST_instrumentation,
                                         Instrumenter.NEG_instrumentation, Instrumenter.CONVERTER_instrumentation,
                                         Instrumenter.WRITE_instrumentation,  Instrumenter.INTERNAL_FUNCTION_instrumentation,
@@ -116,6 +120,7 @@ class Instrumenter:
     def make_comment_block(comment_detail=""):
           block = [smali.BLANK_LINE(), smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA " + comment_detail), smali.BLANK_LINE()]
           return block
+        
     
     @staticmethod
     def create_logd_block(m, tag, message):
@@ -123,7 +128,7 @@ class Instrumenter:
             tmp_reg_for_tag = m.make_new_reg()
             tmp_reg_for_msg = m.make_new_reg()
         except RuntimeError:
-            return 0
+            return []
 
         block = [smali.CONST_STRING(tmp_reg_for_tag, tag),
                 smali.BLANK_LINE(),
@@ -412,12 +417,118 @@ class Instrumenter:
 
         return lines_embedded
         
+    @staticmethod
+    def LOCATION_instrumentation(scd, m, line_num):
+        if STRING_GET_LAST_KNOWN_LOCATION_FUNCTION not in m.raw_text[line_num]:
+            return 0
+            
+        result_line = m.raw_text[line_num + 2]
+        match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
+        if match_obj is None:
+            return 0
+            
+        dest_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
+        taint_loc_dest = scd.create_taint_field(m.get_name(), dest_reg)
+        
+        try:
+            tmp_reg_for_constant = m.make_new_reg()
+        except RuntimeError:
+            return 0
+            
+        logBlock = Instrumenter.create_logd_block(m, "\"STIGMAAC\"", "\"Location Entered\"")
+        
+        block = Instrumenter.make_comment_block("for getLastKnownLocation()")
+        block.append(smali.CONST_16(tmp_reg_for_constant, "0x1"))
+        block.append(smali.BLANK_LINE())
+        block.append(smali.SPUT(tmp_reg_for_constant, scd.class_name, taint_loc_dest))
+        block = block + Instrumenter.make_comment_block("for getLastKnownLocation()")
+        
+        block = block + logBlock
+        
+        m.embed_block(line_num, block)
+        m.free_reg()
+        
+        return len(block)
+        
+    @staticmethod
+    def LONGITUDE_instrumentation(scd, m, line_num):
+        if STRING_GET_LONGITUDE not in m.raw_text[line_num]:
+            return 0
+            
+        result_line = m.raw_text[line_num + 2]
+        match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
+        if match_obj is None:
+            return 0
+            
+        dest_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
+        taint_loc_dest = scd.create_taint_field(m.get_name(), dest_reg)
+        
+        try:
+            tmp_reg_for_constant = m.make_new_reg()
+        except RuntimeError:
+            return 0
+            
+        logBlock = Instrumenter.create_logd_block(m, "\"STIGMAAC\"", "\"Location Entered\"")
+        
+        block = Instrumenter.make_comment_block("for getLongitude()")
+        block.append(smali.CONST_16(tmp_reg_for_constant, "0x1"))
+        block.append(smali.BLANK_LINE())
+        block.append(smali.SPUT(tmp_reg_for_constant, scd.class_name, taint_loc_dest))
+        block = block + Instrumenter.make_comment_block("for getLongitude()")
+        
+        block = block + logBlock
+        
+        m.embed_block(line_num, block)
+        m.free_reg()
+        
+        return len(block)
+        
+        
+    @staticmethod
+    def LATITUDE_instrumentation(scd, m, line_num):
+        if STRING_GET_LATITUDE not in m.raw_text[line_num]:
+            return 0
+            
+        result_line = m.raw_text[line_num + 2]
+        match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
+        if match_obj is None:
+            return 0
+            
+        dest_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
+        taint_loc_dest = scd.create_taint_field(m.get_name(), dest_reg)
+        
+        try:
+            tmp_reg_for_constant = m.make_new_reg()
+        except RuntimeError:
+            return 0
+            
+        logBlock = Instrumenter.create_logd_block(m, "\"STIGMAAC\"", "\"Location Entered\"")
+        
+        block = Instrumenter.make_comment_block("for getLatitude()")
+        block.append(smali.CONST_16(tmp_reg_for_constant, "0x1"))
+        block.append(smali.BLANK_LINE())
+        block.append(smali.SPUT(tmp_reg_for_constant, scd.class_name, taint_loc_dest))
+        block = block + Instrumenter.make_comment_block("for getLatitude()")
+        
+        block = block + logBlock
+        
+        m.embed_block(line_num, block)
+        m.free_reg()
+        
+        return len(block)
+        
+        
+        
     @staticmethod    
     def PHONE_NUM_instrumentation(scd, m, line_num):
         if STRING_PHONE_NUM_FUNCTION not in m.raw_text[line_num]:
             return 0
             
         result_line = m.raw_text[line_num + 2]
+        match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
+        if match_obj is None:
+            return 0
+            
         reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
         taint_loc = scd.create_taint_field(m.get_name(), reg)
         
@@ -689,7 +800,7 @@ class Instrumenter:
         
         
         
-        '''
+        
         # this point (for some reason) this stuff is causing the java verifier
         # to reject classes and I don't know why
         
@@ -705,6 +816,13 @@ class Instrumenter:
         result_line = m.raw_text[line_num + len(block) + 2]
         match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
         if match_obj is None:
+            return len(block)
+            
+        # We must not do this instrumentation, because it occurs
+        # AFTER the line in question, which may affect the control
+        # flow / type checking done by the verifier
+        # https://github.com/JesusFreke/smali/issues/797
+        if(m.is_in_try_block):
             return len(block)
         
         #print("file: " + scd.file_name)
@@ -732,10 +850,6 @@ class Instrumenter:
         #print("line 4 + 19 + 1: " + str(m.raw_text[line_num + 19 + 1]))
         
         return (len(block) + len(result_block) + 3)
-        '''
-        
-        return len(block)
-        
 
 
     @staticmethod

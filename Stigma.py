@@ -103,22 +103,23 @@ def runStigma():
     relevantFilePaths = getFiles()
     analytics_path = os.path.join(temp_file.name, getNewAPKName() + "_analytics.dat")
     
-    scd_list = []
+    scd_hashmap = {}
     start_time2 = time.time()
     #run stigma on all file paths
     print("...Parsing all class files")
     for path in relevantFilePaths:
         #print("Parsing: " + str(path))
         scd = SmaliClassDef.SmaliClassDef(path)
-        scd_list.append(scd)
+        scd_hashmap[scd.class_name] = scd
 
     print("...Instrumenting all class files")
     counter = 1
-    total_files = len(scd_list)
-    for scd in scd_list:
+    total_files = len(scd_hashmap)
+    for name in scd_hashmap.keys():
         # Do the actual instrumentation
         #print("Instrumenting: " + str(class_smali_file))
-        scd.other_scds = scd_list
+        scd = scd_hashmap[name]
+        scd.other_scds = scd_hashmap
         #Progress bar
         print(f'...{str(counter)}/{str(total_files)}', end = '\r')
         counter += 1
@@ -126,8 +127,9 @@ def runStigma():
         
     
     print("...Overwriting instrumented classes")    
-    for scd in scd_list:
+    for name in scd_hashmap.keys():
         #print("Overwriting: " + str(scd.file_name))
+        scd = scd_hashmap[name]
         scd.overwrite_to_file()
 
 
@@ -235,11 +237,7 @@ def splitSmali():
             # in those cases we don't want to do any mv at all.  Even with -n
             # mv will exit with an error, status 1
             if(smaliFile != newFileAbsPath):
-                # -n means "no clobber" in mv command on bash, do not overwrite existing files
-                mvCMD = ["mv", "-n", smaliFile, newFileAbsPath]
-                #print(mvCMD)
-                completedProcess = subprocess.run(mvCMD)
-                completedProcess.check_returncode()
+                os.rename(smaliFile, newFileAbsPath)
 
 #rebuild apk
 def rebuildApk():
@@ -310,7 +308,7 @@ if __name__ == '__main__':
     
     # this input is here because it is helpful to keep the temporary files
     # around for debugging purposes.  In final release maybe remove it.
-    input("Press Enter to Continue: ")
+    input("Press Enter to Delete Temporary Files: ")
     deleteFiles()
 
 

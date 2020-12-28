@@ -6,7 +6,7 @@ from SmaliMethodDef import SmaliMethodDef
 
 
 class SmaliClassDef:
-    # self.other_scds: a list of other SmaliClassDef objects for this project / app
+    # self.other_scds: a dictionary of other SmaliClassDef objects for this project / app
     # self.header: a list of strings, lines from the beginning of the file
     # self.static_fields: a list of strings, the static fields in this class
     # self.instance_fields: a list of strings, the instance fields in this class
@@ -25,7 +25,10 @@ class SmaliClassDef:
     def __init__(self, file_name):
         # These are just lists of strings
         # Should be filled in before instrument
-        self.other_scds = []
+        
+        # key: name of class (a string)
+        # value: SmaliClassDef object
+        self.other_scds = {}
         
         self.header = []
         self.static_fields = []
@@ -189,7 +192,7 @@ class SmaliClassDef:
 
 
     def instrument(self):
-        if self.other_scds == []:
+        if self.other_scds == {}:
             raise ValueError("Other SCDs list not passed to scd")
 
         for m in self.methods:
@@ -203,6 +206,16 @@ class SmaliClassDef:
             idx = 0
             while idx < len(m.raw_text):
                 # print("line: " + m.raw_text[idx])
+                
+                # we need to know if we are in a try block so we can avoid
+                # the one type of instrumentation where that matters
+                # internal-function move-result lines
+                if(m.raw_text[idx].startswith("    :try_start_")):
+                    m.is_in_try_block = True
+                    
+                if(m.raw_text[idx].startswith("    :try_end_")):
+                    m.is_in_try_block = False
+                
                 # The lines of code that we add (instrument) will be instances of smali.SmaliAssemblyInstruction
                 # the lines of code that are existing already will be type string
                 # So, this check prevents us from instrumenting our new, additional code
@@ -296,9 +309,8 @@ class SmaliClassDef:
         
     def get_other_class(self, other_class_name):
         #print("\nget_other_class(" + str(other_class_name) + ")")
-        for scd in self.other_scds:
-            if(scd.class_name == other_class_name):
-                return scd
+        if other_class_name in self.other_scds:
+            return self.other_scds[other_class_name]
         return None
         
     def __str__(self):
