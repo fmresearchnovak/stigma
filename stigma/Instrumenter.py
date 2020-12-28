@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-import SmaliAssemblyInstructions as smali
-import StigmaStringParsingLib
+from stigma import SmaliAssemblyInstructions as smali
+from stigma import StigmaStringParsingLib
 import re
 
 
@@ -385,6 +385,14 @@ class Instrumenter:
             return 0
 
         result_line = m.raw_text[line_num + 2]
+
+        match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
+        if match_obj is None:
+            return 0
+        #print("ResultLine: " + str(result_line))
+
+        #for line in m.raw_text:
+        #    print(line)
 
         reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
 

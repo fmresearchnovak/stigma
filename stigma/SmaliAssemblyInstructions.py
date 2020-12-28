@@ -36,7 +36,7 @@
 # _TWO_REGISTER_BINARY_INSTRUCTION
 # _TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION
 
-import StigmaStringParsingLib
+from stigma import StigmaStringParsingLib
 
 
 

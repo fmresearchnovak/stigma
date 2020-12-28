@@ -1,6 +1,6 @@
 
-import StigmaStringParsingLib
-import SmaliAssemblyInstructions as smali
+from stigma import StigmaStringParsingLib
+from stigma import SmaliAssemblyInstructions as smali
 import re
 
 

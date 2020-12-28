@@ -52,7 +52,7 @@ BEGINS_WITH_MOVE = r"^\s*move"
 
 
 
-valid_instructions_set = set([x.strip() for x in open("./valid_smali_instructions.txt", "r").readlines()])
+valid_instructions_set = set([x.strip() for x in open("./stigma/valid_smali_instructions.txt", "r").readlines()])
 
 
 def get_v_from_p(p_register, locals_num):
@@ -64,6 +64,7 @@ def get_v_from_p(p_register, locals_num):
 def get_num_registers(line):
     tokens = break_into_tokens(line)
     #print("tokens[0]: " + str(tokens[0]))
+    #print("Line:" + str(line))
     number_registers = get_num_register_parameters(tokens[0])
     if number_registers is None:
         number_registers = _param_list_len(line)
@@ -268,6 +269,7 @@ def main():
     assert(_param_list_len("filled-new-array {v0, v1, v2}, [Ljava/lang/String;\n") == 3)
     assert(get_num_registers("const-string v1, \"hard example: v2\"\n") == 1)
 
+    assert(is_valid_instruction("    .line 36") == False)
     print("ALL StringParsingLib TESTS PASSED")
 
 

@@ -147,6 +147,7 @@ cython_debug/
 
 #apkTesting
 apk/
+APK/
 *.apk
 
 # The keystore

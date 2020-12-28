@@ -1,0 +1,15 @@
+Tag: STIGMA__
+
+1st Pos:
+A = Source
+Z = Sink
+
+2nd Pos:
+A-N for sources
+O-Z for sinks
+
+A = IMEI
+B = Phone Number
+
+Z = Write
+Y = LOGD

@@ -1,5 +1,5 @@
 import re
-import SmaliAssemblyInstructions as smali
+from stigma import SmaliAssemblyInstructions as smali
 
 class SmaliRegister():
 	

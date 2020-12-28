@@ -1,3 +1,4 @@
+from stigma import SmaliClassDef
 import os
 import time
 import sys
@@ -7,7 +8,6 @@ import subprocess
 from subprocess import Popen, PIPE
 import shutil
 import glob
-import SmaliClassDef
 import tempfile
 
 

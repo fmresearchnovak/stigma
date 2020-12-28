@@ -1,7 +1,7 @@
 import re
-import SmaliAssemblyInstructions as smali
-import StigmaStringParsingLib
-import VRegisterPool
+from stigma import SmaliAssemblyInstructions as smali
+from stigma import StigmaStringParsingLib
+from stigma import VRegisterPool
 
         
 class SmaliMethodSignature:

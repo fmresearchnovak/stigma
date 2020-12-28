@@ -3,7 +3,7 @@ import sys
 import csv
 import os
 import glob
-import StigmaExecutor
+from stigma import StigmaExecutor
 import numpy as np
 
 

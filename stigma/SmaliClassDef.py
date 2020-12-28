@@ -1,8 +1,8 @@
-import StigmaStringParsingLib
+from stigma import StigmaStringParsingLib
 import re
-import Instrumenter as inst
-import SmaliAssemblyInstructions as smali
-from SmaliMethodDef import SmaliMethodDef
+from stigma import Instrumenter as inst
+from stigma import SmaliAssemblyInstructions as smali
+from stigma.SmaliMethodDef import SmaliMethodDef
 
 
 class SmaliClassDef:
@@ -221,6 +221,7 @@ class SmaliClassDef:
                 # So, this check prevents us from instrumenting our new, additional code
                 if not isinstance(m.raw_text[idx], smali.SmaliAssemblyInstruction):
                     # Only do instrumentation if line is a valid instruction
+                    #print(m.raw_text[idx])
                     if StigmaStringParsingLib.is_valid_instruction(m.raw_text[idx]):
                         idx = self._do_instrumentation_plugins(m, idx)
 
