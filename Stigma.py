@@ -177,6 +177,10 @@ def splitSmali():
     #
 
     THRESH = 16384 # probably isn't the correct threshold
+    # max unsigned short: 65535
+    # max signed short: 32767
+    # max unsigned byte: 255
+    # max signed byte: 127
 
     print("...Creating appropriate sized dex files")
     smaliFiles = getFiles()
@@ -242,6 +246,7 @@ def splitSmali():
 #rebuild apk
 def rebuildApk():
     # dumps the apk file in current working directory
+    #input("continue?")
     start_time = time.time()
     newName = getNewAPKName()
     rebuildCMD = ["apktool", "b", temp_file.name, "-o", getNewAPKName()]

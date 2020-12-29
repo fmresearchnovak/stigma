@@ -13,6 +13,8 @@ END_REACHED_FLAG = "endstigmatestapp" # StigmaTestApp Logs this to help detect e
 
 
 def internal_tests():
+    
+    # TODO: fix the below so that it actually runs given the new paths
 
 	cmd = ["python3", "VRegisterPool.py"]
 	finished_proc = subprocess.run(cmd)

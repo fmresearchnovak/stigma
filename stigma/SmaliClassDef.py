@@ -121,9 +121,9 @@ class SmaliClassDef:
         identifier = identifier.replace("<", "")
         identifier = identifier.replace(">", "")
         if reg_name != "":
-            static_f_name = str(identifier) + "_" + str(reg_name) + "_TAINT:I"
+            static_f_name = str(identifier) + "_" + str(reg_name) + "_TAINT:F"
         else:
-            static_f_name = str(identifier) + "_TAINT:I"
+            static_f_name = str(identifier) + "_TAINT:F"
         full_name = ".field public static " + static_f_name + "\n"
 
         return (static_f_name, full_name)

@@ -65,6 +65,8 @@ class Instrumenter:
         except RuntimeError:
             return block
             
+        # TODO: remove the CONST_16 for tmp_reg2 as it is unnecessary
+        # the SGET in the for loop will set / overwrite it's value
         block.append(smali.CONST_16(tmp_reg1_for_merging, "0x0"))
         block.append(smali.BLANK_LINE())
         block.append(smali.CONST_16(tmp_reg2_for_merging, "0x0"))
@@ -74,7 +76,7 @@ class Instrumenter:
             block.append(smali.BLANK_LINE())
             block.append(smali.SGET(tmp_reg2_for_merging, scd.class_name, taint_loc_param))
             block.append(smali.BLANK_LINE())
-            block.append(smali.OR_INT(tmp_reg1_for_merging, tmp_reg1_for_merging, tmp_reg2_for_merging))
+            block.append(smali.ADD_FLOAT(tmp_reg1_for_merging, tmp_reg1_for_merging, tmp_reg2_for_merging))
 
         block.append(smali.BLANK_LINE())
         block.append(smali.SPUT(tmp_reg1_for_merging, scd.class_name, taint_loc_result))
@@ -405,10 +407,13 @@ class Instrumenter:
 
         logBlock = Instrumenter.create_logd_block(m, "\"STIGMAAA\"", "\"IMEI Num Entered\"")
 
+        # https://www.h-schmidt.net/FloatConverter/IEEE754.html
+        # 0.1 = 0x3dcccccd
+        # CONST does NOT sign extends, it takes a 32 bit constant
         block = [smali.BLANK_LINE(),
                  smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for getDeviceID()"),
                  smali.BLANK_LINE(),
-                 smali.CONST(tmp_reg_for_constant, "0x1"),
+                 smali.CONST(tmp_reg_for_constant, "0x3dcccccd"), 
                  smali.BLANK_LINE(),
                  smali.SPUT(tmp_reg_for_constant, scd.class_name, taint_location),
                  smali.BLANK_LINE(),
@@ -445,8 +450,11 @@ class Instrumenter:
             
         logBlock = Instrumenter.create_logd_block(m, "\"STIGMAAC\"", "\"Location Entered\"")
         
+        # https://www.h-schmidt.net/FloatConverter/IEEE754.html
+        # 2 = 0x40000000
+        # CONST_16 sign extends to 32 bits
         block = Instrumenter.make_comment_block("for getLastKnownLocation()")
-        block.append(smali.CONST_16(tmp_reg_for_constant, "0x1"))
+        block.append(smali.CONST_16(tmp_reg_for_constant, "0x4000"))
         block.append(smali.BLANK_LINE())
         block.append(smali.SPUT(tmp_reg_for_constant, scd.class_name, taint_loc_dest))
         block = block + Instrumenter.make_comment_block("for getLastKnownLocation()")
@@ -478,8 +486,11 @@ class Instrumenter:
             
         logBlock = Instrumenter.create_logd_block(m, "\"STIGMAAC\"", "\"Location Entered\"")
         
+        # https://www.h-schmidt.net/FloatConverter/IEEE754.html
+        # 1.0 = 0x3f800000 
+        # CONST_16 takes a 16-bit literal and sign-extends to 32 bits
         block = Instrumenter.make_comment_block("for getLongitude()")
-        block.append(smali.CONST_16(tmp_reg_for_constant, "0x1"))
+        block.append(smali.CONST_16(tmp_reg_for_constant, "0x3f80"))
         block.append(smali.BLANK_LINE())
         block.append(smali.SPUT(tmp_reg_for_constant, scd.class_name, taint_loc_dest))
         block = block + Instrumenter.make_comment_block("for getLongitude()")
@@ -512,8 +523,11 @@ class Instrumenter:
             
         logBlock = Instrumenter.create_logd_block(m, "\"STIGMAAC\"", "\"Location Entered\"")
         
+        # https://www.h-schmidt.net/FloatConverter/IEEE754.html
+        # 1.0 = 0x3f800000 
+        # CONST_16 takes a 16-bit literal and sign-extends to 32 bits
         block = Instrumenter.make_comment_block("for getLatitude()")
-        block.append(smali.CONST_16(tmp_reg_for_constant, "0x1"))
+        block.append(smali.CONST_16(tmp_reg_for_constant, "0x3f80"))
         block.append(smali.BLANK_LINE())
         block.append(smali.SPUT(tmp_reg_for_constant, scd.class_name, taint_loc_dest))
         block = block + Instrumenter.make_comment_block("for getLatitude()")
@@ -551,9 +565,11 @@ class Instrumenter:
         
         block = Instrumenter.make_comment_block("for getLine1Number()")
         
-     
+        # https://www.h-schmidt.net/FloatConverter/IEEE754.html
+        # 1.0 = 0x3f800000 
+        # CONST_16 takes a 16-bit literal and sign-extends to 32 bits
         block.append(smali.BLANK_LINE())
-        block.append(smali.CONST_16(tmp_reg_for_constant, "0x1"))
+        block.append(smali.CONST_16(tmp_reg_for_constant, "0x3f80"))
         block.append(smali.BLANK_LINE())
         block.append(smali.SPUT(tmp_reg_for_constant, scd.class_name, taint_loc))
         
@@ -580,12 +596,15 @@ class Instrumenter:
 
         taint_loc = scd.create_taint_field(m.get_name(), target_reg)
 
+        
+        # TODO: re-write the below using only 3 registers (or fewer
+        # if possible
 
-        # 1, 2, and 3
         try:
-            tmp_reg_for_tag = m.make_new_reg()
-            tmp_reg_for_msg = m.make_new_reg()
-            tmp_reg_for_compare = m.make_new_reg()
+            logd_tag_reg = m.make_new_reg() # 1
+            logd_msg_reg = m.make_new_reg() # 2
+            taint_tag_reg = m.make_new_reg() # 3
+            zero_reg = m.make_new_reg() # 4
         except RuntimeError:
             return 0
 
@@ -595,17 +614,25 @@ class Instrumenter:
         block = [smali.BLANK_LINE(),
                  smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for write()"),
                  smali.BLANK_LINE(),
-                 smali.CONST_16(tmp_reg_for_compare, "0x0"),
+                 smali.SGET(taint_tag_reg, scd.class_name, taint_loc),
                  smali.BLANK_LINE(),
-                 smali.SGET(tmp_reg_for_compare, scd.class_name, taint_loc),
+                 smali.CONST_16(zero_reg, "0x0"),
                  smali.BLANK_LINE(),
-                 smali.IF_EQZ(tmp_reg_for_compare, jmp_label),
+                 smali.CMPL_FLOAT(zero_reg, taint_tag_reg, zero_reg),
                  smali.BLANK_LINE(),
-                 smali.CONST_STRING(tmp_reg_for_tag, "\"STIGMAZZ\""),
+                 smali.IF_EQZ(zero_reg, jmp_label),
                  smali.BLANK_LINE(),
-                 smali.CONST_STRING(tmp_reg_for_msg, "\"LEAK via WRITE() OCCURING!\""),
+                 smali.CONST_STRING(logd_tag_reg, "\"STIGMAZZ\""),
                  smali.BLANK_LINE(),
-                 smali.LOG_D(tmp_reg_for_tag, tmp_reg_for_msg),
+                 smali.CONST_STRING(logd_msg_reg, "\"LEAK via WRITE() OCCURING!\""),
+                 smali.BLANK_LINE(),
+                 smali.LOG_D(logd_tag_reg, logd_msg_reg),
+                 smali.BLANK_LINE(),
+                 smali.INVOKE_STATIC([taint_tag_reg], "Ljava/lang/String;->valueOf(F)Ljava/lang/String;"),
+                 smali.BLANK_LINE(),
+                 smali.MOVE_RESULT_OBJECT(logd_msg_reg),
+                 smali.BLANK_LINE(),
+                 smali.LOG_D(logd_tag_reg, logd_msg_reg),
                  smali.BLANK_LINE(),
                  jmp_label,
                  smali.BLANK_LINE(),
@@ -614,10 +641,10 @@ class Instrumenter:
         m.embed_block(line_num, block)
         lines_embedded = len(block)
 
-        m.free_reg()
-        m.free_reg()
-        m.free_reg()
-        # 1, 2, and 3
+        m.free_reg() # 1
+        m.free_reg() # 2
+        m.free_reg() # 3
+        m.free_reg() # 4
 
 
         return lines_embedded
@@ -639,11 +666,14 @@ class Instrumenter:
 
         taint_loc = scd.create_taint_field(m.get_name(), target_reg)
 
-        # 1, 2, and 3
+        # TODO: re-write the below using only 3 registers (or fewer
+        # if possible
+        
         try:
-            tmp_reg_for_tag = m.make_new_reg()
-            tmp_reg_for_msg = m.make_new_reg()
-            tmp_reg_for_compare = m.make_new_reg()
+            logd_tag_reg = m.make_new_reg() # 1
+            logd_msg_reg = m.make_new_reg() # 2
+            taint_tag_reg = m.make_new_reg() # 3
+            zero_reg = m.make_new_reg() # 4
         except RuntimeError:
             return 0
 
@@ -653,17 +683,25 @@ class Instrumenter:
         block = [smali.BLANK_LINE(),
                  smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for Log.d() (simulated leak)"),
                  smali.BLANK_LINE(),
-                 smali.CONST_16(tmp_reg_for_compare, "0x0"),
+                 smali.SGET(taint_tag_reg, scd.class_name, taint_loc),
                  smali.BLANK_LINE(),
-                 smali.SGET(tmp_reg_for_compare, scd.class_name, taint_loc),
+                 smali.CONST_16(zero_reg, "0x0"),
                  smali.BLANK_LINE(),
-                 smali.IF_EQZ(tmp_reg_for_compare, jmp_label),
+                 smali.CMPL_FLOAT(zero_reg, taint_tag_reg, zero_reg),
                  smali.BLANK_LINE(),
-                 smali.CONST_STRING(tmp_reg_for_tag, "\"STIGMAZY\""),
+                 smali.IF_EQZ(zero_reg, jmp_label),
                  smali.BLANK_LINE(),
-                 smali.CONST_STRING(tmp_reg_for_msg, "\"LEAK via LOGD() OCCURING!\""),
+                 smali.CONST_STRING(logd_tag_reg, "\"STIGMAZY\""),
                  smali.BLANK_LINE(),
-                 smali.LOG_D(tmp_reg_for_tag, tmp_reg_for_msg),
+                 smali.CONST_STRING(logd_msg_reg, "\"LEAK via LOGD() OCCURING!\""),
+                 smali.BLANK_LINE(),
+                 smali.LOG_D(logd_tag_reg, logd_msg_reg),
+                 smali.BLANK_LINE(),
+                 smali.INVOKE_STATIC([taint_tag_reg], "Ljava/lang/String;->valueOf(F)Ljava/lang/String;"),
+                 smali.BLANK_LINE(),
+                 smali.MOVE_RESULT_OBJECT(logd_msg_reg),
+                 smali.BLANK_LINE(),
+                 smali.LOG_D(logd_tag_reg, logd_msg_reg),
                  smali.BLANK_LINE(),
                  jmp_label,
                  smali.BLANK_LINE(),
@@ -672,10 +710,10 @@ class Instrumenter:
         m.embed_block(line_num, block)
         lines_embedded = len(block)
 
-        m.free_reg()
-        m.free_reg()
-        m.free_reg()
-        # 1, 2, and 3
+        m.free_reg() # 1
+        m.free_reg() # 2
+        m.free_reg() # 3
+        m.free_reg() # 4
 
         return lines_embedded
 
