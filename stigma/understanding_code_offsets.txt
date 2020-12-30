@@ -1,0 +1,34 @@
+
+This error:
+Error while writing instruction at code offset 0x6
+
+In this method:
+# methods
+.method public static A00()[LX/2Lr;
+    .locals 8
+
+    .line 334921
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for SGET
+    
+    sget v6, LX/2zB;->A01_TAINT:F
+    
+    sput v6, LX/2zB;->A00_v0_TAINT:F
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for SGET
+    
+    sget-object v0, LX/2zB;->A01:[LX/2Lr;
+
+    if-nez v0, :cond_0
+
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
+    
+    const v6, 0x0
+    
+    sput v6, LX/2zB;->A00_v0_TAINT:F
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
+    ...
+
+is referring to the line: if-nez v0, :cond_0

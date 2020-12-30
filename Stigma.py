@@ -126,7 +126,7 @@ def runStigma():
         scd.instrument()
         
     
-    print("...Overwriting instrumented classes")    
+    print("...Overwriting smali classes")    
     for name in scd_hashmap.keys():
         #print("Overwriting: " + str(scd.file_name))
         scd = scd_hashmap[name]
@@ -178,37 +178,53 @@ def splitSmali():
 
     THRESH = 16384 # probably isn't the correct threshold
     # max unsigned short: 65535
-    # max signed short: 32767
+    # max signed short: 32767    <-- probably the actual threshold
     # max unsigned byte: 255
     # max signed byte: 127
 
-    print("...Creating appropriate sized dex files")
+
     smaliFiles = getFiles()
 
-    fieldCount = 0
+    totalFieldCount = 0
+    totalMethodCount = 0
     resultLists = []
     s = 0
     e = 0
     for idx, smaliFile in enumerate(smaliFiles):
         scd = SmaliClassDef.SmaliClassDef(smaliFile)
-        num = scd.get_num_fields()
+        field_num = scd.get_num_fields()
+        method_num = scd.get_num_methods()
         
-        if(num > THRESH):
-            raise RuntimeError("fields in " + str(smaliFile) + " is greater than threshold. " + str(num) + ">" + str(THRESH))
+        if(field_num > THRESH):
+            raise RuntimeError("fields in " + str(smaliFile) + " is greater than threshold. " + str(field_num) + ">" + str(THRESH))
+        
+        if(method_num > THRESH):
+            # https://github.com/JesusFreke/smali/issues/301
+            raise RuntimeError("methods in " + str(smaliFile) + " is greater than threshold. " + str(method_num) + ">" + str(THRESH))
 
-        if(fieldCount + num >= THRESH):
+        if((totalFieldCount + field_num >= THRESH) or (totalMethodCount + method_num >= THRESH)):
+            if((totalMethodCount + method_num >= THRESH)):
+                print("METHOD COUNT!")
+                
             # do a break
             e = idx
             resultLists.append(smaliFiles[s:e])
             s = e
-            fieldCount = num
+            
+            totalFieldCount = field_num
+            totalMethodCount = method_num
             # technical detail that's easy to miss / confuse
             # the file that broke the threshold
             # goes into the NEXT list
+            
+
 
         else:
-            fieldCount+=num
+            totalFieldCount+=field_num
+            totalMethodCount+=method_num
 
+
+    print("...Moving files")
     #print(str(len(resultLists)) + " groups")
     for idx, group in enumerate(resultLists):
         path = os.path.join(temp_file.name, "smali/")
@@ -246,7 +262,7 @@ def splitSmali():
 #rebuild apk
 def rebuildApk():
     # dumps the apk file in current working directory
-    #input("continue?")
+    input("continue?")
     start_time = time.time()
     newName = getNewAPKName()
     rebuildCMD = ["apktool", "b", temp_file.name, "-o", getNewAPKName()]

@@ -235,7 +235,15 @@ class SmaliClassDef:
                         #print(m.raw_text[idx])
                         if StigmaStringParsingLib.is_valid_instruction(m.raw_text[idx]):
                             
-                            idx = self._do_instrumentation_plugins(m, idx)
+                            # only do instrumentation if the length of the method is
+                            # not too long.  This is specifically in place to avoid
+                            # issues such as Invalid instruction offset: 36077. Offset must be in [-32768, 32767]
+                            # which arises from instructions like this:
+                            # if-nez v0, :cond_0
+                            # the :cond_0 is actually a 16-bit number
+                            if len(m.raw_text) < 32767:
+                            
+                                idx = self._do_instrumentation_plugins(m, idx)
 
                 idx = idx + 1
 
@@ -302,6 +310,10 @@ class SmaliClassDef:
 
     def get_num_fields(self):
         return self.get_num_static_fields() + self.get_num_instance_fields()
+        
+        
+    def get_num_methods(self):
+        return len(self.methods)
 
 
     @staticmethod
