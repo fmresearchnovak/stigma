@@ -1,3 +1,60 @@
+# from AppCaulk Table 1
+com.mobisystems.office
+# com.netqin.ps
+im.ecloud.ecalendar
+com.nitrodesk.droid20.nitroid
+com.rhmsoft.fm
+cn.wps.moffice_eng
+com.facebook.pages.app
+com.mobisystems.office
+com.allesklar.job
+de.arbeitsagentur.jobboerse
+com.dataviz.docstogo
+com.estrongs.android.taskmanager
+com.netqin.ps
+com.indeed.android.jobsearch
+at.tomtasche.reader
+com.splashtop.remote.pad.v2
+com.box.android
+com.dynamixsoftware.printershare
+com.allesklar.lehrstellen
+com.monster.android.Views
+com.mobisystems.editor.office_with_reg
+mobi.infolife.smsbackup
+de.joergjahnke.documentviewer.android.free
+cn.wps.moffice_i18n
+com.olivephone.edit
+com.scout24.jobs
+com.tux.client
+com.rhythm.hexise.task
+com.threebirds.wordreader
+com.stoik.mdscanlite
+de.aok.gehaltsrchner
+im.ecloud.ecalendar
+com.instig.BCRLite
+com.hi.applock
+com.netqin.mm
+com.threebirds.excelreader
+mobi.infolife.installer
+com.sic.android.wuerth.wuertherapp
+de.interaid.heizoel24
+com.citrix.Receiver
+de.sandnersoft.Arbeitskalender_Lite
+com.samapp.excelcontacts.excelcontactslite
+com.tf.thinkdroid.amlite
+soma.de
+com.nitrodesk.droid20.nitroid
+com.cisco.anyconnect.vpn.android.avf
+com.wyse.pocketcloudfree
+com.zero8timetracking.timesheeter
+com.IQBS.android.app2sd
+com.ups.mobile.android
+com.infraware.ploarisoffice.entbiz.gd.viewer
+com.threebirds.officereader
+
+# From my work on app update timing
+# https://zzudb.github.io/must2019/
+#  Paper 8 -  Android App Update Timing: A Measurement Study 
 com.android.vending 
 com.google.android.youtube
 com.google.android.apps.maps
@@ -198,3 +255,4 @@ com.amazon.clouddrive.photos
 paltroid_fcg.sccs.surrey.paltroid_fcg 
 com.espn.fantasy.lm.football
 org.videolan.vlc
+
