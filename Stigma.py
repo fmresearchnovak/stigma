@@ -99,7 +99,6 @@ def wrapString(string, wrapper):
 
 def runStigma():
     print("Running Stigma")
-    
     relevantFilePaths = getFiles()
     analytics_path = os.path.join(temp_file.name, getNewAPKName() + "_analytics.dat")
     
@@ -262,7 +261,7 @@ def splitSmali():
 #rebuild apk
 def rebuildApk():
     # dumps the apk file in current working directory
-    input("continue?")
+    #input("continue?")
     start_time = time.time()
     newName = getNewAPKName()
     rebuildCMD = ["apktool", "b", temp_file.name, "-o", getNewAPKName()]

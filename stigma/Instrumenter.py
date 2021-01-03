@@ -146,13 +146,26 @@ class Instrumenter:
         m.free_reg()
         
         return block
+        
+    @staticmethod
+    def get_next_move_result(m, line_num):
+        raw_text = m.raw_text
+        for i in range(line_num+1, len(raw_text)):
+            current_line = raw_text[i]
+            match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, current_line)
+            if (match_obj is not None):
+                return current_line
+                
+            elif StigmaStringParsingLib.is_valid_instruction(current_line):
+                return None
+                
+        return None
 
     @staticmethod
     def SIMPLE_instrumentation(scd, m, line_num, regex, dest_num, source_num, comment_string):
         cur_line = m.raw_text[line_num]
 
         search_object = re.search(regex, cur_line)
-
         if search_object is None:
             return 0
 
@@ -189,10 +202,6 @@ class Instrumenter:
         if result_line is None:
             return 0
 
-        match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
-
-        if match_obj == None:
-            return 0
       
         result_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
 
@@ -386,16 +395,7 @@ class Instrumenter:
         
         return len(block)
     
-    @staticmethod
-    def get_next_move_result(m, line_num):
-        raw_text = m.raw_text
-        for i in range(line_num+1, len(raw_text)):
-            current_line = raw_text[i]
-            if "move-result" in current_line:
-                return current_line
-            elif StigmaStringParsingLib.is_valid_instruction(current_line):
-                return None
-        return None
+
 
     @staticmethod
     def IMEI_instrumentation(scd, m, line_num):  # IMEI sources
@@ -404,21 +404,17 @@ class Instrumenter:
             return 0
 
         result_line = Instrumenter.get_next_move_result(m, line_num)
-
-        match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
-        #if match_obj is None:
-        #    return 0
-        #print("ResultLine: " + str(result_line))
-
-        #for line in m.raw_text:
-        #    print(line)
+        if result_line == None:
+            return 0
 
         reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
 
         taint_location = scd.create_taint_field(m.get_name(), reg)
-        # 1
+
         try:
+            # 1
             tmp_reg_for_constant = m.make_new_reg()
+            
         except RuntimeError:
             return 0
 
@@ -453,8 +449,8 @@ class Instrumenter:
             return 0
             
         result_line = Instrumenter.get_next_move_result(m, line_num)
-
-        match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
+        if(result_line is None):
+            return 0
         
             
         dest_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
@@ -489,11 +485,8 @@ class Instrumenter:
             return 0
             
         result_line = Instrumenter.get_next_move_result(m, line_num)
-
-        match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
-        
-        #if match_obj is None:
-        #    return 0
+        if(result_line is None):
+            return 0
             
         dest_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
         taint_loc_dest = scd.create_taint_field(m.get_name(), dest_reg)
@@ -528,10 +521,8 @@ class Instrumenter:
             return 0
             
         result_line = Instrumenter.get_next_move_result(m, line_num)
-        
-        match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
-        #if match_obj is None:
-        #    return 0
+        if(result_line is None):
+            return 0
             
         dest_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
         taint_loc_dest = scd.create_taint_field(m.get_name(), dest_reg)
@@ -565,11 +556,10 @@ class Instrumenter:
     def PHONE_NUM_instrumentation(scd, m, line_num):
         if STRING_PHONE_NUM_FUNCTION not in m.raw_text[line_num]:
             return 0
-            
+        
         result_line = Instrumenter.get_next_move_result(m, line_num)
-        match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
-        #if match_obj is None:
-        #    return 0
+        if(result_line is None):
+            return 0
             
         reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
         taint_loc = scd.create_taint_field(m.get_name(), reg)
@@ -594,7 +584,7 @@ class Instrumenter:
         block.append(smali.SPUT(tmp_reg_for_constant, scd.class_name, taint_loc))
         
         block = logBlock + block + Instrumenter.make_comment_block("for getLine1Number()")
-        
+        print("embeding block: " + block)
         m.embed_block(line_num, block)
         m.free_reg() # 1
         return len(block)
@@ -879,13 +869,9 @@ class Instrumenter:
         # 2) We cannot add code between a invoke line and the corresponding
         # move-result line
 
-        result_line = m.raw_text[line_num + len(block) + 2]
 
-        #result_line = Instrumenter.get_next_move_result(m, line_num+len(block))
-        #if result_line is None:
-        #    return len(block)
-        match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
-        if match_obj is None:
+        result_line = Instrumenter.get_next_move_result(m, line_num+len(block))
+        if result_line is None:
             return len(block)
         
         #print("file: " + scd.file_name)
@@ -971,10 +957,8 @@ class Instrumenter:
         result_line = Instrumenter.get_next_move_result(m, line_num)
         if result_line is None:
             return 0
-        match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
-        if match_obj == None:
-            return 0
-            # if match_obj is None then the 
+            
+            # if result_line is None then the 
             # only data flow possible is "side-effects"
             # and calls to other external function
 
