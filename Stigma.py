@@ -1,4 +1,5 @@
 from stigma import SmaliClassDef
+from stigma.Instrumenter import storage_handler
 import os
 import time
 import sys
@@ -136,6 +137,15 @@ def runStigma():
     print("Stigma ran in %.1f seconds" % (time.time() - start_time2))
 
 
+def writeStorageClasses():
+    #print(storage_handler)
+    print("Creating Taint Storage Locations")
+    path = os.path.join(temp_file.name, "smali/stigmacom/stigmastorage/package1/")
+    os.makedirs(path, exist_ok=True)
+    for storage_class in storage_handler.storage_classes:
+        #print(path + storage_class.get_storage_class_name() + ".smali")
+        with open(path + storage_class.get_storage_class_name() + ".smali", "w") as f:
+            f.write(storage_class.generate_smali_class_text())
 
 def extractPathParts(path, begin, end):
     # This crazy line does three things.
@@ -184,6 +194,8 @@ def splitSmali():
 
 
     smaliFiles = getFiles()
+    #print(smaliFiles)
+    input("continue?")
 
     totalFieldCount = 0
     totalMethodCount = 0
@@ -318,6 +330,7 @@ if __name__ == '__main__':
     print("Working In: " + str(temp_file.name))
     dumpApk()
     runStigma()
+    writeStorageClasses()
     splitSmali()
     rebuildApk()
     signApk()
