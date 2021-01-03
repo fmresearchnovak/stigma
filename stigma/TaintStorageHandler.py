@@ -20,7 +20,7 @@ class TaintStorageHandler:
             self.current_storage_class = StorageClass(GENERIC_STORAGE_CLASS_NAME + 
                 str(self.current_storage_class_num))
             self.storage_classes = [self.current_storage_class]
-            self.max_fields = 1000
+            self.max_fields = 100
             #max 'fields per class' parameter
 
             self.cache_locations = {}

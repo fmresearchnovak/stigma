@@ -1,5 +1,4 @@
 from stigma import SmaliClassDef
-from stigma.Instrumenter import storage_handler
 import os
 import time
 import sys
@@ -136,7 +135,6 @@ def runStigma():
 
     print("Stigma ran in %.1f seconds" % (time.time() - start_time2))
 
-
 def writeStorageClasses():
     #print(storage_handler)
     print("Creating Taint Storage Locations")
@@ -194,8 +192,6 @@ def splitSmali():
 
 
     smaliFiles = getFiles()
-    #print(smaliFiles)
-    input("continue?")
 
     totalFieldCount = 0
     totalMethodCount = 0
