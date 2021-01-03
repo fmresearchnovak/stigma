@@ -124,7 +124,7 @@ class SmaliClassDef:
             static_f_name = str(identifier) + "_" + str(reg_name) + "_TAINT:F"
         else:
             static_f_name = str(identifier) + "_TAINT:F"
-        full_name = ".field public transient static " + static_f_name + "\n"
+        full_name = ".field public static " + static_f_name + "\n"
 
         return (static_f_name, full_name)
 
