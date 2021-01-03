@@ -10,9 +10,6 @@ import re
 STRING_IMEI_FUNCTION = "Landroid/telephony/TelephonyManager;->getDeviceId()Ljava/lang/String;"
 STRING_PHONE_NUM_FUNCTION = "Landroid/telephony/TelephonyManager;->getLine1Number()Ljava/lang/String;"
 STRING_STREAM_WRITE_FUNCTION = "Ljava/io/OutputStreamWriter;->write(Ljava/lang/String;II)V"
-BYTE_STREAM_WRITE_FUNCTION = "Ljava/io/OutputStream;->write([BII)V"
-#Ljava/io/OutputStream;->write([B)V
-#Ljava/io/OutputStream;->write(I)V
 STRING_LOGD_FUNCTION = "Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I"
 STRING_GET_LAST_KNOWN_LOCATION_FUNCTION = "Landroid/location/LocationManager;->getLastKnownLocation(Ljava/lang/String;)Landroid/location/Location;"
 STRING_GET_LATITUDE = "Landroid/location/Location;->getLatitude()D"
@@ -184,11 +181,8 @@ class Instrumenter:
 
         regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
 
-        #Not Assuming move-result is 1 line later
-        result_line = Instrumenter.get_next_move_result(m, line_num)
-        if result_line is None:
-            return 0
-
+        #Assuming move-result is 1 line later
+        result_line = m.raw_text[line_num + 2]
         match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
 
         if match_obj == None:
@@ -387,27 +381,16 @@ class Instrumenter:
         return len(block)
     
     @staticmethod
-    def get_next_move_result(m, line_num):
-        raw_text = m.raw_text
-        for i in range(line_num+1, len(raw_text)):
-            current_line = raw_text[i]
-            if "move-result" in current_line:
-                return current_line
-            elif StigmaStringParsingLib.is_valid_instruction(current_line):
-                return None
-        return None
-
-    @staticmethod
     def IMEI_instrumentation(scd, m, line_num):  # IMEI sources
         # print("IMEI_instrumentation")
         if STRING_IMEI_FUNCTION not in m.raw_text[line_num]:
             return 0
 
-        result_line = Instrumenter.get_next_move_result(m, line_num)
+        result_line = m.raw_text[line_num + 2]
 
         match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
-        #if match_obj is None:
-        #    return 0
+        if match_obj is None:
+            return 0
         #print("ResultLine: " + str(result_line))
 
         #for line in m.raw_text:
@@ -452,10 +435,10 @@ class Instrumenter:
         if STRING_GET_LAST_KNOWN_LOCATION_FUNCTION not in m.raw_text[line_num]:
             return 0
             
-        result_line = Instrumenter.get_next_move_result(m, line_num)
-
+        result_line = m.raw_text[line_num + 2]
         match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
-        
+        if match_obj is None:
+            return 0
             
         dest_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
         taint_loc_dest = scd.create_taint_field(m.get_name(), dest_reg)
@@ -488,12 +471,10 @@ class Instrumenter:
         if STRING_GET_LONGITUDE not in m.raw_text[line_num]:
             return 0
             
-        result_line = Instrumenter.get_next_move_result(m, line_num)
-
+        result_line = m.raw_text[line_num + 2]
         match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
-        
-        #if match_obj is None:
-        #    return 0
+        if match_obj is None:
+            return 0
             
         dest_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
         taint_loc_dest = scd.create_taint_field(m.get_name(), dest_reg)
@@ -527,11 +508,10 @@ class Instrumenter:
         if STRING_GET_LATITUDE not in m.raw_text[line_num]:
             return 0
             
-        result_line = Instrumenter.get_next_move_result(m, line_num)
-        
+        result_line = m.raw_text[line_num + 2]
         match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
-        #if match_obj is None:
-        #    return 0
+        if match_obj is None:
+            return 0
             
         dest_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
         taint_loc_dest = scd.create_taint_field(m.get_name(), dest_reg)
@@ -566,10 +546,10 @@ class Instrumenter:
         if STRING_PHONE_NUM_FUNCTION not in m.raw_text[line_num]:
             return 0
             
-        result_line = Instrumenter.get_next_move_result(m, line_num)
+        result_line = m.raw_text[line_num + 2]
         match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
-        #if match_obj is None:
-        #    return 0
+        if match_obj is None:
+            return 0
             
         reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
         taint_loc = scd.create_taint_field(m.get_name(), reg)
@@ -880,10 +860,6 @@ class Instrumenter:
         # move-result line
 
         result_line = m.raw_text[line_num + len(block) + 2]
-
-        #result_line = Instrumenter.get_next_move_result(m, line_num+len(block))
-        #if result_line is None:
-        #    return len(block)
         match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
         if match_obj is None:
             return len(block)
@@ -967,10 +943,7 @@ class Instrumenter:
 
         param_regs = StigmaStringParsingLib.get_v_and_p_numbers(invoke_line)
         
-        #result_line = m.raw_text[line_num + 2]
-        result_line = Instrumenter.get_next_move_result(m, line_num)
-        if result_line is None:
-            return 0
+        result_line = m.raw_text[line_num + 2]
         match_obj = re.match(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, result_line)
         if match_obj == None:
             return 0
