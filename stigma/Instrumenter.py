@@ -53,6 +53,17 @@ class Instrumenter:
         if new_method not in self.instrumentation_methods:
             self.instrumentation_methods.append(new_method)
 
+  
+    @staticmethod
+    def get_next_move_result(m, line_num):
+        raw_text = m.raw_text
+        for i in range(line_num+1, len(raw_text)):
+            current_line = raw_text[i]
+            if "move-result" in current_line:
+                return current_line
+            elif StigmaStringParsingLib.is_valid_instruction(current_line):
+                return None
+        return None
 
     @staticmethod
     def make_merge_register_block(scd, m, registers, taint_loc_result):
@@ -91,7 +102,6 @@ class Instrumenter:
         # 2, 1
 
         return block
-
 
     @staticmethod
     def make_simple_assign_block(scd, m, taint_field_dest, taint_field_src):
@@ -400,17 +410,6 @@ class Instrumenter:
         m.embed_block(line_num, block)
         
         return len(block)
-    
-    @staticmethod
-    def get_next_move_result(m, line_num):
-        raw_text = m.raw_text
-        for i in range(line_num+1, len(raw_text)):
-            current_line = raw_text[i]
-            if "move-result" in current_line:
-                return current_line
-            elif StigmaStringParsingLib.is_valid_instruction(current_line):
-                return None
-        return None
 
     @staticmethod
     def IMEI_instrumentation(scd, m, line_num):  # IMEI sources
