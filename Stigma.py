@@ -9,6 +9,7 @@ from subprocess import Popen, PIPE
 import shutil
 import glob
 import tempfile
+from stigma import TaintStorageHandler
 
 
 # https://docs.python.org/3/library/tempfile.html
@@ -134,7 +135,17 @@ def runStigma():
 
     print("Stigma ran in %.1f seconds" % (time.time() - start_time2))
 
-
+def writeStorageClasses():
+    storage_handler = TaintStorageHandler.TaintStorageHandler.get_instance()
+    #print(storage_handler)
+    print("Creating Taint Storage Locations")
+    path = os.path.join(temp_file.name, "smali", "net", "stigmastorage")
+    os.makedirs(path, exist_ok=True)
+    for storage_class in storage_handler.storage_classes:
+        #print(path + storage_class.get_storage_class_name() + ".smali")
+        full_path = os.path.join(path, storage_class.get_storage_class_name() + ".smali")
+        with open(full_path , "w") as f:
+            f.write(storage_class.generate_smali_class_text())
 
 def extractPathParts(path, begin, end):
     # This crazy line does three things.
@@ -261,7 +272,7 @@ def splitSmali():
 #rebuild apk
 def rebuildApk():
     # dumps the apk file in current working directory
-    #input("continue?")
+    input("continue?")
     start_time = time.time()
     newName = getNewAPKName()
     rebuildCMD = ["apktool", "b", temp_file.name, "-o", getNewAPKName()]
@@ -317,6 +328,7 @@ if __name__ == '__main__':
     print("Working In: " + str(temp_file.name))
     dumpApk()
     runStigma()
+    writeStorageClasses()
     splitSmali()
     rebuildApk()
     signApk()

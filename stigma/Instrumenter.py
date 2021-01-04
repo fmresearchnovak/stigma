@@ -2,6 +2,7 @@
 
 from stigma import SmaliAssemblyInstructions as smali
 from stigma import StigmaStringParsingLib
+from stigma.TaintStorageHandler import TaintStorageHandler
 import re
 
 
@@ -17,6 +18,7 @@ STRING_LOGD_FUNCTION = "Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/Strin
 STRING_GET_LAST_KNOWN_LOCATION_FUNCTION = "Landroid/location/LocationManager;->getLastKnownLocation(Ljava/lang/String;)Landroid/location/Location;"
 STRING_GET_LATITUDE = "Landroid/location/Location;->getLatitude()D"
 STRING_GET_LONGITUDE = "Landroid/location/Location;->getLongitude()D"
+storage_handler = TaintStorageHandler.get_instance()
 
 class Instrumenter:
     
@@ -51,7 +53,6 @@ class Instrumenter:
         if new_method not in self.instrumentation_methods:
             self.instrumentation_methods.append(new_method)
 
-
     @staticmethod
     def make_merge_register_block(scd, m, registers, taint_loc_result):
         # This function creates a "merge block"
@@ -75,21 +76,20 @@ class Instrumenter:
         block.append(smali.CONST_16(tmp_reg2_for_merging, "0x0"))
 
         for r in registers:
-            taint_loc_param = scd.create_taint_field(m.get_name(), r)
+            taint_loc_param = storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), r)
             block.append(smali.BLANK_LINE())
-            block.append(smali.SGET(tmp_reg2_for_merging, scd.class_name, taint_loc_param))
+            block.append(smali.SGET(tmp_reg2_for_merging, taint_loc_param))
             block.append(smali.BLANK_LINE())
             block.append(smali.ADD_FLOAT(tmp_reg1_for_merging, tmp_reg1_for_merging, tmp_reg2_for_merging))
 
         block.append(smali.BLANK_LINE())
-        block.append(smali.SPUT(tmp_reg1_for_merging, scd.class_name, taint_loc_result))
+        block.append(smali.SPUT(tmp_reg1_for_merging, taint_loc_result))
 
         m.free_reg()
         m.free_reg()
         # 2, 1
 
         return block
-
 
     @staticmethod
     def make_simple_assign_block(scd, m, taint_field_dest, taint_field_src):
@@ -112,9 +112,9 @@ class Instrumenter:
         except RuntimeError:
             return []
             
-        block = [smali.SGET(tmp_reg, scd_src.class_name, taint_field_src),
+        block = [smali.SGET(tmp_reg, taint_field_src),
                  smali.BLANK_LINE(),
-                 smali.SPUT(tmp_reg, scd_dest.class_name, taint_field_dest)]
+                 smali.SPUT(tmp_reg, taint_field_dest)]
 
         m.free_reg() #1
 
@@ -172,8 +172,11 @@ class Instrumenter:
         regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
 
 
-        taint_field_src = scd.create_taint_field(m.get_name(), regs[source_num])
-        taint_field_dest = scd.create_taint_field(m.get_name(), regs[dest_num])
+        #taint_field_src = scd.create_taint_field(m.get_name(), regs[source_num])
+        taint_field_src = storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), regs[source_num])
+        #taint_field_dest = scd.create_taint_field(m.get_name(), regs[dest_num])
+
+        taint_field_dest = storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), regs[dest_num])
 
 
         block = Instrumenter.make_comment_block(comment_string)
@@ -205,7 +208,8 @@ class Instrumenter:
       
         result_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
 
-        taint_loc_result = scd.create_taint_field(m.get_name(), result_reg)
+        #taint_loc_result = scd.create_taint_field(m.get_name(), result_reg)
+        taint_loc_result = storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), result_reg)
 
         block = Instrumenter.make_comment_block("for FILLED-NEW-ARRAY")
         block = block + Instrumenter.make_merge_register_block(scd, m, regs, taint_loc_result)
@@ -256,9 +260,11 @@ class Instrumenter:
         # field_base_name = "TAG"
         # taint_field_src = "Ledu/fandm/enovak/leaks/Main;->TAG_TAINT:I;"
         field_base_name = re.search(StigmaStringParsingLib.FIELD_NAME, cur_line).group(1)
-        taint_field_src = scd.create_taint_field(field_base_name)
+        #taint_field_src = scd.create_taint_field(field_base_name)
+        taint_field_src = storage_handler.add_taint_location(scd.class_name[1:-1], "", field_base_name)
 
-        taint_field_dest = scd.create_taint_field(m.get_name(), regs[0])
+        #taint_field_dest = scd.create_taint_field(m.get_name(), regs[0])
+        taint_field_dest = storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), regs[0])
                 
         block = Instrumenter.make_comment_block("for SGET")
         block = block + Instrumenter.make_simple_assign_block(scd, m, taint_field_dest, taint_field_src)
@@ -293,9 +299,11 @@ class Instrumenter:
         # field_base_name = "TAG"
         # taint_field_dest = "Ledu/fandm/enovak/leaks/Main;->TAG_TAINT:I;"
         field_base_name = re.search(StigmaStringParsingLib.FIELD_NAME, cur_line).group(1)
-        taint_field_dest = scd.create_taint_field(field_base_name)
+        #taint_field_dest = scd.create_taint_field(field_base_name)
+        taint_field_dest = storage_handler.add_taint_location(scd.class_name[1:-1], "", field_base_name)
 
-        taint_field_src = scd.create_taint_field(m.get_name(), regs[0])
+        #taint_field_src = scd.create_taint_field(m.get_name(), regs[0])
+        taint_field_src = storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), regs[0])
                 
         block = Instrumenter.make_comment_block("for SPUT")
         block = block + Instrumenter.make_simple_assign_block(scd, m, taint_field_dest, taint_field_src)
@@ -342,10 +350,12 @@ class Instrumenter:
         # field_base_name = "TAG"
         # taint_field_dest = "Ledu/fandm/enovak/leaks/Main;->TAG_TAINT:I;"
         field_base_name = re.search(StigmaStringParsingLib.FIELD_NAME, cur_line).group(1)
-        taint_field_dest = scd.create_taint_field(field_base_name, regs[1])
+        #taint_field_dest = scd.create_taint_field(field_base_name, regs[1])
+        taint_field_dest= storage_handler.add_taint_location(scd.class_name[1:-1], regs[1], field_base_name)
 
         # didn't include taint status of "p0", maybe I should have
-        taint_field_src = scd.create_taint_field(m.get_name(), regs[0])
+        #taint_field_src = scd.create_taint_field(m.get_name(), regs[0])
+        taint_field_src= storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), regs[0])
                 
         block = Instrumenter.make_comment_block("for IPUT")
         block = block + Instrumenter.make_simple_assign_block(scd, m, taint_field_dest, taint_field_src)
@@ -381,11 +391,14 @@ class Instrumenter:
         # field_base_name = "left"
         # taint_field_dest = "Ledu/fandm/enovak/leaks/Main;->left_p2_TAINT:I;"
         field_base_name = re.search(StigmaStringParsingLib.FIELD_NAME, cur_line).group(1)
-        taint_field_src = scd.create_taint_field(field_base_name, regs[1])
+        #taint_field_src = scd.create_taint_field(field_base_name, regs[1])
+        #Convention for IPUT and IGET Taint Storages
+        taint_field_src = storage_handler.add_taint_location(scd.class_name[1:-1], regs[1], field_base_name)
 
         # maybe we should be using the second register as well?  make_merge_register_block
         # isn't setup to do that though.
-        taint_field_dest = scd.create_taint_field(m.get_name(), regs[0])
+        #taint_field_dest = scd.create_taint_field(m.get_name(), regs[0])
+        taint_field_dest = storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), regs[0])
                 
         block = Instrumenter.make_comment_block("for IGET")
         block = block + Instrumenter.make_simple_assign_block(scd, m, taint_field_dest, taint_field_src)
@@ -394,7 +407,6 @@ class Instrumenter:
         m.embed_block(line_num, block)
         
         return len(block)
-    
 
 
     @staticmethod
@@ -404,13 +416,14 @@ class Instrumenter:
             return 0
 
         result_line = Instrumenter.get_next_move_result(m, line_num)
-        if result_line == None:
+        if result_line is None:
             return 0
 
         reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
 
-        taint_location = scd.create_taint_field(m.get_name(), reg)
 
+        #taint_location = scd.create_taint_field(m.get_name(), reg)
+        taint_location = storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), reg)
         try:
             # 1
             tmp_reg_for_constant = m.make_new_reg()
@@ -428,7 +441,7 @@ class Instrumenter:
                  smali.BLANK_LINE(),
                  smali.CONST(tmp_reg_for_constant, "0x3dcccccd"), 
                  smali.BLANK_LINE(),
-                 smali.SPUT(tmp_reg_for_constant, scd.class_name, taint_location),
+                 smali.SPUT(tmp_reg_for_constant, taint_location),
                  smali.BLANK_LINE(),
                  smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for getDeviceID()")]
 
@@ -454,7 +467,8 @@ class Instrumenter:
         
             
         dest_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
-        taint_loc_dest = scd.create_taint_field(m.get_name(), dest_reg)
+        #taint_loc_dest = scd.create_taint_field(m.get_name(), dest_reg)
+        taint_loc_dest = storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), dest_reg)
         
         try:
             tmp_reg_for_constant = m.make_new_reg()
@@ -469,7 +483,7 @@ class Instrumenter:
         block = Instrumenter.make_comment_block("for getLastKnownLocation()")
         block.append(smali.CONST_16(tmp_reg_for_constant, "0x4000"))
         block.append(smali.BLANK_LINE())
-        block.append(smali.SPUT(tmp_reg_for_constant, scd.class_name, taint_loc_dest))
+        block.append(smali.SPUT(tmp_reg_for_constant, taint_loc_dest))
         block = block + Instrumenter.make_comment_block("for getLastKnownLocation()")
         
         block = block + logBlock
@@ -489,7 +503,8 @@ class Instrumenter:
             return 0
             
         dest_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
-        taint_loc_dest = scd.create_taint_field(m.get_name(), dest_reg)
+        #taint_loc_dest = scd.create_taint_field(m.get_name(), dest_reg)
+        taint_loc_dest = storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), dest_reg)
         
         try:
             tmp_reg_for_constant = m.make_new_reg()
@@ -504,7 +519,7 @@ class Instrumenter:
         block = Instrumenter.make_comment_block("for getLongitude()")
         block.append(smali.CONST_16(tmp_reg_for_constant, "0x3f80"))
         block.append(smali.BLANK_LINE())
-        block.append(smali.SPUT(tmp_reg_for_constant, scd.class_name, taint_loc_dest))
+        block.append(smali.SPUT(tmp_reg_for_constant, taint_loc_dest))
         block = block + Instrumenter.make_comment_block("for getLongitude()")
         
         block = block + logBlock
@@ -525,7 +540,8 @@ class Instrumenter:
             return 0
             
         dest_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
-        taint_loc_dest = scd.create_taint_field(m.get_name(), dest_reg)
+        #taint_loc_dest = scd.create_taint_field(m.get_name(), dest_reg)
+        taint_loc_dest = storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), dest_reg)
         
         try:
             tmp_reg_for_constant = m.make_new_reg()
@@ -540,7 +556,7 @@ class Instrumenter:
         block = Instrumenter.make_comment_block("for getLatitude()")
         block.append(smali.CONST_16(tmp_reg_for_constant, "0x3f80"))
         block.append(smali.BLANK_LINE())
-        block.append(smali.SPUT(tmp_reg_for_constant, scd.class_name, taint_loc_dest))
+        block.append(smali.SPUT(tmp_reg_for_constant, taint_loc_dest))
         block = block + Instrumenter.make_comment_block("for getLatitude()")
         
         block = block + logBlock
@@ -562,7 +578,8 @@ class Instrumenter:
             return 0
             
         reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
-        taint_loc = scd.create_taint_field(m.get_name(), reg)
+        #taint_loc = scd.create_taint_field(m.get_name(), reg)
+        taint_loc = storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), reg)
         
         # 1
         try:
@@ -581,10 +598,10 @@ class Instrumenter:
         block.append(smali.BLANK_LINE())
         block.append(smali.CONST_16(tmp_reg_for_constant, "0x3f80"))
         block.append(smali.BLANK_LINE())
-        block.append(smali.SPUT(tmp_reg_for_constant, scd.class_name, taint_loc))
+        block.append(smali.SPUT(tmp_reg_for_constant, taint_loc))
         
         block = logBlock + block + Instrumenter.make_comment_block("for getLine1Number()")
-        print("embeding block: " + block)
+        #print("embeding block: " + str(block))
         m.embed_block(line_num, block)
         m.free_reg() # 1
         return len(block)
@@ -604,7 +621,8 @@ class Instrumenter:
         target_reg = results[1]
         # print("results: " + str(results))
 
-        taint_loc = scd.create_taint_field(m.get_name(), target_reg)
+        #taint_loc = scd.create_taint_field(m.get_name(), target_reg)
+        taint_loc = storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), target_reg)
 
         
         # TODO: re-write the below using only 3 registers (or fewer
@@ -624,7 +642,7 @@ class Instrumenter:
         block = [smali.BLANK_LINE(),
                  smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for write()"),
                  smali.BLANK_LINE(),
-                 smali.SGET(taint_tag_reg, scd.class_name, taint_loc),
+                 smali.SGET(taint_tag_reg, taint_loc),
                  smali.BLANK_LINE(),
                  smali.CONST_16(zero_reg, "0x0"),
                  smali.BLANK_LINE(),
@@ -674,7 +692,8 @@ class Instrumenter:
         target_reg = results[1]
         # print("results: " + str(results))
 
-        taint_loc = scd.create_taint_field(m.get_name(), target_reg)
+        #taint_loc = scd.create_taint_field(m.get_name(), target_reg)
+        taint_loc = storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), target_reg)
 
         # TODO: re-write the below using only 3 registers (or fewer
         # if possible
@@ -693,7 +712,7 @@ class Instrumenter:
         block = [smali.BLANK_LINE(),
                  smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for Log.d() (simulated leak)"),
                  smali.BLANK_LINE(),
-                 smali.SGET(taint_tag_reg, scd.class_name, taint_loc),
+                 smali.SGET(taint_tag_reg, taint_loc),
                  smali.BLANK_LINE(),
                  smali.CONST_16(zero_reg, "0x0"),
                  smali.BLANK_LINE(),
@@ -756,7 +775,8 @@ class Instrumenter:
         # this is necessary because the tag must be in a package
         # that the caller class can access.  This is not easy to know
         # when looking only at smali code
-        taint_field_dest = scd.create_taint_field("return", "field")
+        #taint_field_dest = scd.create_taint_field("return", "field")
+        taint_field_dest = storage_handler.add_taint_location(scd.class_name[1:-1], "return", "field")
         
         regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
         if(regs == []):
@@ -769,12 +789,13 @@ class Instrumenter:
             
             block.append(smali.CONST(reg_for_zero, "0x0"))
             block.append(smali.BLANK_LINE())
-            block.append(smali.SPUT(reg_for_zero, scd.class_name, taint_field_dest))
+            block.append(smali.SPUT(reg_for_zero, taint_field_dest))
             
             m.free_reg() # 1
             
         else:
-            taint_field_src = scd.create_taint_field(m.get_name(), regs[0])
+            #taint_field_src = scd.create_taint_field(m.get_name(), regs[0])
+            taint_field_src = storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), regs[0])
             block = block + Instrumenter.make_simple_assign_block(scd, m, taint_field_dest, taint_field_src)
             
         block = block + Instrumenter.make_comment_block("for RETURN")
@@ -844,8 +865,10 @@ class Instrumenter:
         block = Instrumenter.make_comment_block("for INTERNAL METHOD")
         idx = 0
         for reg in param_regs:
-            taint_loc_dest = callee_class_obj.create_taint_field(callee_method_name, "p" + str(idx))
-            taint_loc_src = scd.create_taint_field(m.get_name(), reg)
+            #taint_loc_dest = callee_class_obj.create_taint_field(callee_method_name, )
+            taint_loc_dest = storage_handler.add_taint_location(callee_class_obj.class_name[1:-1], callee_method_name, "p" + str(idx))
+            #taint_loc_src = scd.create_taint_field(m.get_name(), reg)
+            taint_loc_src = storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), reg)
             block = block + Instrumenter.make_two_class_assign_block(callee_class_obj, scd, m, taint_loc_dest, taint_loc_src)
             block.append(smali.BLANK_LINE())
             idx = idx + 1
@@ -884,8 +907,10 @@ class Instrumenter:
         # this is necessary because the tag must be in a package
         # that the caller class can access.  This is not easy to know
         # when looking only at smali code
-        taint_loc_src = callee_class_obj.create_taint_field("return", "field")
-        taint_loc_dest = scd.create_taint_field(m.get_name(), reg)
+        #taint_loc_src = callee_class_obj.create_taint_field("return", "field")
+        taint_loc_src = storage_handler.add_taint_location(callee_class_obj.class_name[1:-1], "return", "field")
+        #taint_loc_dest = scd.create_taint_field(m.get_name(), reg)
+        taint_loc_dest = storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), reg)
         
         result_block = Instrumenter.make_comment_block("for MOVE-RESULT")
         result_block = result_block + Instrumenter.make_two_class_assign_block(scd, callee_class_obj, m, taint_loc_dest, taint_loc_src)
@@ -966,7 +991,8 @@ class Instrumenter:
             # if it is present?
       
         result_regs = StigmaStringParsingLib.get_v_and_p_numbers(result_line)
-        taint_loc_result = scd.create_taint_field(m.get_name(), result_regs[0])
+        #taint_loc_result = scd.create_taint_field(m.get_name(), result_regs[0])
+        taint_loc_result = storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), result_regs[0])
         
         block = Instrumenter.make_comment_block("for EXTERNAL METHOD")
         block = block + Instrumenter.make_merge_register_block(scd, m, param_regs, taint_loc_result)
@@ -1032,7 +1058,8 @@ class Instrumenter:
 
         block = [smali.BLANK_LINE(), smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for %s instruction" % instruction)]
 
-        taint_loc_result = scd.create_taint_field(m.get_name(), regs[0])
+        #taint_loc_result = scd.create_taint_field(m.get_name(), regs[0])
+        taint_loc_result = storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), regs[0])
 
         # this should probably not merge in the destination register (only the parameter registers)
         blockquette = Instrumenter.make_merge_register_block(scd, m, regs[1:], taint_loc_result)
@@ -1070,8 +1097,10 @@ class Instrumenter:
         regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
         
         #print("cur line: " + str(cur_line) + "   regs: " + str(regs))
-        taint_field_dest = scd.create_taint_field(m.get_name(), regs[0])
-        taint_field_src = scd.create_taint_field(m.get_name(), regs[1])
+        #taint_field_dest = scd.create_taint_field(m.get_name(), regs[0])
+        taint_field_dest = storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), regs[0])
+        #taint_field_src = scd.create_taint_field(m.get_name(), regs[1])
+        taint_field_src = storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), regs[1])
         
         block = Instrumenter.make_comment_block("for MOVE")
         block = block + Instrumenter.make_simple_assign_block(scd, m, taint_field_dest, taint_field_src)
@@ -1093,7 +1122,8 @@ class Instrumenter:
         
         regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
         
-        taint_field_loc = scd.create_taint_field(m.get_name(), regs[0])
+        #taint_field_loc = scd.create_taint_field(m.get_name(), regs[0])
+        taint_field_loc = storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), regs[0])
         try:
             reg_for_zero = m.make_new_reg() #1
         except RuntimeError:
@@ -1102,7 +1132,7 @@ class Instrumenter:
         block = Instrumenter.make_comment_block("for CONST")
         block.append(smali.CONST(reg_for_zero, "0x0"))
         block.append(smali.BLANK_LINE())
-        block.append(smali.SPUT(reg_for_zero, scd.class_name, taint_field_loc))
+        block.append(smali.SPUT(reg_for_zero, taint_field_loc))
         block = block + Instrumenter.make_comment_block("for CONST")
         
         m.embed_block(line_num, block)
@@ -1122,8 +1152,10 @@ class Instrumenter:
 
         regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
         
-        taint_field_src = scd.create_taint_field(m.get_name(), regs[1])
-        taint_field_dest = scd.create_taint_field(m.get_name(), regs[0])
+        #taint_field_src = scd.create_taint_field(m.get_name(), regs[1])
+        taint_field_src = storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), regs[1])
+        #taint_field_dest = scd.create_taint_field(m.get_name(), regs[0])
+        taint_field_dest = storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), regs[0])
         
         block = Instrumenter.make_comment_block("for NEG")
         block = block + Instrumenter.make_simple_assign_block(scd, m, taint_field_dest, taint_field_src)
@@ -1151,8 +1183,10 @@ class Instrumenter:
             # this is very common and requires no instrumentation
             return 0
         
-        taint_field_src = scd.create_taint_field(m.get_name(), regs[1])
-        taint_field_dst = scd.create_taint_field(m.get_name(), regs[0])
+        #taint_field_src = scd.create_taint_field(m.get_name(), regs[1])
+        taint_field_src= storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), regs[1])
+        #taint_field_dst = scd.create_taint_field(m.get_name(), regs[0])
+        taint_field_dst = storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), regs[0])
         
         block = Instrumenter.make_comment_block("for CONVERTER: " + str(opcode))
         block = block + Instrumenter.make_simple_assign_block(scd, m, taint_field_dst, taint_field_src)

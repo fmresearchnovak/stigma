@@ -156,3 +156,7 @@ APK/
 
 # The data files
 *.dat
+
+
+# macOS directory meta-information
+.DS_Store

@@ -36,10 +36,6 @@
 # _TWO_REGISTER_BINARY_INSTRUCTION
 # _TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION
 
-from stigma import StigmaStringParsingLib
-
-
-
 
 class SmaliAssemblyInstruction():
 
@@ -747,6 +743,7 @@ class _S_INSTRUCTION(SmaliAssemblyInstruction):
     # A parent class that should never be instantiated directly
     #   Backward compatibility with how we call IGET() in Instrument
     def __init__(self, reg_dest, class_name , instance_field_name = ""): 
+        self.field_fqn = ""
         self.rd = reg_dest
         if instance_field_name != "":
             cn = class_name
@@ -754,13 +751,13 @@ class _S_INSTRUCTION(SmaliAssemblyInstruction):
             self.field_id =  cn + "->" + ifn
         else:
             self.field_id = class_name
-
         
     def get_registers(self):
         return [self.rd]
 
     def __repr__(self):
-        return self.opcode() + " " + self.rd + ", " + self.field_id
+        if self.field_fqn == "":
+            return self.opcode() + " " + self.rd + ", " + self.field_id
 
 class SGET(_S_INSTRUCTION):
     def opcode(self):
