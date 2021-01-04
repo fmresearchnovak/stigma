@@ -316,6 +316,20 @@ class SmaliClassDef:
         return len(self.methods)
 
 
+    def get_num_field_references(self):
+        # this should be computed here and not computed else- where 
+        # and cached.  The reasoning is because the number of field
+        # references changes drastically after the instrumentation
+        field_ref_set = set()
+        for m in self.methods:
+            for line in m.raw_text:
+                if StigmaStringParsingLib.is_field_instruction(line):
+                    field_name = StigmaStringParsingLib.break_into_tokens(line)[-1]
+                    field_ref_set.add(field_name)
+        #print(field_ref_set)
+        return len(field_ref_set)
+                
+
     @staticmethod
     def _count_fields(fieldsList):
         regexBeginsWithField = r"^\s*.field"

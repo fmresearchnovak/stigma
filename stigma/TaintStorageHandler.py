@@ -28,7 +28,8 @@ class TaintStorageHandler:
                 str(self.current_storage_class_num))
             self.storage_classes = [self.current_storage_class]
             #self.max_fields = 100
-            self.max_fields = 16384
+            #self.max_fields = 16384
+            self.max_fields = 8190
             #max 'fields per class' parameter
             ### TODO why isn't max_fields 1000 or 32768?
 

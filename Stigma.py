@@ -166,15 +166,21 @@ def extractPathParts(path, begin, end):
 
 def splitSmali():
     print("Re-arranging Smali Files")
-    # Our stigma instrumentation will add many fields to each class
+    # There are separately enumerated and indexed constant pools for references to strings, types, fields, and methods. 
+    # https://source.android.com/devices/tech/dalvik/dalvik-bytecode
+    
+    # Our stigma instrumentation will add many fields and many classes
     # unfortunately, for a single smali_classesX folder there can only be 
-    # so many fields in all the classes combined.  We typically break that limit
-    # so, we can resolve the issue by simply moving some files to smali_classesX+1
+    # so many classes, so many fields in all the classes combined, 
+    # and so many methods in all classes combined .  We typically break
+    # those limits.  So, we can resolve the issue by simply moving 
+    # some files to smali_classesX+1
 
     # basic algorithm is to place all smali files into a list
     # regardless of existing folder location (smali_classesX)
     # go through the list linearly and count the number of fields
-    # in the classes.  If the number of fields goes above THRESH
+    # in the classes, methods in the classes, and total number of
+    # classes.  If any of those goes above THRESH
     # break the list at this point and designate all the files
     # until this point to be in smali_classesY (where Y increments)
     # each time the list is split up
@@ -186,9 +192,10 @@ def splitSmali():
     # (number of fields in file1, 2, 3, and 4 combined is > THRESH)
     #
 
-    THRESH = 16384 # probably isn't the correct threshold
+    THRESH = 32767 # probably isn't the correct threshold
     # max unsigned short: 65535
-    # max signed short: 32767    <-- probably the actual threshold
+    # middle-ground: 16384 probably not relevant
+    # max signed short: 32767
     # max unsigned byte: 255
     # max signed byte: 127
 
@@ -196,7 +203,9 @@ def splitSmali():
     smaliFiles = getFiles()
 
     totalFieldCount = 0
+    totalFieldRefCount = 0
     totalMethodCount = 0
+    totalClassCount = 0
     resultLists = []
     s = 0
     e = 0
@@ -204,34 +213,47 @@ def splitSmali():
         scd = SmaliClassDef.SmaliClassDef(smaliFile)
         field_num = scd.get_num_fields()
         method_num = scd.get_num_methods()
+        field_ref_num = scd.get_num_field_references()
         
         if(field_num > THRESH):
+            # https://github.com/JesusFreke/smali/issues/301
             raise RuntimeError("fields in " + str(smaliFile) + " is greater than threshold. " + str(field_num) + ">" + str(THRESH))
         
         if(method_num > THRESH):
             # https://github.com/JesusFreke/smali/issues/301
             raise RuntimeError("methods in " + str(smaliFile) + " is greater than threshold. " + str(method_num) + ">" + str(THRESH))
+            
+        if(field_ref_num > THRESH):
+            # https://github.com/JesusFreke/smali/issues/301
+            raise RuntimeError("methods in " + str(smaliFile) + " is greater than threshold. " + str(method_num) + ">" + str(THRESH))
 
-        if((totalFieldCount + field_num >= THRESH) or (totalMethodCount + method_num >= THRESH)):
+        if( (totalFieldCount + field_num >= THRESH) or ((totalMethodCount + method_num) >= THRESH) or ((totalClassCount + 1) >= THRESH) or ((totalFieldRefCount + field_ref_num) > THRESH) ):
+            
             if((totalMethodCount + method_num >= THRESH)):
-                print("METHOD COUNT!")
+                print("METHOD COUNT:   " + str(totalMethodCount) + "->" + str(totalMethodCount + method_num))
+                
+            if((totalFieldRefCount + field_ref_num >= THRESH)):
+                print("FIELD REF COUNT:   " + str(totalFieldRefCount) + "->" + str(totalFieldRefCount + field_ref_num))
                 
             # do a break
             e = idx
             resultLists.append(smaliFiles[s:e])
             s = e
             
-            totalFieldCount = field_num
-            totalMethodCount = method_num
             # technical detail that's easy to miss / confuse
             # the file that broke the threshold
             # goes into the NEXT list
-            
+            totalFieldCount = field_num
+            totalFieldRefCount = field_ref_num
+            totalMethodCount = method_num
+            totalClassCount = 1
 
 
         else:
             totalFieldCount+=field_num
+            totalFieldRefCount+=field_ref_num
             totalMethodCount+=method_num
+            totalClassCount+=1
 
 
     print("...Moving files")
@@ -272,12 +294,14 @@ def splitSmali():
 #rebuild apk
 def rebuildApk():
     # dumps the apk file in current working directory
-    input("continue?")
     start_time = time.time()
     newName = getNewAPKName()
     rebuildCMD = ["apktool", "b", temp_file.name, "-o", getNewAPKName()]
     completedProcess = subprocess.run(rebuildCMD)
-    completedProcess.check_returncode()
+    try:
+        completedProcess.check_returncode()
+    except:
+        input("continue?")
     print("Apk packed in %.1f seconds" % (time.time() - start_time))
 
 

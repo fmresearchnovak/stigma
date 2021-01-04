@@ -69,11 +69,8 @@ class Instrumenter:
         except RuntimeError:
             return block
             
-        # TODO: remove the CONST_16 for tmp_reg2 as it is unnecessary
-        # the SGET in the for loop will set / overwrite it's value
+
         block.append(smali.CONST_16(tmp_reg1_for_merging, "0x0"))
-        block.append(smali.BLANK_LINE())
-        block.append(smali.CONST_16(tmp_reg2_for_merging, "0x0"))
 
         for r in registers:
             taint_loc_param = storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), r)

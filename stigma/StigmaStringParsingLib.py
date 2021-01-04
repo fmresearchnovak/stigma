@@ -113,6 +113,26 @@ def is_valid_instruction(line):
         
     opcode = tokens[0]
     return opcode in valid_instructions_set
+    
+def is_field_instruction(line):
+    search_object = re.search(BEGINS_WITH_SPUT, line)
+    if search_object is not None:
+        return True
+        
+    search_object = re.search(BEGINS_WITH_SGET, line)
+    if search_object is not None:
+        return True
+        
+    search_object = re.search(BEGINS_WITH_IPUT, line)
+    if search_object is not None:
+        return True
+        
+    search_object = re.search(BEGINS_WITH_IGET, line)
+    if search_object is not None:
+        return True
+
+        
+    return False
 
 def get_num_register_parameters(instr):
     #print("calling get num register parameters on: " + instr)
