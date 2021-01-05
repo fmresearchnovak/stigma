@@ -72,17 +72,34 @@ def get_num_registers(line):
 
 
 def get_v_and_p_numbers(line):
-    number_registers = get_num_registers(line)
 
     tokens = break_into_tokens(line)
-    relevant_list = tokens[1:number_registers + 1]
+    if "range" in tokens[0]:
+        range_spec = re.search(r"{(.+)}", line).group(0)
+        #print("range_spec: " + str(range_spec))
+        parts = range_spec.split("..")
+        #print("parts: " + str(parts))
+        start = parts[0].strip(" {")
+        end = parts[1].strip(" }")
+        letter = start[0]
+        #print("end: " + str(end))
+        start_num = int(start[1:])
+        end_num = int(end[1:])
+        registers = []
+        for i in range(start_num, end_num+1):
+            registers.append(letter + str(i))
+        
+    else:    
+        number_registers = get_num_registers(line)
+        relevant_list = tokens[1:number_registers + 1]
 
-    registers = []
-    for token in relevant_list:
-        registers += re.findall(r"p[0-9]+|v[0-9]+", token)
-        
+        registers = []
+        for token in relevant_list:
+            registers += re.findall(r"p[0-9]+|v[0-9]+", token)
+            
     return registers
-        
+    
+
 
 def get_p_numbers(line):
     registers = get_v_and_p_numbers(line)
@@ -105,10 +122,6 @@ def is_valid_instruction(line):
     tokens = break_into_tokens(line)
 
     if(tokens == []):
-        return False
-        
-    ## Have not parsed range syntax correctly yet
-    if 'range' in tokens[0]:
         return False
         
     opcode = tokens[0]
@@ -281,6 +294,7 @@ def main():
 
     assert(get_v_and_p_numbers("const-string v1, \"Parcelables cannot be written to an OutputStream\"\n") == ["v1"])
     assert(get_v_and_p_numbers("filled-new-array {v0, v1, v2}, [Ljava/lang/String;\n") == ["v0", "v1", "v2"])
+    assert(get_v_and_p_numbers("invoke-static/range {v0 .. v7}, Lcom/example/class1;->foo()Z;") == ["v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7"])
 
     assert(get_p_numbers("const-string p0, \"Parcelables cannot be written to an OutputStream\"\n") == ["p0"])
     assert(get_p_numbers("filled-new-array {v0, p1, v2}, [Ljava/lang/String;\n") == ["p1"])
