@@ -4,10 +4,14 @@ Stigma instruments the Smali assembly code of commodity Android applications in 
 # Usage
 `python3 StigmaExecutor.py /path/to/application.apk`
 
+<br/>
+A new APK file should be generated (and signed): `Tracked_application.apk` which can be installed / run on a device:
+
+`adb install -r Tracked_application.apk`
 
 
 ### Necessary Dependencies
-* Linux or MacOS environment.  Code should be compatible on Windows as well, but it is untested.
+* Linux or MacOS environment.  Code might be compatible on Windows as well, but is untested.
 * python3
 * apktool (available in Ubuntu repository and here: https://ibotpeaches.github.io/Apktool/)
 * openjdk-11-jdk
@@ -21,6 +25,8 @@ Stigma instruments the Smali assembly code of commodity Android applications in 
 
 
 # Troubleshooting
+
+Stigma is currently ``beta'' software.  Numerous bugs and limitations exist, which limit broad compatibility with many Android apps.  It is intended to be a tool intended for computer science researchers in (a) smali byte-code instrumentation or (b) dynamic information flow channel.
 
 ### APKTOOL issues
 Suppose when re-building (apktool b) there is an error of this nature:
@@ -39,17 +45,13 @@ Then you should do:
 
 `rm -r ~/.local/share/apktool/`
 
-Also, it maybe be necessary to NOT use the Ubuntu provided version of apktool.  Use the publically available one instead: https://ibotpeaches.github.io/Apktool/
+Also, it may be necessary to NOT use the Ubuntu provided version of apktool.  Use the publicly available one instead: https://ibotpeaches.github.io/Apktool/
 
-### Advanced Usage
-Consider modifiying the final lines in the "main" portion of StigmaExecutor.py to configure which aspects of Stigma you would like to execute.
 
-The Stigma.py program can be used to parse and instrument a single smali file.  This can be used to instrument a single class, for debugging, or for research purposes.
+# Utilities and Auxiliary Programs
 
-`python3 Stigma.py /path/to/file.smali`
+* `stigma/count_pools.sh` - Bash command line utility for counting the references to strings, types, fields, and methods.  Requires the installation of [https://github.com/JesusFreke/smali/](the smali command line tool).
 
-Command line flags for Stigma.py include
+* `stigma/valid_smali_instructions.txt` and `stigma/ValidSmaliInstrunctions.py` comprehensive collection of all valid smali opcode names.
 
-* __`-ow`__ "over-write" over-writes the input file with the instrumented version.
-* __`-o`__  "output file" (e.g., `python3 Stigma.py -o result.smali input.smali`) outputs the instrumented version of the input to the specified path.  Note: input file must be the final argument given on the command line.
-* __`-a`__ "analytics" output analytics such as lines of code before and after Stigma instrumentation.  All information is sent to analytics.dat in temporary directory.
+* `stigma/app_check_eval.py` utility that searches for small collection of likely source function calls.  Takes a path to a folder (containing APKs) as input.
