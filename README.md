@@ -50,7 +50,7 @@ Also, it may be necessary to NOT use the Ubuntu provided version of apktool.  Us
 
 # Utilities and Auxiliary Programs
 
-* `stigma/count_pools.sh` - Bash command line utility for counting the references to strings, types, fields, and methods.  Requires the installation of [https://github.com/JesusFreke/smali/](the smali command line tool).
+* `stigma/count_pools.sh` - Bash command line utility for counting the references to strings, types, fields, and methods.  Requires the installation of [the smali command line tool](https://github.com/JesusFreke/smali/).
 
 * `stigma/valid_smali_instructions.txt` and `stigma/ValidSmaliInstrunctions.py` comprehensive collection of all valid smali opcode names.
 
