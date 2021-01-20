@@ -208,6 +208,8 @@ class SmaliMethodDef:
 
 
     def make_new_reg(self):
+        # see comment below this method
+        
         # Do not allow the system to push any register (even pX) 
         # over the "v15" barrier (v0 .. v15 = 16 total registers)
         if(self.get_num_registers() >= 16):
@@ -222,6 +224,35 @@ class SmaliMethodDef:
             self.set_locals_directive(self.reg_number_float)
             
         return "v" + str(self.reg_number_float -1)
+
+
+    # Consider the following method which came from the whatsapp
+    # app
+    # the .locals is 1 indicating that v0 is the only local register.
+    # that is true. BUT, the first use of v0 is to store a long (J)
+    # so actually v0 and v1 are used.  I assume that p0 is v1, but p0 is
+    # over-written immediately after it's first and only use.
+    # If we attempt to use v1 for some taint-tag propagation
+    # it will cause a verify error since v1 is supposed to hold the second
+    # half of a long
+    '''
+    .method public static A0C(Ljava/lang/Long;J)Ljava/lang/Long;
+    .locals 1
+
+    invoke-virtual {p0}, Ljava/lang/Number;->longValue()J
+
+    move-result-wide v0
+
+    sub-long/2addr p1, v0
+
+    invoke-static {p1, p2}, Ljava/lang/Long;->valueOf(J)Ljava/lang/Long;
+
+    move-result-object v0
+
+    return-object v0
+    
+    .end method
+    '''
 
     # Only v0 - v16 registers are allowed for general purpose use.
     # This is enforced by apktool.  The documentation indicates that

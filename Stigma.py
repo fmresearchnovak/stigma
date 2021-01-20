@@ -165,7 +165,7 @@ def extractPathParts(path, begin, end):
     return ans
 
 def splitSmali():
-    print("Re-arranging Smali Files")
+    print("Accounting For Constant Pool Limits")
     # There are separately enumerated and indexed constant pools for references to strings, types, fields, and methods. 
     # https://source.android.com/devices/tech/dalvik/dalvik-bytecode
     
@@ -191,8 +191,10 @@ def splitSmali():
     #                                split point
     # (number of fields in file1, 2, 3, and 4 combined is > THRESH)
     #
+    
 
-    THRESH = 32767 # probably isn't the correct threshold
+
+    THRESH = 32768 # probably isn't the correct threshold
     # max unsigned short: 65535
     # middle-ground: 16384 probably not relevant
     # max signed short: 32767
@@ -202,38 +204,39 @@ def splitSmali():
 
     smaliFiles = getFiles()
 
+    # see the instructions that correspond to the 4 different 
+    # countable things: type_id, string_id, field_id,
+    # http://pallergabor.uw.hu/androidblog/dalvik_opcodes.html
+    # method_id does not exist in that file.  BUT, the 
     totalFieldCount = 0
-    totalFieldRefCount = 0
     totalMethodCount = 0
-    totalClassCount = 0
+    
+    # missing: strings, classes
+    
     resultLists = []
     s = 0
     e = 0
     for idx, smaliFile in enumerate(smaliFiles):
         scd = SmaliClassDef.SmaliClassDef(smaliFile)
-        field_num = scd.get_num_fields()
-        method_num = scd.get_num_methods()
-        field_ref_num = scd.get_num_field_references()
+        field_num = scd.get_num_field_declarations() + scd.get_num_field_references()
+        method_num = scd.get_num_method_declarations() + scd.get_num_method_references()
         
-        if(field_num > THRESH):
-            # https://github.com/JesusFreke/smali/issues/301
-            raise RuntimeError("fields in " + str(smaliFile) + " is greater than threshold. " + str(field_num) + ">" + str(THRESH))
         
         if(method_num > THRESH):
             # https://github.com/JesusFreke/smali/issues/301
             raise RuntimeError("methods in " + str(smaliFile) + " is greater than threshold. " + str(method_num) + ">" + str(THRESH))
             
-        if(field_ref_num > THRESH):
+        if(field_num > THRESH):
             # https://github.com/JesusFreke/smali/issues/301
             raise RuntimeError("methods in " + str(smaliFile) + " is greater than threshold. " + str(method_num) + ">" + str(THRESH))
 
-        if( (totalFieldCount + field_num >= THRESH) or ((totalMethodCount + method_num) >= THRESH) or ((totalClassCount + 1) >= THRESH) or ((totalFieldRefCount + field_ref_num) > THRESH) ):
+        if( (totalFieldCount + field_num >= THRESH) or ((totalMethodCount + method_num) >= THRESH)):
             
             if((totalMethodCount + method_num >= THRESH)):
                 print("METHOD COUNT:   " + str(totalMethodCount) + "->" + str(totalMethodCount + method_num))
                 
-            if((totalFieldRefCount + field_ref_num >= THRESH)):
-                print("FIELD REF COUNT:   " + str(totalFieldRefCount) + "->" + str(totalFieldRefCount + field_ref_num))
+            if((totalFieldCount + field_num >= THRESH)):
+                print("FIELD  COUNT:   " + str(totalFieldCount) + "->" + str(totalFieldCount + field_num))
                 
             # do a break
             e = idx
@@ -244,19 +247,14 @@ def splitSmali():
             # the file that broke the threshold
             # goes into the NEXT list
             totalFieldCount = field_num
-            totalFieldRefCount = field_ref_num
             totalMethodCount = method_num
-            totalClassCount = 1
 
 
         else:
             totalFieldCount+=field_num
-            totalFieldRefCount+=field_ref_num
             totalMethodCount+=method_num
-            totalClassCount+=1
 
-
-    print("...Moving files")
+    print("...Re-arranging files")
     #print(str(len(resultLists)) + " groups")
     for idx, group in enumerate(resultLists):
         path = os.path.join(temp_file.name, "smali/")
@@ -331,8 +329,6 @@ def signApk():
     #print("Signing...")
     newAppName = getNewAPKName()
     #jarsigner -keystore stigma-keys.keystore -storepass MzJiY2ZjNjY5Z ./leak_detect_test/Tracked_StigmaTest.apk stigma_keystore_alias
-
-    # jarsigner -verbose -keystore my-release-key.keystore ./Leaks/dist/Leaks.apk alias_name
     cmd = ["jarsigner", "-keystore", keystore_name, "-storepass", password, newAppName, stigma_alias]
     completedProcess = subprocess.run(cmd)
     completedProcess.check_returncode()

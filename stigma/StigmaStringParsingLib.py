@@ -1,4 +1,5 @@
 import re
+from stigma import ValidSmaliInstructions
 
 BEGINS_WITH_DOT = r"^\s*\."  # oat "assembler" directives begin with a .dot
 BEGINS_WITH_HASHTAG = r"^\s*\#"
@@ -52,7 +53,6 @@ BEGINS_WITH_MOVE = r"^\s*move"
 
 
 
-valid_instructions_set = set([x.strip() for x in open("./stigma/valid_smali_instructions.txt", "r").readlines()])
 
 
 def get_v_from_p(p_register, locals_num):
@@ -114,7 +114,6 @@ def break_into_tokens(line):
     return tokens
     
 def is_valid_instruction(line):
-    global valid_instructions_set
     # valid_instructions_list 
     # is global so reading from file 
     # only happens once (not sure if 
@@ -125,7 +124,7 @@ def is_valid_instruction(line):
         return False
         
     opcode = tokens[0]
-    return opcode in valid_instructions_set
+    return opcode in ValidSmaliInstructions.SET
     
 def is_field_instruction(line):
     search_object = re.search(BEGINS_WITH_SPUT, line)
@@ -145,6 +144,12 @@ def is_field_instruction(line):
         return True
 
         
+    return False
+    
+def is_method_call_instruction(line):
+    search_object = re.search(BEGINS_WITH_INVOKE, line)
+    if search_object is not None:
+        return True
     return False
 
 def get_num_register_parameters(instr):
@@ -304,6 +309,8 @@ def main():
     assert(get_num_registers("const-string v1, \"hard example: v2\"\n") == 1)
 
     assert(is_valid_instruction("    .line 36") == False)
+    
+    assert(break_into_tokens("    invoke-static/range {v0 .. v7}, Lcom/example/class1;->foo()Z;")[-1] == "Lcom/example/class1;->foo()Z;")
     print("ALL StringParsingLib TESTS PASSED")
 
 
