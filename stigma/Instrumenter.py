@@ -11,9 +11,11 @@ import re
 STRING_IMEI_FUNCTION = "Landroid/telephony/TelephonyManager;->getDeviceId()Ljava/lang/String;"
 STRING_PHONE_NUM_FUNCTION = "Landroid/telephony/TelephonyManager;->getLine1Number()Ljava/lang/String;"
 STRING_STREAM_WRITE_FUNCTION = "Ljava/io/OutputStreamWriter;->write(Ljava/lang/String;II)V"
-BYTE_STREAM_WRITE_FUNCTION = "Ljava/io/OutputStream;->write([BII)V"
-#Ljava/io/OutputStream;->write([B)V
-#Ljava/io/OutputStream;->write(I)V
+BYTE_STREAM_WRITE_FUNCTION_OVER = "Ljava/io/OutputStream;->write([BII)V"
+BYTE_STREAM_WRITE_FUNCTION = "Ljava/io/OutputStream;->write([B)V"
+INT_STREAM_WRITE_FUNCTION = "Ljava/io/OutputStream;->write(I)V"
+PARCEL_WRITE_FUNCTION = "Landroid/os/Parcel;->write"
+OBJECT_STREAM_WRITE_FUNCTION = "Ljava/io/ObjectOutputStream;->writeObject("
 STRING_LOGD_FUNCTION = "Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I"
 STRING_GET_LAST_KNOWN_LOCATION_FUNCTION = "Landroid/location/LocationManager;->getLastKnownLocation(Ljava/lang/String;)Landroid/location/Location;"
 STRING_GET_LATITUDE = "Landroid/location/Location;->getLatitude()D"
@@ -610,7 +612,17 @@ class Instrumenter:
 
         # determine that this is a write() call and is therefore
         # necessary for WRITE instrumentation
-        if STRING_STREAM_WRITE_FUNCTION not in m.raw_text[line_num]:
+        if STRING_STREAM_WRITE_FUNCTION in m.raw_text[line_num]:
+            pass
+        elif BYTE_STREAM_WRITE_FUNCTION in m.raw_text[line_num]:
+            pass
+        elif BYTE_STREAM_WRITE_FUNCTION_OVER in m.raw_text[line_num]:
+            pass
+        elif INT_STREAM_WRITE_FUNCTION in m.raw_text[line_num]:
+            pass
+        elif OBJECT_STREAM_WRITE_FUNCTION in m.raw_text[line_num]:
+            pass
+        else:
             return 0
 
         # print("line: " + m.raw_text[line_num])

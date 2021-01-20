@@ -15,7 +15,7 @@ class TaintStorageHandler:
     
     @staticmethod
     def gen_field_name(source_class_fqn, method_name, register_name):
-        return "_".join([source_class_fqn, method_name, register_name])
+        return "".join([source_class_fqn, method_name, register_name])
         
     def __init__(self):
         #Virtually private constructor
