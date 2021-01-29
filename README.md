@@ -2,7 +2,7 @@
 Stigma instruments the Smali assembly code of commodity Android applications in order to implement dynamic information flow tracking. It is intended to be used as a sandbox for modifying android apps to test, amongst other things, a novel approach to implicit information flow tracking.
 
 # Usage
-`python3 StigmaExecutor.py /path/to/application.apk`
+`python3 Stigma.py /path/to/application.apk`
 
 <br/>
 A new APK file should be generated (and signed): `Tracked_application.apk` which can be installed / run on a device:
