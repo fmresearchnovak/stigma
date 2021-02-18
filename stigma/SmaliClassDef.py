@@ -112,7 +112,7 @@ class SmaliClassDef:
         # iput v2, p1, someclass->somefield
         # iget v3, p2, someclass->somefield
         # 
-        # somefield_p1_TAINT:I <- foo_v2_taint:I
+        # somefield_p1_TAINT:I <- foo_v2_taint:F
         # 
 
         # identifier = method name or instance field name
