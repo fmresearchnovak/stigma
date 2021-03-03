@@ -145,15 +145,15 @@ class SmaliMethodDef:
 
         self.scd = scd # smali class definition
         
+        
+        # should be re-factored with get_signature() method below
         self.signature = SmaliMethodSignature(self.raw_text[0])
         # print("created: " + str(self.signature))
-
-        self.ORIGINAL_NUM_REGISTERS = self.get_num_registers()
 
 
 
     # There are three "register numbers"
-    # 1) The ORIGINAL_NUMER_REGS
+    # 1) The ORIGINAL_LOCAL_NUMBER_REGS
     #       This is the number of registers this method had / used before
     #       any instrumentation
     #
@@ -188,11 +188,14 @@ class SmaliMethodDef:
             
     def get_num_registers(self):
         # +1 at the end is necessary to account for p0 ("this") reference
+        # this may be a bug, since statid methods don't have a "this" reference
         ans = self.get_locals_directive_num() + self.signature.num_of_parameter_registers + 1
         return ans
         
 
     def get_signature(self):
+        # should be re-factored with self.signature instance variable
+        # above
         return self.raw_text[0].strip()
 
 
