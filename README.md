@@ -10,6 +10,16 @@ A new APK file should be generated (and signed): `Tracked_application.apk` which
 `adb install -r Tracked_application.apk`
 
 
+The "tracked" version of the application will monitor the use of sensitive information (e.g., GPS coordinates).  In the tracked version, if that sensitive information is transmitted over a network connection such as WiFi (i.e., "leaked") by the app, there will be an entry made in the logcat.  That entry will have the tag `STIGMAXY` and a short message indicating that a leak is occurring.
+
+`STIGMAXY, LEAK via WRITE() OCCURING!`
+
+Note, the `X` and `Y` above are variables that encode the type of leak.  The user can then check the logcat for `STIGMA` messages using Android Studio or `adb` on a second computer, or using a logcat reader application directly on the phone / device.
+
+### Limitations
+Stigma has many limitations.  It can only track very limited sources of sensitive information (GPS, IMEI, Device Phone Number) and it can lose track of that sensitive information as the target application operates.  Additionally, the detection of network connections / transmission is very primitive and may not catch many instances.  Extensive future research work and improvments are planned / ongoing.
+
+
 ### Necessary Dependencies
 * Linux or MacOS environment.  Code might be compatible on Windows as well, but is untested.
 * python3
