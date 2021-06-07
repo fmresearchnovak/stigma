@@ -1,4 +1,5 @@
 import re
+from stigma.TypeSafetyChecker import TypeSafetyChecker
 from stigma import SmaliAssemblyInstructions as smali
 from stigma import StigmaStringParsingLib
 from stigma import VRegisterPool
@@ -150,7 +151,9 @@ class SmaliMethodDef:
         self.signature = SmaliMethodSignature(self.raw_text[0])
         # print("created: " + str(self.signature))
 
-
+        #initialize the type checker as a instance variable for each method. 
+        #this will check and track types of each register on each line 
+        self.tcs = TypeSafetyChecker(text)
 
     # There are three "register numbers"
     # 1) The ORIGINAL_LOCAL_NUMBER_REGS
