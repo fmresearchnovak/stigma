@@ -51,6 +51,9 @@ BEGINS_WITH_FILLED_NEW_ARRAY = r"^\s*filled-new-array"
 
 BEGINS_WITH_MOVE = r"^\s*move"
 
+THIRTY_TWO_BIT_TYPES = ["I", "S", "C", "B", "Z", "F"]
+SIXTY_FOUR_BIT_TYPES = ["D", "J"]
+OBJECT_TYPES = ["THIS", "L", "ARRAY"]
 
 
 
