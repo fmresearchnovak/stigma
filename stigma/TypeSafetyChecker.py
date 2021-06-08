@@ -5,7 +5,7 @@ the types of each register at each current line.
 hashmap -> key: string (register name)
         -> value: string, (type stored in the register)(32bit-64bit-object)
 '''
-from stigma import StigmaStringParsingLib
+from stigma.VRegisterPool import VRegisterPool
 
 class TypeSafetyChecker:
 
@@ -44,13 +44,11 @@ class TypeSafetyChecker:
             print("no parameters in this method")
             return        
         else:
-            print("parameters: ", par)
             if line2.find('.locals') == -1:
                 print("invalid instruction for .locals passed in")
                 return 
             else:
                 num_registers = int(line2.strip()[7:].strip())
-                print("num registers: ", num_registers)
                 v_reg_index = num_registers
                 
                 for key,value in self.signature.parameter_type_map.items():
@@ -65,11 +63,11 @@ class TypeSafetyChecker:
 
 
     def check_value_type(self,value):
-        if(value in StigmaStringParsingLib.OBJECT_TYPES):
+        if(value in VRegisterPool.TYPE_LIST_OBJECT_REF):
             return "object"
-        elif (value in StigmaStringParsingLib.THIRTY_TWO_BIT_TYPES):
+        elif (value in VRegisterPool.TYPE_LIST_WORD):
             return "32-bit"
-        elif (value in StigmaStringParsingLib.SIXTY_FOUR_BIT_TYPES):
+        elif (value in VRegisterPool.TYPE_LIST_WIDE):
             return "64-bit"
         else:
             return "invalid type"
