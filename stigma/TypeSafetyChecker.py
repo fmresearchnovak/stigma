@@ -5,7 +5,7 @@ the types of each register at each current line.
 hashmap -> key: string (register name)
         -> value: string, (type stored in the register)(32bit-64bit-object)
 '''
-from stigma.VRegisterPool import VRegisterPool
+from stigma import VRegisterPool
 
 class TypeSafetyChecker:
 
@@ -33,11 +33,11 @@ class TypeSafetyChecker:
         line1 = line1.replace("\n","")
         line2 = line2.replace("\n", "")
         line_type_map = {}
-
+        
+        #replace with num registers from the smalimethodsignature class
         #parse out the parenthesis to get the parameters out
         par_start = line1.find('(')+1
         par_end = line1.find(')')
-        par = line1[par_start: par_end]
 
         #check if the parameter is empty
         if(par_end - par_start == 1):
@@ -46,10 +46,11 @@ class TypeSafetyChecker:
         else:
             if line2.find('.locals') == -1:
                 print("invalid instruction for .locals passed in")
+                #throw an exception here
                 return 
             else:
-                num_registers = int(line2.strip()[7:].strip())
-                v_reg_index = num_registers
+                #method in smali method def does similar parsing(can be used in future)
+                v_reg_index = int(line2.strip()[7:].strip())
                 
                 for key,value in self.signature.parameter_type_map.items():
                     v_reg = "v"+str(v_reg_index) 
@@ -63,6 +64,7 @@ class TypeSafetyChecker:
 
 
     def check_value_type(self,value):
+        print(value)
         if(value in VRegisterPool.TYPE_LIST_OBJECT_REF):
             return "object"
         elif (value in VRegisterPool.TYPE_LIST_WORD):

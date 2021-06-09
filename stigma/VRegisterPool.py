@@ -376,7 +376,7 @@ def main():
 	print("Testing VRegisterPool")
 	
 	# this import is actually only necessary for the tests
-	import SmaliMethodDef 
+	from stigma import SmaliMethodDef 
 	
 	print("\tConstructor...")
 	signature = SmaliMethodDef.SmaliMethodSignature(".method private calculatePageOffsets(Landroidx/viewpager/widget/ViewPager$ItemInfo;ILandroidx/viewpager/widget/ViewPager$ItemInfo;)V")
