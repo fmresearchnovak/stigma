@@ -53,7 +53,29 @@ BEGINS_WITH_MOVE = r"^\s*move"
 
 
 
-
+def parse_array_type(array_string_chunk):
+    # e.g., "[Ljava/lang/String;"  (array of strings)
+    # e.g., "[[I" (array of array of integers, 2D matrix of ints
+    # e.g., "[[[J" array of array of array of long (3D array of long)
+    
+    
+    # aget vx, vy
+    
+    # type(vx) ????    if vy = [[I;
+    # solution: type(vx) = [I (use a move-object)
+    
+    # type(vx)        if vy = [I;
+    # solution: type(vx) = I (use a move)
+    
+    # type(vx)??      if vy = [Ljava/lang/String;
+    # solution: type(vx) = object (String)  (use a move-object)
+    
+    # type(vx) ????    if vy = [[[[I;
+    # solution: type(vx) = "[[[I" (use a move-object)
+    
+    
+    
+    
 
 def get_v_from_p(p_register, locals_num):
     # e.g., _get_v_frl(p2, 2) -> v4
@@ -286,13 +308,14 @@ CONVERTER_INSTRUCTION_LIST = ["int-to-long",  "int-to-float",
  "double-to-long",  "double-to-float",  "int-to-byte",  "int-to-char",
  "int-to-short"]
     
-NON_RELEVANT_INSTRUCTION_LIST = ["nop","return" ,"return-wide", "return-object", "return-void",
- ".param",".line" , "monitor-enter" , "monitor-exit", "check-cast", "throw" ,"goto" , "goto/16", "goto/32" , "packed-switch", 
+NON_RELEVANT_INSTRUCTION_LIST = ["nop","return" ,"return-wide", "return-object", "return-void", 
+ "monitor-enter" , "monitor-exit", "check-cast", "throw" ,"goto" , "goto/16", "goto/32" , "packed-switch", 
  "sparse-switch", "if-eq","if-ne" ,"if-lt" ,"if-ge" ,"if-gt" ,"if-le" ,"if-eqz" ,"if-nez" ,"if-ltz" ,"if-gez" ,"if-gtz ","if-lez" ,
  "neg-int","not-int" ,"neg-long" ,"not-long" ,"neg-float" ,"neg-double" ,"execute-inline" ,"invoke-virtual" ,"invoke-super ","invoke-direct" ,
  "invoke-static","invoke-interface","invoke-interface-range","invoke-static/range","invoke-direct/range","invoke-virtual/range",
  "invoke-super/range","invoke-direct-empty","invoke-virtual-quick","invoke-virtual-quick/range","invoke-super-quick",
- "invoke-super-quick/range","invoke-direct-empty", ".local"]
+ "invoke-super-quick/range","invoke-direct-empty", "fill-array-data", "filled-new-array", "filled-new-array-range",
+ ".local", ".param", ".line" ]
         
 def main():
     print("Minimal Tests for String Parsing Library")

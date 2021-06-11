@@ -153,12 +153,18 @@ class SmaliMethodDef:
 
         #initialize the type checker as a instance variable for each method. 
         #this will check and track types of each register on each line 
-        self.tcs = TypeSafetyChecker(text, self.signature)
+
+        try:
+            self.tcs = TypeSafetyChecker(text, self.signature)
+        except:
+            print("Building Type Checker For: " + str(self.signature) + "  in " + str(scd.file_name))
+            input("continue")
+            
 
         #debugging
-        print("method name: " , self.signature.name)
-        if scd.file_name.find("Main.smali") != -1:
-            input("Continue?")
+        #print("method name: " , self.signature.name)
+        #if scd.file_name.find("Main.smali") != -1:
+        #    input("Continue?")
 
     # There are three "register numbers"
     # 1) The ORIGINAL_LOCAL_NUMBER_REGS

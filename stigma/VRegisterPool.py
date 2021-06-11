@@ -60,11 +60,11 @@ def check_type(type_code):
 
 # Used in VRegisterPool class (below)
 def _get_type_written(opcode):
-	if opcode in StigmaStringParsingLib.WORD_MOVE_LIST:
+	if opcode in StigmaStringParsingLib.THIRTY_TWO_BIT_TYPE_LIST:
 		return TYPE_CODE_WORD
-	elif opcode in StigmaStringParsingLib.WIDE_MOVE_LIST:
+	elif opcode in StigmaStringParsingLib.SIXTY_FOUR_BIT_TYPE_LIST:
 		return TYPE_CODE_WIDE
-	elif opcode in StigmaStringParsingLib.OBJECT_MOVE_LIST:
+	elif opcode in StigmaStringParsingLib.OBJECT_TYPE_LIST:
 		return TYPE_CODE_OBJ_REF
 	else:
 		return None

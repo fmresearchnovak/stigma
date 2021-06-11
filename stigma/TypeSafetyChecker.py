@@ -18,7 +18,10 @@ class TypeSafetyChecker:
                signature = signature class from smd which parses the first line and returns a list of parameters and their types
         """
                 
-        text = self.clean_up_text(text)
+                
+        self.clean_up_text(text)
+        self.text = text
+        
         self.most_recent_type_map = {}
         
         #this is a list of all the mappings
@@ -26,26 +29,24 @@ class TypeSafetyChecker:
         self.signature = signature
 
         #check for first two lines and create a new hashmap for the first line extracting the parameters
-        self.type_update_parameter(text[0], text[1])
+        self.type_update_parameter(self.text[0], self.text[1])
         
         #now loop over the whole method and call type update 
-        text.remove(text[0])
-        text.remove(text[0])
+        #self.text.remove(self.text[0])
+        #self.text.remove(self.text[0])
 
-        for i in range(len(text)):
-            text[i] = text[i]
-            self.type_update(text[i], i)
+        for i in range(len(self.text)):
+            #text[i] = text[i]
+            self.type_update(self.text[i], i)
         
-        print("\n")
+        #print("\n")
 
     #remove new line elements from list and newline characters from strings
     def clean_up_text(self, text):
-        if('\n' in text):
-            text.remove('\n')
+        # remove newlines s
         for i in range(len(text)):
-            text[i] = text[i].replace('\n','').strip()
+            text[i] = text[i].strip()
         text.remove(".end method")
-        return text
 
     def type_update_parameter(self, line1, line2):  
         """
@@ -57,11 +58,11 @@ class TypeSafetyChecker:
         
         #checks for number of parameters in the method
         if(self.signature.num_of_parameters == 0):
-            print("no parameters in this method")
+            #print("no parameters in this method")
             return 
         else:
             if line2.find('.locals') == -1:
-                print("invalid instruction for .locals passed in")
+                #print("invalid instruction for .locals passed in")
                 #throw an exception here
                 return 
             else:
@@ -79,7 +80,7 @@ class TypeSafetyChecker:
         self.most_recent_type_map = line_type_map
         self.method_type_list.append(line_type_map) 
         self.method_type_list.append(-1) #this is for .locals line
-        print(line_type_map)
+        #print(line_type_map)
 
     def check_value_type(self,value):
         if(value in VRegisterPool.TYPE_LIST_OBJECT_REF):
@@ -100,23 +101,63 @@ class TypeSafetyChecker:
                line_index = index of that line in the text list 
         """
         
+        
+        
+        ''' 
+        for the update function special cases regarding arrays
+             step 1) move-result-object vx
+             a move-result-object may be subsequent after an invoke- 
+             of after a new-array instruction.  Either way, the data
+             stored into vx might be an array (or N-dimensional array
+             
+             solution: find the instruction two lines earlier
+             e.g., filled-new-array {v0, v1, v2, v3}, [Ljava/lang/String;
+             and parse out the type: [Ljava/lang/String;
+             and store that in the hashmap for the type of vx
+             
+             step 2) aget vy, vx
+             The type of vx may be [I or [[I or [Ljava/lang/String; etc.
+             
+             solution: take the type [[I and strip away the first character
+             e.g., [[I -> [I   this is the type of vy   (vy = [I
+                special special case: suppose vx = [Ljava/lang/String;
+                in this special special case when we strip away the preceeding [
+                we are left with  Ljava/lang/String;  this starts with an L
+                so we can say that the type of vy is now "object" (move-object)
+        '''
+            
+        
+        
         if(self.type_not_relevant(line) or not StigmaStringParsingLib.is_valid_instruction(line)):
             #get index of that line and put a -1
             self.method_type_list.append(-1)
         else:
             tokens = self.break_into_tokens(line)
-
-            print("line: " + str(line_index), line)
-            print("token:" , tokens)
-            
-            #instruction is always the first one in the list of tokens
             instruction = tokens[0]
-            registers = StigmaStringParsingLib.get_v_and_p_numbers(line)
-            dest_reg = registers[0]
-            line_type_map_new = self.most_recent_type_map 
-            line_type_map_new[dest_reg] = self.check_type_list(instruction)
-            self.most_recent_type_map = line_type_map_new
-            self.method_type_list.append(line_type_map_new)
+
+            if(instruction == "move-result-object"):
+                # this is a very special case.   move-result-object vx
+                # may cause vx to be (a) an Object (b) an Array
+                # if it is an array we need to know the type of that array
+                # (array of String vs array of int, etc)
+                # in order to properly handle subsequent instructions
+                # such as aget vy, vx
+                prev_line = self.text[line_index-2]
+                
+                
+                
+            else:
+                #print("line: " + str(line_index), line)
+                #print("token:" , tokens)
+                
+                #instruction is always the first one in the list of tokens
+                
+                registers = StigmaStringParsingLib.get_v_and_p_numbers(line)
+                dest_reg = registers[0]
+                line_type_map_new = self.most_recent_type_map 
+                line_type_map_new[dest_reg] = self.check_type_list(instruction)
+                self.most_recent_type_map = line_type_map_new
+                self.method_type_list.append(line_type_map_new)
 
     #check if a current instruction on a given line is relevant or not. return boolean
     def type_not_relevant(self, line):
@@ -155,4 +196,14 @@ class TypeSafetyChecker:
         elif(opcode in StigmaStringParsingLib.OBJECT_TYPE_LIST):
             return "object"
         else:
-            raise RuntimeError ("opcode seems to has no type", opcode)
+            raise RuntimeError ("opcode seems to has no type", opcode, )
+            
+          
+def tests():
+    pass
+    
+    
+    
+    
+if __name__ == "__main__":
+    tests()
