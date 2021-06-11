@@ -154,7 +154,9 @@ class SmaliMethodDef:
         #initialize the type checker as a instance variable for each method. 
         #this will check and track types of each register on each line 
         self.tcs = TypeSafetyChecker(text, self.signature)
-        print("file name: " , scd.file_name)
+
+        #debugging
+        print("method name: " , self.signature.name)
         if scd.file_name.find("Main.smali") != -1:
             input("Continue?")
 

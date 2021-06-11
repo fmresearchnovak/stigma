@@ -100,12 +100,10 @@ def get_v_and_p_numbers(line):
     return registers
     
 
-
 def get_p_numbers(line):
     registers = get_v_and_p_numbers(line)
     p_only_registers = list(filter(lambda x : x[0] == "p", registers))
-    return p_only_registers
-    
+    return p_only_registers   
 
 def break_into_tokens(line):
     #print("calling break into tokens on: " + line)
@@ -229,13 +227,10 @@ def has_three_register_parameters(instr):
         "rem-float", "add-double", "sub-double", "mul-double", "div-double", "rem-double"]
         
    
-    
 # GLOBAL
-# these instructions specify that the first register is of the 
-# corresponding "move type" e.g., seeing the instruction 
-#    array-length v0, p1 
-# indicates that v0 is an int and should be moved using move/16
-WORD_MOVE_LIST = ["move", "move/from16", "move/16", "return", 
+# these lists of instructions specify the type of the destination register
+# e.g add-int assigns a 32-bit type to the dest register
+THIRTY_TWO_BIT_TYPE_LIST = ["move", "move/from16", "move/16", "return", 
     "move-result", "const/4", "const/16", "const", "const/high16", 
     "instance-of", "array-length", "packed-switch", "sparse-switch",
     "cmpl-float", "cmpg-float", "if-eq", "if-ne", "if-lt", "if-ge",
@@ -260,7 +255,7 @@ WORD_MOVE_LIST = ["move", "move/from16", "move/16", "return",
     "div-float/2addr", "mul-float/2addr", "sub-float/2addr", 
     "add-float/2addr"]
     
-WIDE_MOVE_LIST = ["move-wide", "move-wide/from16", "move-wide/16", 
+SIXTY_FOUR_BIT_TYPE_LIST = ["move-wide", "move-wide/from16", "move-wide/16", 
     "move-result-wide", "return-wide", "const-wide/16", 
     "const-wide/32", "const-wide", "const-wide/high16", "cmpl-double",
     "cmpg-double", "cmp-long", "aget-wide", "aput-wide",
@@ -278,21 +273,26 @@ WIDE_MOVE_LIST = ["move-wide", "move-wide/from16", "move-wide/16",
     "div-long/2addr", "mul-long/2addr", "sub-long/2addr", 
     "add-long/2addr"]
     
-OBJECT_MOVE_LIST = ["move-object", "move-object/from16", "move-object/16",
+OBJECT_TYPE_LIST = ["move-object", "move-object/from16", "move-object/16",
     "move-result-object", "move-exception", "return-object",
     "const-string", "const-string-jumbo", "const-class", 
     "monitor-enter", "check-cast", "new-instance", "new-array", 
     "throw", "aput-object", "aget-object", "iget-object", "iput-object", "sget-object",
     "sput-object", "iput-object-quick", "iget-object-quick"]
     
-
-
 CONVERTER_INSTRUCTION_LIST = ["int-to-long",  "int-to-float", 
  "int-to-double",  "long-to-int",  "long-to-float", "long-to-double",
  "float-to-int",  "float-to-long", "float-to-double",  "double-to-int",
  "double-to-long",  "double-to-float",  "int-to-byte",  "int-to-char",
  "int-to-short"]
     
+NON_RELEVANT_INSTRUCTION_LIST = ["nop","return" ,"return-wide", "return-object", "return-void",
+ ".param",".line" , "monitor-enter" , "monitor-exit", "check-cast", "throw" ,"goto" , "goto/16", "goto/32" , "packed-switch", 
+ "sparse-switch", "if-eq","if-ne" ,"if-lt" ,"if-ge" ,"if-gt" ,"if-le" ,"if-eqz" ,"if-nez" ,"if-ltz" ,"if-gez" ,"if-gtz ","if-lez" ,
+ "neg-int","not-int" ,"neg-long" ,"not-long" ,"neg-float" ,"neg-double" ,"execute-inline" ,"invoke-virtual" ,"invoke-super ","invoke-direct" ,
+ "invoke-static","invoke-interface","invoke-interface-range","invoke-static/range","invoke-direct/range","invoke-virtual/range",
+ "invoke-super/range","invoke-direct-empty","invoke-virtual-quick","invoke-virtual-quick/range","invoke-super-quick",
+ "invoke-super-quick/range","invoke-direct-empty", ".local"]
         
 def main():
     print("Minimal Tests for String Parsing Library")
@@ -312,8 +312,6 @@ def main():
     
     assert(break_into_tokens("    invoke-static/range {v0 .. v7}, Lcom/example/class1;->foo()Z;")[-1] == "Lcom/example/class1;->foo()Z;")
     print("ALL StringParsingLib TESTS PASSED")
-
-
 
 if __name__ == "__main__":
     main()
