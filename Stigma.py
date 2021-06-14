@@ -107,6 +107,7 @@ def runStigma():
     start_time2 = time.time()
     #run stigma on all file paths
     print("...Parsing all class files")
+    print("...Building Type Safety Checker")
     for path in relevantFilePaths:
         #print("Parsing: " + str(path))
         scd = SmaliClassDef.SmaliClassDef(path)

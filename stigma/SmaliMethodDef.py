@@ -87,6 +87,7 @@ class SmaliMethodSignature:
             elif parameter_raw[i] == "[": # an array
                 # note arrays are n-dimensional
                 # e.g., [[[I
+                start_index = i
                 i = SmaliMethodSignature.fast_forward_to_not_bracket(i, parameter_raw)
                 
                 if(parameter_raw[i] == "L"):
@@ -97,10 +98,12 @@ class SmaliMethodSignature:
                     # this is an array of primitives
                     # this skips forward past the primitive letter
                     # i += 1
-            
+                #to get the last character of array type, we add a +1 to the end_index
+                #fast_forward methods ignore the last character itself, so to include it we have to increment the index by 1
+                end_index = i+1
                 self.num_of_parameter_registers += 1
                 p_name = "p" + str(p_idx)
-                self.parameter_type_map[p_name] = "ARRAY"
+                self.parameter_type_map[p_name] = parameter_raw[start_index:end_index]
 
 
             #print("the big one")
@@ -149,22 +152,18 @@ class SmaliMethodDef:
         
         # should be re-factored with get_signature() method below
         self.signature = SmaliMethodSignature(self.raw_text[0])
-        # print("created: " + str(self.signature))
 
         #initialize the type checker as a instance variable for each method. 
         #this will check and track types of each register on each line 
-
-        try:
-            self.tcs = TypeSafetyChecker(text, self.signature)
-        except:
-            print("Building Type Checker For: " + str(self.signature) + "  in " + str(scd.file_name))
-            input("continue")
+        self.tcs = TypeSafetyChecker(text, self.signature)
+    
+        # try:
+        #     self.tcs = TypeSafetyChecker(text, self.signature)
+        #     #input("Continue?")
+        # except:
+        #     print("Building Type Checker For: " + str(self.signature.name) + "  in " + str(scd.file_name))
+        #     input("Continue with exception")
             
-
-        #debugging
-        #print("method name: " , self.signature.name)
-        #if scd.file_name.find("Main.smali") != -1:
-        #    input("Continue?")
 
     # There are three "register numbers"
     # 1) The ORIGINAL_LOCAL_NUMBER_REGS
@@ -604,7 +603,6 @@ class SmaliMethodDef:
         else:
             return False
             
-
 
 
 def tests():

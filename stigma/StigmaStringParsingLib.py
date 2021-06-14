@@ -36,7 +36,6 @@ BEGINS_WITH_SHR = r"^\s*shr-"
 BEGINS_WITH_USHR = r"^\s*ushr-"
 
 
-
 BEGINS_WITH_IPUT = r"^\s*iput"
 BEGINS_WITH_IGET = r"^\s*iget"
 BEGINS_WITH_SPUT = r"^\s*sput"
@@ -50,30 +49,6 @@ BEGINS_WITH_FILLED_NEW_ARRAY = r"^\s*filled-new-array"
 
 
 BEGINS_WITH_MOVE = r"^\s*move"
-
-
-
-def parse_array_type(array_string_chunk):
-    # e.g., "[Ljava/lang/String;"  (array of strings)
-    # e.g., "[[I" (array of array of integers, 2D matrix of ints
-    # e.g., "[[[J" array of array of array of long (3D array of long)
-    
-    
-    # aget vx, vy
-    
-    # type(vx) ????    if vy = [[I;
-    # solution: type(vx) = [I (use a move-object)
-    
-    # type(vx)        if vy = [I;
-    # solution: type(vx) = I (use a move)
-    
-    # type(vx)??      if vy = [Ljava/lang/String;
-    # solution: type(vx) = object (String)  (use a move-object)
-    
-    # type(vx) ????    if vy = [[[[I;
-    # solution: type(vx) = "[[[I" (use a move-object)
-    
-    
     
     
 
@@ -275,7 +250,10 @@ THIRTY_TWO_BIT_TYPE_LIST = ["move", "move/from16", "move/16", "return",
     "and-int/lit16", "rem-int/lit16", "div-int/lit16", "mul-int/lit16", 
     "sub-int/lit16", "add-int/lit16", "rem-float/2addr", 
     "div-float/2addr", "mul-float/2addr", "sub-float/2addr", 
-    "add-float/2addr"]
+    "add-float/2addr", "or-int/2addr", "and-int/2addr", "xor-int/2addr",
+    "shl-int/2addr", "shr-int/2addr", "ushr-int/2addr", "rem-int/2addr",
+    "div-int/2addr", "mul-int/2addr", "sub-int/2addr", "add-int/2addr", 
+    "int-to-byte", "int-to-char", "int-to-short"]
     
 SIXTY_FOUR_BIT_TYPE_LIST = ["move-wide", "move-wide/from16", "move-wide/16", 
     "move-result-wide", "return-wide", "const-wide/16", 
@@ -286,7 +264,7 @@ SIXTY_FOUR_BIT_TYPE_LIST = ["move-wide", "move-wide/from16", "move-wide/16",
     "long-to-double", "float-to-long", "float-to-double", 
     "double-to-long", "add-long", "sub-long", "mul-long", "div-long", 
     "rem-long", "and-long", "or-long", "xor-long", "shl-long", 
-    "shr-long", "add-double", "sub-double", "mul-double", "div-double"
+    "shr-long", "ushr-long", "add-double", "sub-double", "mul-double", "div-double",
     "rem-double", "iput-wide-quick", "iget-wide-quick", 
     "rem-double/2addr", "div-double/2addr", "mul-double/2addr", 
     "sub-double/2addr", "add-double/2addr", "ushr-long/2addr", 
