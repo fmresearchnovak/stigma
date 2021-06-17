@@ -42,6 +42,7 @@ class TypeSafetyChecker:
             self.type_update(self.text[i], i)
         
     #remove new line elements from list and newline characters from strings
+    #this method is not required now as we check for a valid instruction anyways, so ingnore this.
     def clean_up_text(self, text):
         # remove newlines s
         for i in range(len(text)):
@@ -80,6 +81,7 @@ class TypeSafetyChecker:
         self.most_recent_type_map = line_type_map
         self.method_type_list.append(line_type_map) 
         #print("map after parameters update: ", line_type_map)
+        #input("Continue after parameter")
 
     def type_update(self, line, line_index):        
 
@@ -98,7 +100,12 @@ class TypeSafetyChecker:
             instruction = tokens[0]
             registers = StigmaStringParsingLib.get_v_and_p_numbers(line)
             dest_reg = registers[0]
-            line_type_map_new = self.most_recent_type_map 
+            
+            #SHALLOW COPY
+            #the keys and values are strings (immutable), so a shallow copy is adequateable
+            #https://stackoverflow.com/questions/2465921/how-to-copy-a-dictionary-and-only-edit-the-copy
+            line_type_map_new = self.most_recent_type_map.copy()
+
 
             if(instruction == "move-result-object"):
                 # this is a very special case.   move-result-object vx
@@ -118,7 +125,7 @@ class TypeSafetyChecker:
                         instruction_type = prev_line[type_start_index+1:]
                                                     
                         if("[" not in instruction_type):
-                            line_type_map_new[dest_reg] = self.check_invoke_type(instruction_type)
+                            line_type_map_new[dest_reg] = self.check_invoke_type(instruction_type[0])
                         else:
                             line_type_map_new[dest_reg] = instruction_type
                         
@@ -137,6 +144,10 @@ class TypeSafetyChecker:
                         
             self.most_recent_type_map = line_type_map_new
             self.method_type_list.append(line_type_map_new)
+            
+            # Debugging the smali line-by-line as program runs
+            #print(line_index , line, self.method_type_list)
+            #input("Conitnue after update")
         
     def type_not_relevant(self, line):
         #check if a current instruction on a given line is relevant or not. return boolean
@@ -241,10 +252,5 @@ class TypeSafetyChecker:
         else:
             return "invalid type"
               
-          
-def tests():
-    pass
-    
-    
-if __name__ == "__main__":
-    tests()
+    def __str__(self):
+        return str(self.method_type_list)

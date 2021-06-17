@@ -106,14 +106,13 @@ def runStigma():
     scd_hashmap = {}
     start_time2 = time.time()
     #run stigma on all file paths
-    print("...Parsing all class files")
-    print("...Building Type Safety Checker")
+    print("...Parsing class files")
     for path in relevantFilePaths:
         #print("Parsing: " + str(path))
         scd = SmaliClassDef.SmaliClassDef(path)
         scd_hashmap[scd.class_name] = scd
 
-    print("...Instrumenting all class files")
+    print("...Instrumenting class files")
     counter = 1
     total_files = len(scd_hashmap)
     for name in scd_hashmap.keys():
@@ -234,10 +233,10 @@ def splitSmali():
         if( (totalFieldCount + field_num >= THRESH) or ((totalMethodCount + method_num) >= THRESH)):
             
             if((totalMethodCount + method_num >= THRESH)):
-                print("METHOD COUNT:   " + str(totalMethodCount) + "->" + str(totalMethodCount + method_num))
+                print("  ...crossing method threshold at:" + str(scd) + ":   " + str(totalMethodCount) + "->" + str(totalMethodCount + method_num))
                 
             if((totalFieldCount + field_num >= THRESH)):
-                print("FIELD  COUNT:   " + str(totalFieldCount) + "->" + str(totalFieldCount + field_num))
+                print("  ...crossing field threshold at:" + str(scd) + ":   " + str(totalFieldCount) + "->" + str(totalFieldCount + field_num))
                 
             # do a break
             e = idx

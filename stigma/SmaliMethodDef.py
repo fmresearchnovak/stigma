@@ -131,9 +131,7 @@ class SmaliMethodSignature:
 
         
 
-
 class SmaliMethodDef:
-
 
 
     def __init__(self, text, scd):

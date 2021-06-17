@@ -569,7 +569,7 @@ class _ONE_REG_EQ_ZERO(SmaliAssemblyInstruction):
         
         # This could be a bug in other classes, maybe re-write 
         # the LABEL(SmaliAssemblyInstruction) class
-        return self.opcode() + " " + str(self.ra) + ", " + str(self.target)
+        return self.opcode() + " " + str(self.ra) + ", " + repr(self.target)
         
 
 class IF_EQZ(_ONE_REG_EQ_ZERO):

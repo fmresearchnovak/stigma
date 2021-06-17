@@ -15,6 +15,11 @@ class TaintStorageHandler:
     
     @staticmethod
     def gen_field_name(source_class_fqn, method_name, register_name):
+        #Location name should have format : Source class FQN + _methodName + _registerName
+        method_name = method_name.replace("<", "")
+        method_name = method_name.replace(">", "")
+        source_class_fqn = source_class_fqn.replace("/", "_") # Replace / because special character in Java
+        source_class_fqn = source_class_fqn[1:-1]
         return "_".join([source_class_fqn, method_name, register_name])
         
     def __init__(self):
@@ -44,10 +49,6 @@ class TaintStorageHandler:
                 str(self.current_storage_class_num))
             self.storage_classes.append(self.current_storage_class)
 
-        #Location name should have format : Source class FQN + _methodName + _registerName
-        source_class_fqn = source_class_fqn.replace("/", "") # Replace / because special character in Java
-        method_name = method_name.replace("<", "")
-        method_name = method_name.replace(">", "")
         location_field_name = TaintStorageHandler.gen_field_name(source_class_fqn, method_name, register_name)
         
         if location_field_name in self.cache_locations:
@@ -63,9 +64,6 @@ class TaintStorageHandler:
     
     #Try and use add_taint to immediatly get accessor. This is an expensive operation!
     def get_taint_location_accessor(self, source_class_fqn, method_name, register_name):
-        source_class_fqn = source_class_fqn.replace("/", "") # Replace / because special character in Java
-        method_name = method_name.replace("<", "")
-        method_name = method_name.replace(">", "")
         location_field_name = TaintStorageHandler.gen_field_name(source_class_fqn, method_name, register_name)
         if location_field_name not in self.cache_locations:
             raise ValueError("Taint storaged accessed before created")

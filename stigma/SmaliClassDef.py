@@ -62,7 +62,7 @@ class SmaliClassDef:
 
                 match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_END_METHOD, lines[idx])
                 while match_object is None:
-                    # print(str(idx) + "    " + lines[idx])
+                    #print(str(idx))
                     method_code.append(lines[idx])
                     match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_END_METHOD, lines[idx])
                     idx += 1
