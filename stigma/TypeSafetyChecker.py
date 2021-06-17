@@ -21,7 +21,7 @@ class TypeSafetyChecker:
         if(len(text) < 3 or text == [] or text == ''):
             return
                     
-        self.clean_up_text(text)
+        #self.clean_up_text(text)
         self.text = text
         
         self.most_recent_type_map = {}
@@ -42,6 +42,7 @@ class TypeSafetyChecker:
             self.type_update(self.text[i], i)
         
     #remove new line elements from list and newline characters from strings
+    #this method is not required now as we check for a valid instruction anyways, so ingnore this.
     def clean_up_text(self, text):
         # remove newlines s
         for i in range(len(text)):
@@ -243,6 +244,7 @@ class TypeSafetyChecker:
               
           
 def tests():
+    #
     pass
     
     
