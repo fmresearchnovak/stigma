@@ -288,9 +288,16 @@ class SmaliMethodDef:
     def make_new_jump_label(self):
         res = smali.LABEL(self.num_jumps)
         self.num_jumps += 1
-        if self.num_jumps > 20:
+        if self.num_jumps > 500:
             raise Exception("too many jumps")
         return res
+        
+    def write_to_file(self, filename):
+        fh = open(filename, "w")
+        
+        for line in self.raw_text:
+            fh.write(str(line))
+        
 
     def embed_line(self, position, line):
         self.raw_text.insert(position, line)

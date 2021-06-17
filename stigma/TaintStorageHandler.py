@@ -15,7 +15,7 @@ class TaintStorageHandler:
     
     @staticmethod
     def gen_field_name(source_class_fqn, method_name, register_name):
-        return "".join([source_class_fqn, method_name, register_name])
+        return "_".join([source_class_fqn, method_name, register_name])
         
     def __init__(self):
         #Virtually private constructor
@@ -35,6 +35,7 @@ class TaintStorageHandler:
 
             self.cache_locations = {}
             #key: smali location_field_name, value: storage class fq name
+            
 
     def add_taint_location(self, source_class_fqn, method_name, register_name):  
         if self.current_storage_class.get_locations_len() >= self.max_fields:

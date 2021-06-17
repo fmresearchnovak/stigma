@@ -39,6 +39,7 @@ class Instrumenter:
                                         Instrumenter.PHONE_NUM_instrumentation, Instrumenter.LOCATION_instrumentation,
                                         Instrumenter.LONGITUDE_instrumentation, Instrumenter.LATITUDE_instrumentation,
                                         Instrumenter.MOVE_instrumentation, Instrumenter.CONST_instrumentation,
+                                        Instrumenter.IF_instrumentation,
                                         Instrumenter.NEG_instrumentation, Instrumenter.CONVERTER_instrumentation,
                                         Instrumenter.WRITE_instrumentation,  Instrumenter.INTERNAL_FUNCTION_instrumentation,
                                         Instrumenter.BINARYOP_instrumenter, Instrumenter.RETURN_instrumentation,
@@ -430,7 +431,7 @@ class Instrumenter:
         except RuntimeError:
             return 0
 
-        logBlock = Instrumenter.create_logd_block(m, "\"STIGMAAA\"", "\"IMEI Num Entered\"")
+        logBlock = Instrumenter.create_logd_block(m, "\"STIGMA\"", "\"IMEI obtained\"")
 
         # https://www.h-schmidt.net/FloatConverter/IEEE754.html
         # 0.1 = 0x3dcccccd
@@ -474,7 +475,7 @@ class Instrumenter:
         except RuntimeError:
             return 0
             
-        logBlock = Instrumenter.create_logd_block(m, "\"STIGMAAC\"", "\"Location Entered\"")
+        logBlock = Instrumenter.create_logd_block(m, "\"STIGMA\"", "\"Location (getLastKnownLocation) obtained\"")
         
         # https://www.h-schmidt.net/FloatConverter/IEEE754.html
         # 2 = 0x40000000
@@ -510,7 +511,7 @@ class Instrumenter:
         except RuntimeError:
             return 0
             
-        logBlock = Instrumenter.create_logd_block(m, "\"STIGMAAC\"", "\"Location Entered\"")
+        logBlock = Instrumenter.create_logd_block(m, "\"STIGMA\"", "\"Location (longitude) obtained\"")
         
         # https://www.h-schmidt.net/FloatConverter/IEEE754.html
         # 1.0 = 0x3f800000 
@@ -547,7 +548,7 @@ class Instrumenter:
         except RuntimeError:
             return 0
             
-        logBlock = Instrumenter.create_logd_block(m, "\"STIGMAAC\"", "\"Location Entered\"")
+        logBlock = Instrumenter.create_logd_block(m, "\"STIGMA\"", "\"Location (latitude) obtained\"")
         
         # https://www.h-schmidt.net/FloatConverter/IEEE754.html
         # 1.0 = 0x3f800000 
@@ -587,7 +588,7 @@ class Instrumenter:
             return 0
             
         
-        logBlock = Instrumenter.create_logd_block(m, "\"STIGMAAB\"", "\"Phone Num Entered\"")
+        logBlock = Instrumenter.create_logd_block(m, "\"STIGMA\"", "\"Phone number obtained\"")
         
         block = Instrumenter.make_comment_block("for getLine1Number()")
         
@@ -604,6 +605,7 @@ class Instrumenter:
         m.embed_block(line_num, block)
         m.free_reg() # 1
         return len(block)
+
 
     @staticmethod
     def WRITE_instrumentation(scd, m, line_num):  # "write()" sinks
@@ -631,6 +633,8 @@ class Instrumenter:
         # print("results: " + str(results))
 
         #taint_loc = scd.create_taint_field(m.get_name(), target_reg)
+        # these needs to be "add_taint_location" becuase the tag for the
+        # target register might not yet exist (although it should in theory)
         taint_loc = storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), target_reg)
 
         
@@ -676,15 +680,95 @@ class Instrumenter:
                  smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for write()")]
 
         m.embed_block(line_num, block)
-        lines_embedded = len(block)
 
         m.free_reg() # 1
         m.free_reg() # 2
         m.free_reg() # 3
         m.free_reg() # 4
 
+        return len(block)
+        
+        
+    @staticmethod    
+    def IF_instrumentation(scd, m, line_num): # if statement implicit flow "sinks"
+        cur_line = m.raw_text[line_num]
+        
+        search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_IF, cur_line)
+        search_object2 = re.search(StigmaStringParsingLib.BEGINS_WITH_CMP, cur_line)
+        if search_object is None and search_object2 is None:
+            # of course the line can't be both an if and a cmp
+            return 0
+            
+        
+        registers = StigmaStringParsingLib.get_v_and_p_numbers(m.raw_text[line_num])
+        m.write_to_file("/home/ed/tmp/" + m.get_name() + "_before.smali")
+        # if there are three registers, the second two are operands
+        # if there are two registers, they are both operands
+        # if there is one register it is an operand  (it's an "compare to zero")
+        # this negative slicing works even if the list is only one item!
+        operand_registers = registers[-2:]
+        
+        lines_added = 0
+        for reg in operand_registers:
+            # TODO: re-write the below using only 3 registers (or fewer
+            # if possible
+            # TODO: consolidate the below with the similar code
+            # found in WRITE_instrumentation method
+            
+            taint_tag_field = storage_handler.add_taint_location(scd.class_name[1:-1], m.get_name(), reg)
 
-        return lines_embedded
+            try:
+                logd_tag_reg = m.make_new_reg() # 1
+                logd_msg_reg = m.make_new_reg() # 2
+                taint_tag_reg = m.make_new_reg() # 3
+                zero_reg = m.make_new_reg() # 4
+            except RuntimeError:
+                return lines_added
+
+            # This is a smali.LABEL
+            jmp_label = m.make_new_jump_label()
+            
+            block = Instrumenter.make_comment_block("IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)")
+
+            block = block + [smali.SGET(taint_tag_reg, taint_tag_field),
+                     smali.BLANK_LINE(),
+                     smali.CONST_16(zero_reg, "0x0"),
+                     smali.BLANK_LINE(),
+                     smali.CMPL_FLOAT(zero_reg, taint_tag_reg, zero_reg),
+                     smali.BLANK_LINE(),
+                     smali.IF_EQZ(zero_reg, jmp_label),
+                     smali.BLANK_LINE(),
+                     smali.CONST_STRING(logd_tag_reg, "\"STIGMA\""),
+                     smali.BLANK_LINE(),
+                     smali.CONST_STRING(logd_msg_reg, "\"Implicit flow involving sensitive data!\""),
+                     smali.BLANK_LINE(),
+                     smali.LOG_D(logd_tag_reg, logd_msg_reg),
+                     smali.BLANK_LINE(),
+                     smali.INVOKE_STATIC([taint_tag_reg], "Ljava/lang/String;->valueOf(F)Ljava/lang/String;"),
+                     smali.BLANK_LINE(),
+                     smali.MOVE_RESULT_OBJECT(logd_msg_reg),
+                     smali.BLANK_LINE(),
+                     smali.LOG_D(logd_tag_reg, logd_msg_reg),
+                     smali.BLANK_LINE(),
+                     jmp_label]
+                     
+            block = block + Instrumenter.make_comment_block("IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end")
+
+            m.embed_block(line_num, block)
+
+            m.free_reg() # 1
+            m.free_reg() # 2
+            m.free_reg() # 3
+            m.free_reg() # 4
+            
+            lines_added = lines_added + len(block)
+
+
+        m.write_to_file("/home/ed/tmp/" + m.get_name() + "_after.smali")
+        #input("Added " + str(lines_added) + " lines.  Continue?")
+        return lines_added
+            
+        
 
     @staticmethod
     def LOGD_instrumentation(scd, m, line_num):  # simulated Log.d sink
@@ -834,7 +918,7 @@ class Instrumenter:
         #
         # 
         # and they need to be given the taint-values from p0 and v2
-        # respectively.  Note: there are multiple "p0" the one in bar()
+        # respectively.  Note: there are multiple "p0", the one in bar()
         # the one in foo().  They are coincidentally the same value
         # in this example.
         # Note, static functions are not an issue since all parameters
@@ -1153,7 +1237,7 @@ class Instrumenter:
     @staticmethod
     def NEG_instrumentation(scd, m, line_num):
         cur_line = m.raw_text[line_num]
-        
+
         search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_NEG, cur_line)
         if(search_object is None):
             return 0

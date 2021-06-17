@@ -22,6 +22,8 @@ BEGINS_WITH_MOVE = r"^\s*move"
 BEGINS_WITH_CONST = r"^\s*const"
 BEGINS_WITH_NEG = r"^\s*neg-"
 BEGINS_WITH_RETURN = r"^\s*return"
+BEGINS_WITH_IF = r"^\s*if-"
+BEGINS_WITH_CMP = r"^\s*cmp"
 
 BEGINS_WITH_ADD = r"^\s*add-"
 BEGINS_WITH_SUB = r"^\s*sub-"

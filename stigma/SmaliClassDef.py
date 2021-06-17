@@ -206,7 +206,7 @@ class SmaliClassDef:
                 
             idx = 0
             while idx < len(m.raw_text):
-                # print("line: " + m.raw_text[idx])
+                #print("line: ", m.raw_text[idx], "  which is a:", type(m.raw_text[idx]))
                 
                 # we need to know if we are in a try block so we can avoid
                 # the one type of instrumentation where that matters

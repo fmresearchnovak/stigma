@@ -21,7 +21,7 @@ class TypeSafetyChecker:
         if(len(text) < 3 or text == [] or text == ''):
             return
                     
-        self.clean_up_text(text)
+        #self.clean_up_text(text)
         self.text = text
         
         self.most_recent_type_map = {}
