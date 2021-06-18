@@ -2,7 +2,7 @@
 from stigma import SmaliMethodDef
 import sys
 
-def main():
+def type_safety_checker_test():
     
     method_text = '''.method public leakPasswd(Landroid/view/View;)V
     .locals 6
@@ -92,13 +92,28 @@ def main():
     return-void
 .end method'''
 
+    method_text_static = '''.method public static leakPasswd()V
+    .locals 1
+
+    .line 181
+    const v0, 0x7f070050
+
+    return-void
+.end method'''
+
+
     method_list = method_text.split("\n")
     smd =  SmaliMethodDef.SmaliMethodDef(method_list, None)
-    #print(smd.tcs)
     
     for i in range(len(method_list)):
-        print(method_list[i], smd.tcs.method_type_list[i])
+        print("line: " + str(method_list[i]), "\nline_map: ", smd.tcs.method_type_list[i])
     
     
+    method_list_static = method_text_static.split("\n")
+    smd1 = SmaliMethodDef.SmaliMethodDef(method_list_static, None)
+    
+    #smd1.tcs.type_query("v1", 4)
+    #print(smd1.tcs.type_query("v0", 4))
+
 if __name__=="__main__":
-    main()
+    type_safety_checker_test()

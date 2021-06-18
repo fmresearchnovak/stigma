@@ -295,7 +295,8 @@ NON_RELEVANT_INSTRUCTION_LIST = ["nop","return" ,"return-wide", "return-object",
  "invoke-static","invoke-interface","invoke-interface-range","invoke-static/range","invoke-direct/range","invoke-virtual/range",
  "invoke-super/range","invoke-direct-empty","invoke-virtual-quick","invoke-virtual-quick/range","invoke-super-quick",
  "invoke-super-quick/range","invoke-direct-empty", "fill-array-data", "filled-new-array", "filled-new-array-range",
- ".local", ".param", ".line" ]
+ ".local", ".param", ".line", "aput", "aput-wide",  "aput-object", "aput-boolean", "aput-byte",
+ "aput-char", "aput-short"]
         
 def main():
     print("Minimal Tests for String Parsing Library")
