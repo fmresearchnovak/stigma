@@ -127,7 +127,7 @@ class SmaliMethodSignature:
       
       
     def __str__(self):
-        return str(self.sig_line) + " " + str(self.parameter_type_map)
+        return str(self.sig_line.strip()) # + " " + str(self.parameter_type_map)
 
         
 
@@ -137,6 +137,10 @@ class SmaliMethodDef:
     def __init__(self, text, scd):
         # should be a list of strings (lines)
         # starting from ".method..." and ending in "... .end method"
+        
+        if(text == []):
+            raise ValueError("Attempting to instantiate method with no code!")
+        
         self.raw_text = text
         self.is_in_try_block = False
 
@@ -153,7 +157,8 @@ class SmaliMethodDef:
 
         #initialize the type checker as a instance variable for each method. 
         #this will check and track types of each register on each line 
-        self.tcs = TypeSafetyChecker(text, self.signature)
+        #print("Running Type Checker on: " + str(self.signature) + " in " + str(scd))
+        self.tsc = TypeSafetyChecker(text, self.signature)
     
         # try:
         #     self.tcs = TypeSafetyChecker(text, self.signature)

@@ -25,6 +25,7 @@ const-wide
 const-wide/high16
 const-string
 const-string-jumbo
+const-string/jumbo
 const-class
 monitor-enter
 monitor-exit

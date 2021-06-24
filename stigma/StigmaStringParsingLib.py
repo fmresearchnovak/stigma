@@ -178,7 +178,7 @@ def _param_list_len(line):
 
 
 def has_zero_register_parameters(instr):
-    return instr in ["nop", "return-void", "const-string-jumbo", "goto", "goto/16",
+    return instr in ["nop", "return-void", "goto", "goto/16",
     "goto/32", "invoke-direct-empty"]
 
 
@@ -277,7 +277,7 @@ SIXTY_FOUR_BIT_TYPE_LIST = ["move-wide", "move-wide/from16", "move-wide/16",
     
 OBJECT_TYPE_LIST = ["move-object", "move-object/from16", "move-object/16",
     "move-result-object", "move-exception", "return-object",
-    "const-string", "const-string-jumbo", "const-class", 
+    "const-string", "const-string-jumbo", "const-string/jumbo", "const-class", 
     "monitor-enter", "check-cast", "new-instance", "new-array", 
     "throw", "aput-object", "aget-object", "iget-object", "iput-object", "sget-object",
     "sput-object", "iput-object-quick", "iget-object-quick"]
