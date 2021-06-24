@@ -3,7 +3,11 @@ from stigma import SmaliMethodDef
 from stigma import SmaliClassDef
 import sys
 
+<<<<<<< HEAD
 def type_saftey_checker_test1():
+=======
+def type_safety_checker_test():
+>>>>>>> fd647d978fbc45b2bdefa69d64acd8aa445ca670
     
     method_text = '''.method public leakPasswd(Landroid/view/View;)V
     .locals 6
@@ -93,9 +97,18 @@ def type_saftey_checker_test1():
     return-void
 .end method'''
 
+    method_text_static = '''.method public static leakPasswd()V
+    .locals 1
+
+    .line 181
+    const v0, 0x7f070050
+
+    return-void
+.end method'''
+
+
     method_list = method_text.split("\n")
     smd =  SmaliMethodDef.SmaliMethodDef(method_list, None)
-    #print(smd.tcs)
     
     for i in range(len(method_list)):
         print(method_list[i], smd.tcs.method_type_list[i])

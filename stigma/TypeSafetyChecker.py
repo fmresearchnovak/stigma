@@ -154,6 +154,7 @@ class TypeSafetyChecker:
                 prev_line = TypeSafetyChecker.obtain_previous_instruction(self.text, line_index-1)
                 prev_line_tokens = self.break_into_tokens(prev_line)
                 prev_line_instruction = prev_line_tokens[0]
+                #print("prev line instruction for move result: ", prev_line)
                 
                 
                 if(re.search(StigmaStringParsingLib.BEGINS_WITH_INVOKE, prev_line_instruction) is not None):
@@ -167,9 +168,14 @@ class TypeSafetyChecker:
                             line_type_map_new[dest_reg] = instruction_type
                         
                 elif("new-array" in prev_line_instruction):
-                    instruction_type = prev_line_tokens[len(prev_line_tokens)-1]
+                    instruction_type = prev_line_tokens[-1]
                     line_type_map_new[dest_reg] = instruction_type
-                           
+                          
+            #if instruction == new-array , get the whole type, including the ['s
+            elif(instruction == "new-array"):
+                instruction_type = tokens[-1]
+                line_type_map_new[dest_reg] = instruction_type
+        
             elif(instruction == "aget"):
                 src_reg = registers[1]
                 
@@ -187,8 +193,8 @@ class TypeSafetyChecker:
             self.method_type_list.append(line_type_map_new)
             
             # Debugging the smali line-by-line as program runs
-            #print(line_index , line, self.method_type_list)
-            #input("Conitnue after update")
+            #print("line: " + str(line_index) + line , "\n", self.method_type_list)
+            #input("\nConitnue after update")
         
     def type_not_relevant(self, line):
         #check if a current instruction on a given line is relevant or not. return boolean
@@ -199,23 +205,22 @@ class TypeSafetyChecker:
         return result
     
     def type_query(self, register, line_number):
-        #print("method_type_list: " + str(self.method_type_list))
-        #print("\t(length: " + str(len(self.method_type_list)) + ")")
-        #print("line number:" + str(line_number))
-        if(line_number >= len(self.method_type_list)):
-            print("Here!")
+        orig_line_number = line_number
         current_line_map = self.method_type_list[line_number]
         if isinstance(current_line_map, dict):
             return current_line_map[register]
         #loop and build a connection to find the relevant hashmap
         elif(current_line_map == -1):
-            while(not isinstance(current_line_map, dict)):
+            while(not isinstance(current_line_map, dict) and line_number >= 0):
                 line_number = line_number-1
                 current_line_map = self.method_type_list[line_number]
-            return current_line_map[register]
-        else:
-            return "invalid line, no register type map found"
-        
+                
+            if(current_line_map == -1):
+                raise ValueError("query cannot be resolved for " + str(register) + " " + str(orig_line_number))
+            
+            else:
+                return current_line_map[register]
+
     def break_into_tokens(self,line):
         line = line.strip()
         tokens = line.split()
