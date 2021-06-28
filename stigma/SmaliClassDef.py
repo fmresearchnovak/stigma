@@ -307,6 +307,12 @@ class SmaliClassDef:
                 print(str(line))
             print("\n")
 
+    def get_num_comparison_instructions(self):
+        count = 0
+        for m in self.methods:
+            count = count + m.get_num_comparison_instructions()
+            #print("count: " + str(count))
+        return count
 
     def get_num_field_declarations(self):
         return self.get_num_static_fields() + self.get_num_instance_fields()
@@ -366,5 +372,7 @@ class SmaliClassDef:
         
     def __eq__(self, other):
         return self.class_name == other.class_name
+
+
 
 

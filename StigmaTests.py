@@ -3,13 +3,9 @@ from stigma import SmaliMethodDef
 from stigma import SmaliClassDef
 import sys
 
-<<<<<<< HEAD
-def type_saftey_checker_test1():
-=======
-def type_safety_checker_test():
->>>>>>> fd647d978fbc45b2bdefa69d64acd8aa445ca670
-    
-    method_text = '''.method public leakPasswd(Landroid/view/View;)V
+
+
+method_text = '''.method public leakPasswd(Landroid/view/View;)V
     .locals 6
     .param p1, "v"    # Landroid/view/View;
 
@@ -97,7 +93,7 @@ def type_safety_checker_test():
     return-void
 .end method'''
 
-    method_text_static = '''.method public static leakPasswd()V
+method_text_static = '''.method public static leakPasswd()V
     .locals 1
 
     .line 181
@@ -106,6 +102,8 @@ def type_safety_checker_test():
     return-void
 .end method'''
 
+def type_safety_checker_test():
+    global method_text
 
     method_list = method_text.split("\n")
     smd =  SmaliMethodDef.SmaliMethodDef(method_list, None)
@@ -249,12 +247,25 @@ def type_saftey_checker_test3():
     scd = SmaliClassDef.SmaliClassDef("/home/ed/research/ift/stigma/APK/0wH.smali")
     
     
+def comparison_count_test1():
+    global method_text
+
+    method_list = method_text.split("\n")
+    smd =  SmaliMethodDef.SmaliMethodDef(method_list, None)
+    
+    print("count: " + str(smd.get_num_comparison_instructions()))
+    assert(smd.get_num_comparison_instructions() == 1)
+        
     
 
 def main():
+    comparison_count_test1()
+    
     #type_saftey_checker_test1()
     #type_saftey_checker_test2()
     type_saftey_checker_test3()
+    
+    
     
 if __name__=="__main__":
     main()

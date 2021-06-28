@@ -190,6 +190,27 @@ class SmaliMethodDef:
 
     def get_locals_directive_line(self):
         return self.raw_text[1].strip()
+        
+    def get_num_comparison_instructions(self):
+        count = 0
+        
+        # this could be improved in two ways
+        #   1) we could cache the value of count, but that would require
+        #      cache invalidation
+        #   2) we could join the strings in the list raw_text into
+        #      one large string and use the regular expression matching
+        #      to find _ALL_ matches in one call.
+        #      The challenge with this approach is that comments and 
+        #      other extraneous text might contain "if-eqz" and others 
+        #      by coincidnence
+        for cur_line in self.raw_text:
+        
+            search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_IF, cur_line)
+            search_object2 = re.search(StigmaStringParsingLib.BEGINS_WITH_CMP, cur_line)
+            if (search_object is not None) or (search_object2 is not None):
+                # of course the line can't be both an if and a cmp
+                count = count + 1
+        return count
 
     def get_locals_directive_num(self):
         line = self.get_locals_directive_line()
