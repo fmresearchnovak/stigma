@@ -28,7 +28,7 @@ class TypeSafetyChecker:
         
         #this is a list of all the mappings
         self.method_type_list = []
-        self.signature = signature
+        self.signature = signature        
 
         #check for first two lines and create a new hashmap for the first line extracting the parameters
         self.type_update_parameter(self.text[0], self.text[1])
@@ -90,7 +90,6 @@ class TypeSafetyChecker:
                line_index = index of that line in the text list 
         this method creates a hashmap for a normal line if udpate happens otherwise puts a reference to the existing hashmap
         '''
-            
         #check for non relevant instructions and ignore them here
         if(self.type_not_relevant(line) or not StigmaStringParsingLib.is_valid_instruction(line)):
             #get index of that line and put a -1
@@ -118,7 +117,6 @@ class TypeSafetyChecker:
                 prev_line = self.text[line_index-2]
                 prev_line_tokens = self.break_into_tokens(prev_line)
                 prev_line_instruction = prev_line_tokens[0]
-                #print("prev line instruction for move result: ", prev_line)
                 
                 if(re.search(StigmaStringParsingLib.BEGINS_WITH_INVOKE, prev_line_instruction) is not None):
                     type_start_index = prev_line.rfind(")")
@@ -128,6 +126,7 @@ class TypeSafetyChecker:
                         if("[" not in instruction_type):
                             line_type_map_new[dest_reg] = self.check_invoke_type(instruction_type[0])
                         else:
+                            instruction_type = instruction_type.replace("\n", "")  #need to replace new line char from end, otherwise stores [I\n -> we need only [I
                             line_type_map_new[dest_reg] = instruction_type
                         
                 elif("new-array" in prev_line_instruction):
@@ -141,12 +140,12 @@ class TypeSafetyChecker:
         
             elif(instruction == "aget"):
                 src_reg = registers[1]
-                src_type = self.type_query(src_reg, line_index-1)
+                src_type = self.type_query(src_reg, line_index-2)
                 line_type_map_new[dest_reg] = self.check_aget_type(src_type)
                                 
             else:
                 line_type_map_new[dest_reg] = self.check_type_list(instruction)
-            
+
                         
             self.most_recent_type_map = line_type_map_new
             self.method_type_list.append(line_type_map_new)
@@ -154,6 +153,7 @@ class TypeSafetyChecker:
             # Debugging the smali line-by-line as program runs
             #print("line: " + str(line_index) + line , "\n", self.method_type_list)
             #input("\nConitnue after update")
+
         
     def type_not_relevant(self, line):
         #check if a current instruction on a given line is relevant or not. return boolean

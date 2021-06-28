@@ -147,7 +147,6 @@ class SmaliMethodDef:
 
         self.scd = scd # smali class definition
         
-        
         # should be re-factored with get_signature() method below
         self.signature = SmaliMethodSignature(self.raw_text[0])
 
