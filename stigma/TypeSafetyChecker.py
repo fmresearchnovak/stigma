@@ -18,6 +18,7 @@ class TypeSafetyChecker:
                signature = signature class from smd which parses the first line and returns a list of parameters and their types
         """
                 
+        # this should probably raise an exception instead of returning?
         if(len(text) < 3 or text == [] or text == ''):
             return
                     
@@ -82,6 +83,39 @@ class TypeSafetyChecker:
         self.method_type_list.append(line_type_map) 
         #print("map after parameters update: ", line_type_map)
         #input("Continue after parameter")
+        
+    
+    @staticmethod
+    def obtain_previous_instruction(text, start):
+        # I found a situation in the whatsapp.apk which 
+        # has the instruction preceeding a move-result-* instruction
+        # MORE than 2 lines previous
+        #
+        #
+        #...
+        #invoke-interface {v0, v1, v4}, LX/1Fz;->AY5(Lcom/google/android/gms/dynamic/IObjectWrapper;LX/1oP;)[LX/1p7;
+        #
+        #
+        #
+        #.line 486217
+        #
+        #move-result-object v10
+        #
+        #:try_end_2
+        # ...
+        # such a situation means that line_index-2 is not a safe assumption
+        # old code this method replaces: prev_line = self.text[line_index-2]
+        
+        cur_line = text[start]
+        while(not StigmaStringParsingLib.is_valid_instruction(cur_line)):
+            start = start-1
+            cur_line = text[start]
+        
+        return cur_line
+            
+        
+
+        
 
     def type_update(self, line, line_index):        
 
@@ -114,9 +148,12 @@ class TypeSafetyChecker:
                 # in order to properly handle subsequent instructions
                 # such as aget vy, vx
                 
-                prev_line = self.text[line_index-2]
+
+
+                prev_line = TypeSafetyChecker.obtain_previous_instruction(self.text, line_index-1)
                 prev_line_tokens = self.break_into_tokens(prev_line)
                 prev_line_instruction = prev_line_tokens[0]
+                
                 
                 if(re.search(StigmaStringParsingLib.BEGINS_WITH_INVOKE, prev_line_instruction) is not None):
                     type_start_index = prev_line.rfind(")")
@@ -140,6 +177,9 @@ class TypeSafetyChecker:
         
             elif(instruction == "aget"):
                 src_reg = registers[1]
+                # the method_type_list does not yet have a hashmap
+                # inserted for the current (aget) line.  So, to 
+                # look at the previous line, we have to query line_index-2
                 src_type = self.type_query(src_reg, line_index-2)
                 line_type_map_new[dest_reg] = self.check_aget_type(src_type)
                                 
@@ -199,6 +239,7 @@ class TypeSafetyChecker:
                 opcode: move
                 return "32-bit"
         '''
+        
         if(opcode in StigmaStringParsingLib.THIRTY_TWO_BIT_TYPE_LIST):
             return "32-bit"
         elif(opcode in StigmaStringParsingLib.SIXTY_FOUR_BIT_TYPE_LIST):

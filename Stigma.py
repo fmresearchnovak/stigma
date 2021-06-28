@@ -233,10 +233,10 @@ def splitSmali():
         if( (totalFieldCount + field_num >= THRESH) or ((totalMethodCount + method_num) >= THRESH)):
             
             if((totalMethodCount + method_num >= THRESH)):
-                print("  ...crossing method threshold at:" + str(scd) + ":   " + str(totalMethodCount) + "->" + str(totalMethodCount + method_num))
+                print("  ...adjusting to avoid method threshold...") #at:" + str(scd) + ":   " + str(totalMethodCount) + "->" + str(totalMethodCount + method_num))
                 
             if((totalFieldCount + field_num >= THRESH)):
-                print("  ...crossing field threshold at:" + str(scd) + ":   " + str(totalFieldCount) + "->" + str(totalFieldCount + field_num))
+                print("  ...adjusting to avoid field threshold...") #at:" + str(scd) + ":   " + str(totalFieldCount) + "->" + str(totalFieldCount + field_num))
                 
             # do a break
             e = idx
