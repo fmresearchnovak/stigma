@@ -24,6 +24,7 @@ BEGINS_WITH_NEG = r"^\s*neg-"
 BEGINS_WITH_RETURN = r"^\s*return"
 BEGINS_WITH_IF = r"^\s*if-"
 BEGINS_WITH_CMP = r"^\s*cmp"
+BEGINS_WITH_COND = r"^\s*:cond_"
 
 BEGINS_WITH_ADD = r"^\s*add-"
 BEGINS_WITH_SUB = r"^\s*sub-"
@@ -288,9 +289,10 @@ CONVERTER_INSTRUCTION_LIST = ["int-to-long",  "int-to-float",
  "double-to-long",  "double-to-float",  "int-to-byte",  "int-to-char",
  "int-to-short"]
     
+#"if-eq","if-ne" ,"if-lt" ,"if-ge" ,"if-gt" ,"if-le" ,"if-eqz" ,"if-nez" ,"if-ltz" ,"if-gez" ,"if-gtz ","if-lez" , removed these for now
 NON_RELEVANT_INSTRUCTION_LIST = ["nop","return" ,"return-wide", "return-object", "return-void", 
  "monitor-enter" , "monitor-exit", "check-cast", "throw" ,"goto" , "goto/16", "goto/32" , "packed-switch", 
- "sparse-switch", "if-eq","if-ne" ,"if-lt" ,"if-ge" ,"if-gt" ,"if-le" ,"if-eqz" ,"if-nez" ,"if-ltz" ,"if-gez" ,"if-gtz ","if-lez" ,
+ "sparse-switch", 
  "neg-int","not-int" ,"neg-long" ,"not-long" ,"neg-float" ,"neg-double" ,"execute-inline" ,"invoke-virtual" ,"invoke-super ","invoke-direct" ,
  "invoke-static","invoke-interface","invoke-interface-range","invoke-static/range","invoke-direct/range","invoke-virtual/range",
  "invoke-super/range","invoke-direct-empty","invoke-virtual-quick","invoke-virtual-quick/range","invoke-super-quick",
