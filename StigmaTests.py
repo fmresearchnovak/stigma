@@ -1,5 +1,5 @@
 
-from stigma import SmaliMethodDef, SmaliClassDef, StigmaStringParsingLib
+from stigma import SmaliMethodDef, SmaliClassDef, StigmaStringParsingLib, ControlFlowGraph
 import sys, re
 
 method_text = '''.method public leakPasswd(Landroid/view/View;)V
@@ -300,18 +300,29 @@ def comparison_count_test1():
     assert(smd.get_num_comparison_instructions() == 1)
         
         
+def control_flow_graph_test_1():
+    global method_text
+
+    method_list = method_text.split("\n")
+
+    cfg = ControlFlowGraph.ControlFlowGraph(method_list)
+
+    print("cfg lines: " + str(cfg))
+    cfg.show()
+
     
 
 def main():
     # comparison_count_test1()
     
+    control_flow_graph_test_1()
     # type_safety_checker_test()
     # type_saftey_checker_test2()
     # type_saftey_checker_test3()
-    type_safety_checker_control_flow_test()
-    type_safety_checker_control_flow_test_edge_case_1()
-    type_safety_checker_control_flow_test_edge_case_2()
-    type_safety_checker_control_flow_test_edge_case_3()
+    #type_safety_checker_control_flow_test()
+    #type_safety_checker_control_flow_test_edge_case_1()
+    #type_safety_checker_control_flow_test_edge_case_2()
+    #type_safety_checker_control_flow_test_edge_case_3()
     # type_safety_checker_switch_statements()
     
 if __name__=="__main__":

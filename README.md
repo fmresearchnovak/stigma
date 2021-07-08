@@ -24,6 +24,7 @@ Stigma has many limitations.  It can only track very limited sources of sensitiv
 * Linux or MacOS environment.  Code might be compatible on Windows as well, but is untested.
 * python3
 * apktool (available in Ubuntu repository and here: https://ibotpeaches.github.io/Apktool/)
+* networkx (available here: https://github.com/networkx/networkx) version 2.5.1
 * openjdk-11-jdk
   * keytool (provided by above Ubuntu package)
   * jarsigner (provided by above Ubuntu package)
@@ -56,6 +57,12 @@ Then you should do:
 `rm -r ~/.local/share/apktool/`
 
 Also, it may be necessary to NOT use the Ubuntu provided version of apktool.  Use the publicly available one instead: https://ibotpeaches.github.io/Apktool/
+
+
+### NetworkX installation
+Recommened installation method for NetworkX is to use `pip3` on Ubuntu 
+
+```pip3 install networkx```
 
 
 # Utilities and Auxiliary Programs

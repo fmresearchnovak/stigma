@@ -3,6 +3,7 @@ from stigma.TypeSafetyChecker import TypeSafetyChecker
 from stigma import SmaliAssemblyInstructions as smali
 from stigma import StigmaStringParsingLib
 from stigma import VRegisterPool
+from stigma import ControlFlowGraph
 
         
 class SmaliMethodSignature:
@@ -154,10 +155,13 @@ class SmaliMethodDef:
         # should be re-factored with get_signature() method below
         self.signature = SmaliMethodSignature(self.raw_text[0])
 
+        self.cfg = ControlFlowGraph(text)
+
         #initialize the type checker as a instance variable for each method. 
         #this will check and track types of each register on each line 
         #print("Running Type Checker on: " + str(self.signature) + " in " + str(scd))
-        self.tsc = TypeSafetyChecker(text, self.signature)
+        self.tsc = TypeSafetyChecker(text, self.signature) # signature is an object
+
     
         # try:
         #     self.tcs = TypeSafetyChecker(text, self.signature)
