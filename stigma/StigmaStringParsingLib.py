@@ -290,10 +290,9 @@ CONVERTER_INSTRUCTION_LIST = ["int-to-long",  "int-to-float",
  "int-to-short"]
     
 #"if-eq","if-ne" ,"if-lt" ,"if-ge" ,"if-gt" ,"if-le" ,"if-eqz" ,"if-nez" ,"if-ltz" ,"if-gez" ,"if-gtz ","if-lez" , removed these for now
-NON_RELEVANT_INSTRUCTION_LIST = ["nop","return" ,"return-wide", "return-object", "return-void", 
- "monitor-enter" , "monitor-exit", "check-cast", "throw" ,"goto" , "goto/16", "goto/32" , "packed-switch", 
- "sparse-switch", 
- "neg-int","not-int" ,"neg-long" ,"not-long" ,"neg-float" ,"neg-double" ,"execute-inline" ,"invoke-virtual" ,"invoke-super ","invoke-direct" ,
+#"return" ,"return-wide", "return-object", "return-void", 
+NON_RELEVANT_INSTRUCTION_LIST = ["nop","monitor-enter" , "monitor-exit", "check-cast", "throw" ,"goto" , "goto/16", "goto/32" , "packed-switch", 
+ "sparse-switch", "neg-int","not-int" ,"neg-long" ,"not-long" ,"neg-float" ,"neg-double" ,"execute-inline" ,"invoke-virtual" ,"invoke-super","invoke-direct" ,
  "invoke-static","invoke-interface","invoke-interface-range","invoke-static/range","invoke-direct/range","invoke-virtual/range",
  "invoke-super/range","invoke-direct-empty","invoke-virtual-quick","invoke-virtual-quick/range","invoke-super-quick",
  "invoke-super-quick/range","invoke-direct-empty", "fill-array-data", "filled-new-array", "filled-new-array-range",
