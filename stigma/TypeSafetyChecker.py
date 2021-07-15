@@ -11,7 +11,7 @@ import re
 
 class TypeSafetyChecker:
 
-    def __init__(self, text, signature):
+    def __init__(self, text, signature, cfg):
         """
         @parms text = all lines of method packed in a list
                signature = signature class from smd which parses the first line and returns a list of parameters and their types
@@ -22,7 +22,10 @@ class TypeSafetyChecker:
             return
                     
         self.text = text                  #orignal method text
-        self.signature = signature        #method object stored in object 
+        self.signature = signature        #method object stored in object
+       
+        self.cfg = cfg          #instance of the control flow graph object for this method 
+        self.visited_nodes = [] #list of all nodes in the cfg that have already been visited
 
         self.most_recent_type_map = {}                             #this map is the latest hashmap at that current line
         self.most_recent_if_statement_parent_map = {}              #this list holds the latest hashmap before the if was executed
@@ -32,36 +35,23 @@ class TypeSafetyChecker:
         #this is a list of all the mappings
         self.method_type_list = []
 
-        #check for first two lines and create a new hashmap for the first line extracting the parameters
-        self.type_update_parameter(self.text[0], self.text[1])
+        #check for the signature and create a new hashmap for the types of parameters from the first line
+        self.type_update_parameter()
+                                
         
-        for i in range(1,len(self.text)):
-            self.type_update(self.text[i], i)
-        
-    def type_update_parameter(self, line1, line2):  
-        
-        """
-        @parms line1 = first line of method (containing method signature)
-               line2 = information about total number of v registers in the current method
-        """
+    def type_update_parameter(self):  
         
         line_type_map = {}
         #checks for number of parameters in the method
         if(self.signature.num_of_parameters == 0):
             return 
         else:
-            # if line2.find('.locals') == -1:
-            #     #throw an exception here
-            #     print(self.text)
-            #     raise ValueError("Unable to find .locals in ", self.signature) 
-            # else:
-                #method in smali method def does similar parsing(can be used in future)
-                #just store the p registers, because during instrumentation if .locals changes 
-                #the v numbers would shift from their corresponding p registers 
+            #method in smali method def does similar parsing(can be used in future)
+            #just store the p registers, because during instrumentation if .locals changes 
+            #the v numbers would shift from their corresponding p registers 
             for p_num,value in self.signature.parameter_type_map.items():
                 type_val = self.check_parameter_type(value)
                 line_type_map[p_num] = type_val
-
 
         self.most_recent_type_map = line_type_map
         self.method_type_list.append(line_type_map) 
@@ -406,6 +396,7 @@ class TypeSafetyChecker:
         
         return cur_line
 
+
     def debugging(self, line, line_index):
         print("\nline: " + str(line_index) + line , "\nline_map: ", self.most_recent_type_map)
         print("Size of type_list:", len(self.method_type_list))
@@ -417,6 +408,7 @@ class TypeSafetyChecker:
                 print("Control flow list: ", i+1, ":", self.control_flow_list.l[i])
         
         #input("Continue?")
+   
         
 class IF_CONDITION_PAIR:
     def __init__(self, new_condition_number, new_parent_map):

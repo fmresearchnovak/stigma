@@ -155,14 +155,12 @@ class SmaliMethodDef:
         # should be re-factored with get_signature() method below
         self.signature = SmaliMethodSignature(self.raw_text[0])
 
-        self.cfg = ControlFlowGraph(text)
-
-        #initialize the type checker as a instance variable for each method. 
+        #create the control flow graph for the method text and pass it to the type safety checker
         #this will check and track types of each register on each line 
         #print("Running Type Checker on: " + str(self.signature) + " in " + str(scd))
-        self.tsc = TypeSafetyChecker(text, self.signature) # signature is an object
+        self.cfg = ControlFlowGraph.ControlFlowGraph(text)
+        self.tsc = TypeSafetyChecker(text, self.signature, self.cfg) 
 
-    
         # try:
         #     self.tcs = TypeSafetyChecker(text, self.signature)
         #     #input("Continue?")

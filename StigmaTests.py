@@ -99,6 +99,328 @@ method_text_static = '''.method public static leakPasswd()V
     return-void
 .end method'''
 
+method_text_switch = '''.method public onOptionsItemSelected(Landroid/view/MenuItem;)Z
+
+    .locals 2
+
+    .param p1, "item"    # Landroid/view/MenuItem;
+
+    .line 120
+
+    invoke-interface {p1}, Landroid/view/MenuItem;->getItemId()I
+
+    move-result v0
+
+    packed-switch v0, :pswitch_data_0
+
+    goto :goto_0
+
+    .line 128
+
+    :pswitch_0
+
+    new-instance v0, Landroid/content/Intent;
+
+    const-class v1, Ledu/fandm/enovak/leaks/SimpleLeak;
+
+    invoke-direct {v0, p0, v1}, Landroid/content/Intent;-><init>(Landroid/content/Context;Ljava/lang/Class;)V
+
+    .line 129
+
+    .local v0, "i":Landroid/content/Intent;
+
+    invoke-virtual {p0, v0}, Ledu/fandm/enovak/leaks/Main;->startActivity(Landroid/content/Intent;)V
+
+    goto :goto_0
+
+    .line 122
+
+    .end local v0    # "i":Landroid/content/Intent;
+
+    :pswitch_1
+
+    new-instance v0, Landroid/content/Intent;
+
+    const-class v1, Ledu/fandm/enovak/leaks/SettingsAct;
+
+    invoke-direct {v0, p0, v1}, Landroid/content/Intent;-><init>(Landroid/content/Context;Ljava/lang/Class;)V
+
+    .line 123
+
+    .restart local v0    # "i":Landroid/content/Intent;
+
+    invoke-virtual {p0, v0}, Ledu/fandm/enovak/leaks/Main;->startActivity(Landroid/content/Intent;)V
+
+    .line 124
+
+    nop
+
+    .line 133
+
+    .end local v0    # "i":Landroid/content/Intent;
+
+    :goto_0
+
+    const/4 v0, 0x1
+
+    return v0
+
+    :pswitch_data_0
+    .packed-switch 0x7f070056
+        :pswitch_1
+        :pswitch_0
+    .end packed-switch
+    
+    .end method
+    '''
+
+
+method_text_sparse = '''
+    .method public static getOpticalBounds(Landroid/graphics/drawable/Drawable;)Landroid/graphics/Rect;
+    .locals 14
+    .param p0, "drawable"    # Landroid/graphics/drawable/Drawable;
+
+    .line 69
+    sget-object v0, Landroid/support/v7/widget/DrawableUtils;->sInsetsClazz:Ljava/lang/Class;
+
+    if-eqz v0, :cond_7
+
+    .line 73
+    :try_start_0
+    invoke-static {p0}, Landroid/support/v4/graphics/drawable/DrawableCompat;->unwrap(Landroid/graphics/drawable/Drawable;)Landroid/graphics/drawable/Drawable;
+
+    move-result-object v0
+
+    move-object p0, v0
+
+    .line 75
+    invoke-virtual {p0}, Ljava/lang/Object;->getClass()Ljava/lang/Class;
+
+    move-result-object v0
+
+    const-string v1, "getOpticalInsets"
+
+    const/4 v2, 0x0
+
+    new-array v3, v2, [Ljava/lang/Class;
+
+    .line 76
+    invoke-virtual {v0, v1, v3}, Ljava/lang/Class;->getMethod(Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;
+
+    move-result-object v0
+
+    .line 77
+    .local v0, "getOpticalInsetsMethod":Ljava/lang/reflect/Method;
+    new-array v1, v2, [Ljava/lang/Object;
+
+    invoke-virtual {v0, p0, v1}, Ljava/lang/reflect/Method;->invoke(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;
+
+    move-result-object v1
+
+    .line 79
+    .local v1, "insets":Ljava/lang/Object;
+    if-eqz v1, :cond_6
+
+    .line 81
+    new-instance v3, Landroid/graphics/Rect;
+
+    invoke-direct {v3}, Landroid/graphics/Rect;-><init>()V
+
+    .line 83
+    .local v3, "result":Landroid/graphics/Rect;
+    sget-object v4, Landroid/support/v7/widget/DrawableUtils;->sInsetsClazz:Ljava/lang/Class;
+
+    invoke-virtual {v4}, Ljava/lang/Class;->getFields()[Ljava/lang/reflect/Field;
+
+    move-result-object v4
+
+    array-length v5, v4
+
+    const/4 v6, 0x0
+
+    :goto_0
+    if-ge v6, v5, :cond_5
+
+    aget-object v7, v4, v6
+
+    .line 84
+    .local v7, "field":Ljava/lang/reflect/Field;
+    invoke-virtual {v7}, Ljava/lang/reflect/Field;->getName()Ljava/lang/String;
+
+    move-result-object v8
+
+    const/4 v9, -0x1
+
+    invoke-virtual {v8}, Ljava/lang/String;->hashCode()I
+
+    move-result v10
+
+    const/4 v11, 0x3
+
+    const/4 v12, 0x2
+
+    const/4 v13, 0x1
+
+    sparse-switch v10, :sswitch_data_0
+
+    :cond_0
+    goto :goto_1
+
+    :sswitch_0
+    const-string v10, "right"
+
+    invoke-virtual {v8, v10}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+
+    move-result v8
+
+    if-eqz v8, :cond_0
+
+    const/4 v9, 0x2
+
+    goto :goto_1
+
+    :sswitch_1
+    const-string v10, "left"
+
+    invoke-virtual {v8, v10}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+
+    move-result v8
+
+    if-eqz v8, :cond_0
+
+    const/4 v9, 0x0
+
+    goto :goto_1
+
+    :sswitch_2
+    const-string v10, "top"
+
+    invoke-virtual {v8, v10}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+
+    move-result v8
+
+    if-eqz v8, :cond_0
+
+    const/4 v9, 0x1
+
+    goto :goto_1
+
+    :sswitch_3
+    const-string v10, "bottom"
+
+    invoke-virtual {v8, v10}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+
+    move-result v8
+
+    if-eqz v8, :cond_0
+
+    const/4 v9, 0x3
+
+    :goto_1
+    if-eqz v9, :cond_4
+
+    if-eq v9, v13, :cond_3
+
+    if-eq v9, v12, :cond_2
+
+    if-eq v9, v11, :cond_1
+
+    goto :goto_2
+
+    .line 95
+    :cond_1
+    invoke-virtual {v7, v1}, Ljava/lang/reflect/Field;->getInt(Ljava/lang/Object;)I
+
+    move-result v8
+
+    iput v8, v3, Landroid/graphics/Rect;->bottom:I
+
+    goto :goto_2
+
+    .line 92
+    :cond_2
+    invoke-virtual {v7, v1}, Ljava/lang/reflect/Field;->getInt(Ljava/lang/Object;)I
+
+    move-result v8
+
+    iput v8, v3, Landroid/graphics/Rect;->right:I
+
+    .line 93
+    goto :goto_2
+
+    .line 89
+    :cond_3
+    invoke-virtual {v7, v1}, Ljava/lang/reflect/Field;->getInt(Ljava/lang/Object;)I
+
+    move-result v8
+
+    iput v8, v3, Landroid/graphics/Rect;->top:I
+
+    .line 90
+    goto :goto_2
+
+    .line 86
+    :cond_4
+    invoke-virtual {v7, v1}, Ljava/lang/reflect/Field;->getInt(Ljava/lang/Object;)I
+
+    move-result v8
+
+    iput v8, v3, Landroid/graphics/Rect;->left:I
+    :try_end_0
+    .catch Ljava/lang/Exception; {:try_start_0 .. :try_end_0} :catch_0
+
+    .line 87
+    nop
+
+    .line 83
+    .end local v7    # "field":Ljava/lang/reflect/Field;
+    :goto_2
+    add-int/lit8 v6, v6, 0x1
+
+    goto :goto_0
+
+    .line 99
+    :cond_5
+    return-object v3
+
+    .line 104
+    .end local v0    # "getOpticalInsetsMethod":Ljava/lang/reflect/Method;
+    .end local v1    # "insets":Ljava/lang/Object;
+    .end local v3    # "result":Landroid/graphics/Rect;
+    :cond_6
+    goto :goto_3
+
+    .line 101
+    :catch_0
+    move-exception v0
+
+    .line 103
+    .local v0, "e":Ljava/lang/Exception;
+    const-string v1, "DrawableUtils"
+
+    const-string v2, "Couldn\'t obtain the optical insets. Ignoring."
+
+    invoke-static {v1, v2}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
+
+    .line 109
+    .end local v0    # "e":Ljava/lang/Exception;
+    :cond_7
+    :goto_3
+    sget-object v0, Landroid/support/v7/widget/DrawableUtils;->INSETS_NONE:Landroid/graphics/Rect;
+
+    return-object v0
+
+    nop
+
+    :sswitch_data_0
+    .sparse-switch
+        -0x527265d5 -> :sswitch_3
+        0x1c155 -> :sswitch_2
+        0x32a007 -> :sswitch_1
+        0x677c21c -> :sswitch_0
+    .end sparse-switch
+.end method'''
+
 def type_safety_checker_test():
     global method_text
 
@@ -302,20 +624,34 @@ def comparison_count_test1():
         
 def control_flow_graph_test_1():
     global method_text
-
-    method_list = method_text.split("\n")
-
-    cfg = ControlFlowGraph.ControlFlowGraph(method_list)
-
-    print("cfg lines: " + str(cfg))
-    cfg.show()
+    global method_text_switch
+    global method_text_sparse
 
     
+    method_list = method_text_sparse.split("\n")
+    #method_list = ['.method private registerListeners()V\n', '    .locals 9\n', '\n', '    .line 272\n', '    const-string v0, "network"\n', '\n', '    sget-object v1, Ledu/fandm/enovak/leaks/Main;->TAG:Ljava/lang/String;\n', '\n', '    const-string v2, "Registering listeners"\n', '\n', '    invoke-static {v1, v2}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I\n', '\n', '    .line 276\n', '    const/4 v1, 0x0\n', '\n', '    .line 277\n', '    .local v1, "success":Z\n', '    :try_start_0\n', '    iget-object v2, p0, Ledu/fandm/enovak/leaks/Main;->locationManager:Landroid/location/LocationManager;\n', '\n', '    const-string v3, "passive"\n', '\n', '    invoke-virtual {v2, v3}, Landroid/location/LocationManager;->isProviderEnabled(Ljava/lang/String;)Z\n', '\n', '    move-result v2\n', '\n', '    if-eqz v2, :cond_0\n', '\n', '    .line 278\n', '    iget-object v3, p0, Ledu/fandm/enovak/leaks/Main;->locationManager:Landroid/location/LocationManager;\n', '\n', '    const-string v4, "passive"\n', '\n', '    const-wide/16 v5, 0x0\n', '\n', '    const/4 v7, 0x0\n', '\n', '    iget-object v8, p0, Ledu/fandm/enovak/leaks/Main;->locationListener:Landroid/location/LocationListener;\n', '\n', '    invoke-virtual/range {v3 .. v8}, Landroid/location/LocationManager;->requestLocationUpdates(Ljava/lang/String;JFLandroid/location/LocationListener;)V\n', '\n', '    .line 279\n', '    const/4 v1, 0x1\n', '\n', '    .line 280\n', '    sget-object v2, Ledu/fandm/enovak/leaks/Main;->TAG:Ljava/lang/String;\n', '\n', '    const-string v3, "Passive Provider Listening Enabled"\n', '\n', '    invoke-static {v2, v3}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I\n', '\n', '    .line 283\n', '    :cond_0\n', '    iget-object v2, p0, Ledu/fandm/enovak/leaks/Main;->locationManager:Landroid/location/LocationManager;\n', '\n', '    invoke-virtual {v2, v0}, Landroid/location/LocationManager;->isProviderEnabled(Ljava/lang/String;)Z\n', '\n', '    move-result v2\n', '\n', '    if-eqz v2, :cond_1\n', '\n', '    .line 284\n', '    iget-object v3, p0, Ledu/fandm/enovak/leaks/Main;->locationManager:Landroid/location/LocationManager;\n', '\n', '    const-string v4, "network"\n', '\n', '    const-wide/16 v5, 0x0\n', '\n', '    const/4 v7, 0x0\n', '\n', '    iget-object v8, p0, Ledu/fandm/enovak/leaks/Main;->locationListener:Landroid/location/LocationListener;\n', '\n', '    invoke-virtual/range {v3 .. v8}, Landroid/location/LocationManager;->requestLocationUpdates(Ljava/lang/String;JFLandroid/location/LocationListener;)V\n', '\n', '    .line 285\n', '    const/4 v1, 0x1\n', '\n', '    .line 286\n', '    sget-object v2, Ledu/fandm/enovak/leaks/Main;->TAG:Ljava/lang/String;\n', '\n', '    const-string v3, "Network Provider Listening Enabled"\n', '\n', '    invoke-static {v2, v3}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I\n', '\n', '    .line 289\n', '    :cond_1\n', '    iget-object v2, p0, Ledu/fandm/enovak/leaks/Main;->locationManager:Landroid/location/LocationManager;\n', '\n', '    const-string v3, "gps"\n', '\n', '    invoke-virtual {v2, v3}, Landroid/location/LocationManager;->isProviderEnabled(Ljava/lang/String;)Z\n', '\n', '    move-result v2\n', '\n', '    if-eqz v2, :cond_2\n', '\n', '    .line 290\n', '    iget-object v3, p0, Ledu/fandm/enovak/leaks/Main;->locationManager:Landroid/location/LocationManager;\n', '\n', '    const-string v4, "gps"\n', '\n', '    const-wide/16 v5, 0x0\n', '\n', '    const/4 v7, 0x0\n', '\n', '    iget-object v8, p0, Ledu/fandm/enovak/leaks/Main;->locationListener:Landroid/location/LocationListener;\n', '\n', '    invoke-virtual/range {v3 .. v8}, Landroid/location/LocationManager;->requestLocationUpdates(Ljava/lang/String;JFLandroid/location/LocationListener;)V\n', '\n', '    .line 291\n', '    const/4 v1, 0x1\n', '\n', '    .line 292\n', '    sget-object v2, Ledu/fandm/enovak/leaks/Main;->TAG:Ljava/lang/String;\n', '\n', '    const-string v3, "GPS Provider Listening Enabled"\n', '\n', '    invoke-static {v2, v3}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I\n', '\n', '    .line 295\n', '    :cond_2\n', '    if-eqz v1, :cond_4\n', '\n', '    .line 296\n', '    sget-object v2, Ledu/fandm/enovak/leaks/Main;->TAG:Ljava/lang/String;\n', '\n', '    const-string v3, "Leaking turned on!!"\n', '\n', '    invoke-static {v2, v3}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I\n', '\n', '    .line 299\n', '    iget-object v2, p0, Ledu/fandm/enovak/leaks/Main;->locationManager:Landroid/location/LocationManager;\n', '\n', '    invoke-virtual {v2, v0}, Landroid/location/LocationManager;->getLastKnownLocation(Ljava/lang/String;)Landroid/location/Location;\n', '\n', '    move-result-object v0\n', '\n', '    .line 300\n', '    .local v0, "lastKnownLocation":Landroid/location/Location;\n', '    if-eqz v0, :cond_3\n', '\n', '    .line 301\n', '    invoke-virtual {p0, v0}, Ledu/fandm/enovak/leaks/Main;->leakLoc(Landroid/location/Location;)V\n', '\n', '    .line 304\n', '    .end local v0    # "lastKnownLocation":Landroid/location/Location;\n', '    :cond_3\n', '    nop\n', '\n', '    .line 314\n', '    .end local v1    # "success":Z\n', '    goto :goto_0\n', '\n', '    .line 305\n', '    .restart local v1    # "success":Z\n', '    :cond_4\n', '    const-string v0, "No providers available!"\n', '\n', '    const/4 v2, 0x0\n', '\n', '    invoke-static {p0, v0, v2}, Landroid/widget/Toast;->makeText(Landroid/content/Context;Ljava/lang/CharSequence;I)Landroid/widget/Toast;\n', '\n', '    move-result-object v0\n', '\n', '    invoke-virtual {v0}, Landroid/widget/Toast;->show()V\n', '\n', '    .line 306\n', '    sget-object v0, Ledu/fandm/enovak/leaks/Main;->TAG:Ljava/lang/String;\n', '\n', '    const-string v2, "Could not get a provider"\n', '\n', '    invoke-static {v0, v2}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I\n', '\n', '    .line 307\n', '    invoke-virtual {p0}, Ledu/fandm/enovak/leaks/Main;->stopLocationUpdates()V\n', '    :try_end_0\n', '    .catch Ljava/lang/SecurityException; {:try_start_0 .. :try_end_0} :catch_0\n', '\n', '    .line 308\n', '    return-void\n', '\n', '    .line 311\n', '    .end local v1    # "success":Z\n', '    :catch_0\n', '    move-exception v0\n', '\n', '    .line 312\n', '    .local v0, "se":Ljava/lang/SecurityException;\n', '    const/4 v1, 0x1\n', '\n', '    const-string v2, "Insufficient permissions to get location data"\n', '\n', '    invoke-static {p0, v2, v1}, Landroid/widget/Toast;->makeText(Landroid/content/Context;Ljava/lang/CharSequence;I)Landroid/widget/Toast;\n', '\n', '    move-result-object v1\n', '\n', '    invoke-virtual {v1}, Landroid/widget/Toast;->show()V\n', '\n', '    .line 313\n', '    invoke-virtual {p0}, Ledu/fandm/enovak/leaks/Main;->stopLocationUpdates()V\n', '\n', '    .line 315\n', '    .end local v0    # "se":Ljava/lang/SecurityException;\n', '    :goto_0\n', '    return-void\n', '.end method\n']
+    cfg = ControlFlowGraph.ControlFlowGraph(method_list)    
+    #print("cfg lines: " + str(cfg))
+    cfg.show()
+    
+    
+def control_flow_graph_test_2():
+    global method_text
+    global method_text_switch
+    global method_text_sparse
+    
+    method_list = method_text.split("\n")
+    smd = SmaliMethodDef.SmaliMethodDef(method_list, None)
+    
+    print("TEST PASSED NO CRASH!")
+
 
 def main():
     # comparison_count_test1()
     
-    control_flow_graph_test_1()
+    control_flow_graph_test_2()
+    
+    # control_flow_graph_test_1()
     # type_safety_checker_test()
     # type_saftey_checker_test2()
     # type_saftey_checker_test3()
@@ -324,6 +660,7 @@ def main():
     #type_safety_checker_control_flow_test_edge_case_2()
     #type_safety_checker_control_flow_test_edge_case_3()
     # type_safety_checker_switch_statements()
+ 
     
 if __name__=="__main__":
     main()

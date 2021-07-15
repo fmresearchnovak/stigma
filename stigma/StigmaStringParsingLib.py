@@ -29,7 +29,17 @@ BEGINS_WITH_CMP = r"^\s*cmp"
 BEGINS_WITH_COND = r"^\s*:cond_"
 BEGINS_WITH_COLON = r"^\s*:"
 BEGINS_WITH_GOTO = r"^\s*goto"
+BEGINS_WITH_GOTO_LABEL = r"^\s*:goto_"
+BEGINS_WITH_THROW = r"^\s*throw"
+BEGINS_WITH_CATCH_LABEL = r"^\s*:catch_"
 
+
+BEGINS_WITH_PSWITCH_LABEL = r"^\s*:pswitch_"
+BEGINS_WITH_SSWITCH_LABEL = r"^\s*:sswitch_"
+BEGINS_WITH_PSWITCH_DATA = r"^\s*:pswitch_data_"
+BEGINS_WITH_SSWITCH_DATA = r"^\s*:sswitch_data_"
+BEGINS_WITH_DOT_END_PACKED_SWITCH = r"^\s*\.end packed-switch"
+BEGINS_WITH_DOT_END_SPARSE_SWITCH = r"^\s*\.end sparse-switch"
 
 BEGINS_WITH_ADD = r"^\s*add-"
 BEGINS_WITH_SUB = r"^\s*sub-"
@@ -115,18 +125,15 @@ def break_into_tokens(line):
     line = line.strip()
     tokens = line.split()
     return tokens
-    
-def is_valid_instruction(line):
-    # valid_instructions_list 
-    # is global so reading from file 
-    # only happens once (not sure if 
-    # this is truely necessary)
-    tokens = break_into_tokens(line)
 
+def extract_opcode(line):
+    tokens = break_into_tokens(line)
     if(tokens == []):
-        return False
-        
-    opcode = tokens[0]
+        return ""
+    return tokens[0]
+    
+def is_valid_instruction(line):        
+    opcode = extract_opcode(line)
     return opcode in ValidSmaliInstructions.SET
     
 def is_field_instruction(line):
@@ -325,4 +332,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
