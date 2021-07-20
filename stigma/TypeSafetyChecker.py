@@ -16,34 +16,71 @@ class TypeSafetyChecker:
         @parms text = all lines of method packed in a list
                signature = signature class from smd which parses the first line and returns a list of parameters and their types
         """
-                
-        # this should probably raise an exception instead of returning?
-        if(len(text) < 3 or text == [] or text == ''):
-            return
-                    
-        self.text = text                  #orignal method text
-        self.signature = signature        #method object stored in object
+            
+        self.signature = signature        #method object stored in smd, used for parameter types of signature
        
+        self.text = text
         self.cfg = cfg          #instance of the control flow graph object for this method 
-        self.visited_nodes = [] #list of all nodes in the cfg that have already been visited
+        self.visited_nodes = [] #list of all nodes in the cfg that have already been visited        if(len(cfg.G)) == 0:
+        
+        if(len(cfg.G)) == 1:
+            return        
 
         self.most_recent_type_map = {}                             #this map is the latest hashmap at that current line
-        self.most_recent_if_statement_parent_map = {}              #this list holds the latest hashmap before the if was executed
-        self.control_flow_list = IF_CONDITION_PAIR_LIST()          #this list holds all the control flow maps currently in execution
         self.looping_conditions_list = []                          #We need to check if the corresponding condition exists already, if yes, we do not put it in our control flow list, assuming it is a loop e.g [':cond_7', ':cond_8']
 
-        #this is a list of all the mappings
-        self.method_type_list = []
+        #this is a list of all the mappings for the a node
+        self.node_type_list = []
 
         #check for the signature and create a new hashmap for the types of parameters from the first line
         self.type_update_parameter()
-                                
         
+        #traverse through the control flow graph to build a type safety list for each node
+        self.walk()
+  
+    def walk(self):
+        #start processing the graph from second node, frst is just the signature       
+        counter = 1
+        cur_nodes = [self.cfg.G.nodes[1]]    
+        
+        while(self.nodes_left_to_visit()):
+
+            #if the cur_nodes is not empty process the smallest node
+            if(len(cur_nodes) != 0):
+                node = self.get_smallest_node(cur_nodes)
+                cur_nodes.remove(node)
+                node_counter = node["node_counter"]
+
+                if(not node["visited"]):
+                    node["visited"] = True 
+                    #get neighbors of current node and store for breadth first search
+                    neighbors = self.cfg.G.neighbors(node_counter)    
+                    for neighbor in neighbors:                               
+                        neighbor_node = self.cfg.G.nodes[neighbor]
+                        if neighbor_node["visited"] == False:
+                            cur_nodes.append(neighbor_node)
+                    
+                    #call type_update on each line of code inside the node. 
+                    for index in range(len(node["text"])):
+                        self.type_update(node["text"][index], index, node_counter)
+                    
+                    #assign the register type list to this current node after its processed processed
+                    node["type_list"] = self.node_type_list
+                    self.node_type_list = []
+                    #self.debug_node(node, cur_nodes)
+
+            else:
+                #if cur_nodes was empty, insert a new node
+                cur_nodes = [self.cfg.G.nodes[counter]]
+                counter+=1    
+                                                
     def type_update_parameter(self):  
         
         line_type_map = {}
         #checks for number of parameters in the method
         if(self.signature.num_of_parameters == 0):
+            self.cfg.G.nodes[0]["visited"] = True
+            self.cfg.G.nodes[0]["type_list"] = self.node_type_list    
             return 
         else:
             #method in smali method def does similar parsing(can be used in future)
@@ -54,9 +91,14 @@ class TypeSafetyChecker:
                 line_type_map[p_num] = type_val
 
         self.most_recent_type_map = line_type_map
-        self.method_type_list.append(line_type_map) 
-            
-    def type_update(self, line, line_index):        
+        self.node_type_list.append(line_type_map) 
+        self.node_type_list = []
+        
+        #mark the first node visited, and assign it the method type list containing parameter types
+        self.cfg.G.nodes[0]["visited"] = True
+        self.cfg.G.nodes[0]["type_list"] = self.node_type_list    
+  
+    def type_update(self, line, line_index, node_counter):     
         '''
         @parms line = specific line inside the method
                line_index = index of that line in the text list 
@@ -65,59 +107,64 @@ class TypeSafetyChecker:
 
         #find all unrelevant instructions and put a -1 for them in the type list
         if(self.non_relevent_line(line)):
-            self.method_type_list.append(-1)
-            #self.debugging(line, line_index)
+            self.node_type_list.append(self.most_recent_type_map)
             return
         
         tokens = StigmaStringParsingLib.break_into_tokens(line)
 
         #if the current line is an if statement, store the most recent hashmap as most recent if statement parent map, for later access 
         if(re.search(StigmaStringParsingLib.BEGINS_WITH_IF, line) is not None):
-            '''
-            We need to check if the corresponding condition exists already, if yes, we donont put it in our control flow list, assuming it is a loop
-            '''
-            condition_number = tokens[len(tokens)-1]
-            if(condition_number not in self.looping_conditions_list):                
-                self.most_recent_if_statement_parent_map = self.most_recent_type_map.copy()              
-                current_if_pair = IF_CONDITION_PAIR(condition_number,self.most_recent_if_statement_parent_map)
-                self.control_flow_list.append(current_if_pair)
             line_type_map_new = self.most_recent_type_map.copy()
-            self.method_type_list.append(line_type_map_new)
-            #return
+            self.node_type_list.append(line_type_map_new)
+        
+        #if the current line is a packed switch or a sparse switch
+        elif(re.search(StigmaStringParsingLib.BEGINS_WITH_PACKED_SWITCH, line) is not None or re.search(StigmaStringParsingLib.BEGINS_WITH_SPARSE_SWITCH, line) is not None):
+            line_type_map_new = self.most_recent_type_map.copy()
+            self.node_type_list.append(line_type_map_new)
 
-        #if the current line is a start of a condition, check if there is a correlating if statement that we have seen before this condition, if true prcoceed, otherwise go to else
-        elif(re.search(StigmaStringParsingLib.BEGINS_WITH_COND, line) is not None):
-            condition_number = tokens[0]
-            if(not self.has_corresponding_if_statement(condition_number)):
+        #if the current line is a start of a label, check if there is a correlating if or goto statement that we have seen before this condition
+        elif(re.search(StigmaStringParsingLib.BEGINS_WITH_PSWITCH_LABEL, line) is not None or re.search(StigmaStringParsingLib.BEGINS_WITH_SSWITCH_LABEL, line) is not None):
+            map_list = self.get_relevant_maps_to_merge(node_counter)        
+            new_map = self.merge_maps(map_list)
+            self.most_recent_type_map = new_map
+            self.node_type_list.append(new_map)
+        
+        #if the current line is a :catch label, reset everything because we dont know which line has caused the catch 
+        elif(re.search(StigmaStringParsingLib.BEGINS_WITH_CATCH_LABEL, line) is not None):
+            self.node_type_list.append({})
+            self.most_recent_type_map = {}
+            
+        #if the current line is a start of a label, check if there is a correlating if or goto statement that we have seen before this condition
+        elif(re.search(StigmaStringParsingLib.BEGINS_WITH_COLON, line) is not None):
+            label = tokens[0]
+            if(not self.has_matching_visited_label_parent(label, node_counter)):
                 #this is a situation where (:cond_x) statement has no (if-eqz :cond_4) preceding, (probably a loop) so just keep going
-                self.looping_conditions_list.append(condition_number)
-                self.method_type_list.append(-1)
+                self.looping_conditions_list.append(label)
+                line_type_map_new = self.most_recent_type_map.copy()
+                self.node_type_list.append(line_type_map_new)
             else:
-                
-                map_list = self.control_flow_list.get_the_maps_of_corresponding_ifs(condition_number)
-                                
-                if(not self.control_flow_list.check_if_returns_exist()):
-                    map_list.append(self.most_recent_type_map)
-                                    
-                # merge all maps
+                map_list = self.get_relevant_maps_to_merge(node_counter)        
                 new_map = self.merge_maps(map_list)
                 self.most_recent_type_map = new_map
-                self.method_type_list.append(new_map)
-                self.control_flow_list.update(condition_number)
+                self.node_type_list.append(new_map)
 
         #this is case, where we see a return statement, and we store it with the conditon and the map
         elif(re.search(StigmaStringParsingLib.BEGINS_WITH_RETURN, line) is not None):
-            if(len(self.control_flow_list.l) != 0): #check if are inside an if statement or not, this could be a return at end of the method also
-                latest_if_condition_pair = self.control_flow_list.l[-1] 
-                latest_if_condition_pair.return_statment = tokens[0]
-            self.method_type_list.append(-1)
-
+            line_type_map_new = self.most_recent_type_map.copy()
+            self.node_type_list.append(line_type_map_new)
+            
         #this is the normal case, all other lines do the process of assigning new map as the most recent map
         else:
             instruction = tokens[0]
             registers = StigmaStringParsingLib.get_v_and_p_numbers(line)
             dest_reg = registers[0]
-            line_type_map_new = self.most_recent_type_map.copy()
+            #if this is a start of new block, retreive most recent map from the parent node
+            #if this is not a start, keep using the most recent map assigned
+            if(line_index == 0):
+                line_type_map_new = self.get_most_recent_type_map(node_counter).copy()
+            else:
+                line_type_map_new = self.most_recent_type_map.copy()
+
             #SHALLOW COPY
             #the keys and values are strings (immutable), so a shallow copy is adequateable
             #https://stackoverflow.com/questions/2465921/how-to-copy-a-dictionary-and-only-edit-the-copy
@@ -130,7 +177,7 @@ class TypeSafetyChecker:
                 # in order to properly handle subsequent instructions
                 # such as aget vy, vx
 
-                prev_line = TypeSafetyChecker.obtain_previous_instruction(self.text, line_index-1)
+                prev_line = self.obtain_previous_instruction(node_counter, line_index-1)
                 prev_line_tokens = StigmaStringParsingLib.break_into_tokens(prev_line)
                 prev_line_instruction = prev_line_tokens[0]
                 
@@ -152,83 +199,83 @@ class TypeSafetyChecker:
             elif(instruction == "new-array"):
                 instruction_type = tokens[-1]
                 line_type_map_new[dest_reg] = instruction_type
-   
-        
+
+            
             elif(instruction == "aget"):
-                print(line)
                 src_reg = registers[1]
-                # the method_type_list does not yet have a hashmap
+                # the node_type_list does not yet have a hashmap
                 # inserted for the current (aget) line.  So, to 
                 # look at the previous line, we have to query line_index-1
-                src_type = self.type_query(src_reg, line_index-1)
+                #src_type = self.type_query(src_reg, line_index-1)
+                src_type = line_type_map_new[src_reg]
                 line_type_map_new[dest_reg] = self.check_aget_type(src_type)
-  
+                      
                                 
             else:
                 line_type_map_new[dest_reg] = self.check_type_list(instruction)
-
-            self.most_recent_type_map = line_type_map_new
-            self.method_type_list.append(line_type_map_new)
+            
+            self.most_recent_type_map = line_type_map_new.copy()
+            self.node_type_list.append(line_type_map_new)
             
         # Debugging the smali line-by-line as program runs
         # self.debugging(line, line_index)
     
-    def get_relevant_maps_to_merge(self,condition_number):
-        map_list = []
-        #all relevant if statements of that condition seen so far
-        for if_pair in self.control_flow_list:
-            if if_pair.condition_number == condition_number:
-                map_list.append(if_pair.if_parent_map)
-        
-        return map_list
-
-    def has_corresponding_if_statement(self, condition_number):
-        for item in self.control_flow_list.l:
-            if(item.condition_number == condition_number):
+    def get_relevant_maps_to_merge(self,node_counter):
+        '''This gets all maps from the predecessor nodes to merge'''
+        revelant_maps = []
+        predecessors = self.cfg.G.predecessors(node_counter)
+        for parent in predecessors:
+            parent_node_map = self.cfg.G.nodes[parent]["type_list"][-1]
+            revelant_maps.append(parent_node_map)
+        return revelant_maps
+    
+    def has_matching_visited_label_parent(self, label, node_counter):
+        '''This checks if the preceding node has a matching label'''
+        predecessors = self.cfg.G.predecessors(node_counter)
+        for parent in predecessors:
+            parent_node = self.cfg.G.nodes[parent]["text"][0]
+            parent_node_tokens = StigmaStringParsingLib.break_into_tokens(parent_node)
+            if(len(parent_node_tokens) != 0) and label == parent_node_tokens[-1] and self.cfg.G.nodes[parent]["visited"] == True:
                 return True
         return False
     
-    def type_query(self, register, line_number):
+    def get_most_recent_type_map(self, node_counter):
+        predecessors = self.cfg.G.predecessors(node_counter) #this should always be just one node, call this on a block of code
+        for parent in predecessors:
+            parent_type_list = self.cfg.G.nodes[parent]["type_list"]
+            parent_type_map = parent_type_list[-1]
+            return parent_type_map
+    
+    def nodes_left_to_visit(self):
+        '''If any node in cfg is not marked visited yet, return True meaning keep processing the graph''' 
+        for i in range(len(self.cfg.G)):
+            node = self.cfg.G.nodes[i]
+            if(node["visited"] == False):
+                return True
+        return False
+
+    def type_query(self, register, line):
+        #find which node contains the given line number
+        #extract the type map for that line from the node type list
+        node, line_index = self.get_relevent_node_for_line(line)
+        line_map = node["type_list"][line_index]
+        if register in line_map:
+            return line_map[register]
+        else:
+            raise ValueError("query cannot be resolved for " + str(register) + " " + str(line))
         
-        if(line_number == len(self.method_type_list)):
-            line_number = line_number-1
-        orig_line_number = line_number
-        current_line_map = self.method_type_list[line_number]
+    def get_relevent_node_for_line(self, line):
+        #this loops over the each line of text in each line and tries to find which node contains
+        #the relevent line for query
+        line = line.strip()
+        for node_counter in range(len(self.cfg.G)):
+            node = self.cfg.G.nodes[node_counter]
+            node_text = node["text"]
+            for line_index in range(len(node_text)):
+                if(node_text[line_index].strip() == line):
+                    return node, line_index
 
-        if isinstance(current_line_map, dict):            
-            if(register in current_line_map):
-                return current_line_map[register]
-            else:
-                #loop back to find the most recent hashmap which might contain this register, which was created inside a few lines of code.
-                while(True):
-                    line_number = line_number-1
-                    current_line_map = self.method_type_list[line_number]
-                    if(current_line_map != -1):
-                        if(register in current_line_map):
-                                break
-                return current_line_map[register]
-
-        #loop and build a connection to find the relevant hashmap
-        elif(current_line_map == -1):
-            while(not isinstance(current_line_map, dict) and line_number >= 0):
-                line_number = line_number-1
-                current_line_map = self.method_type_list[line_number]
-                
-            if(current_line_map == -1):
-                raise ValueError("query cannot be resolved for " + str(register) + " " + str(orig_line_number))
-            
-            else:
-                if(register in current_line_map):
-                    return current_line_map[register]
-                else:
-                    #loop back to find the most recent hashmap which might contain this register, which was created inside a few lines of code.
-                    while(True):
-                        line_number = line_number-1
-                        current_line_map = self.method_type_list[line_number]
-                        if(current_line_map != -1):
-                            if(register in current_line_map):
-                                break
-                    return current_line_map[register]
+        raise ValueError("Line not found in any node:", line)
     
     def check_type_list(self, opcode):
         '''
@@ -263,12 +310,7 @@ class TypeSafetyChecker:
             2)
                 src_type: [Ljava/lang/String
                 return "object"
-        """
-        if(len(src_type) == 1):
-            # for line in self.text:
-            #     print(line)
-            print(src_type)
-        
+        """        
         value = src_type[1:]
         if(value[0] == "L"):
             return "object"
@@ -309,10 +351,50 @@ class TypeSafetyChecker:
             return "64-bit-2"
         else:
             return "invalid type"
+    
+    def obtain_previous_instruction(self, node_counter, start):
+        # I found a situation in the whatsapp.apk which 
+        # has the instruction preceeding a move-result-* instruction
+        # MORE than 2 lines previous
+        #
+        #
+        #...
+        #invoke-interface {v0, v1, v4}, LX/1Fz;->AY5(Lcom/google/android/gms/dynamic/IObjectWrapper;LX/1oP;)[LX/1p7;
+        #
+        #
+        #
+        #.line 486217
+        #
+        #move-result-object v10
+        #
+        #:try_end_2
+        # ...
+        # such a situation means that line_index-2 is not a safe assumption
+        # old code this method replaces: prev_line = self.text[line_index-2]
+        #this method takes in a node counter which is the current node we are looking at, so we can extract the text of that node and look 
+        #for the last valid instruction to return
+        
+        text = self.cfg.G.nodes[node_counter]["text"]
+        cur_line = text[start]
+        while(not StigmaStringParsingLib.is_valid_instruction(cur_line)):
+            start = start-1
+            cur_line = text[start]
+        
+        return cur_line          
               
     def __str__(self):
-        return str(self.method_type_list)
+        return str(self.node_type_list)
 
+    @staticmethod                                   
+    def get_smallest_node(cur_nodes):
+        smallest_node = cur_nodes[0]
+        smallest = cur_nodes[0]["node_counter"]
+        for node in cur_nodes:
+            if node["node_counter"] < smallest:
+                smallest = node["node_counter"]
+                smallest_node = node
+        return smallest_node
+    
     @staticmethod
     def merge_maps(map_list):
         '''
@@ -361,118 +443,24 @@ class TypeSafetyChecker:
         elif(not StigmaStringParsingLib.is_valid_instruction(line)
              and re.search(StigmaStringParsingLib.BEGINS_WITH_RETURN, line) is None 
              and re.search(StigmaStringParsingLib.BEGINS_WITH_IF, line) is None 
-             and re.search(StigmaStringParsingLib.BEGINS_WITH_COND, line) is None):
+             and re.search(StigmaStringParsingLib.BEGINS_WITH_COLON, line) is None
+             and re.search(StigmaStringParsingLib.BEGINS_WITH_PACKED_SWITCH, line) is None
+             and re.search(StigmaStringParsingLib.BEGINS_WITH_SPARSE_SWITCH, line) is None):
             return True
         else:
             tokens = StigmaStringParsingLib.break_into_tokens(line)
             opcode = tokens[0]
             return opcode in StigmaStringParsingLib.NON_RELEVANT_INSTRUCTION_LIST
 
-    @staticmethod
-    def obtain_previous_instruction(text, start):
-        # I found a situation in the whatsapp.apk which 
-        # has the instruction preceeding a move-result-* instruction
-        # MORE than 2 lines previous
-        #
-        #
-        #...
-        #invoke-interface {v0, v1, v4}, LX/1Fz;->AY5(Lcom/google/android/gms/dynamic/IObjectWrapper;LX/1oP;)[LX/1p7;
-        #
-        #
-        #
-        #.line 486217
-        #
-        #move-result-object v10
-        #
-        #:try_end_2
-        # ...
-        # such a situation means that line_index-2 is not a safe assumption
-        # old code this method replaces: prev_line = self.text[line_index-2]
-        
-        cur_line = text[start]
-        while(not StigmaStringParsingLib.is_valid_instruction(cur_line)):
-            start = start-1
-            cur_line = text[start]
-        
-        return cur_line
 
+    def debug_node(self, node, cur_nodes):
+        print("\nCurrent node counter:", node["node_counter"])
+        for i in range(len(node["type_list"])):
+            print("line: ", node["text"][i])
+            print(i, node["type_list"][i], "\n")            
 
-    def debugging(self, line, line_index):
-        print("\nline: " + str(line_index) + line , "\nline_map: ", self.most_recent_type_map)
-        print("Size of type_list:", len(self.method_type_list))
-        print("Looping Condition list: ", self.looping_conditions_list)
-        if(len(self.control_flow_list.l) == 0):
-            print("Control flow list: Empty List []", "\n")
-        else:            
-            for i in range(len(self.control_flow_list.l)):
-                print("Control flow list: ", i+1, ":", self.control_flow_list.l[i])
-        
-        #input("Continue?")
-   
-        
-class IF_CONDITION_PAIR:
-    def __init__(self, new_condition_number, new_parent_map):
-        self.condition_number = new_condition_number                #this is a condition number (e.g ":cond_4")
-        self.if_parent_map = new_parent_map                         #this is the hashmap stored for that condition number at the if statement = {p0:object, p1:object}
-        self.return_statment = None                                 #e.g return-object vx, just to check if return statement exists or not line iteself doesnt matter
-
-    def check_if_return_exists(self):
-        return self.return_statment != None
-
-    def __str__(self):
-        return "Condition->" + str(self.condition_number) + ", Parent->" + str(self.if_parent_map) + ", Return->" + str(self.return_statment)
+        print("neighbors: ", end =" ")
+        for node in cur_nodes:
+            print(node["node_counter"], end =" ")
+        input("\n-----------------------Continue?????-----------------------C\n")
     
-    
-class IF_CONDITION_PAIR_LIST:
-    
-    def __init__(self):
-        self.l = []
-    
-    def append(self, if_condition_pair):
-        if(not isinstance(if_condition_pair, IF_CONDITION_PAIR)):
-            raise TypeError("Invalid type: " + str(type(if_condition_pair)))
-        else:
-            self.l.append(if_condition_pair)
-
-    def get_the_maps_of_corresponding_ifs(self,condition_number):
-        map_list = []
-        #all relevant if statements of that condition seen so far
-        for if_pair in self.l:
-            if if_pair.condition_number == condition_number:
-                map_list.append(if_pair.if_parent_map)
-        return map_list
-    
-    def check_if_returns_exist(self):
-        for pair in self.l[:-1]:
-            if pair.check_if_return_exists():
-                raise RuntimeError("Multiple if's appear to have a return statement.")
-
-        return self.l[-1].check_if_return_exists()
-
-    def update(self,condition_number):
-        '''This method takes in a condition number (':cond_3') and loops through the self.l list to find all instances of if_condition_pair matching this condition and removes them from the list '''
-        while(len(self.l) != 0):
-            last_item = self.l[-1]
-            if last_item.condition_number == condition_number:
-                self.l.pop()
-            else:
-                break
-
-    
-'''
-Changes made:
-    - Maintain a seperate list of possible looping conditions which do not have a preceding if statement, 
-     so when we see an if with that condition we can simply ignore it rather than making a new if_condition_pair
-
-    - The presumed type of a register when merger cannot be taken out from the first map always, as that register might not exist
-      in the first map, so implemented a new method, get_register_presumed_type which can loop through all maps and 
-      find a type from any first map where the register existsdatetime A combination of a date and a time. Attributes: ()
-      
-    - Implemented get_relevant_maps_to_merge, this method takes in a condition_number and loops through all the if_pairs stored 
-    in the control flow list. if the condition number matches, we append it to the map_list. The most recent map is also appended in the map_list.
-    
-    - the condition_pair_list doesnt have list attributes such as length and others, so we need to access the .l (list) inside it and call list methods on that.
-    
-    - implemented an update method in the if_condition_pair_list which takes a condition number and removes all if-pairs matching that condition from the list. 
-     
-'''

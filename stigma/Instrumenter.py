@@ -164,7 +164,7 @@ class Instrumenter:
     @staticmethod
     def SIMPLE_instrumentation(scd, m, line_num, regex, dest_num, source_num, comment_string):
         cur_line = m.raw_text[line_num]
-
+        
         search_object = re.search(regex, cur_line)
         if search_object is None:
             return 0
