@@ -917,11 +917,75 @@ def control_flow_graph_test_2():
     print("TEST PASSED NO CRASH!")
 
 
+
+def grow_locals_test_1():
+    global method_text
+    method_list = method_text.split("\n")
+
+    smd = SmaliMethodDef.SmaliMethodDef(method_list, None)
+    smd.grow_locals(3)
+    #print(smd)
+    smd.write_to_file(str(smd.get_name()) + ".smali")
+
+
+    test_line = "    invoke-virtual {v1}, Ljava/lang/Object;->toString()Ljava/lang/String;\n"
+    result_line = smd.convert_p_to_v_numbers(test_line)
+    assert(result_line == test_line)
+   
+    test_line = "    invoke-virtual {p0}, Ljava/lang/Object;->toString()Ljava/lang/String;\n"
+    result_line = smd.convert_p_to_v_numbers(test_line)
+    #print(result_line)
+    assert(result_line == "    invoke-virtual {v9}, Ljava/lang/Object;->toString()Ljava/lang/String;\n")
+    
+    test_line = "    invoke-virtual {p0, p1, p2}, Ljava/lang/Object;->toString()Ljava/lang/String;\n"
+    result_line = smd.convert_p_to_v_numbers(test_line)
+    #print(result_line)
+    assert(result_line == "    invoke-virtual {v9, v10, v11}, Ljava/lang/Object;->toString()Ljava/lang/String;\n")
+
+
+    
+    method_text = '''.method public leakPasswd(Landroid/view/View;J)V
+    .locals 3
+    .param p1, "v"    # Landroid/view/View;
+    .param p2, "x"    # Long (64-bits, "wide")
+    .param p3, "x"
+
+    .line 181
+    const-string p2, "p2"
+    
+    const-string p3, "p3"
+
+    invoke-virtual {p0, v0}, Ledu/fandm/enovak/leaks/Main;->findViewById(I)Landroid/view/View;
+
+    move-result-object v2
+    
+    return v2
+    
+.end_method'''
+    
+    
+    method_list = method_text.split("\n")
+    smd = SmaliMethodDef.SmaliMethodDef(method_list, None)
+    smd.convert_all_lines_p_to_v_numbers()
+    #print(smd.raw_text)
+    
+    
+    
+    ans = smd.convert_p_to_v_numbers("invoke-virtual/range {v2 .. p2}, Landroid/support/v4/app/FragmentManagerNonConfig;->getFragments()Ljava/util/List;")
+    assert(ans == "invoke-virtual/range {v2 .. v5}, Landroid/support/v4/app/FragmentManagerNonConfig;->getFragments()Ljava/util/List;")
+    
+    
+def grow_locals_test_2():
+    scd = SmaliClassDef.SmaliClassDef("./test/Main.smali")
+    scd.grow_locals(3)
+    scd.write_to_file("./test/Main_After.smali")
+    
+    
 def main():
     # comparison_count_test1()
     
-    control_flow_graph_test_2()
-    
+
+    # control_flow_graph_test_2()
     # control_flow_graph_test_1()
     # type_safety_checker_test()
     # type_saftey_checker_test2()
@@ -935,7 +999,11 @@ def main():
     # type_safety_checker_empty_method_test()
     # type_safety_checker_leaks_test()
     # type_safety_checker_action_bar_try_catch_leaks() #failed
- 
+
+    grow_locals_test_1()
+    grow_locals_test_2()
+    
+
     
 if __name__=="__main__":
     main()

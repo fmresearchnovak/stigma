@@ -131,7 +131,8 @@ def runStigma():
         #Progress bar
         print(f'...{str(counter)}/{str(total_files)}', end = '\r')
         counter += 1
-        scd.instrument()
+        #scd.instrument()
+        scd.grow_locals(3)
         
     
     print("...Overwriting smali classes")    
@@ -225,6 +226,7 @@ def splitSmali():
     s = 0
     e = 0
     for idx, smaliFile in enumerate(smaliFiles):
+        #print("file: " + str(smaliFile))
         scd = SmaliClassDef.SmaliClassDef(smaliFile)
         field_num = scd.get_num_field_declarations() + scd.get_num_field_references()
         method_num = scd.get_num_method_declarations() + scd.get_num_method_references()

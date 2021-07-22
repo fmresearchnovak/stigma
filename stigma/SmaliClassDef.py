@@ -53,8 +53,7 @@ class SmaliClassDef:
         pre_methods = True
         idx = 0
         while idx < len(lines):
-
-            # print("processing line: " + str(lines[idx]))
+            #print("processing line: " + str(lines[idx]))
             match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_METHOD, lines[idx])
             if match_object is not None:  # This is the start of a method defintion
                 # print(str(match_object) + " in line: " + lines[idx])
@@ -189,6 +188,15 @@ class SmaliClassDef:
 
         func_name = line.split(" ")[-1]
         return func_name not in self.methods
+        
+        
+    def grow_locals(self, n):
+        
+        if(n < 0):
+            raise ValueError("Cannot grow locals by a negative amount: " + str(n))
+        
+        for m in self.methods:
+            m.grow_locals(n)
 
 
     def instrument(self):

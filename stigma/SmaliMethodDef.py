@@ -1,9 +1,11 @@
 import re
-from stigma.TypeSafetyChecker import TypeSafetyChecker
+
 from stigma import SmaliAssemblyInstructions as smali
 from stigma import StigmaStringParsingLib
-from stigma import VRegisterPool
-from stigma import ControlFlowGraph
+from stigma import Instrumenter
+
+from stigma.ControlFlowGraph import ControlFlowGraph
+from stigma.TypeSafetyChecker import TypeSafetyChecker
 
         
 class SmaliMethodSignature:
@@ -31,6 +33,10 @@ class SmaliMethodSignature:
         self.is_static = False
         if "static" in modifiers:
             self.is_static = True
+            
+        self.is_abstract = False
+        if "abstract" in modifiers:
+            self.is_abstract = True
         
         #print("name: " + str(self.name))
         #print("static: " + str(self.is_static))
@@ -59,13 +65,13 @@ class SmaliMethodSignature:
         while i < len(parameter_raw):
             self.num_of_parameters += 1
             
-            if parameter_raw[i] in VRegisterPool.TYPE_LIST_WORD: 
+            if parameter_raw[i] in smali.TYPE_LIST_WORD: 
                 self.num_of_parameter_registers += 1
                 p_name = "p" + str(p_idx)
                 self.parameter_type_map[p_name] = parameter_raw[i]
                 
                 
-            elif parameter_raw[i] in VRegisterPool.TYPE_LIST_WIDE: # long or double
+            elif parameter_raw[i] in smali.TYPE_LIST_WIDE: # long or double
                 self.num_of_parameter_registers += 2
                 p_name = "p" + str(p_idx)
                 self.parameter_type_map[p_name] = parameter_raw[i]
@@ -155,8 +161,16 @@ class SmaliMethodDef:
         # should be re-factored with get_signature() method below
         self.signature = SmaliMethodSignature(self.raw_text[0])
 
+
         #create the control flow graph for the method text and pass it to the type safety checker
         #this will check and track types of each register on each line 
+        #self.cfg = ControlFlowGraph(text)
+
+        #initialize the type checker as a instance variable for each method. 
+        #this will check and track types of each register on each line 
+        #print("Running Type Checker on: " + str(self.signature) + " in " + str(scd))
+        #self.tsc = TypeSafetyChecker(text, self.signature) # signature is an object
+
 
         print("Running Smali Method Def on: " + str(self.signature) + " in " + str(scd))
         self.cfg = ControlFlowGraph.ControlFlowGraph(text)
@@ -168,7 +182,134 @@ class SmaliMethodDef:
         # except:
         #     print("Building Type Checker For: " + str(self.signature.name) + "  in " + str(scd.file_name))
         #     input("Continue with exception")
+        
+        if(str(self.signature) == ".method static binarySearch([JIJ)I"):
+            print(self.signature)
+            print("\t .locals: " + self.raw_text[1].strip())
+            print("\t total number of registers: " + str(self.get_num_registers()))
             
+
+    def grow_locals(self, n):
+        # grows the .locals from the current value such that there are
+        # n new registers in the method
+        # moves the parameters so that they don't incur maximum register value
+        # issues when used in instructions
+
+        if(n < 0):
+            raise ValueError("Cannot grow locals by a negative amount: " + str(n))
+            
+        if(self.signature.is_abstract):
+            # We shouldn't grow abstract methods since they don't have 
+            # code / locals
+            return
+        
+        
+        # Convert all "pX" references to their corresponding "vX" register
+        # names BEFORE adjusting .locals so the references are correct
+        # Note: part of the algorithm is to move the values from
+        # the new location (after adjusting .locals) into their original
+        # location    
+        self.convert_all_lines_p_to_v_numbers()
+
+    
+
+
+        old_locals_num = self.get_locals_directive_num()
+        #orig_locals_num = old_locals_num
+        # Set the new locals number
+        # this is the "main event" / primary purpose
+        # of this method
+        # I need to expand the locals to hold
+        #   (a) all of the existing locals used in the mod
+        #   (b) all of the parameters for this method
+        #   (c) n new registers, which will be used for taint-tracking
+        
+        new_locals_num = old_locals_num + n
+        self.set_locals_directive(new_locals_num)
+        
+
+    
+        # Write the necessary move values so that the vX
+        # registers that originally contained the parameters
+        # contain the correct values
+        block = Instrumenter.Instrumenter.make_comment_block("")
+        #print(self.signature.parameter_type_map)
+        for param in self.signature.parameter_type_map:
+
+            param_type = self.signature.parameter_type_map[param]
+            if(param_type in smali.TYPE_LIST_OBJECT_REF or param_type[0] in smali.TYPE_LIST_OBJECT_REF):
+                # param_type might be "THIS" or "Lsome/class;" etc.
+                mv_cmd = smali.MOVE_OBJECT_16
+            elif(param_type in smali.TYPE_LIST_WIDE):
+                mv_cmd = smali.MOVE_WIDE_16
+            elif(param_type in smali.TYPE_LIST_WIDE_REMAINING):
+                # the MOVE_WIDE_16 from the first part of the wide
+                # will move both the first part and this second part
+                mv_cmd = None 
+                old_locals_num += 1
+                continue
+            elif(param_type in smali.TYPE_LIST_WORD):
+                mv_cmd = smali.MOVE_16
+            else:
+                raise ValueError("Unknown type for parameter " + str(param) + ": " + str(param_type))
+
+
+            mv_cmd = mv_cmd("v" + str(old_locals_num), param)
+
+            block.append(mv_cmd)
+            block.append(smali.BLANK_LINE())
+            
+            old_locals_num += 1
+            
+        
+        #while(old_locals_num < new_locals_num):
+            # this loop should repeat n times
+            #   (n is the input parameter to this function)
+        #    block.append(smali.CONST("v" + str(old_locals_num), "0x1"))
+        #    block.append(smali.BLANK_LINE())
+        #    old_locals_num+=1
+
+        block = block + Instrumenter.Instrumenter.make_comment_block("")
+    
+        insert_idx = self.find_first_valid_instruction()
+        self.embed_block(insert_idx, block)
+
+
+    def convert_p_to_v_numbers(self, line):
+        # a nasty edge-case that must be considered is a const-string
+        # or comment or something that contains substrings
+        # that look like register references
+        # 
+        # const-string vX, "bad string p0 v2"
+        
+        num_locals = self.get_locals_directive_num()
+        
+        opcode = StigmaStringParsingLib.break_into_tokens(line)[0]            
+        
+        regs = StigmaStringParsingLib.get_v_and_p_numbers(line)
+        for r in regs:
+            if r[0] == "p":
+                v_reg = StigmaStringParsingLib.get_v_from_p(r, num_locals)
+                line = line.replace(r, v_reg, 1)
+        return line
+        
+            
+                
+    def convert_all_lines_p_to_v_numbers(self):
+        for i in range(len(self.raw_text)):
+            cur_line = self.raw_text[i]
+            if(StigmaStringParsingLib.is_valid_instruction(cur_line)):
+                new_line = self.convert_p_to_v_numbers(cur_line)
+                self.raw_text[i] = new_line
+            
+            
+    def find_first_valid_instruction(self):
+        for i in range(len(self.raw_text)):
+            cur_line = self.raw_text[i]
+            if(StigmaStringParsingLib.is_valid_instruction(cur_line)):
+                return i
+
+
 
     # There are three "register numbers"
     # 1) The ORIGINAL_LOCAL_NUMBER_REGS
@@ -226,9 +367,13 @@ class SmaliMethodDef:
             return 0
             
     def get_num_registers(self):
-        # +1 at the end is necessary to account for p0 ("this") reference
-        # this may be a bug, since statid methods don't have a "this" reference
-        ans = self.get_locals_directive_num() + self.signature.num_of_parameter_registers + 1
+        # the total number of registers used by this function
+        ans = self.get_locals_directive_num() + self.signature.num_of_parameter_registers
+        #if(not self.signature.is_static):
+            # +1 at the end is necessary to account for p0 ("this") reference
+            # this may be a bug, I'm not sure how the other parts of the code
+            # count registers
+        #    ans+=1
         return ans
         
 
@@ -322,7 +467,12 @@ class SmaliMethodDef:
         fh = open(filename, "w")
         
         for line in self.raw_text:
-            fh.write(str(line))
+            s = str(line)
+            if(s == "" or s[-1] != "\n"):
+                s = s + "\n"
+            fh.write(s)
+
+        fh.close()
         
 
     def embed_line(self, position, line):
@@ -468,7 +618,7 @@ class SmaliMethodDef:
             if(reg_pool.is_high_numbered(reg_high_name)):
                 #print("fixing reg: " + str(reg_high_name))
 
-                is_wide = (reg_pool[reg_high_name] == VRegisterPool.TYPE_CODE_WIDE)
+                is_wide = (reg_pool[reg_high_name] == smali.TYPE_CODE_WIDE)
 
         
                 try:
@@ -541,7 +691,7 @@ class SmaliMethodDef:
         #print("block produced: " + str(ans_block))
         #print("\n\n")
         return ans_block
-            
+    '''        
     def fix_register_limit(self):
         #print("self.scd.file_name: " + str(self.scd.file_name))
         #print("fix_register_limit(" + str(self.signature) + ")")
@@ -617,9 +767,8 @@ class SmaliMethodDef:
 
             # go to next line!
             line_num += len(ans_block)
-            
-            
-
+    '''
+    
     def __repr__(self):
         return self.get_signature()
 
@@ -700,94 +849,6 @@ def tests():
     assert(SmaliMethodDef._dereference_p_registers_frl("    const-string p2, \"nasty p2 example\"\n", 2) == "    const-string v4, \"nasty p2 example\"\n")
     
 
-    print("\tfix_register_limit_for_line...")
-    # foo(I)
-    # .locals 16
-    # v0, v1, v2, ... v15, v16, v17
-    #                     shad,  p0
-    line = "    iget v0, v17, LMyObject->num1:I\n"
-    shadows = ["v16"]
-    signature = SmaliMethodSignature(".method private foo()V")
-    reg_pool = VRegisterPool.VRegisterPool(signature, 17)
-    reg_pool["v17"] = VRegisterPool.TYPE_CODE_OBJ_REF
-
-    #print(reg_pool.pretty_string(0, 20))
-    code_block = SmaliMethodDef.fix_register_limit_for_line(line, shadows, reg_pool)
-    soln = [smali.MOVE_OBJECT_16("v1", "v17"),
-        smali.BLANK_LINE(),
-        str(smali.IGET("v0", "v1", "LMyObject->num1:I")),
-        smali.BLANK_LINE(),
-        smali.MOVE_OBJECT_16("v17", "v1"),
-        smali.BLANK_LINE()]
-    assert(code_block == soln)
-    #print(reg_pool.pretty_string(0, 20))
-    
-    line = "    iget v1, v17, LMyObject->num2:I\n"
-    code_block = SmaliMethodDef.fix_register_limit_for_line(line, shadows, reg_pool)
-    soln = [smali.MOVE_OBJECT_16("v2", "v17"),
-        smali.BLANK_LINE(),
-        str(smali.IGET("v1", "v2", "LMyObject->num2:I")),
-        smali.BLANK_LINE(),
-        smali.MOVE_OBJECT_16("v17", "v2"),
-        smali.BLANK_LINE()]
-    assert(code_block == soln)
-    
-    
-    line = "    const/16 v3, 0x5\n"
-    code_block = SmaliMethodDef.fix_register_limit_for_line(line, shadows, reg_pool)
-    soln = [str(smali.CONST_16("v3", "0x5")),
-        smali.BLANK_LINE()]
-    assert(code_block == soln)
-
-    line = "    iget v17, v17, Lblahblah->somefield:I\n"
-    code_block = SmaliMethodDef.fix_register_limit_for_line(line, shadows, reg_pool)
-    soln = [smali.MOVE_OBJECT_16("v3", "v17"),
-        smali.BLANK_LINE(),
-        str(smali.IGET("v3", "v3", "Lblahblah->somefield:I")),
-        smali.BLANK_LINE(),
-        smali.MOVE_16("v17", "v3"),
-        smali.BLANK_LINE()]
-    assert(code_block == soln)
-    
-    
-    line = "    invoke-super {v12, v13, v14, v15, v16}, Landroid/view/ViewGroup;->drawChild(Landroid/graphics/Canvas;Landroid/view/View;J)Z\n"
-    shadows = ["v10", "v11"]
-    reg_pool.type_map = {"v0": VRegisterPool.TYPE_CODE_OBJ_REF, 
-        "v1": VRegisterPool.TYPE_CODE_WORD,
-        "v2": VRegisterPool.TYPE_CODE_WORD,
-        "v3": VRegisterPool.TYPE_CODE_WORD,
-        "v4": VRegisterPool.TYPE_CODE_OBJ_REF,
-        "v5": VRegisterPool.TYPE_CODE_WORD,
-        "v6": VRegisterPool.TYPE_CODE_WORD,
-        "v7": VRegisterPool.TYPE_CODE_WORD,
-        "v8": VRegisterPool.TYPE_CODE_WORD,
-        "v9": VRegisterPool.TYPE_CODE_OBJ_REF,
-        "v10": VRegisterPool.TYPE_CODE_WORD,
-        "v11": VRegisterPool.TYPE_CODE_WORD,
-        "v12": VRegisterPool.TYPE_CODE_OBJ_REF,
-        "v13": VRegisterPool.TYPE_CODE_OBJ_REF,
-        "v14": VRegisterPool.TYPE_CODE_OBJ_REF,
-        "v15": VRegisterPool.TYPE_CODE_WIDE,
-        "v16": VRegisterPool.TYPE_CODE_WIDE_REMAINING}
-    code_block = SmaliMethodDef.fix_register_limit_for_line(line, shadows, reg_pool)
-    soln_block = [smali.MOVE_16("v11", "v1"),  # shad <-- corr
-        smali.BLANK_LINE(),
-        smali.MOVE_OBJECT_16("v10", "v0"), # shad <-- corr
-        smali.BLANK_LINE(),
-        smali.MOVE_WIDE_16("v0", "v15"), # corr <-- high
-        smali.BLANK_LINE(),
-        str(smali.INVOKE_SUPER(["v12", "v13", "v14", "v0", "v1"], "Landroid/view/ViewGroup;->drawChild(Landroid/graphics/Canvas;Landroid/view/View;J)Z")),
-        smali.BLANK_LINE(),
-        smali.MOVE_16("v1", "v11"),
-        smali.BLANK_LINE(),
-        smali.MOVE_WIDE_16("v15", "v0"),
-        smali.BLANK_LINE(),
-        smali.MOVE_OBJECT_16("v0", "v10"), # missing v1 <-- v11
-        smali.BLANK_LINE()]
-        
-    #for line in code_block:
-    #    print(line)
-    assert(code_block == soln_block)
         
 
     '''

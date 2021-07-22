@@ -96,14 +96,8 @@ def get_v_and_p_numbers(line):
         #print("parts: " + str(parts))
         start = parts[0].strip(" {")
         end = parts[1].strip(" }")
-        letter = start[0]
-        #print("end: " + str(end))
-        start_num = int(start[1:])
-        end_num = int(end[1:])
-        registers = []
-        for i in range(start_num, end_num+1):
-            registers.append(letter + str(i))
-        
+        registers = [start, end]
+
     else:    
         number_registers = get_num_registers(line)
         relevant_list = tokens[1:number_registers + 1]

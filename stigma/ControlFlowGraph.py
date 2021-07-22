@@ -5,6 +5,32 @@ This graph generates nodes for each block of code (list of all contingunous inst
 it sees an if, cond, goto, switch, or return and in that cases it branches out, creating a new node.
 Then it creates an edge from existing blocks of code to this new branching node.  
 https://networkx.org/documentation/stable/index.html
+
+
+example demonstrating goto-s
+const v2 0x1     {v2: 32-bit}
+
+add v3 v2 v2     {v2: 32-bit, v3: 32-bit}
+
+goto :goto_4
+
+:goto_2
+
+invoke-virtual{v2}   type of v2???    answer: object (string)
+
+:goto_4
+
+const-string v2 "hello"
+
+goto :goto_2
+
+goto :goto_4
+
+
+# if, cmp, goto, switch (packed and sparse)
+# returns (terminate a branch / is a leaf-node)
+# everything else
+
 '''
 
 from stigma import VRegisterPool, StigmaStringParsingLib
