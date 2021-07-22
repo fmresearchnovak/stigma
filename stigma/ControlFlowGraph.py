@@ -4,7 +4,37 @@ This class contains a list of hashmaps, which are associated with each line of t
 the types of each register at each current line. 
 hashmap -> key: string (register name)
         -> value: string, (type stored in the register)(32bit-64bit-object)
+
+
+
+
+example demonstrating goto-s
+const v2 0x1     {v2: 32-bit}
+
+add v3 v2 v2     {v2: 32-bit, v3: 32-bit}
+
+goto :goto_4
+
+:goto_2
+
+invoke-virtual{v2}   type of v2???    answer: object (string)
+
+:goto_4
+
+const-string v2 "hello"
+
+goto :goto_2
+
+goto :goto_4
+
+
+# if, cmp, goto, switch (packed and sparse)
+# returns (terminate a branch / is a leaf-node)
+# everything else
+
 '''
+
+
 from stigma import VRegisterPool, StigmaStringParsingLib
 import re
 import networkx as nx
