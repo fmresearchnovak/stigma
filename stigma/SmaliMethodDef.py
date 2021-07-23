@@ -43,6 +43,8 @@ class SmaliMethodSignature:
         
         self.parameter_type_map = {}
         
+        # note, if there is a 64-bit parameter
+        # it counts as one param, but two param-regs
         self.num_of_parameters = 0 
         self.num_of_parameter_registers = 0
         p_idx = 0 # number for "pX" notation
@@ -186,6 +188,7 @@ class SmaliMethodDef:
             print("\t .locals: " + self.raw_text[1].strip())
             print("\t total number of registers: " + str(self.get_num_registers()))
             
+            
     def grow_locals(self, n):
         # grows the .locals from the current value such that there are
         # n new registers in the method
@@ -210,8 +213,14 @@ class SmaliMethodDef:
 
     
 
-
         old_locals_num = self.get_locals_directive_num()
+        
+        # determine the names of the new registers (to return later)
+        first_new_free_reg_num = old_locals_num + self.signature.num_of_parameter_registers
+        new_regs = []
+        for num in range(first_new_free_reg_num, first_new_free_reg_num+n):
+            new_regs.append("v" + str(num))
+        
         #orig_locals_num = old_locals_num
         # Set the new locals number
         # this is the "main event" / primary purpose
@@ -268,8 +277,12 @@ class SmaliMethodDef:
 
         block = block + Instrumenter.Instrumenter.make_comment_block("")
     
+        # this should maybe be refactored to use extends / append
+        # into the "new_instrumented_code" list
         insert_idx = self.find_first_valid_instruction()
         self.embed_block(insert_idx, block)
+        
+        return new_regs
 
     def convert_p_to_v_numbers(self, line):
         # a nasty edge-case that must be considered is a const-string
@@ -490,6 +503,9 @@ class SmaliMethodDef:
     
     def instrument(self):
         
+        # these are the newly freed registers at the top
+        free_regs = self.grow_locals(3)
+        
         counter = 1
         cur_nodes = [self.cfg[1]]    
         
@@ -514,7 +530,7 @@ class SmaliMethodDef:
                     for index in range(len(node["text"])):
                         line = node["text"][index]
                         if(self.is_relevant(line, node)):
-                            self._do_instrumentation_plugins(index)
+                            self._do_instrumentation_plugins(free_regs, node, index)
                         self.tcs.type_update(line, index, node_counter)
                         
                     
@@ -527,13 +543,56 @@ class SmaliMethodDef:
                 #if cur_nodes was empty, insert a new node
                 cur_nodes = [self.cfg.G.nodes[counter]]
                 counter+=1              
+                
+                
+    def gen_list_of_safe_registers(self, free_regs, node, idx, goal_size):
+        # "safe" registers are 
+        #  (a) low numbered (less than v16)
+        #  (b) not used in the instruction on line idx
+        #  (c) not currently assigned a type in the method on line idx
+        #  (d) not the second 1/2 of a wide value
+        
+        # The algorithm aims to get to goal_size
+        # for the number of registers return
+        # it will stop early if possible and it will
+        # throw an exception if goal_size cannot be reached
+                
+        # generate a list of available registers
+        safe_regs = []
+        
+        for r in free_regs:
+            n = int(r[1:])
+            if(n < 16):
+                safe_regs.append(r)
+                
+        if(len(safe_regs) >= goal_size):
+            return safe_regs
+        
+        
+        # FIX ME
+        for i in range(16):
+            reg = "v" + str(i)
+            
+            # each node has a list of hashmaps (typelist)
+            # each hashmap in the list corresponds to a line from the original
+            # program.
+            if(reg not in node["type_list"][idx]):
+                avail_regs.append(reg)
+                
+        if(len(avail_regs) < 6):
+        
 
-    def _do_instrumentation_plugins(self, idx):
+    def _do_instrumentation_plugins(self, free_regs, node, idx):
         # extract opcode
         # get the relevant instrumentation method from the instrumentation_map and call it
         opcode = StigmaStringParsingLib.extract_opcode(self.raw_text[idx])
         instrumentation_method = Instrumenter.instrumentation_map[opcode]
-        new_block = instrumentation_method(self.scd, self, idx, [])
+        
+        
+
+            
+        
+        new_block = instrumentation_method(self.scd, self, idx, regs)
         
         #invoke foo()
         #move-result vx
@@ -546,6 +605,10 @@ class SmaliMethodDef:
         else:
             self.instrumented_code.extend(new_block)   
             self.instrumented_code.append(self.raw_text[idx])
+            
+            
+    def generate_list_of_available_registers(self, idx):
+        
     
     def is_relevant(self, line, node):
         # only do instrumentation if the length of the method is
