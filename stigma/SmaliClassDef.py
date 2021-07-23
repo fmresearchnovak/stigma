@@ -1,6 +1,5 @@
 from stigma import StigmaStringParsingLib
 import re
-from stigma import Instrumenter as inst
 from stigma import SmaliAssemblyInstructions as smali
 from stigma.SmaliMethodDef import SmaliMethodDef
 
@@ -11,7 +10,6 @@ class SmaliClassDef:
     # self.static_fields: a list of strings, the static fields in this class
     # self.instance_fields: a list of strings, the instance fields in this class
     # self.methods: a list of SmaliMethodDef objects in this class
-    # self.instrumenter: don't touch it yo!
     # self.file_name: the (absolute?) path to the file
     # self.class_name: extracted from the first line of the smali file
     #       example: Lcom/google/android/material/animation/AnimationUtils;
@@ -37,9 +35,6 @@ class SmaliClassDef:
 
         # This is a list of SmaliMethodDef (as seen above) which aids instrumentation later
         self.methods = []
-
-        self.instrumenter = inst.Instrumenter()
-
         self.file_name = file_name
         
         fh = open(file_name, "r")

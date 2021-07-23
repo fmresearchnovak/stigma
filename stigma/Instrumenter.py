@@ -105,7 +105,6 @@ def make_two_class_assign_block(scd_dest, scd_src, m, taint_field_dest, taint_fi
 
     return block
 
-@staticmethod
 def make_comment_block(comment_detail=""):
         block = [smali.BLANK_LINE(), smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA " + comment_detail), smali.BLANK_LINE()]
         return block

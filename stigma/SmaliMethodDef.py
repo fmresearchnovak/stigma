@@ -168,26 +168,9 @@ class SmaliMethodDef:
 
         #initialize the type checker as a instance variable for each method. 
         #this will check and track types of each register on each line 
-        #print("Running Type Checker on: " + str(self.signature) + " in " + str(scd))
-        #self.tsc = TypeSafetyChecker(text, self.signature) # signature is an object
-
-
-        print("Running Smali Method Def on: " + str(self.signature) + " in " + str(scd))
-        self.cfg = ControlFlowGraph.ControlFlowGraph(text)
+        #print("Running Smali Method Def on: " + str(self.signature) + " in " + str(scd))
+        self.cfg = ControlFlowGraph(text)
         self.tsc = TypeSafetyChecker(self.signature, self.cfg) 
-
-        # try:
-        #     self.tcs = TypeSafetyChecker(text, self.signature)
-        #     #input("Continue?")
-        # except:
-        #     print("Building Type Checker For: " + str(self.signature.name) + "  in " + str(scd.file_name))
-        #     input("Continue with exception")
-        
-        if(str(self.signature) == ".method static binarySearch([JIJ)I"):
-            print(self.signature)
-            print("\t .locals: " + self.raw_text[1].strip())
-            print("\t total number of registers: " + str(self.get_num_registers()))
-            
             
     def grow_locals(self, n):
         # grows the .locals from the current value such that there are
@@ -238,7 +221,8 @@ class SmaliMethodDef:
         # Write the necessary move values so that the vX
         # registers that originally contained the parameters
         # contain the correct values
-        block = Instrumenter.Instrumenter.make_comment_block("")
+        block = Instrumenter.make_comment_block("")
+
         #print(self.signature.parameter_type_map)
         for param in self.signature.parameter_type_map:
 
@@ -275,8 +259,8 @@ class SmaliMethodDef:
         #    block.append(smali.BLANK_LINE())
         #    old_locals_num+=1
 
-        block = block + Instrumenter.Instrumenter.make_comment_block("")
-    
+        block = block + Instrumenter.make_comment_block("")
+
         # this should maybe be refactored to use extends / append
         # into the "new_instrumented_code" list
         insert_idx = self.find_first_valid_instruction()
@@ -502,6 +486,24 @@ class SmaliMethodDef:
         # print("\n\n")
     
     def instrument(self):
+        print("Starting instrumentation on this method", str(self.signature))
+        
+        #these methods are causing issue. there must be more. i have only gotten this far. u can call the cfg show to visualize how they look
+        if(str(self.signature) == '.method public static setActionBarUpIndicator(Landroid/support/v7/app/ActionBarDrawerToggleHoneycomb$SetIndicatorInfo;Landroid/app/Activity;Landroid/graphics/drawable/Drawable;I)Landroid/support/v7/app/ActionBarDrawerToggleHoneycomb$SetIndicatorInfo;'):
+            #self.cfg.show()
+            return
+        
+        if(str(self.signature) == '.method public createView(Landroid/view/View;Ljava/lang/String;Landroid/content/Context;Landroid/util/AttributeSet;)Landroid/view/View;'):
+            #self.cfg.show()
+            return
+        
+        if(str(self.signature) == '.method public constructor <init>(Landroid/content/Context;Landroid/util/AttributeSet;IILandroid/content/res/Resources$Theme;)V'):
+            #self.cfg.show()
+            return
+        
+        #incase the graph is empty, we dont instrument
+        if(len(self.cfg.G)) == 1:
+            return     
         
         # these are the newly freed registers at the top
         free_regs = self.grow_locals(3)
@@ -530,21 +532,20 @@ class SmaliMethodDef:
                     for index in range(len(node["text"])):
                         line = node["text"][index]
                         if(self.is_relevant(line, node)):
-                            self._do_instrumentation_plugins(free_regs, node, index)
-                        self.tcs.type_update(line, index, node_counter)
+                            self._do_instrumentation_plugins(free_regs, node, line, index)
+                        self.tsc.type_update(line, index, node_counter)
                         
                     
                     #assign the register type list to this current node after its processed processed
-                    node["type_list"] = self.node_type_list
-                    self.node_type_list = []
+                    node["type_list"] = self.tsc.node_type_list
+                    self.tsc.node_type_list = []
                     #self.debug_node(node, cur_nodes)
 
             else:
                 #if cur_nodes was empty, insert a new node
                 cur_nodes = [self.cfg.G.nodes[counter]]
                 counter+=1              
-                
-                
+                        
     def gen_list_of_safe_registers(self, free_regs, node, idx, goal_size):
         # "safe" registers are 
         #  (a) low numbered (less than v16)
@@ -558,58 +559,61 @@ class SmaliMethodDef:
         # throw an exception if goal_size cannot be reached
                 
         # generate a list of available registers
-        safe_regs = []
+        safe_regs = set()
         
+        # 1) Try to use the top registers available after growing
         for r in free_regs:
             n = int(r[1:])
             if(n < 16):
-                safe_regs.append(r)
+                safe_regs.add(r)
                 
         if(len(safe_regs) >= goal_size):
-            return safe_regs
-        
-        
-        # FIX ME
+            return list(safe_regs)
+    
+        # 2) Try to use the regiters not yet used uptil now in this method according to tsc
         for i in range(16):
             reg = "v" + str(i)
-            
+
             # each node has a list of hashmaps (typelist)
             # each hashmap in the list corresponds to a line from the original
             # program.
             if(reg not in node["type_list"][idx]):
-                avail_regs.append(reg)
-                
-        if(len(avail_regs) < 6):
+                safe_regs.add(reg)
         
-
-    def _do_instrumentation_plugins(self, free_regs, node, idx):
+        #get the registers being used in the current line
+        cur_line_reg = set(StigmaStringParsingLib.get_v_and_p_numbers(self.raw_text[idx]))
+        safe_regs.difference_update(cur_line_reg)
+        if(len(safe_regs) >= goal_size):
+            return list(safe_regs)
+        
+        raise Exception("Unable to get enough safe registers", safe_regs)
+        
+    def _do_instrumentation_plugins(self, free_regs, node, line, idx):
         # extract opcode
         # get the relevant instrumentation method from the instrumentation_map and call it
-        opcode = StigmaStringParsingLib.extract_opcode(self.raw_text[idx])
-        instrumentation_method = Instrumenter.instrumentation_map[opcode]
+        # print("calling _do_instrumentation_plugins on line: ", line)
+        opcode = StigmaStringParsingLib.extract_opcode(line)
+        if opcode in Instrumenter.instrumentation_map:
+            instrumentation_method = Instrumenter.instrumentation_map[opcode]
+            regs = self.gen_list_of_safe_registers(free_regs, node, idx, 4)
+            new_block = instrumentation_method(self.scd, self, idx, regs)
         
-        
-
+            #invoke foo()
+            #move-result vx
+            #for such a line which contains a move result, we cannot put the new block of code between the 
+            #move-result and the invoke as it would case a java verifier error, so in this case we need to append the move-result line first into our new 
+            #instrumented code and then add the new block, otherwise we add the block and then the current line. 
+            if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, line) is not None):
+                self.instrumented_code.append(line)
+                self.instrumented_code.extend(new_block)
+            else:
+                self.instrumented_code.extend(new_block)   
+                self.instrumented_code.append(line)
+                
+                
+            print("new block inserted: ", new_block)
+            input("Continue?")
             
-        
-        new_block = instrumentation_method(self.scd, self, idx, regs)
-        
-        #invoke foo()
-        #move-result vx
-        #for such a line which contains a move result, we cannot put the new block of code between the 
-        #move-result and the invoke as it would case a java verifier error, so in this case we need to append the move-result line first into our new 
-        #instrumented code and then add the new block, otherwise we add the block and then the current line. 
-        if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, self.raw_text[idx]) is not None):
-            self.instrumented_code.append(self.raw_text[idx])
-            self.instrumented_code.extend(new_block)
-        else:
-            self.instrumented_code.extend(new_block)   
-            self.instrumented_code.append(self.raw_text[idx])
-            
-            
-    def generate_list_of_available_registers(self, idx):
-        
-    
     def is_relevant(self, line, node):
         # only do instrumentation if the length of the method is
         # not too long.  This is specifically in place to avoid
@@ -644,7 +648,6 @@ class SmaliMethodDef:
         else:
             return True
     
-
     @staticmethod
     def _should_skip_line_frl(cur_line):
         # print(cur_line)

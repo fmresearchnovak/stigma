@@ -5,13 +5,13 @@ the types of each register at each current line.
 hashmap -> key: string (register name)
         -> value: string, (type stored in the register)(32bit-64bit-object)
 '''
-from stigma import VRegisterPool, StigmaStringParsingLib
+from stigma import VRegisterPool, StigmaStringParsingLib, SmaliAssemblyInstructions
 import re
 
 
 class TypeSafetyChecker:
 
-    def __init__(self, text, signature, cfg):
+    def __init__(self, signature, cfg):
         """
         @parms text = all lines of method packed in a list
                signature = signature class from smd which parses the first line and returns a list of parameters and their types
@@ -19,7 +19,6 @@ class TypeSafetyChecker:
             
         self.signature = signature        #method object stored in smd, used for parameter types of signature
        
-        self.text = text
         self.cfg = cfg          #instance of the control flow graph object for this method 
         self.visited_nodes = [] #list of all nodes in the cfg that have already been visited        if(len(cfg.G)) == 0:
         
@@ -225,6 +224,8 @@ class TypeSafetyChecker:
         revelant_maps = []
         predecessors = self.cfg.G.predecessors(node_counter)
         for parent in predecessors:
+            if "type_list" not in self.cfg.G.nodes[parent]:
+                raise Exception("The parent node has not been visited yet.", self.cfg.G.nodes[parent]["text"])
             parent_node_map = self.cfg.G.nodes[parent]["type_list"][-1]
             revelant_maps.append(parent_node_map)
         return revelant_maps
@@ -322,25 +323,25 @@ class TypeSafetyChecker:
         '''
         if("[" in value):
             return value
-        elif(value in VRegisterPool.TYPE_LIST_OBJECT_REF):
+        elif(value in SmaliAssemblyInstructions.TYPE_LIST_OBJECT_REF):
             return "object"
-        elif (value in VRegisterPool.TYPE_LIST_WORD):
+        elif (value in SmaliAssemblyInstructions.TYPE_LIST_WORD):
             return "32-bit"
-        elif (value in VRegisterPool.TYPE_LIST_WIDE):
+        elif (value in SmaliAssemblyInstructions.TYPE_LIST_WIDE):
             return "64-bit"
-        elif (value in VRegisterPool.TYPE_LIST_WIDE_REMAINING):
+        elif (value in SmaliAssemblyInstructions.TYPE_LIST_WIDE_REMAINING):
             return "64-bit-2"
         else:
             return "invalid type"
         
     def check_invoke_type(self, value):
-        if(value in VRegisterPool.TYPE_LIST_OBJECT_REF):
+        if(value in SmaliAssemblyInstructions.TYPE_LIST_OBJECT_REF):
             return "object"
-        elif (value in VRegisterPool.TYPE_LIST_WORD):
+        elif (value in SmaliAssemblyInstructions.TYPE_LIST_WORD):
             return "32-bit"
-        elif (value in VRegisterPool.TYPE_LIST_WIDE):
+        elif (value in SmaliAssemblyInstructions.TYPE_LIST_WIDE):
             return "64-bit"
-        elif (value in VRegisterPool.TYPE_LIST_WIDE_REMAINING):
+        elif (value in SmaliAssemblyInstructions.TYPE_LIST_WIDE_REMAINING):
             return "64-bit-2"
         else:
             return "invalid type"

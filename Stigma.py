@@ -131,8 +131,8 @@ def runStigma():
         #Progress bar
         print(f'...{str(counter)}/{str(total_files)}', end = '\r')
         counter += 1
-        #scd.instrument()
-        scd.grow_locals(3)
+        scd.instrument()
+        #scd.grow_locals(3)
         
     
     print("...Overwriting smali classes")    
