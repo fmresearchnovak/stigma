@@ -53,10 +53,11 @@ class ControlFlowGraph:
         self.switch_label_list = [] #this list should store all the pswitch and sswitch labels and their parent attached to them
         self.looping_label_list = [] #this contains a list of hashmap, where each hashmap is a key label, which cannot find a parent to connect to, so we store and to retreive and connect if we see a parent later
 
+        try_start_flag = False
         line_index = 0
         
         #create a dummy head node at start of the graph, so 
-        self.G.add_node(self.node_counter, text = text[line_index], node_counter = self.node_counter, visited = False)
+        self.G.add_node(self.node_counter, text = text[line_index], node_counter = self.node_counter, visited = False, is_in_try_block = try_start_flag )
         line_index+=1
         self.label_dict[self.node_counter] = str(self.node_counter) + ". Method Sitgnature"
         self.node_counter+=1
@@ -85,7 +86,7 @@ class ControlFlowGraph:
                     self.label_list.append(label_map)
                     
                     #create a new node of the if statement, and connect the edge from previous continious regiion node to this node
-                    self.G.add_node(self.node_counter, text = [line], node_counter = self.node_counter, visited = False)
+                    self.G.add_node(self.node_counter, text = [line], node_counter = self.node_counter, visited = False , is_in_try_block = try_start_flag )
                     self.G.add_edge(self.node_counter-1, self.node_counter)
                     self.label_dict[self.node_counter] = str(self.node_counter) + ". " + line.strip()     
                     
@@ -100,7 +101,7 @@ class ControlFlowGraph:
                 elif re.search(StigmaStringParsingLib.BEGINS_WITH_CATCH_LABEL, line) is not None:
                     self.bundle_contingous_region()
                     
-                    self.G.add_node(self.node_counter, text = [line], node_counter = self.node_counter, visited = False)
+                    self.G.add_node(self.node_counter, text = [line], node_counter = self.node_counter, visited = False , is_in_try_block = try_start_flag )
                     #create a new node of the catch statement, and connect the edge from corresponding if statement node to this node
                     self.label_dict[self.node_counter] = str(self.node_counter) + ". " + line.strip()     
 
@@ -111,12 +112,16 @@ class ControlFlowGraph:
                     #create a node for the existing lines of code in the continguous region and empty the contigious_region_list
                     #add an edge for this block of code, to the previous node in graph
                     
+                    #if we see a try start label, we raise a flag to indicate we are inside a try block and if we see a try_end, it should make the label false 
+                    if re.search(StigmaStringParsingLib.BEGINS_WITH_TRY, line) is not None:
+                        try_start_flag = not try_start_flag
+                    
                     #this must be done before bundling, otherwise the node counter would change once u bundle it returning the wrong previous line
                     prev_prev_line = self.G.nodes[self.node_counter-1]["text"][0] 
                         
                     self.bundle_contingous_region()
                     prev_line = self.G.nodes[self.node_counter-1]["text"][0] 
-                    self.G.add_node(self.node_counter, text = [line], node_counter = self.node_counter, visited = False)   #create a new node of the label statement, and connect the edge from corresponding if statement node to this node
+                    self.G.add_node(self.node_counter, text = [line], node_counter = self.node_counter, visited = False, is_in_try_block = try_start_flag )  #create a new node of the label statement, and connect the edge from corresponding if statement node to this node
                     self.label_dict[self.node_counter] = str(self.node_counter) + ". " + line.strip()     
 
                     if(StigmaStringParsingLib.extract_opcode(prev_line) != "goto" and re.search(StigmaStringParsingLib.BEGINS_WITH_RETURN, prev_line) is None and re.search(StigmaStringParsingLib.BEGINS_WITH_CATCH_LABEL, prev_prev_line) is None):
@@ -154,7 +159,7 @@ class ControlFlowGraph:
                     self.label_list.append(label_map)
                     
                     #add the current line as a node and make a edge with previous node in tree. 
-                    self.G.add_node(self.node_counter, text = [line], node_counter = self.node_counter, visited = False)
+                    self.G.add_node(self.node_counter, text = [line], node_counter = self.node_counter, visited = False , is_in_try_block = try_start_flag )
                     self.label_dict[self.node_counter] = str(self.node_counter) + ". " + line.strip()     
                     self.G.add_edge(self.node_counter-1, self.node_counter)
                     
@@ -173,7 +178,7 @@ class ControlFlowGraph:
                 elif re.search(StigmaStringParsingLib.BEGINS_WITH_RETURN, line) is not None or re.search(StigmaStringParsingLib.BEGINS_WITH_THROW, line) is not None:
                     self.bundle_contingous_region()
                     
-                    self.G.add_node(self.node_counter, text = [line], node_counter = self.node_counter, visited = False)
+                    self.G.add_node(self.node_counter, text = [line], node_counter = self.node_counter, visited = False , is_in_try_block = try_start_flag )
                     self.label_dict[self.node_counter] = str(self.node_counter) + ". " + line.strip()     
                     self.G.add_edge(self.node_counter-1, self.node_counter)
                     self.node_counter+=1
@@ -193,7 +198,7 @@ class ControlFlowGraph:
                     self.label_list.append(label_map)
                     
                     #create a new node of the switch statement, and connect the edge from previous continious regiion node to this node
-                    self.G.add_node(self.node_counter, text = [line], node_counter = self.node_counter, visited = False)
+                    self.G.add_node(self.node_counter, text = [line], node_counter = self.node_counter, visited = False , is_in_try_block = try_start_flag )
                     self.G.add_edge(self.node_counter-1, self.node_counter)
                     self.label_dict[self.node_counter] = str(self.node_counter) + ". " + line.strip()     
                     self.node_counter+=1
@@ -247,7 +252,7 @@ class ControlFlowGraph:
             if(self.contingous_region[0] == ''):
                 return
         
-        self.G.add_node(self.node_counter, text = self.contingous_region, node_counter = self.node_counter, visited = False)
+        self.G.add_node(self.node_counter, text = self.contingous_region, node_counter = self.node_counter, visited = False , is_in_try_block = try_start_flag )
         self.G.add_edge(self.node_counter-1, self.node_counter)
         self.label_dict[self.node_counter] = str(self.node_counter) + ". BLOCK OF CODE"  #+ self.contingous_region[-1]     
         self.contingous_region = []
@@ -312,7 +317,33 @@ class ControlFlowGraph:
         nx.draw(self.G, pos, font_size = 6, labels=self.label_dict, with_labels = True)
         plt.show()
 
+                
+    @staticmethod
+    def get_smallest_node(cur_nodes):
+        smallest_node = cur_nodes[0]
+        smallest = cur_nodes[0]["node_counter"]
+        for node in cur_nodes:
+            if node["node_counter"] < smallest:
+                smallest = node["node_counter"]
+                smallest_node = node
+        return smallest_node
+    
+    def nodes_left_to_visit(self):
+        '''If any node in cfg is not marked visited yet, return True meaning keep processing the graph''' 
+        for i in range(len(self.G)):
+            node = self.G.nodes[i]
+            if(node["visited"] == False):
+                return True
+        return False
+    
+    
+    def neighbors(self, node_counter):
+        return self.G.neighbors(node_counter) 
+
+    
+    def __getitem__(self, node_counter):
+        return self.G.nodes[node_counter]  
             
     def __str__(self):
         return str(self.G.nodes.data())
-    
+            

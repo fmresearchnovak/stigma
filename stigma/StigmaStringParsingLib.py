@@ -32,6 +32,7 @@ BEGINS_WITH_GOTO = r"^\s*goto"
 BEGINS_WITH_GOTO_LABEL = r"^\s*:goto_"
 BEGINS_WITH_THROW = r"^\s*throw"
 BEGINS_WITH_CATCH_LABEL = r"^\s*:catch"
+BEGINS_WITH_TRY = r"^\s*:try_"
 
 
 BEGINS_WITH_PSWITCH_LABEL = r"^\s*:pswitch_"

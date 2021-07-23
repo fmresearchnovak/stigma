@@ -203,81 +203,10 @@ class SmaliClassDef:
         if self.other_scds == {}:
             raise ValueError("Other SCDs list not passed to scd")
 
-        for m in self.methods:
-
-            # not really necessary, just an optimization to avoid
-            # processing methods when they have more than 16 registers
-            # before any instrumentation
-            if(m.get_num_registers() > 16):
-                continue
-                
-                
-            idx = 0
-            while idx < len(m.raw_text):
-                #print("line: ", m.raw_text[idx], "  which is a:", type(m.raw_text[idx]))
-                
-                # we need to know if we are in a try block so we can avoid
-                # the one type of instrumentation where that matters
-                # internal-function move-result lines
-                if(m.raw_text[idx].startswith("    :try_start_")):
-                    m.is_in_try_block = True
-                    
-                if(m.raw_text[idx].startswith("    :try_end_")):
-                    m.is_in_try_block = False
-                    
-                
-                # The lines of code that we add (instrument) will be instances of smali.SmaliAssemblyInstruction
-                # the lines of code that are existing already will be type string
-                # So, this check prevents us from instrumenting our new, additional code
-                if not isinstance(m.raw_text[idx], smali.SmaliAssemblyInstruction):
-                    
-                    # If we are in a try block, then adding instructions
-                    # may affect the control flow / type checking done 
-                    # by the verifier.  This causes java.lang.VerifyError
-                    # with  messages like this:
-                    # [0x35] register v0 has type Precise Reference: java.lang.String[] but expected Long
-                    # https://github.com/JesusFreke/smali/issues/797
-                    if not m.is_in_try_block:
-                    
-                        # Only do instrumentation if line is a valid instruction
-                        #print(m.raw_text[idx])
-                        if StigmaStringParsingLib.is_valid_instruction(m.raw_text[idx]):
-                            
-                            # only do instrumentation if the length of the method is
-                            # not too long.  This is specifically in place to avoid
-                            # issues such as Invalid instruction offset: 36077. Offset must be in [-32768, 32767]
-                            # which arises from instructions like this:
-                            # if-nez v0, :cond_0
-                            # the :cond_0 is actually a 16-bit number
-                            if len(m.raw_text) < 32767:
-                            
-                                idx = self._do_instrumentation_plugins(m, idx)
-
-                idx = idx + 1
+        for m in self.methods:                
+            m.instrument()
 
 
-
-        
-
-
-    def _do_instrumentation_plugins(self, m, idx):
-
-        for inst_method in self.instrumenter.instrumentation_methods:
-
-            # The lines of code that we add (instrument) will always leave
-            # a comment on the line before their target instruction
-            # in order to indicate that the target instruction has
-            # already been addressed by instrumentation.
-            # This check prevents "double" cases where two different instrumenters
-            # both try to add code for the same original instruction
-            # print("\n\ncur line: " + str(m.raw_text[idx]) + "   prev line: " + str(m.raw_text[idx-1]))
-            lines_added = inst_method(self, m, idx)
-            idx = idx + lines_added
-            if lines_added != 0:
-                #in the case an instrumentation has happened, end loop (prevents downstream double instrumentation)
-                break
-
-        return idx
 
     def write_to_file(self, class_smali_file):
         # Write new "program" out to file

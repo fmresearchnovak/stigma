@@ -36,7 +36,7 @@ class TypeSafetyChecker:
         self.type_update_parameter()
         
         #traverse through the control flow graph to build a type safety list for each node
-        self.walk()
+        #self.walk()
   
     def walk(self):
         #start processing the graph from second node, frst is just the signature       
@@ -245,14 +245,7 @@ class TypeSafetyChecker:
             parent_type_list = self.cfg.G.nodes[parent]["type_list"]
             parent_type_map = parent_type_list[-1]
             return parent_type_map
-    
-    def nodes_left_to_visit(self):
-        '''If any node in cfg is not marked visited yet, return True meaning keep processing the graph''' 
-        for i in range(len(self.cfg.G)):
-            node = self.cfg.G.nodes[i]
-            if(node["visited"] == False):
-                return True
-        return False
+
 
     def type_query(self, register, line):
         #find which node contains the given line number
@@ -385,16 +378,6 @@ class TypeSafetyChecker:
     def __str__(self):
         return str(self.node_type_list)
 
-    @staticmethod                                   
-    def get_smallest_node(cur_nodes):
-        smallest_node = cur_nodes[0]
-        smallest = cur_nodes[0]["node_counter"]
-        for node in cur_nodes:
-            if node["node_counter"] < smallest:
-                smallest = node["node_counter"]
-                smallest_node = node
-        return smallest_node
-    
     @staticmethod
     def merge_maps(map_list):
         '''
@@ -451,7 +434,6 @@ class TypeSafetyChecker:
             tokens = StigmaStringParsingLib.break_into_tokens(line)
             opcode = tokens[0]
             return opcode in StigmaStringParsingLib.NON_RELEVANT_INSTRUCTION_LIST
-
 
     def debug_node(self, node, cur_nodes):
         print("\nCurrent node counter:", node["node_counter"])

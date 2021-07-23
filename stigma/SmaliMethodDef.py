@@ -124,7 +124,6 @@ class SmaliMethodSignature:
             #print("this one")
         return idx
         
-        
     @staticmethod
     def fast_forward_to_not_bracket(idx, string):
         while(string[idx] == "["):
@@ -139,7 +138,6 @@ class SmaliMethodSignature:
         
 
 class SmaliMethodDef:
-
 
     def __init__(self, text, scd):
         # should be a list of strings (lines)
@@ -160,7 +158,7 @@ class SmaliMethodDef:
         
         # should be re-factored with get_signature() method below
         self.signature = SmaliMethodSignature(self.raw_text[0])
-
+        self.instrumented_code = [] #this is a list containing new instrumented code
 
         #create the control flow graph for the method text and pass it to the type safety checker
         #this will check and track types of each register on each line 
@@ -174,7 +172,7 @@ class SmaliMethodDef:
 
         print("Running Smali Method Def on: " + str(self.signature) + " in " + str(scd))
         self.cfg = ControlFlowGraph.ControlFlowGraph(text)
-        self.tsc = TypeSafetyChecker(text, self.signature, self.cfg) 
+        self.tsc = TypeSafetyChecker(self.signature, self.cfg) 
 
         # try:
         #     self.tcs = TypeSafetyChecker(text, self.signature)
@@ -188,7 +186,6 @@ class SmaliMethodDef:
             print("\t .locals: " + self.raw_text[1].strip())
             print("\t total number of registers: " + str(self.get_num_registers()))
             
-
     def grow_locals(self, n):
         # grows the .locals from the current value such that there are
         # n new registers in the method
@@ -274,7 +271,6 @@ class SmaliMethodDef:
         insert_idx = self.find_first_valid_instruction()
         self.embed_block(insert_idx, block)
 
-
     def convert_p_to_v_numbers(self, line):
         # a nasty edge-case that must be considered is a const-string
         # or comment or something that contains substrings
@@ -292,17 +288,14 @@ class SmaliMethodDef:
                 v_reg = StigmaStringParsingLib.get_v_from_p(r, num_locals)
                 line = line.replace(r, v_reg, 1)
         return line
-        
-            
-                
+             
     def convert_all_lines_p_to_v_numbers(self):
         for i in range(len(self.raw_text)):
             cur_line = self.raw_text[i]
             if(StigmaStringParsingLib.is_valid_instruction(cur_line)):
                 new_line = self.convert_p_to_v_numbers(cur_line)
                 self.raw_text[i] = new_line
-            
-            
+                        
     def find_first_valid_instruction(self):
         for i in range(len(self.raw_text)):
             cur_line = self.raw_text[i]
@@ -376,12 +369,10 @@ class SmaliMethodDef:
         #    ans+=1
         return ans
         
-
     def get_signature(self):
         # should be re-factored with self.signature instance variable
         # above
         return self.raw_text[0].strip()
-
 
     def get_name(self):
         # kinda hacky!  Sorry 'bout that!
@@ -392,7 +383,6 @@ class SmaliMethodDef:
         name = s[-1]
         # print("name: " + str(name))
         return name
-
 
     def make_new_reg(self):
         # see comment below this method
@@ -449,6 +439,7 @@ class SmaliMethodDef:
     # instrumentation does not accumulate registers when adding
     # several instrumentation lines into one method.
     # This first became an issue with EXTERNAL_FUNCTION_instrumentation
+    
     def free_reg(self):
         if self.reg_number_float == self.ORIGINAL_LOCAL_NUMBER_REGS:
             raise Exception("No registers to free!")
@@ -474,14 +465,11 @@ class SmaliMethodDef:
 
         fh.close()
         
-
     def embed_line(self, position, line):
         self.raw_text.insert(position, line)
 
-
     def embed_block_with_replace(self, position, block):
         self.raw_text = self.raw_text[:position] + block + self.raw_text[position + 1:]
-
 
     def embed_block(self, position, block):
         # put the code in this block just before the position
@@ -500,7 +488,99 @@ class SmaliMethodDef:
         # print(self.raw_text[i], end="")
         # print("\n\n")
     
+    def instrument(self):
+        
+        counter = 1
+        cur_nodes = [self.cfg[1]]    
+        
+        while(self.cfg.nodes_left_to_visit()):
 
+            #if the cur_nodes is not empty process the smallest node
+            if(len(cur_nodes) != 0):
+                node = ControlFlowGraph.get_smallest_node(cur_nodes)
+                cur_nodes.remove(node)
+                node_counter = node["node_counter"]
+
+                if(not node["visited"]):
+                    node["visited"] = True 
+                    #get neighbors of current node and store for breadth first search
+                    neighbors = self.cfg.neighbors(node_counter)    
+                    for neighbor in neighbors:                               
+                        neighbor_node = self.cfg[neighbor]
+                        if neighbor_node["visited"] == False:
+                            cur_nodes.append(neighbor_node)
+                    
+                    #call type_update on each line of code inside the node. 
+                    for index in range(len(node["text"])):
+                        line = node["text"][index]
+                        if(self.is_relevant(line, node)):
+                            self._do_instrumentation_plugins(index)
+                        self.tcs.type_update(line, index, node_counter)
+                        
+                    
+                    #assign the register type list to this current node after its processed processed
+                    node["type_list"] = self.node_type_list
+                    self.node_type_list = []
+                    #self.debug_node(node, cur_nodes)
+
+            else:
+                #if cur_nodes was empty, insert a new node
+                cur_nodes = [self.cfg.G.nodes[counter]]
+                counter+=1              
+
+    def _do_instrumentation_plugins(self, idx):
+        # extract opcode
+        # get the relevant instrumentation method from the instrumentation_map and call it
+        opcode = StigmaStringParsingLib.extract_opcode(self.raw_text[idx])
+        instrumentation_method = Instrumenter.instrumentation_map[opcode]
+        new_block = instrumentation_method(self.scd, self, idx, [])
+        
+        #invoke foo()
+        #move-result vx
+        #for such a line which contains a move result, we cannot put the new block of code between the 
+        #move-result and the invoke as it would case a java verifier error, so in this case we need to append the move-result line first into our new 
+        #instrumented code and then add the new block, otherwise we add the block and then the current line. 
+        if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, self.raw_text[idx]) is not None):
+            self.instrumented_code.append(self.raw_text[idx])
+            self.instrumented_code.extend(new_block)
+        else:
+            self.instrumented_code.extend(new_block)   
+            self.instrumented_code.append(self.raw_text[idx])
+    
+    def is_relevant(self, line, node):
+        # only do instrumentation if the length of the method is
+        # not too long.  This is specifically in place to avoid
+        # issues such as Invalid instruction offset: 36077. Offset must be in [-32768, 32767]
+        # which arises from instructions like this:
+        # if-nez v0, :cond_0
+        # the :cond_0 is actually a 16-bit number
+        if len(self.raw_text) > 32767:
+            return False
+        
+        # The lines of code that we add (instrument) will be instances of smali.SmaliAssemblyInstruction
+        # the lines of code that are existing already will be type string
+        # So, this check prevents us from instrumenting our new, additional code
+        elif isinstance(line, smali.SmaliAssemblyInstruction):
+            return False
+        
+        # we need to know if we are in a try block so we can avoid
+        # the one type of instrumentation where that matters
+        # internal-function move-result lines
+        # If we are in a try block, then adding instructions
+        # may affect the control flow / type checking done 
+        # by the verifier.  This causes java.lang.VerifyError
+        # with  messages like this:
+        # [0x35] register v0 has type Precise Reference: java.lang.String[] but expected Long
+        # https://github.com/JesusFreke/smali/issues/797
+        elif node["is_in_try_block"]:
+            return False
+        
+        # Only do instrumentation if line is a valid instruction
+        elif not StigmaStringParsingLib.is_valid_instruction(line):
+            return False
+        else:
+            return True
+    
 
     @staticmethod
     def _should_skip_line_frl(cur_line):
@@ -544,7 +624,6 @@ class SmaliMethodDef:
         
         return False
 
-
     @staticmethod
     def _dereference_p_registers_frl(cur_line, locals_num):
         # Step 2, de-reference p registers
@@ -576,7 +655,6 @@ class SmaliMethodDef:
             block.append(smali.BLANK_LINE())
 
             reg_pool.update(str(CUSTOM_MOVE))
-
 
     @staticmethod
     def fix_register_limit_for_line(line, shadows, reg_pool):
@@ -691,6 +769,7 @@ class SmaliMethodDef:
         #print("block produced: " + str(ans_block))
         #print("\n\n")
         return ans_block
+   
     '''        
     def fix_register_limit(self):
         #print("self.scd.file_name: " + str(self.scd.file_name))
