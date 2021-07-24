@@ -435,15 +435,3 @@ class TypeSafetyChecker:
             tokens = StigmaStringParsingLib.break_into_tokens(line)
             opcode = tokens[0]
             return opcode in StigmaStringParsingLib.NON_RELEVANT_INSTRUCTION_LIST
-
-    def debug_node(self, node, cur_nodes):
-        print("\nCurrent node counter:", node["node_counter"])
-        for i in range(len(node["type_list"])):
-            print("line: ", node["text"][i])
-            print(i, node["type_list"][i], "\n")            
-
-        print("neighbors: ", end =" ")
-        for node in cur_nodes:
-            print(node["node_counter"], end =" ")
-        input("\n-----------------------Continue?????-----------------------C\n")
-    

@@ -2,7 +2,7 @@ import re
 
 from stigma import SmaliAssemblyInstructions as smali
 from stigma import StigmaStringParsingLib
-from stigma import Instrumenter
+from stigma import Instrumenter, TaintTrackingInstrumentation
 
 from stigma.ControlFlowGraph import ControlFlowGraph
 from stigma.TypeSafetyChecker import TypeSafetyChecker
@@ -150,7 +150,7 @@ class SmaliMethodDef:
         
         self.raw_text = text
         self.is_in_try_block = False
-
+        
         self.num_jumps = 0 # not used except for a sanity check
 
         self.ORIGINAL_LOCAL_NUMBER_REGS = self.get_locals_directive_num()
@@ -484,23 +484,9 @@ class SmaliMethodDef:
         # for i in range(position-5, position+len(block) + 5):
         # print(self.raw_text[i], end="")
         # print("\n\n")
-    
-    def instrument(self):
+                
+    def instrument(self):        
         print("Starting instrumentation on this method", str(self.signature))
-        
-        #these methods are causing issue. there must be more. i have only gotten this far. u can call the cfg show to visualize how they look
-        if(str(self.signature) == '.method public static setActionBarUpIndicator(Landroid/support/v7/app/ActionBarDrawerToggleHoneycomb$SetIndicatorInfo;Landroid/app/Activity;Landroid/graphics/drawable/Drawable;I)Landroid/support/v7/app/ActionBarDrawerToggleHoneycomb$SetIndicatorInfo;'):
-            #self.cfg.show()
-            return
-        
-        if(str(self.signature) == '.method public createView(Landroid/view/View;Ljava/lang/String;Landroid/content/Context;Landroid/util/AttributeSet;)Landroid/view/View;'):
-            #self.cfg.show()
-            return
-        
-        if(str(self.signature) == '.method public constructor <init>(Landroid/content/Context;Landroid/util/AttributeSet;IILandroid/content/res/Resources$Theme;)V'):
-            #self.cfg.show()
-            return
-        
         #incase the graph is empty, we dont instrument
         if(len(self.cfg.G)) == 1:
             return     
@@ -508,45 +494,42 @@ class SmaliMethodDef:
         # these are the newly freed registers at the top
         free_regs = self.grow_locals(3)
         
+        #start walking the graph at node 1 and go in ascending order
         counter = 1
-        cur_nodes = [self.cfg[1]]    
-        
         while(self.cfg.nodes_left_to_visit()):
-
+            
             #if the cur_nodes is not empty process the smallest node
-            if(len(cur_nodes) != 0):
-                node = ControlFlowGraph.get_smallest_node(cur_nodes)
-                cur_nodes.remove(node)
-                node_counter = node["node_counter"]
+            node = self.cfg[counter]
+            node_counter = node["node_counter"]
 
-                if(not node["visited"]):
-                    node["visited"] = True 
-                    #get neighbors of current node and store for breadth first search
-                    neighbors = self.cfg.neighbors(node_counter)    
-                    for neighbor in neighbors:                               
-                        neighbor_node = self.cfg[neighbor]
-                        if neighbor_node["visited"] == False:
-                            cur_nodes.append(neighbor_node)
-                    
-                    #call type_update on each line of code inside the node. 
-                    for index in range(len(node["text"])):
-                        line = node["text"][index]
-                        if(self.is_relevant(line, node)):
-                            self._do_instrumentation_plugins(free_regs, node, line, index)
-                        self.tsc.type_update(line, index, node_counter)
-                        
-                    
-                    #assign the register type list to this current node after its processed processed
+            if(not node["visited"]):
+                node["visited"] = True 
+                #get neighbors of current node and store for breadth first search
+                # neighbors = self.cfg.neighbors(node_counter)    
+                # for neighbor in neighbors:                               
+                #     neighbor_node = self.cfg[neighbor]
+                #     if neighbor_node["visited"] == False:
+                #         cur_nodes.append(neighbor_node)
+                
+                #call type_update on each line of code inside the node. 
+                for index in range(len(node["text"])):
+                    line = node["text"][index]
+                    if(self.is_relevant(line, node)):
+                        self._do_instrumentation_plugins(free_regs, node, line, index)
+                    self.tsc.type_update(line, index, node_counter)
                     node["type_list"] = self.tsc.node_type_list
-                    self.tsc.node_type_list = []
-                    #self.debug_node(node, cur_nodes)
+
+                #assign the register type list to this current node after its processed processed
+                # node["type_list"] = self.tsc.node_type_list
+                self.tsc.node_type_list = []
+                counter+=1  
 
             else:
-                #if cur_nodes was empty, insert a new node
-                cur_nodes = [self.cfg.G.nodes[counter]]
-                counter+=1              
-                        
+                #if current node is visited, increment the counter, get the next node
+                counter+=1                 
+                               
     def gen_list_of_safe_registers(self, free_regs, node, idx, goal_size):
+        print("current line node type_list: ", node["type_list"][idx-1])
         # "safe" registers are 
         #  (a) low numbered (less than v16)
         #  (b) not used in the instruction on line idx
@@ -567,21 +550,21 @@ class SmaliMethodDef:
             if(n < 16):
                 safe_regs.add(r)
                 
+                
         if(len(safe_regs) >= goal_size):
             return list(safe_regs)
     
         # 2) Try to use the regiters not yet used uptil now in this method according to tsc
         for i in range(16):
             reg = "v" + str(i)
-
             # each node has a list of hashmaps (typelist)
             # each hashmap in the list corresponds to a line from the original
             # program.
-            if(reg not in node["type_list"][idx]):
+            if(reg not in node["type_list"][idx-1]):
                 safe_regs.add(reg)
         
         #get the registers being used in the current line
-        cur_line_reg = set(StigmaStringParsingLib.get_v_and_p_numbers(self.raw_text[idx]))
+        cur_line_reg = set(StigmaStringParsingLib.get_v_and_p_numbers(node["text"][idx]))
         safe_regs.difference_update(cur_line_reg)
         if(len(safe_regs) >= goal_size):
             return list(safe_regs)
@@ -589,14 +572,16 @@ class SmaliMethodDef:
         raise Exception("Unable to get enough safe registers", safe_regs)
         
     def _do_instrumentation_plugins(self, free_regs, node, line, idx):
+        print("doing instrumentation on this line in node", node["text"][idx])
         # extract opcode
         # get the relevant instrumentation method from the instrumentation_map and call it
         # print("calling _do_instrumentation_plugins on line: ", line)
         opcode = StigmaStringParsingLib.extract_opcode(line)
         if opcode in Instrumenter.instrumentation_map:
             instrumentation_method = Instrumenter.instrumentation_map[opcode]
-            regs = self.gen_list_of_safe_registers(free_regs, node, idx, 4)
-            new_block = instrumentation_method(self.scd, self, idx, regs)
+            regs = self.gen_list_of_safe_registers(free_regs, node, idx, 3)
+            print("Free regs: ", regs)
+            new_block = instrumentation_method(self.scd, self, node, idx, regs)
         
             #invoke foo()
             #move-result vx
@@ -611,8 +596,10 @@ class SmaliMethodDef:
                 self.instrumented_code.append(line)
                 
                 
-            print("new block inserted: ", new_block)
-            input("Continue?")
+            print("new block inserted: ")
+            for line in new_block:
+                print(line)
+            input("\n------------------SGET INSTRUMENTATION DONE, CONTINUE?----------------------")
             
     def is_relevant(self, line, node):
         # only do instrumentation if the length of the method is

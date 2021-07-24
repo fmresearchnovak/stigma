@@ -38,8 +38,8 @@ def sign_up(opcode, new_method):
     # to do that in python (reflection)
     # this is _ideally_ to allow a sort of "plugin" system where
     # other developers could add instrumentation
-    if opcode not in self.instrumentation_map:
-        self.instrumentation_map[opcode] = new_method
+    if opcode not in instrumentation_map:
+        instrumentation_map[opcode] = new_method
 
 @staticmethod
 def make_merge_block(scd, m, registers, taint_loc_result):

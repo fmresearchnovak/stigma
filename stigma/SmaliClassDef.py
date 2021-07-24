@@ -2,6 +2,7 @@ from stigma import StigmaStringParsingLib
 import re
 from stigma import SmaliAssemblyInstructions as smali
 from stigma.SmaliMethodDef import SmaliMethodDef
+from stigma import TaintTrackingInstrumentation
 
 
 class SmaliClassDef:
@@ -198,6 +199,8 @@ class SmaliClassDef:
         if self.other_scds == {}:
             raise ValueError("Other SCDs list not passed to scd")
 
+        #this will signup our methods for instrumentation with their related opcodes
+        TaintTrackingInstrumentation.main()
         for m in self.methods:                
             m.instrument()
 

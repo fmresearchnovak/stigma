@@ -1,6 +1,26 @@
 from stigma import Instrumenter 
-    
-@staticmethod
+import re
+from stigma import StigmaStringParsingLib
+from stigma import SmaliAssemblyInstructions as smali
+from stigma.TaintStorageHandler import TaintStorageHandler
+
+
+
+# A more complete listing of these sort of things can be found in ./SourcesAndSinks.txt
+STRING_IMEI_FUNCTION = "Landroid/telephony/TelephonyManager;->getDeviceId()Ljava/lang/String;"
+STRING_PHONE_NUM_FUNCTION = "Landroid/telephony/TelephonyManager;->getLine1Number()Ljava/lang/String;"
+STRING_STREAM_WRITE_FUNCTION = "Ljava/io/OutputStreamWriter;->write(Ljava/lang/String;II)V"
+BYTE_STREAM_WRITE_FUNCTION_OVER = "Ljava/io/OutputStream;->write([BII)V"
+BYTE_STREAM_WRITE_FUNCTION = "Ljava/io/OutputStream;->write([B)V"
+INT_STREAM_WRITE_FUNCTION = "Ljava/io/OutputStream;->write(I)V"
+PARCEL_WRITE_FUNCTION = "Landroid/os/Parcel;->write"
+OBJECT_STREAM_WRITE_FUNCTION = "Ljava/io/ObjectOutputStream;->writeObject("
+STRING_LOGD_FUNCTION = "Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I"
+STRING_GET_LAST_KNOWN_LOCATION_FUNCTION = "Landroid/location/LocationManager;->getLastKnownLocation(Ljava/lang/String;)Landroid/location/Location;"
+STRING_GET_LATITUDE = "Landroid/location/Location;->getLatitude()D"
+STRING_GET_LONGITUDE = "Landroid/location/Location;->getLongitude()D"
+storage_handler = TaintStorageHandler.get_instance()
+
 def SIMPLE_instrumentation(scd, m, line_num, regex, dest_num, source_num, comment_string):
     cur_line = m.raw_text[line_num]
     
@@ -26,7 +46,7 @@ def SIMPLE_instrumentation(scd, m, line_num, regex, dest_num, source_num, commen
 
     return len(block)
 
-@staticmethod
+
 def FILLED_NEW_ARRAY_instrumentation(scd, m, line_num):
     #filled-new-array {parameters},type_id ; new array reference goten by move line
     cur_line = m.raw_text[line_num]
@@ -57,29 +77,29 @@ def FILLED_NEW_ARRAY_instrumentation(scd, m, line_num):
 
     return len(block)
 
-@staticmethod
+
 def NEW_ARRAY_instrumentation(scd, m, line_num):
     #new-array vx,vy,type_id ; puts length vy array into vx
     return Instrumenter.SIMPLE_instrumentation(scd, m, line_num, StigmaStringParsingLib.BEGINS_WITH_NEW_ARRAY, 0, 1, "for NEW-ARRAY")
 
-@staticmethod
+
 def ARRAY_LENGTH_instrumentation(scd, m, line_num):
     #array-length vx,vy ; puts length of array vy into vx
     return Instrumenter.SIMPLE_instrumentation(scd, m, line_num, StigmaStringParsingLib.BEGINS_WITH_ARRAY_LENGTH, 0, 1, "for ARRAY-LENGTH")
 
-@staticmethod
+
 def AGET_instrumentation(scd, m, line_num):
     #aget vx,vy, vz ; gets data of array vy into register vx
     return Instrumenter.SIMPLE_instrumentation(scd, m, line_num, StigmaStringParsingLib.BEGINS_WITH_AGET, 0, 1, "for AGET")
 
-@staticmethod
+
 def APUT_instrumentation(scd, m, line_num):
     #aput vx,vy, vz ; puts data of register vx into array vy
     return Instrumenter.SIMPLE_instrumentation(scd, m, line_num, StigmaStringParsingLib.BEGINS_WITH_APUT, 1, 0, "for APUT")
 
-@staticmethod
-def SGET_instrumentation(scd, m, line_num, free_reg):
-    cur_line = m.raw_text[line_num]
+
+def SGET_instrumentation(scd, m, node, line_num, free_reg):
+    cur_line = node["text"][line_num]
     
     # search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_SGET, cur_line)
     # if search_object is None:
@@ -116,7 +136,7 @@ def SGET_instrumentation(scd, m, line_num, free_reg):
     block = block + Instrumenter.make_comment_block("for SGET")
     return block
 
-@staticmethod
+
 def SPUT_instrumentation(scd, m, line_num, free_reg):
     #sput vx, field_id
     #Puts vx into a static field.
@@ -154,7 +174,7 @@ def SPUT_instrumentation(scd, m, line_num, free_reg):
     
     return len(block)
 
-@staticmethod
+
 def IPUT_instrumentation(scd, m, line_num):
     # iput vx, vy, field_id puts the data in vx into the field
     # specified by field_id (vy is the instance / OBJ_REF)
@@ -205,7 +225,7 @@ def IPUT_instrumentation(scd, m, line_num):
     
     return len(block)
     
-@staticmethod
+
 def IGET_instrumentation(scd, m, line_num):
     #iget vx, vy field_id
     #gets data from field in instance vy and places data in vx
@@ -247,7 +267,7 @@ def IGET_instrumentation(scd, m, line_num):
     
     return len(block)
 
-@staticmethod
+
 def IMEI_instrumentation(scd, m, line_num):  # IMEI sources
     # print("IMEI_instrumentation")
     if STRING_IMEI_FUNCTION not in m.raw_text[line_num]:
@@ -294,7 +314,7 @@ def IMEI_instrumentation(scd, m, line_num):  # IMEI sources
 
     return lines_embedded
     
-@staticmethod
+
 def LOCATION_instrumentation(scd, m, line_num):
     if STRING_GET_LAST_KNOWN_LOCATION_FUNCTION not in m.raw_text[line_num]:
         return 0
@@ -331,7 +351,7 @@ def LOCATION_instrumentation(scd, m, line_num):
     
     return len(block)
     
-@staticmethod
+
 def LONGITUDE_instrumentation(scd, m, line_num):
     if STRING_GET_LONGITUDE not in m.raw_text[line_num]:
         return 0
@@ -367,7 +387,7 @@ def LONGITUDE_instrumentation(scd, m, line_num):
     
     return len(block)
     
-@staticmethod
+
 def LATITUDE_instrumentation(scd, m, line_num):
     if STRING_GET_LATITUDE not in m.raw_text[line_num]:
         return 0
@@ -403,7 +423,7 @@ def LATITUDE_instrumentation(scd, m, line_num):
     
     return len(block)
     
-@staticmethod    
+    
 def PHONE_NUM_instrumentation(scd, m, line_num):
     if STRING_PHONE_NUM_FUNCTION not in m.raw_text[line_num]:
         return 0
@@ -440,7 +460,7 @@ def PHONE_NUM_instrumentation(scd, m, line_num):
     m.free_reg() # 1
     return len(block)
 
-@staticmethod
+
 def WRITE_instrumentation(scd, m, line_num):  # "write()" sinks
     # print("WRITE_instrumentation")
     # print("line_num: " + str(line_num))
@@ -520,7 +540,7 @@ def WRITE_instrumentation(scd, m, line_num):  # "write()" sinks
 
     return len(block)
     
-@staticmethod    
+    
 def IF_instrumentation(scd, m, line_num): # if statement implicit flow "sinks"
     cur_line = m.raw_text[line_num]
     
@@ -599,7 +619,7 @@ def IF_instrumentation(scd, m, line_num): # if statement implicit flow "sinks"
     #input("Added " + str(lines_added) + " lines.  Continue?")
     return lines_added
         
-@staticmethod
+
 def LOGD_instrumentation(scd, m, line_num):  # simulated Log.d sink
 
     if STRING_LOGD_FUNCTION not in m.raw_text[line_num]:
@@ -668,7 +688,7 @@ def LOGD_instrumentation(scd, m, line_num):  # simulated Log.d sink
 
     return lines_embedded
 
-@staticmethod
+
 def RETURN_instrumentation(scd, m, line_num):
     # return-object v2
     cur_line = m.raw_text[line_num]
@@ -726,7 +746,7 @@ def RETURN_instrumentation(scd, m, line_num):
     
     return len(block)
         
-@staticmethod
+
 def INTERNAL_FUNCTION_instrumentation(scd, m, line_num):
     # Part 1, instrumentation for the invoke-* line
     
@@ -842,7 +862,7 @@ def INTERNAL_FUNCTION_instrumentation(scd, m, line_num):
     
     return (len(block) + len(result_block) + 3)
 
-@staticmethod
+
 def EXTERNAL_FUNCTION_instrumentation(scd, m, line_num):
     # This instrumentation is "downstream" which is the term
     # I have decided means applied afterwords and only on lines which
@@ -918,7 +938,7 @@ def EXTERNAL_FUNCTION_instrumentation(scd, m, line_num):
 
     return len(block)
 
-@staticmethod
+
 def BINARYOP_instrumenter(scd, m, line_num):
     # Currently covers "ADD" "SUB" "MUL" and "DIV"
     # could probably be expanded to cover other / all
@@ -989,7 +1009,7 @@ def BINARYOP_instrumenter(scd, m, line_num):
 
     return len(block)
         
-@staticmethod
+
 def MOVE_instrumentation(scd, m, line_num):
     # move vx vy
     
@@ -1024,7 +1044,7 @@ def MOVE_instrumentation(scd, m, line_num):
     
     return len(block)
     
-@staticmethod
+
 def CONST_instrumentation(scd, m, line_num):
     # const v0, 0x2
     cur_line = m.raw_text[line_num]
@@ -1055,7 +1075,7 @@ def CONST_instrumentation(scd, m, line_num):
     
     return len(block)
     
-@staticmethod
+
 def NEG_instrumentation(scd, m, line_num):
     cur_line = m.raw_text[line_num]
 
@@ -1079,7 +1099,7 @@ def NEG_instrumentation(scd, m, line_num):
     
     return len(block)
     
-@staticmethod
+
 def CONVERTER_instrumentation(scd, m, line_num):
     cur_line = m.raw_text[line_num]
     
@@ -1113,7 +1133,22 @@ def CONVERTER_instrumentation(scd, m, line_num):
     
 def main():
     Instrumenter.sign_up("sget", SGET_instrumentation)
-    Instrumenter.sign_up("sput", SPUT_instrumentation)
+    Instrumenter.sign_up("sget-wide", SGET_instrumentation)
+    Instrumenter.sign_up("sget-object", SGET_instrumentation)
+    Instrumenter.sign_up("sget-boolean", SGET_instrumentation)
+    Instrumenter.sign_up("sget-byte", SGET_instrumentation)
+    Instrumenter.sign_up("sget-char", SGET_instrumentation)
+    Instrumenter.sign_up("sget-short", SGET_instrumentation)
+
+    #sput
+    # Instrumenter.sign_up("sput", SPUT_instrumentation)
+    # Instrumenter.sign_up("sput-wide", SPUT_instrumentation)
+    # Instrumenter.sign_up("sput-object", SPUT_instrumentation)
+    # Instrumenter.sign_up("sput-boolean", SPUT_instrumentation)
+    # Instrumenter.sign_up("sput-byte", SPUT_instrumentation)
+    # Instrumenter.sign_up("sput-char", SPUT_instrumentation)
+    # Instrumenter.sign_up("sput-short", SPUT_instrumentation)
+
 
 
 if __name__ == '__main__':
