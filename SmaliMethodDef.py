@@ -1,11 +1,11 @@
 import re
 
-from stigma import SmaliAssemblyInstructions as smali
-from stigma import StigmaStringParsingLib
-from stigma import Instrumenter, TaintTrackingInstrumentation
+import SmaliAssemblyInstructions as smali
+import StigmaStringParsingLib
+import Instrumenter
 
-from stigma.ControlFlowGraph import ControlFlowGraph
-from stigma.TypeSafetyChecker import TypeSafetyChecker
+from ControlFlowGraph import ControlFlowGraph
+from TypeSafetyChecker import TypeSafetyChecker
 
         
 class SmaliMethodSignature:
@@ -486,7 +486,6 @@ class SmaliMethodDef:
         # print("\n\n")
                 
     def instrument(self):        
-        print("Starting instrumentation on this method", str(self.signature))
         #incase the graph is empty, we dont instrument
         if(len(self.cfg.G)) == 1:
             return     
@@ -526,10 +525,10 @@ class SmaliMethodDef:
 
             else:
                 #if current node is visited, increment the counter, get the next node
-                counter+=1                 
+                counter+=1   
+                              
                                
     def gen_list_of_safe_registers(self, free_regs, node, idx, goal_size):
-        print("current line node type_list: ", node["type_list"][idx-1])
         # "safe" registers are 
         #  (a) low numbered (less than v16)
         #  (b) not used in the instruction on line idx
@@ -572,7 +571,6 @@ class SmaliMethodDef:
         raise Exception("Unable to get enough safe registers", safe_regs)
         
     def _do_instrumentation_plugins(self, free_regs, node, line, idx):
-        print("doing instrumentation on this line in node", node["text"][idx])
         # extract opcode
         # get the relevant instrumentation method from the instrumentation_map and call it
         # print("calling _do_instrumentation_plugins on line: ", line)
@@ -580,7 +578,6 @@ class SmaliMethodDef:
         if opcode in Instrumenter.instrumentation_map:
             instrumentation_method = Instrumenter.instrumentation_map[opcode]
             regs = self.gen_list_of_safe_registers(free_regs, node, idx, 3)
-            print("Free regs: ", regs)
             new_block = instrumentation_method(self.scd, self, node, idx, regs)
         
             #invoke foo()
@@ -595,12 +592,7 @@ class SmaliMethodDef:
                 self.instrumented_code.extend(new_block)   
                 self.instrumented_code.append(line)
                 
-                
-            print("new block inserted: ")
-            for line in new_block:
-                print(line)
-            input("\n------------------SGET INSTRUMENTATION DONE, CONTINUE?----------------------")
-            
+
     def is_relevant(self, line, node):
         # only do instrumentation if the length of the method is
         # not too long.  This is specifically in place to avoid

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-from stigma import SmaliAssemblyInstructions as smali
-from stigma import StigmaStringParsingLib
-from stigma.TaintStorageHandler import TaintStorageHandler
+import SmaliAssemblyInstructions as smali
+import StigmaStringParsingLib
+from TaintStorageHandler import TaintStorageHandler
 import re
 
 

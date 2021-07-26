@@ -1,5 +1,5 @@
 import re
-from stigma import ValidSmaliInstructions
+import ValidSmaliInstructions
 
 BEGINS_WITH_DOT = r"^\s*\."  # oat "assembler" directives begin with a .dot
 BEGINS_WITH_HASHTAG = r"^\s*\#"

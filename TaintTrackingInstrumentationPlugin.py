@@ -1,9 +1,8 @@
-from stigma import Instrumenter 
+import Instrumenter 
 import re
-from stigma import StigmaStringParsingLib
-from stigma import SmaliAssemblyInstructions as smali
-from stigma.TaintStorageHandler import TaintStorageHandler
-
+import StigmaStringParsingLib
+import SmaliAssemblyInstructions as smali
+from TaintStorageHandler import TaintStorageHandler
 
 
 # A more complete listing of these sort of things can be found in ./SourcesAndSinks.txt

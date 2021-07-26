@@ -1,8 +1,7 @@
-from stigma import StigmaStringParsingLib
+import StigmaStringParsingLib
 import re
-from stigma import SmaliAssemblyInstructions as smali
-from stigma.SmaliMethodDef import SmaliMethodDef
-from stigma import TaintTrackingInstrumentation
+import SmaliAssemblyInstructions as smali
+from SmaliMethodDef import SmaliMethodDef
 
 
 class SmaliClassDef:
@@ -200,10 +199,8 @@ class SmaliClassDef:
             raise ValueError("Other SCDs list not passed to scd")
 
         #this will signup our methods for instrumentation with their related opcodes
-        TaintTrackingInstrumentation.main()
         for m in self.methods:                
             m.instrument()
-
 
 
     def write_to_file(self, class_smali_file):

@@ -1,4 +1,4 @@
-from stigma import SmaliClassDef
+import SmaliClassDef
 import os
 import time
 import sys
@@ -9,8 +9,8 @@ from subprocess import Popen, PIPE
 import shutil
 import glob
 import tempfile
-from stigma import TaintStorageHandler
-
+import TaintStorageHandler
+import TaintTrackingInstrumentationPlugin
 
 # https://docs.python.org/3/library/tempfile.html
 temp_file = tempfile.TemporaryDirectory(prefix="apkOutput_")
@@ -35,6 +35,25 @@ def dumpApk():
     completed_process = subprocess.run(cmd)
     completed_process.check_returncode()
     print("Apk unpacked in %.1f seconds" % (time.time() - start_time))
+
+
+def importPlugins():
+    TaintTrackingInstrumentationPlugin.main()
+    
+    
+    # p = os.path.dirname(os.path.realpath(__file__))
+    # plugins_path = os.path.join(p,"plugins.txt")
+    # print(p)
+    # start_time = time.time()
+    # f = open(plugins_path, 'r')
+    # for line in f:
+    #     if not line.startswith("#"):
+    #         line_path = os.path.join(p,line)
+    #         print(line_path)
+    #         cmd = ["python3", line_path]
+    #         completed_process = subprocess.run(cmd)
+    #         completed_process.check_returncode()
+    # print("Plugins loaded in %.1f seconds" % (time.time() - start_time))
 
 
 def getFiles():
@@ -357,6 +376,7 @@ if __name__ == '__main__':
     start = time.time()
     print("Working In: " + str(temp_file.name))
     dumpApk()
+    importPlugins()
     runStigma()
     writeStorageClasses()
     splitSmali()
