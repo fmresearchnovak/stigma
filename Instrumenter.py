@@ -40,13 +40,16 @@ def sign_up(opcode, new_method):
     # other developers could add instrumentation
     if opcode not in instrumentation_map:
         instrumentation_map[opcode] = new_method
+    else:
+        raise Exception(str(opcode) + " is already registered for:" + str(instrumentation_map[opcode]))
 
 @staticmethod
 def make_merge_block(scd, m, registers, taint_loc_result):
     # This function creates a "merge block"
     # A merge block takes every one of the registers in the 
-    # registers parameter (a list), and performs an OR operation on their
+    # registers parameter (a list), and performs an ADD-FLOAT operation on their
     # values storing the result in taint_loc_result
+    # Note: external methods may merge several registers
 
     block = []
 

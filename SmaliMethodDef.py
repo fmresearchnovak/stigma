@@ -22,7 +22,7 @@ class SmaliMethodSignature:
     # self.num_of_parameters
     # self.num_of_parameter_registers
     
-    def __init__(self, sig_line, class_name = "unknownclass"):
+    def __init__(self, sig_line, class_name):
         
         self.sig_line = sig_line
         
@@ -158,9 +158,15 @@ class SmaliMethodDef:
         self.ORIGINAL_LOCAL_NUMBER_REGS = self.get_locals_directive_num()
         self.reg_number_float = self.ORIGINAL_LOCAL_NUMBER_REGS
 
-        self.scd = scd # smali class definition
+        class_name = "Lunknownclass;"
+        if(scd != None):
+            self.scd = scd # smali class definition
+            class_name = self.scd.class_name
+            
+        self.signature = SmaliMethodSignature(self.raw_text[0], class_name)
 
-        self.signature = SmaliMethodSignature(self.raw_text[0], scd.class_name)
+
+        
         self.instrumented_code = [] #this is a list containing new instrumented code
 
         #print("Running Smali Method Def on: " + str(self.signature) + " in " + str(scd))

@@ -303,7 +303,10 @@ class SmaliClassDef:
         return str(self.file_name)
         
     def __eq__(self, other):
+        if not isinstance(other, SmaliClassDef):
+            return False
         return self.class_name == other.class_name
+
 
 
 
