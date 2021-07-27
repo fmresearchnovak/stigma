@@ -5,7 +5,7 @@ the types of each register at each current line.
 hashmap -> key: string (register name)
         -> value: string, (type stored in the register)(32bit-64bit-object)
 '''
-import VRegisterPool
+
 import StigmaStringParsingLib 
 import SmaliAssemblyInstructions
 import re

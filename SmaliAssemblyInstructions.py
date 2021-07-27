@@ -1479,6 +1479,20 @@ TYPE_LIST_ALL = TYPE_LIST_OBJECT_REF \
                     + TYPE_LIST_WORD
 
 
+def type_code_name(type_code):
+    if(type_code == None):
+        return "None"
+    elif(type_code == TYPE_CODE_WORD):
+        return "TYPE_WORD"
+    elif(type_code == TYPE_CODE_OBJ_REF):
+        return "TYPE_OBJ_REF"
+    elif(type_code == TYPE_CODE_WIDE):
+        return "TYPE_WIDE"
+    elif(type_code == TYPE_CODE_WIDE_REMAINING):
+        return "TYPE_WIDE_REM"
+    else:
+        raise ValueError("Invalid Type Code: " + str(type_code))
+
 
 def parse_line(line):
     #print("parsing: " + line)

@@ -299,6 +299,14 @@ class SmaliMethodDef:
         return new_regs
 
 
+    def dereference_p_to_v_number(self, p_register):
+        # e.g., _get_v_frl(p2, 2) -> v4
+        locals_num = self.get_locals_directive_num()
+        p_num = int(p_register[1:])
+        corresponding_v_num = locals_num + p_num
+        return "v" + str(corresponding_v_num)
+
+
     def dereference_p_to_v_numbers(self, line):
         # de-reference p registers
         # Replace all instances of pX with corresponding vY
@@ -315,14 +323,12 @@ class SmaliMethodDef:
         # For example...
         # const-string vX, "bad string p0 v2"
         
-        num_locals = self.get_locals_directive_num()
-        
         opcode = StigmaStringParsingLib.break_into_tokens(line)[0]            
-        
         regs = StigmaStringParsingLib.get_v_and_p_numbers(line)
+
         for r in regs:
             if r[0] == "p":
-                v_reg = StigmaStringParsingLib.get_v_from_p(r, num_locals)
+                v_reg = self.dereference_p_to_v_number(r)
 
                 # str.replace(x, y, 1) replaces only the first occurence
                 # so, this will not replace instances of
@@ -599,7 +605,81 @@ class SmaliMethodDef:
             return True
     
 
+    # This method was pulled from VRegisterPool
+    def get_spot(self, max_val, type_code, exclude_list = []):
+        # Look for empty spot to use
+        # 1) empty spots prioritized
+        # 2) spots of the matching type
+        # 3) a convenient spot cannot be found:
+        #       just return a spot of different type
+        # 4) if the requested type is WIDE and a convenient
+        #       spot cannot be found: raise an exception
 
+        # 1
+        for i in range(max_val):
+            reg_name = "v" + str(i)
+            
+            if(reg_name in exclude_list):
+                continue
+            
+            if(self[reg_name] == None):
+                if(type_code == TYPE_CODE_WIDE):
+                    adjacent_reg_name = "v" + str(i+1)
+                    if(self[adjacent_reg_name] == None):
+                        return reg_name
+                    else:
+                        continue
+                        
+                else:
+                    return reg_name
+                    
+        # 2
+        for i in range(max_val):
+            reg_name = "v" + str(i)
+            
+            if(reg_name in exclude_list):
+                continue
+                
+            if(type_code == self[reg_name]):
+                return reg_name
+
+        # conclusions 3 and 4
+        # theoretically possible if user is looking for TYPE_CODE_OBJ_REF
+        # and max value is X and all registers below X are TYPE_CODE_WORD
+
+        # 4
+        if type_code == TYPE_CODE_WIDE:
+            #print(self.pretty_string(0, 20))
+            raise ValueError("Could not find a spot for type: " + type_code_name(type_code) + " in first " + str(max_val) + " registers.")  
+
+        # 3
+        for i in range(max_val):
+            reg_name = "v" + str(i)
+
+            if(reg_name in exclude_list):
+                continue
+
+            # this might return a TYPE_WIDE when user
+            # is actually looking for a TYPE_WORD
+            # but that should be ok, bigger problem
+            # is when user is looking for WIDE and can't
+            # get one, that is resolved by conclusion 4
+            return reg_name
+        
+        #return None
+
+    # This method was pulled from VRegisterPool
+    def get_consecutive_non_wide_reg_pair(self, max_val, exclude_list = []):
+        for i in range(max_val):
+            reg_name = "v" + str(i)
+            reg_name_adjoining = "v" + str(i+1)
+
+            if(reg_name in exclude_list):
+                continue
+
+            if(self[reg_name] != TYPE_CODE_WIDE and
+                self[reg_name] != TYPE_CODE_WIDE_REMAINING):
+                return (reg_name, reg_name_adjoining)
 
     
 

@@ -73,11 +73,7 @@ BEGINS_WITH_MOVE = r"^\s*move"
     
     
 
-def get_v_from_p(p_register, locals_num):
-    # e.g., _get_v_frl(p2, 2) -> v4
-    p_num = int(p_register[1:])
-    corresponding_v_num = locals_num + p_num
-    return "v" + str(corresponding_v_num)
+
 
 def get_num_registers(line):
     tokens = break_into_tokens(line)
@@ -118,12 +114,7 @@ def get_p_numbers(line):
     return p_only_registers   
 
 
-
 def is_high_numbered_register(reg_name):
-    result = re.search(VALID_REG_REGEX, reg_name)
-    if(not result):
-        raise ValueError("Invalid Register: " + str(reg_name))
-
     letter = str(reg_name[0])
     number = int(reg_name[1:])
     

@@ -23,10 +23,6 @@ sinkDict['Y'] = "Logd"
 
 '''def internal_tests():
 
-    cmd = ["python3", "VRegisterPool.py"]
-    finished_proc = subprocess.run(cmd)
-    finished_proc.check_returncode()
-
     cmd = ["python3", "StigmaStringParsingLib.py"]
     finished_proc = subprocess.run(cmd)
     finished_proc.check_returncode()
