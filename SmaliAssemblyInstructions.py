@@ -1468,7 +1468,7 @@ TYPE_CODE_ALL = [TYPE_CODE_WORD, TYPE_CODE_WIDE,
     TYPE_CODE_WIDE_REMAINING, TYPE_CODE_OBJ_REF]
 
 # https://github.com/JesusFreke/smali/wiki/TypesMethodsAndFields
-TYPE_LIST_OBJECT_REF = ["THIS", "L", "["]
+TYPE_LIST_OBJECT_REF = ["L", "["]
 TYPE_LIST_WIDE = ["J", "D"]
 TYPE_LIST_WIDE_REMAINING = ["J2", "D2"]
 TYPE_LIST_WORD = ["Z", "B", "S", "C", "I", "F"]

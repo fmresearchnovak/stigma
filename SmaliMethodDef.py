@@ -12,13 +12,17 @@ class SmaliMethodSignature:
 
     # This should maybe be an inner-class of SmaliMethodDef
     
+    # self.sig_line
     # self.name
+
     # self.is_static
+    # self.is_abstract
+
     # self.parameter_type_map
     # self.num_of_parameters
     # self.num_of_parameter_registers
     
-    def __init__(self, sig_line):
+    def __init__(self, sig_line, class_name = "unknownclass"):
         
         self.sig_line = sig_line
         
@@ -55,7 +59,8 @@ class SmaliMethodSignature:
             # the object that the method is being invoked on,
             # p0 holds the object reference and p1 the second 
             # parameter register.
-            self.parameter_type_map["p0"] = "THIS" # not really but that's ok
+
+            self.parameter_type_map["p0"] = class_name
             self.num_of_parameters = 1
             self.num_of_parameter_registers = 1
             p_idx = 1
@@ -63,7 +68,6 @@ class SmaliMethodSignature:
         
         parameter_raw = re.search(StigmaStringParsingLib.PARAMETERS, sig_line).group(1)
         i = 0
-        # https://github.com/JesusFreke/smali/wiki/TypesMethodsAndFields
         while i < len(parameter_raw):
             self.num_of_parameters += 1
             
@@ -89,7 +93,8 @@ class SmaliMethodSignature:
 
             
                 # skip past all the characters in the type
-                # e.g., MyMethod(java/lang/String;[Ljava/lang/Object;)Ljava/lang/String;
+                # e.g., MyMethod(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;
+                # we should skip from "L" all the way to ";" for each parameter
                 i = SmaliMethodSignature.fast_forward_to_semicolon(i, parameter_raw)
                     
                     
@@ -103,19 +108,15 @@ class SmaliMethodSignature:
                     # this is an array of objects (L indicates beginning of object FQN)
                     i = SmaliMethodSignature.fast_forward_to_semicolon(i, parameter_raw)
                     
-                #else: 
-                    # this is an array of primitives
-                    # this skips forward past the primitive letter
-                    # i += 1
+
                 #to get the last character of array type, we add a +1 to the end_index
                 #fast_forward methods ignore the last character itself, so to include it we have to increment the index by 1
                 end_index = i+1
+
                 self.num_of_parameter_registers += 1
                 p_name = "p" + str(p_idx)
                 self.parameter_type_map[p_name] = parameter_raw[start_index:end_index]
 
-
-            #print("the big one")
             p_idx += 1        
             i += 1
 
@@ -142,8 +143,9 @@ class SmaliMethodSignature:
 class SmaliMethodDef:
 
     def __init__(self, text, scd):
-        # should be a list of strings (lines)
+        # text should be a list of strings (lines)
         # starting from ".method..." and ending in "... .end method"
+        # scd should be a SmaliClassDef object
         
         if(text == []):
             raise ValueError("Attempting to instantiate method with no code!")
@@ -157,26 +159,54 @@ class SmaliMethodDef:
         self.reg_number_float = self.ORIGINAL_LOCAL_NUMBER_REGS
 
         self.scd = scd # smali class definition
-        
-        # should be re-factored with get_signature() method below
-        self.signature = SmaliMethodSignature(self.raw_text[0])
+
+        self.signature = SmaliMethodSignature(self.raw_text[0], scd.class_name)
         self.instrumented_code = [] #this is a list containing new instrumented code
 
-        #create the control flow graph for the method text and pass it to the type safety checker
-        #this will check and track types of each register on each line 
-        #self.cfg = ControlFlowGraph(text)
-
-        #initialize the type checker as a instance variable for each method. 
-        #this will check and track types of each register on each line 
         #print("Running Smali Method Def on: " + str(self.signature) + " in " + str(scd))
         self.cfg = ControlFlowGraph(text)
         self.tsc = TypeSafetyChecker(self.signature, self.cfg) 
             
+
     def grow_locals(self, n):
         # grows the .locals from the current value such that there are
         # n new registers in the method
         # moves the parameters so that they don't incur maximum register value
         # issues when used in instructions
+
+        # Only v0 - v16 registers are allowed for general purpose use.
+        # This is enforced by apktool.  The documentation indicates that
+        # some instrucions allow many many more registers (up to v65535)
+        # https://source.android.com/devices/tech/dalvik/dalvik-bytecode
+
+        # Consider the following method which came from whatsapp
+        # This is a very special case
+        # the .locals is 1 indicating that v0 is the only local register.
+        # that is true. BUT, the first use of v0 is to store a long (J)
+        # so actually v0 and v1 are used.  I assume that p0 is v1, but p0 is
+        # over-written immediately after it's first and only use.
+        # If we attempt to use v1 for some taint-tag propagation
+        # it will cause a verify error since v1 is supposed to hold the second
+        # half of a long
+        '''
+        .method public static A0C(Ljava/lang/Long;J)Ljava/lang/Long;
+        .locals 1
+
+        invoke-virtual {p0}, Ljava/lang/Number;->longValue()J
+
+        move-result-wide v0
+
+        sub-long/2addr p1, v0
+
+        invoke-static {p1, p2}, Ljava/lang/Long;->valueOf(J)Ljava/lang/Long;
+
+        move-result-object v0
+
+        return-object v0
+        
+        .end method
+        '''
+
 
         if(n < 0):
             raise ValueError("Cannot grow locals by a negative amount: " + str(n))
@@ -268,11 +298,21 @@ class SmaliMethodDef:
         
         return new_regs
 
-    def convert_p_to_v_numbers(self, line):
+
+    def dereference_p_to_v_numbers(self, line):
+        # de-reference p registers
+        # Replace all instances of pX with corresponding vY
+        # For example...
+        #     v0, v1, v2, v3, v4
+        #             p0, p1, p2
+        # (note: even if p1 is a long, there will still be a p2
+        #  and it will still correspond to v4)
+
         # a nasty edge-case that must be considered is a const-string
         # or comment or something that contains substrings
         # that look like register references
         # 
+        # For example...
         # const-string vX, "bad string p0 v2"
         
         num_locals = self.get_locals_directive_num()
@@ -283,15 +323,22 @@ class SmaliMethodDef:
         for r in regs:
             if r[0] == "p":
                 v_reg = StigmaStringParsingLib.get_v_from_p(r, num_locals)
+
+                # str.replace(x, y, 1) replaces only the first occurence
+                # so, this will not replace instances of
+                # "v4" and other register-like strings in instructions
+                # such as: const-string v4, "edge v2 case p0 string v4\n"
                 line = line.replace(r, v_reg, 1)
         return line
              
+
     def convert_all_lines_p_to_v_numbers(self):
         for i in range(len(self.raw_text)):
             cur_line = self.raw_text[i]
             if(StigmaStringParsingLib.is_valid_instruction(cur_line)):
-                new_line = self.convert_p_to_v_numbers(cur_line)
+                new_line = self.dereference_p_to_v_numbers(cur_line)
                 self.raw_text[i] = new_line
+
                         
     def find_first_valid_instruction(self):
         for i in range(len(self.raw_text)):
@@ -300,31 +347,35 @@ class SmaliMethodDef:
                 return i
 
 
-
-    # There are three "register numbers"
-    # 1) The ORIGINAL_LOCAL_NUMBER_REGS
-    #       This is the number of registers this method had / used before
-    #       any instrumentation
-    #
-    # 2) The locals_directive_num()
-    #       This is the "max" or total number of unique registers
-    #       the method uses.  If a register is used and free in
-    #       the instrumentation this goes up.  But if it is used
-    #       again, this number would not go up, because the register
-    #       is being RE-used.
-    #       The locals_directive is checked at package time by apktool
-    #
-    # 3) The reg_number_float
-    #       This is the register number that is ready to be re-used
-    #       If a register is used this goes up, but if it is freed this
-    #       number goes down
-
     def set_locals_directive(self, new_val):
         self.raw_text[1] = "    .locals " + str(new_val) + "\n"
 
+
     def get_locals_directive_line(self):
         return self.raw_text[1].strip()
+
+
+    def get_locals_directive_num(self):
+        line = self.get_locals_directive_line()
+        search_object = re.search(r"[0-9]+", line)
+        if search_object is not None:
+            num = search_object.group()
+            # print("number: " +  str(num))
+            return int(num)
+        else:
+            return 0
+
+    def get_num_registers(self):
+        # the total number of registers used by this function
+        ans = self.get_locals_directive_num() + self.signature.num_of_parameter_registers
+        #if(not self.signature.is_static):
+            # +1 at the end is necessary to account for p0 ("this") reference
+            # this may be a bug, I'm not sure how the other parts of the code
+            # count registers
+        #    ans+=1
+        return ans
         
+
     def get_num_comparison_instructions(self):
         count = 0
         
@@ -346,30 +397,11 @@ class SmaliMethodDef:
                 count = count + 1
         return count
 
-    def get_locals_directive_num(self):
-        line = self.get_locals_directive_line()
-        search_object = re.search(r"[0-9]+", line)
-        if search_object is not None:
-            num = search_object.group()
-            # print("number: " +  str(num))
-            return int(num)
-        else:
-            return 0
-            
-    def get_num_registers(self):
-        # the total number of registers used by this function
-        ans = self.get_locals_directive_num() + self.signature.num_of_parameter_registers
-        #if(not self.signature.is_static):
-            # +1 at the end is necessary to account for p0 ("this") reference
-            # this may be a bug, I'm not sure how the other parts of the code
-            # count registers
-        #    ans+=1
-        return ans
+
         
     def get_signature(self):
-        # should be re-factored with self.signature instance variable
-        # above
-        return self.raw_text[0].strip()
+        return str(self.signature)
+
 
     def get_name(self):
         # kinda hacky!  Sorry 'bout that!
@@ -381,68 +413,6 @@ class SmaliMethodDef:
         # print("name: " + str(name))
         return name
 
-    def make_new_reg(self):
-        # see comment below this method
-        
-        # Do not allow the system to push any register (even pX) 
-        # over the "v15" barrier (v0 .. v15 = 16 total registers)
-        if(self.get_num_registers() >= 16):
-            # if there are currently 16 registers we cannot
-            # allocate another one.
-            raise RuntimeError("Register limit is 16")
-        
-        self.reg_number_float += 1
-
-        directive = self.get_locals_directive_num()
-        if self.reg_number_float > directive:
-            self.set_locals_directive(self.reg_number_float)
-            
-        return "v" + str(self.reg_number_float -1)
-
-
-    # Consider the following method which came from the whatsapp
-    # app
-    # the .locals is 1 indicating that v0 is the only local register.
-    # that is true. BUT, the first use of v0 is to store a long (J)
-    # so actually v0 and v1 are used.  I assume that p0 is v1, but p0 is
-    # over-written immediately after it's first and only use.
-    # If we attempt to use v1 for some taint-tag propagation
-    # it will cause a verify error since v1 is supposed to hold the second
-    # half of a long
-    '''
-    .method public static A0C(Ljava/lang/Long;J)Ljava/lang/Long;
-    .locals 1
-
-    invoke-virtual {p0}, Ljava/lang/Number;->longValue()J
-
-    move-result-wide v0
-
-    sub-long/2addr p1, v0
-
-    invoke-static {p1, p2}, Ljava/lang/Long;->valueOf(J)Ljava/lang/Long;
-
-    move-result-object v0
-
-    return-object v0
-    
-    .end method
-    '''
-
-    # Only v0 - v16 registers are allowed for general purpose use.
-    # This is enforced by apktool.  The documentation indicates that
-    # some instrucions allow many many more registers (up to v65535)
-    # https://source.android.com/devices/tech/dalvik/dalvik-bytecode
-    # Anyway, it is necessary to "free" registers so that
-    # instrumentation does not accumulate registers when adding
-    # several instrumentation lines into one method.
-    # This first became an issue with EXTERNAL_FUNCTION_instrumentation
-    
-    def free_reg(self):
-        if self.reg_number_float == self.ORIGINAL_LOCAL_NUMBER_REGS:
-            raise Exception("No registers to free!")
-
-        self.reg_number_float -= 1
-        return self.reg_number_float  # IDK why I return anything! lol -\
 
     def make_new_jump_label(self):
         res = smali.LABEL(self.num_jumps)
@@ -580,6 +550,7 @@ class SmaliMethodDef:
             regs = self.gen_list_of_safe_registers(free_regs, node, idx, 3)
             new_block = instrumentation_method(self.scd, self, node, idx, regs)
         
+            print(new_block)
             #invoke foo()
             #move-result vx
             #for such a line which contains a move result, we cannot put the new block of code between the 
@@ -627,68 +598,12 @@ class SmaliMethodDef:
         else:
             return True
     
-    @staticmethod
-    def _should_skip_line_frl(cur_line):
-        # print(cur_line)
-        # We need to check the instruction
-        # some instructions don't need to have their register
-        # limit fixed.  Such as:
-        # * pre-existing move instructions
-        # * */range
-        # * cmpl-double   (weird example IMHO: http://pallergabor.uw.hu/androidblog/dalvik_opcodes.html)
-        # * move/from16 vx,vy # Moves the content of vy into vx. vy may be in the 64k register range while vx is one of the first 256 registers.
 
-        # Check if this line is actually a smali instruction (starts with a valid opcode)
-        if(not StigmaStringParsingLib.is_valid_instruction(cur_line)):
-            return True
-            
-        # Check if this line has "range" in the opcode
-        opcode = StigmaStringParsingLib.break_into_tokens(cur_line)[0]
-        if ("range" in opcode):
-            return True
-            
-        # don't touch any line that has {} in it, which indicate
-        # a list of parameters
-        #if opcode == "filled-new-array" or opcode == "filled-new-array-range":
-        #    return True
-        #search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_INVOKE, opcode)
-        #if(search_object != None):
-        #    return True
 
-        # don't touch "move" lines, basic "move/16" opcode can support
-        # as high as v255.  We assume that we will never see any
-        # higher v number as a result of our tracking / instrumentation
-        # move-result v16  might be a problem?
-        if(re.match("^\s*move/16", cur_line) or 
-            re.match("^\s*move/from16", cur_line) or
-            re.match("^\s*move-wide/from16", cur_line) or
-            re.match("^\s*move-wide/16", cur_line) or
-            re.match("^\s*move-object/16", cur_line) or 
-            re.match("^\s*move-object/from16", cur_line)):
-            return True
-        
-        return False
 
-    @staticmethod
-    def _dereference_p_registers_frl(cur_line, locals_num):
-        # Step 2, de-reference p registers
-        # Replace all instances of pX with corresponding vY
-        # v0, v1, v2, v3, v4
-        #         p0, p1, p2
-        # even if p1 is a long, there will still be a p2
-        # and it will still correspond to v4
-        p_regs = StigmaStringParsingLib.get_p_numbers(cur_line)
-        
-        # because this loops through the registers found
-        # and str.replace(x, y, 1) replaces only the first occurence
-        # this little algoritm will not replace instances of
-        # "v4" and other register-like strings in instructions
-        # such as: const-string v4, "edge v2 case p0 string v4\n"
-        for reg in p_regs:
-            v_name = StigmaStringParsingLib.get_v_from_p(reg, locals_num)
-            cur_line = cur_line.replace(reg, v_name, 1)
-        return cur_line
     
+
+    '''
     @staticmethod
     def _append_move_instr_frl(block, reg_pool, to_reg_name, from_reg_name):
         custom_move = reg_pool.get_move_instr(from_reg_name)
@@ -815,7 +730,7 @@ class SmaliMethodDef:
         #print("\n\n")
         return ans_block
    
-    '''        
+
     def fix_register_limit(self):
         #print("self.scd.file_name: " + str(self.scd.file_name))
         #print("fix_register_limit(" + str(self.signature) + ")")

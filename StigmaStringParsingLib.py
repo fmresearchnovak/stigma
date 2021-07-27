@@ -14,6 +14,8 @@ FIELD_NAME = "->(.+):"
 CLASS_NAME = "(L.+)->"
 PARAMETERS = "[(](.*)[)]"
 
+VALID_REGISTER = r"^[vp][0-9]+$"
+
 
 BEGINS_WITH_INVOKE = r"^\s*invoke-"
 BEGINS_WITH_MOVE_RESULT = r"^\s*move-result"
@@ -114,6 +116,27 @@ def get_p_numbers(line):
     registers = get_v_and_p_numbers(line)
     p_only_registers = list(filter(lambda x : x[0] == "p", registers))
     return p_only_registers   
+
+
+
+def is_high_numbered_register(reg_name):
+    result = re.search(VALID_REG_REGEX, reg_name)
+    if(not result):
+        raise ValueError("Invalid Register: " + str(reg_name))
+
+    letter = str(reg_name[0])
+    number = int(reg_name[1:])
+    
+    if(letter != "v"):
+        raise ValueError("Cannot determine if register is high numbered: " + str(reg_name))
+    
+    # Note, I cannot do this check because this function does not know
+    # the type of the data stored in the given register
+    #if(register_type in smali.TYPE_LIST_WIDE):
+    #    return (number > 14)
+        
+    return (number > 15)
+
 
 def break_into_tokens(line):
     #print("calling break into tokens on: " + line)
