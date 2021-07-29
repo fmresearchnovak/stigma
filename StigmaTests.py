@@ -1677,16 +1677,16 @@ def grow_locals_test_1():
 
 
     test_line = "    invoke-virtual {v1}, Ljava/lang/Object;->toString()Ljava/lang/String;\n"
-    result_line = smd.convert_p_to_v_numbers(test_line)
+    result_line = smd.dereference_p_to_v_numbers(test_line)
     assert(result_line == test_line)
    
     test_line = "    invoke-virtual {p0}, Ljava/lang/Object;->toString()Ljava/lang/String;\n"
-    result_line = smd.convert_p_to_v_numbers(test_line)
+    result_line = smd.dereference_p_to_v_numbers(test_line)
     #print(result_line)
     assert(result_line == "    invoke-virtual {v9}, Ljava/lang/Object;->toString()Ljava/lang/String;\n")
     
     test_line = "    invoke-virtual {p0, p1, p2}, Ljava/lang/Object;->toString()Ljava/lang/String;\n"
-    result_line = smd.convert_p_to_v_numbers(test_line)
+    result_line = smd.dereference_p_to_v_numbers(test_line)
     #print(result_line)
     assert(result_line == "    invoke-virtual {v9, v10, v11}, Ljava/lang/Object;->toString()Ljava/lang/String;\n")
 
@@ -1710,7 +1710,7 @@ def grow_locals_test_1():
     return v2
     
     .end_method'''
-    
+
     
     method_list = method_text.split("\n")
     smd = SmaliMethodDef.SmaliMethodDef(method_list, None)
@@ -1719,7 +1719,7 @@ def grow_locals_test_1():
     
     
     
-    ans = smd.convert_p_to_v_numbers("invoke-virtual/range {v2 .. p2}, Landroid/support/v4/app/FragmentManagerNonConfig;->getFragments()Ljava/util/List;")
+    ans = smd.dereference_p_to_v_numbers("invoke-virtual/range {v2 .. p2}, Landroid/support/v4/app/FragmentManagerNonConfig;->getFragments()Ljava/util/List;")
     assert(ans == "invoke-virtual/range {v2 .. v5}, Landroid/support/v4/app/FragmentManagerNonConfig;->getFragments()Ljava/util/List;")
     
     

@@ -5,7 +5,7 @@ the types of each register at each current line.
 hashmap -> key: string (register name)
         -> value: string, (type stored in the register)(32bit-64bit-object)
 '''
-import VRegisterPool
+
 import StigmaStringParsingLib 
 import SmaliAssemblyInstructions as smali
 import re
@@ -369,9 +369,10 @@ class TypeSafetyChecker:
             2)value:Z
             return 32-bit
         '''
+
         if("[" in value):
             return value
-        elif(value in smali.TYPE_LIST_OBJECT_REF):
+        elif(value in smali.TYPE_LIST_OBJECT_REF or value[0] == "L"):
             return "object"
         elif (value in smali.TYPE_LIST_WORD):
             return "32-bit"
@@ -380,7 +381,7 @@ class TypeSafetyChecker:
         elif (value in smali.TYPE_LIST_WIDE_REMAINING):
             return "64-bit-2"
         else:
-            return "invalid type"
+            raise Exception("Invalid Value: ", value)
         
     def check_invoke_type(self, value):
         if(value in smali.TYPE_LIST_OBJECT_REF):
@@ -392,7 +393,7 @@ class TypeSafetyChecker:
         elif (value in smali.TYPE_LIST_WIDE_REMAINING):
             return "64-bit-2"
         else:
-            return "invalid type"
+            raise Exception("Invalid Value: ", value)
     
     def obtain_previous_instruction(self, node_counter, start):
         # I found a situation in the whatsapp.apk which 

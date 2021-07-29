@@ -33,7 +33,7 @@ goto :goto_4
 
 '''
 
-import VRegisterPool, StigmaStringParsingLib
+import StigmaStringParsingLib
 import re
 import networkx as nx
 import matplotlib.pyplot as plt
