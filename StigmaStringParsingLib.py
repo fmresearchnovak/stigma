@@ -68,7 +68,8 @@ BEGINS_WITH_FILLED_NEW_ARRAY = r"^\s*filled-new-array"
 
 
 BEGINS_WITH_MOVE = r"^\s*move"
-    
+BEGINS_WITH_COMMENT = r"^\s*#"
+
     
 
 def get_v_from_p(p_register, locals_num):

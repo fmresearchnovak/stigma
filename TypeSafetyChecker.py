@@ -7,7 +7,7 @@ hashmap -> key: string (register name)
 '''
 import VRegisterPool
 import StigmaStringParsingLib 
-import SmaliAssemblyInstructions
+import SmaliAssemblyInstructions as smali
 import re
 
 
@@ -105,14 +105,33 @@ class TypeSafetyChecker:
                line_index = index of that line in the text list 
         this method creates a hashmap for a normal line if udpate happens otherwise puts a reference to the existing hashmap
         '''
-
+            
         #find all unrelevant instructions and put a -1 for them in the type list
         if(self.non_relevent_line(line)):
             self.node_type_list.append(self.most_recent_type_map)
+            # print("\n------NON RELECVENT LINE:", line.strip())
+            # print(self.node_type_list[-1])
             return
         
         tokens = StigmaStringParsingLib.break_into_tokens(line)
-
+        
+        if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE, line) is not None and re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, line) is None and re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_EXCEPTION, line) is None):
+            reg = StigmaStringParsingLib.get_v_and_p_numbers(line)       
+            line_type_map_new = self.most_recent_type_map.copy()
+            #in this case the types might not be known to us
+            if(reg[-1] not in self.most_recent_type_map):
+                reg_type = '?'
+            else:
+                reg_type = self.most_recent_type_map[reg[-1]]
+            line_type_map_new[reg[0]] = reg_type
+            self.most_recent_type_map = line_type_map_new.copy()
+            self.node_type_list.append(line_type_map_new)
+            
+            # print("\n*****line:", line.strip())
+            # print(self.node_type_list[-1])
+            
+            return
+        
         #if the current line is an if statement, store the most recent hashmap as most recent if statement parent map, for later access 
         if(re.search(StigmaStringParsingLib.BEGINS_WITH_IF, line) is not None):
             line_type_map_new = self.most_recent_type_map.copy()
@@ -201,6 +220,20 @@ class TypeSafetyChecker:
                 instruction_type = tokens[-1]
                 line_type_map_new[dest_reg] = instruction_type
 
+            #if iget-object is an array, we have to store the exact type of array, otherwise just store object
+            #error:     
+                # iget-object v6, p0, Landroid/support/design/widget/CoordinatorLayout;->mKeylines:[I
+                # aget v7, v6, v5
+            #not sure if have to consider aget-object
+            elif(instruction == "iget-object" or instruction == "sget-object" or instruction == "iget-object-quick"):
+                instruction_type = tokens[-1]
+                idx = instruction_type.find("[")
+                if(idx != -1):
+                    reg_type = instruction_type[idx:]
+                    line_type_map_new[dest_reg] = reg_type
+                else:
+                    line_type_map_new[dest_reg] = "object"
+            
             
             elif(instruction == "aget"):
                 src_reg = registers[1]
@@ -208,6 +241,7 @@ class TypeSafetyChecker:
                 # inserted for the current (aget) line.  So, to 
                 # look at the previous line, we have to query line_index-1
                 #src_type = self.type_query(src_reg, line_index-1)
+                
                 src_type = line_type_map_new[src_reg]
                 line_type_map_new[dest_reg] = self.check_aget_type(src_type)
                       
@@ -217,7 +251,10 @@ class TypeSafetyChecker:
             
             self.most_recent_type_map = line_type_map_new.copy()
             self.node_type_list.append(line_type_map_new)
-            
+        
+        # print("\n*****line:", line.strip())
+        # print(self.node_type_list[-1])
+        # input("Continue???")
         # Debugging the smali line-by-line as program runs
         # self.debugging(line, line_index)
     
@@ -248,7 +285,6 @@ class TypeSafetyChecker:
             parent_type_list = self.cfg.G.nodes[parent]["type_list"]
             parent_type_map = parent_type_list[-1]
             return parent_type_map
-
 
     def type_query(self, register, line):
         #find which node contains the given line number
@@ -308,10 +344,20 @@ class TypeSafetyChecker:
                 return "object"
         """        
         value = src_type[1:]
+        if(value == "bject"):
+            print("value had bject in this method")
+            input("Continue???")
         if(value[0] == "L"):
             return "object"
         else:
-            return value
+            if(value in smali.TYPE_LIST_WIDE):
+                return "64-bit"
+            elif(value in smali.TYPE_LIST_WIDE_REMAINING):
+                return "64-bit-2"
+            elif(value in smali.TYPE_LIST_WORD):
+                return "32-bit"
+            else:
+                return value
 
     def check_parameter_type(self,value):
         '''
@@ -325,25 +371,25 @@ class TypeSafetyChecker:
         '''
         if("[" in value):
             return value
-        elif(value in SmaliAssemblyInstructions.TYPE_LIST_OBJECT_REF):
+        elif(value in smali.TYPE_LIST_OBJECT_REF):
             return "object"
-        elif (value in SmaliAssemblyInstructions.TYPE_LIST_WORD):
+        elif (value in smali.TYPE_LIST_WORD):
             return "32-bit"
-        elif (value in SmaliAssemblyInstructions.TYPE_LIST_WIDE):
+        elif (value in smali.TYPE_LIST_WIDE):
             return "64-bit"
-        elif (value in SmaliAssemblyInstructions.TYPE_LIST_WIDE_REMAINING):
+        elif (value in smali.TYPE_LIST_WIDE_REMAINING):
             return "64-bit-2"
         else:
             return "invalid type"
         
     def check_invoke_type(self, value):
-        if(value in SmaliAssemblyInstructions.TYPE_LIST_OBJECT_REF):
+        if(value in smali.TYPE_LIST_OBJECT_REF):
             return "object"
-        elif (value in SmaliAssemblyInstructions.TYPE_LIST_WORD):
+        elif (value in smali.TYPE_LIST_WORD):
             return "32-bit"
-        elif (value in SmaliAssemblyInstructions.TYPE_LIST_WIDE):
+        elif (value in smali.TYPE_LIST_WIDE):
             return "64-bit"
-        elif (value in SmaliAssemblyInstructions.TYPE_LIST_WIDE_REMAINING):
+        elif (value in smali.TYPE_LIST_WIDE_REMAINING):
             return "64-bit-2"
         else:
             return "invalid type"
@@ -381,6 +427,17 @@ class TypeSafetyChecker:
     def __str__(self):
         return str(self.node_type_list)
 
+    @staticmethod
+    def get_move_instr(type):
+        if type == "32-bit":
+            return smali.MOVE_16
+        elif type == "64-bit":
+            return smali.MOVE_WIDE_16
+        elif type == "object" or type[0] == "[":
+            return smali.MOVE_OBJECT_16
+        else:
+            raise Exception("Invalid type to move", type)
+            
     @staticmethod
     def merge_maps(map_list):
         '''

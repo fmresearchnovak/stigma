@@ -42,7 +42,7 @@ class SmaliClassDef:
         fh.close()
 
         self.class_name = lines[0].split()[-1].strip("\n")
-        #print("Class: " + self.class_name)
+        #print("Class: " + self.class_name + " lines: ", lines)
 
         cur_dest = self.header
         pre_methods = True

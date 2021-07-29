@@ -4,7 +4,7 @@ import SmaliAssemblyInstructions as smali
 import StigmaStringParsingLib
 from TaintStorageHandler import TaintStorageHandler
 import re
-
+NUM_REGISTER = 4 #we grow our .locals by this number
 
 
 # A more complete listing of these sort of things can be found in ./SourcesAndSinks.txt

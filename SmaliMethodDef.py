@@ -152,25 +152,18 @@ class SmaliMethodDef:
         self.is_in_try_block = False
         
         self.num_jumps = 0 # not used except for a sanity check
-
+        self.first_new_free_reg_num = None  #this is the first free reg after we grow the locals number for the method
+        
         self.ORIGINAL_LOCAL_NUMBER_REGS = self.get_locals_directive_num()
         self.reg_number_float = self.ORIGINAL_LOCAL_NUMBER_REGS
-
+        
         self.scd = scd # smali class definition
         
         # should be re-factored with get_signature() method below
         self.signature = SmaliMethodSignature(self.raw_text[0])
         self.instrumented_code = [] #this is a list containing new instrumented code
+        self.moves_after = []
 
-        #create the control flow graph for the method text and pass it to the type safety checker
-        #this will check and track types of each register on each line 
-        #self.cfg = ControlFlowGraph(text)
-
-        #initialize the type checker as a instance variable for each method. 
-        #this will check and track types of each register on each line 
-        #print("Running Smali Method Def on: " + str(self.signature) + " in " + str(scd))
-        self.cfg = ControlFlowGraph(text)
-        self.tsc = TypeSafetyChecker(self.signature, self.cfg) 
             
     def grow_locals(self, n):
         # grows the .locals from the current value such that there are
@@ -199,9 +192,9 @@ class SmaliMethodDef:
         old_locals_num = self.get_locals_directive_num()
         
         # determine the names of the new registers (to return later)
-        first_new_free_reg_num = old_locals_num + self.signature.num_of_parameter_registers
+        self.first_new_free_reg_num = old_locals_num + self.signature.num_of_parameter_registers
         new_regs = []
-        for num in range(first_new_free_reg_num, first_new_free_reg_num+n):
+        for num in range(self.first_new_free_reg_num, self.first_new_free_reg_num+n):
             new_regs.append("v" + str(num))
         
         #orig_locals_num = old_locals_num
@@ -260,9 +253,14 @@ class SmaliMethodDef:
         #    old_locals_num+=1
 
         block = block + Instrumenter.make_comment_block("")
-
-        # this should maybe be refactored to use extends / append
-        # into the "new_instrumented_code" list
+        
+        # we converted the SMALI ASSEMBLY INSTRUCTION OBJECT to the string for each line in the block
+        # so we donot ignore those lines while instrumenting
+        # we need to instrument on these new moves added, because the tags also move from orignal p0 to the new p0 location
+        # the while loop in the control flow graph assumes that all the lines in the input text are a string , otherwise it would crash while parsing
+        for i in range(len(block)):
+            block[i] = str(block[i])
+        
         insert_idx = self.find_first_valid_instruction()
         self.embed_block(insert_idx, block)
         
@@ -486,15 +484,30 @@ class SmaliMethodDef:
         # print("\n\n")
                 
     def instrument(self):        
+        
+        #print("Instrumenting Method: ", str(self.signature), " in file: ", self.scd.file_name)
+        #create the control flow graph for the method text and pass it to the type safety checker
+        #this will check and track types of each register on each line 
+        #self.cfg = ControlFlowGraph(text)
+
+        #initialize the type checker as a instance variable for each method. 
+        #this will check and track types of each register on each line 
+        #print("Running Smali Method Def on: " + str(self.signature) + " in " + str(scd))
+        # these are the newly freed registers at the top
+        free_regs = self.grow_locals(Instrumenter.NUM_REGISTER)
+        self.cfg = ControlFlowGraph(self.raw_text)
+        self.tsc = TypeSafetyChecker(self.signature, self.cfg) 
+        
         #incase the graph is empty, we dont instrument
         if(len(self.cfg.G)) == 1:
             return     
         
-        # these are the newly freed registers at the top
-        free_regs = self.grow_locals(3)
-        
-        #start walking the graph at node 1 and go in ascending order
+        # start walking the graph at node 1 and go in ascending order
+        # this counter starts at 1, becuase when we initialize the type safety checker we already updated the types of the signautre line so we dont do it again
+        # as the signature line never shows up in our walk of the graph, we add it to our new instrumented code here
         counter = 1
+        self.instrumented_code.append(self.raw_text[0])
+        
         while(self.cfg.nodes_left_to_visit()):
             
             #if the cur_nodes is not empty process the smallest node
@@ -513,10 +526,9 @@ class SmaliMethodDef:
                 #call type_update on each line of code inside the node. 
                 for index in range(len(node["text"])):
                     line = node["text"][index]
-                    if(self.is_relevant(line, node)):
-                        self._do_instrumentation_plugins(free_regs, node, line, index)
                     self.tsc.type_update(line, index, node_counter)
-                    node["type_list"] = self.tsc.node_type_list
+                    node["type_list"] = self.tsc.node_type_list                
+                    self._do_instrumentation_plugins(free_regs, node, line, index)
 
                 #assign the register type list to this current node after its processed processed
                 # node["type_list"] = self.tsc.node_type_list
@@ -526,8 +538,14 @@ class SmaliMethodDef:
             else:
                 #if current node is visited, increment the counter, get the next node
                 counter+=1   
-                              
-                               
+
+    
+        # assign the newly instrumented code to the orignal raw text of the method, 
+        # and add the tail from teh cfg, which contains the ending lines of the method
+        # such as the .end method and the pswitch data and the sswitch data. 
+        self.raw_text = self.instrumented_code
+        self.raw_text.extend(self.cfg.tail)
+                   
     def gen_list_of_safe_registers(self, free_regs, node, idx, goal_size):
         # "safe" registers are 
         #  (a) low numbered (less than v16)
@@ -539,10 +557,19 @@ class SmaliMethodDef:
         # for the number of registers return
         # it will stop early if possible and it will
         # throw an exception if goal_size cannot be reached
-                
-        # generate a list of available registers
+        
+        #empty the move lists
+        self.moves_before = []
+        self.moves_after = []
+
+        # generate a list of available registers        
         safe_regs = set()
         
+        if "type_list" not in node:
+            print(node)
+            self.cfg.show()
+        
+        line_type_map = node["type_list"][idx-1]
         # 1) Try to use the top registers available after growing
         for r in free_regs:
             n = int(r[1:])
@@ -559,7 +586,7 @@ class SmaliMethodDef:
             # each node has a list of hashmaps (typelist)
             # each hashmap in the list corresponds to a line from the original
             # program.
-            if(reg not in node["type_list"][idx-1]):
+            if(reg not in line_type_map):
                 safe_regs.add(reg)
         
         #get the registers being used in the current line
@@ -568,17 +595,35 @@ class SmaliMethodDef:
         if(len(safe_regs) >= goal_size):
             return list(safe_regs)
         
-        raise Exception("Unable to get enough safe registers", safe_regs)
+        
+        dest_reg = self.first_new_free_reg_num
+        for i in range(goal_size-len(safe_regs)):
+            for reg in line_type_map:
+                # reg not in cur_line_reg 
+                # it looks like that we can use the registers from the current line being processed, however there is a BIG UNSURE
+                if reg not in safe_regs and line_type_map[reg] != '?' and line_type_map[reg] != '64-bit-2':
+                    move_instr = TypeSafetyChecker.get_move_instr(line_type_map[reg])
+                    self.moves_before.append(move_instr(dest_reg,reg))
+                    self.moves_after.append(move_instr(reg, dest_reg))
+                    safe_regs.add(reg)
+        
+        return list(safe_regs)                    
         
     def _do_instrumentation_plugins(self, free_regs, node, line, idx):
         # extract opcode
         # get the relevant instrumentation method from the instrumentation_map and call it
         # print("calling _do_instrumentation_plugins on line: ", line)
         opcode = StigmaStringParsingLib.extract_opcode(line)
-        if opcode in Instrumenter.instrumentation_map:
+        if self.is_relevant(line, node) and opcode in Instrumenter.instrumentation_map:
             instrumentation_method = Instrumenter.instrumentation_map[opcode]
-            regs = self.gen_list_of_safe_registers(free_regs, node, idx, 3)
-            new_block = instrumentation_method(self.scd, self, node, idx, regs)
+            
+            regs = self.gen_list_of_safe_registers(free_regs, node, idx, Instrumenter.NUM_REGISTER)
+            
+            #if we are unable to get enough free registers, worse case possible if all the types are ?
+            if(len(regs) < Instrumenter.NUM_REGISTER):
+                new_block = []
+            else:
+                new_block = instrumentation_method(self.scd, self, node, idx, regs)
         
             #invoke foo()
             #move-result vx
@@ -587,12 +632,19 @@ class SmaliMethodDef:
             #instrumented code and then add the new block, otherwise we add the block and then the current line. 
             if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, line) is not None):
                 self.instrumented_code.append(line)
+                self.instrumented_code.extend(self.moves_before)
                 self.instrumented_code.extend(new_block)
+                self.instrumented_code.extend(self.moves_after)
+
             else:
-                self.instrumented_code.extend(new_block)   
+                self.instrumented_code.extend(self.moves_before)
+                self.instrumented_code.extend(new_block)
+                self.instrumented_code.extend(self.moves_after)
                 self.instrumented_code.append(line)
                 
-
+        else:
+            self.instrumented_code.append(line)
+            
     def is_relevant(self, line, node):
         # only do instrumentation if the length of the method is
         # not too long.  This is specifically in place to avoid
@@ -1082,7 +1134,19 @@ def tests():
     print("ALL SmaliMethodDef TESTS PASSED!")
 
 
-
-
 if __name__ == "__main__":
     tests()
+
+
+'''
+Problem:
+    Orignal Instruction:     aget v3, p3, v2
+    Type_map = {'p0': 'object', 'p1': '32-bit', 'p2': '[Ljava/lang/String;', 'p3': '[I'}
+
+    After grow_locals
+    Updated Instruction:     aget v3, v7, v2
+    {'p0': 'object', 'p1': '32-bit', 'p2': '[Ljava/lang/String;', 'p3': '[I', 'v4': 'object', 'v5': '32-bit', 'v6': 'object', 'v7': 'object'}
+
+    The reason type of v7 is "object" is because, when we used our move instruction to move p3 into v7 (move-object/16 v7, p3)
+    Type safety checker assigned an object to v7 where as v7 which was originally p3, had a type of [I
+'''

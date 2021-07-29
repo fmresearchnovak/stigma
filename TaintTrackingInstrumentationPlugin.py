@@ -100,15 +100,8 @@ def APUT_instrumentation(scd, m, line_num):
 def SGET_instrumentation(scd, m, node, line_num, free_reg):
     cur_line = node["text"][line_num]
     
-    # search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_SGET, cur_line)
-    # if search_object is None:
-    #     return 0
-
     # the field being referenced may be in another class
-    # for now, instrument only same class fields
     class_name = re.search(StigmaStringParsingLib.CLASS_NAME, cur_line).group(1)
-    if class_name != scd.class_name:
-        return 0
         
     regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
     
@@ -119,7 +112,7 @@ def SGET_instrumentation(scd, m, node, line_num, free_reg):
     field_base_name = re.search(StigmaStringParsingLib.FIELD_NAME, cur_line).group(1)
     #taint_field_src = scd.create_taint_field(field_base_name)
     
-    taint_field_src = storage_handler.add_taint_location(scd.class_name, "", field_base_name)
+    taint_field_src = storage_handler.add_taint_location(class_name, "", field_base_name)
 
     #taint_field_dest = scd.create_taint_field(m.get_name(), regs[0])
     taint_field_dest = storage_handler.add_taint_location(scd.class_name, m.get_name(), regs[0])
