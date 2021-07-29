@@ -545,6 +545,7 @@ class SmaliMethodDef:
         # such as the .end method and the pswitch data and the sswitch data. 
         self.raw_text = self.instrumented_code
         self.raw_text.extend(self.cfg.tail)
+        
                    
     def gen_list_of_safe_registers(self, free_regs, node, idx, goal_size):
         # "safe" registers are 
@@ -565,9 +566,10 @@ class SmaliMethodDef:
         # generate a list of available registers        
         safe_regs = set()
         
-        if "type_list" not in node:
-            print(node)
-            self.cfg.show()
+        # if "type_list" not in node:
+        #     print("no type list found")
+        #     print(node)
+        #     self.cfg.show()
         
         line_type_map = node["type_list"][idx-1]
         # 1) Try to use the top registers available after growing
@@ -597,17 +599,26 @@ class SmaliMethodDef:
         
         
         dest_reg = self.first_new_free_reg_num
-        for i in range(goal_size-len(safe_regs)):
-            for reg in line_type_map:
-                # reg not in cur_line_reg 
-                # it looks like that we can use the registers from the current line being processed, however there is a BIG UNSURE
-                if reg not in safe_regs and line_type_map[reg] != '?' and line_type_map[reg] != '64-bit-2':
-                    move_instr = TypeSafetyChecker.get_move_instr(line_type_map[reg])
-                    self.moves_before.append(move_instr(dest_reg,reg))
-                    self.moves_after.append(move_instr(reg, dest_reg))
-                    safe_regs.add(reg)
-        
-        return list(safe_regs)                    
+        # for i in range(goal_size-len(safe_regs)):
+        for reg in line_type_map:
+            # reg not in cur_line_reg 
+            # it looks like that we can use the registers from the current line being processed, however there is a BIG UNSURE
+            if reg not in safe_regs and line_type_map[reg] != '?' and line_type_map[reg] != '64-bit-2' and reg[0] != 'p' and int(reg[1:]) < 16:
+                move_instr = TypeSafetyChecker.get_move_instr(line_type_map[reg])
+                self.moves_before.append(move_instr("v" + str(dest_reg),reg))
+                self.moves_after.append(move_instr(reg, "v" + str(dest_reg)))
+                safe_regs.add(reg)
+                
+                if(line_type_map[reg] == "64-bit"):
+                    dest_reg+=2
+                else:
+                    dest_reg+=1
+            
+            if len(safe_regs) == goal_size:
+                break
+    
+        return list(safe_regs)               
+         
         
     def _do_instrumentation_plugins(self, free_regs, node, line, idx):
         # extract opcode
@@ -644,6 +655,7 @@ class SmaliMethodDef:
                 
         else:
             self.instrumented_code.append(line)
+            
             
     def is_relevant(self, line, node):
         # only do instrumentation if the length of the method is
