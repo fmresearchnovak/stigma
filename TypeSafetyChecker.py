@@ -328,7 +328,7 @@ class TypeSafetyChecker:
         elif(opcode in StigmaStringParsingLib.OBJECT_TYPE_LIST):
             return "object"
         else:
-            raise RuntimeError ("opcode seems to has no type", opcode, )
+            raise RuntimeError ("opcode seems to has no type", opcode)
             
     def check_aget_type(self, src_type):
         """
@@ -424,6 +424,42 @@ class TypeSafetyChecker:
             cur_line = text[start]
         
         return cur_line          
+              
+    def obtain_next_instruction(self, node_counter, start):
+        # I found a situation in the whatsapp.apk which 
+        # has the instruction preceeding a move-result-* instruction
+        # MORE than 2 lines previous
+        #
+        #
+        #...
+        #invoke-interface {v0, v1, v4}, LX/1Fz;->AY5(Lcom/google/android/gms/dynamic/IObjectWrapper;LX/1oP;)[LX/1p7;
+        #
+        #
+        #
+        #.line 486217
+        #
+        #move-result-object v10
+        #
+        #:try_end_2
+        # ...
+        # such a situation means that line_index-2 is not a safe assumption
+        # old code this method replaces: prev_line = self.text[line_index-2]
+        #this method takes in a node counter which is the current node we are looking at, so we can extract the text of that node and look 
+        #for the last valid instruction to return
+        
+        text = self.cfg.G.nodes[node_counter]["text"]
+
+        if(start>=len(text)):
+            return ""
+
+        cur_line = text[start]        
+        # print("text: ", text)
+        
+        while(not StigmaStringParsingLib.is_valid_instruction(cur_line) and start < len(text)):
+            cur_line = text[start]
+            start = start+1
+        
+        return cur_line    
               
     def __str__(self):
         return str(self.node_type_list)

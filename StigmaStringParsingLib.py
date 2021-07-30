@@ -304,18 +304,13 @@ OBJECT_TYPE_LIST = ["move-object", "move-object/from16", "move-object/16",
     "monitor-enter", "check-cast", "new-instance", "new-array", 
     "throw", "aput-object", "aget-object", "iget-object", "iput-object", "sget-object",
     "sput-object", "iput-object-quick", "iget-object-quick"]
-    
-CONVERTER_INSTRUCTION_LIST = ["int-to-long",  "int-to-float", 
- "int-to-double",  "long-to-int",  "long-to-float", "long-to-double",
- "float-to-int",  "float-to-long", "float-to-double",  "double-to-int",
- "double-to-long",  "double-to-float",  "int-to-byte",  "int-to-char",
- "int-to-short"]
+
     
 #"if-eq","if-ne" ,"if-lt" ,"if-ge" ,"if-gt" ,"if-le" ,"if-eqz" ,"if-nez" ,"if-ltz" ,"if-gez" ,"if-gtz ","if-lez" , removed these for now
 #"return" ,"return-wide", "return-object", "return-void", 
 NON_RELEVANT_INSTRUCTION_LIST = ["nop","monitor-enter" , "monitor-exit", "check-cast", "throw" ,"goto" , "goto/16", "goto/32" , "packed-switch", 
  "sparse-switch", "neg-int","not-int" ,"neg-long" ,"not-long" ,"neg-float" ,"neg-double" ,"execute-inline" ,"invoke-virtual" ,"invoke-super","invoke-direct" ,
- "invoke-static","invoke-interface","invoke-interface-range","invoke-static/range","invoke-direct/range","invoke-virtual/range",
+ "invoke-static","invoke-interface","invoke-interface/range","invoke-static/range","invoke-direct/range","invoke-virtual/range",
  "invoke-super/range","invoke-direct-empty","invoke-virtual-quick","invoke-virtual-quick/range","invoke-super-quick",
  "invoke-super-quick/range","invoke-direct-empty", "fill-array-data", "filled-new-array", "filled-new-array-range",
  ".local", ".param", ".line", "aput", "aput-wide",  "aput-object", "aput-boolean", "aput-byte",

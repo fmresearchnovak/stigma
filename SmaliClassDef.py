@@ -43,6 +43,11 @@ class SmaliClassDef:
 
         self.class_name = lines[0].split()[-1].strip("\n")
         #print("Class: " + self.class_name + " lines: ", lines)
+        
+
+            # for line in lines:
+            #     print(line)
+            
 
         cur_dest = self.header
         pre_methods = True
@@ -88,6 +93,15 @@ class SmaliClassDef:
             #
             # print("idx: " + str(idx))
             idx = idx + 1
+            
+            
+            
+        if("Main.smali" in self.file_name):
+            print(self.class_name)
+            print(self.file_name)
+            
+            self.write_to_file("/Users/saadmahboob/Desktop/Main.smali")
+        
 
 
     @staticmethod

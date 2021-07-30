@@ -384,6 +384,7 @@ class SmaliMethodDef:
         else:
             return 0
 
+
     def get_num_registers(self):
         # the total number of registers used by this function
         ans = self.get_locals_directive_num() + self.signature.num_of_parameter_registers
@@ -416,8 +417,7 @@ class SmaliMethodDef:
                 count = count + 1
         return count
 
-
-        
+    
     def get_signature(self):
         return str(self.signature)
 
@@ -440,6 +440,7 @@ class SmaliMethodDef:
             raise Exception("too many jumps")
         return res
         
+        
     def write_to_file(self, filename):
         fh = open(filename, "w")
         
@@ -451,11 +452,14 @@ class SmaliMethodDef:
 
         fh.close()
         
+        
     def embed_line(self, position, line):
         self.raw_text.insert(position, line)
 
+
     def embed_block_with_replace(self, position, block):
         self.raw_text = self.raw_text[:position] + block + self.raw_text[position + 1:]
+
 
     def embed_block(self, position, block):
         # put the code in this block just before the position
@@ -473,6 +477,7 @@ class SmaliMethodDef:
         # for i in range(position-5, position+len(block) + 5):
         # print(self.raw_text[i], end="")
         # print("\n\n")
+
                 
     def instrument(self):        
         
@@ -537,6 +542,11 @@ class SmaliMethodDef:
         self.raw_text = self.instrumented_code
         self.raw_text.extend(self.cfg.tail)
         
+        
+        # for line in self.raw_text:
+        #     print(line)
+        # input("?")
+        
                    
     def gen_list_of_safe_registers(self, free_regs, node, idx, goal_size):
         # "safe" registers are 
@@ -572,6 +582,17 @@ class SmaliMethodDef:
                 
         if(len(safe_regs) >= goal_size):
             return list(safe_regs)
+        
+        #get the registers being used in the current line
+        line = node["text"][idx]
+        cur_line_reg = set(StigmaStringParsingLib.get_v_and_p_numbers(line))
+        
+        #if the instruction is a move-result, we cannot use the registers from the preceding invoke line
+        #in our safe registers list
+        if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, line) is not None):
+            prev_line = self.tsc.obtain_previous_instruction(node["node_counter"], idx-1)
+            prev_line_reg = set(StigmaStringParsingLib.get_v_and_p_numbers(prev_line))
+            cur_line_reg = cur_line_reg.union(prev_line_reg)
     
         # 2) Try to use the regiters not yet used uptil now in this method according to tsc
         for i in range(16):
@@ -581,20 +602,17 @@ class SmaliMethodDef:
             # program.
             if(reg not in line_type_map):
                 safe_regs.add(reg)
-        
-        #get the registers being used in the current line
-        cur_line_reg = set(StigmaStringParsingLib.get_v_and_p_numbers(node["text"][idx]))
+    
         safe_regs.difference_update(cur_line_reg)
         if(len(safe_regs) >= goal_size):
             return list(safe_regs)
         
-        
+        #3) implement moves to free up lower numbered registers if possible
         dest_reg = self.first_new_free_reg_num
-        # for i in range(goal_size-len(safe_regs)):
         for reg in line_type_map:
             # reg not in cur_line_reg 
             # it looks like that we can use the registers from the current line being processed, however there is a BIG UNSURE
-            if reg not in safe_regs and line_type_map[reg] != '?' and line_type_map[reg] != '64-bit-2' and reg[0] != 'p' and int(reg[1:]) < 16:
+            if reg not in safe_regs and line_type_map[reg] != '?' and line_type_map[reg] != '64-bit-2' and reg[0] != 'p' and int(reg[1:]) < 16 and reg not in cur_line_reg:
                 move_instr = TypeSafetyChecker.get_move_instr(line_type_map[reg])
                 self.moves_before.append(move_instr("v" + str(dest_reg),reg))
                 self.moves_after.append(move_instr(reg, "v" + str(dest_reg)))
@@ -615,9 +633,16 @@ class SmaliMethodDef:
         # extract opcode
         # get the relevant instrumentation method from the instrumentation_map and call it
         # print("calling _do_instrumentation_plugins on line: ", line)
+        
         opcode = StigmaStringParsingLib.extract_opcode(line)
         if self.is_relevant(line, node) and opcode in Instrumenter.instrumentation_map:
-            instrumentation_method = Instrumenter.instrumentation_map[opcode]
+            instrumentation_method = Instrumenter.instrumentation_map[opcode][0]
+            insert_original_lines_after = Instrumenter.instrumentation_map[opcode][1]
+            
+            if(re.search(StigmaStringParsingLib.BEGINS_WITH_INVOKE, line) is not None or re.search(StigmaStringParsingLib.BEGINS_WITH_FILLED_NEW_ARRAY, line) is not None):
+                next_line = self.tsc.obtain_next_instruction(node["node_counter"], idx+1)
+                if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, next_line) is not None):
+                    line = [line,next_line]
             
             regs = self.gen_list_of_safe_registers(free_regs, node, idx, Instrumenter.NUM_REGISTER)
             
@@ -625,24 +650,30 @@ class SmaliMethodDef:
             if(len(regs) < Instrumenter.NUM_REGISTER):
                 new_block = []
             else:
-                new_block = instrumentation_method(self.scd, self, node, idx, regs)
+                new_block = instrumentation_method(self.scd, self, line, regs)
         
             #invoke foo()
             #move-result vx
             #for such a line which contains a move result, we cannot put the new block of code between the 
-            #move-result and the invoke as it would case a java verifier error, so in this case we need to append the move-result line first into our new 
-            #instrumented code and then add the new block, otherwise we add the block and then the current line. 
-            if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, line) is not None):
-                self.instrumented_code.append(line)
+            #move-result and the invoke as it would case a java verifier error, so in for this case, the instrumenter for move result
+            #returns the new block with the orignal line inerted at the correct spot, so we donot need to append the line again
+            #there are three cases for the invokes, preceding the move-result
+                #1)Sources (getLastKnownLocation, IMEI etc) -> new code comes before/after the original line
+                #2)Internal Functions, -> new code comes before and after the original lines (invoke,move-result)
+                #3)External Functions, -> new code comes before/after the original line
+            #Note: No valid code can come in between an invoke and a move result
+            if(insert_original_lines_after):
                 self.instrumented_code.extend(self.moves_before)
                 self.instrumented_code.extend(new_block)
                 self.instrumented_code.extend(self.moves_after)
-
+                if(isinstance(line,list)):
+                    self.instrumented_code.extend(line)
+                else:
+                    self.instrumented_code.append(line)
             else:
                 self.instrumented_code.extend(self.moves_before)
                 self.instrumented_code.extend(new_block)
                 self.instrumented_code.extend(self.moves_after)
-                self.instrumented_code.append(line)
                 
         else:
             self.instrumented_code.append(line)
@@ -760,7 +791,6 @@ class SmaliMethodDef:
                 return (reg_name, reg_name_adjoining)
 
     
-
     '''
     @staticmethod
     def _append_move_instr_frl(block, reg_pool, to_reg_name, from_reg_name):
@@ -969,8 +999,10 @@ class SmaliMethodDef:
     def __repr__(self):
         return self.get_signature()
 
+
     def __str__(self):
         return self.get_signature()
+
 
     def __eq__(self, other):
         if isinstance(other, str):
