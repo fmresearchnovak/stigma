@@ -24,12 +24,15 @@ Stigma has many limitations.  It can only track very limited sources of sensitiv
 * Linux or MacOS environment.  Code might be compatible on Windows as well, but is untested.
 * python3
 * apktool (available in Ubuntu repository and here: https://ibotpeaches.github.io/Apktool/)
-* networkx (available here: https://github.com/networkx/networkx) version 2.5.1
+* networkx version 2.5.1 (we recommend installing via pip3; see below).  networkx source code is available here: https://github.com/networkx/networkx)
+* matplotlib version 3.1.2 (available in Ubuntu repository under python3-matplotlib).  https://matplotlib.org/
 * openjdk-11-jdk
   * keytool (provided by above Ubuntu package)
   * jarsigner (provided by above Ubuntu package)
 * adb (available in Ubuntu repository and here: https://www.lifewire.com/android-debug-bridge-adb-4149410)
   * official adb documentation: https://developer.android.com/studio/command-line/adb
+  * Tested with Android Debug Bridge version 1.0.41 (Version 30.0.4-6686687)
+
 * aapt (available in Ubuntu repository)
 
 
