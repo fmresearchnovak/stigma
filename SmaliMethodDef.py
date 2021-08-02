@@ -518,6 +518,10 @@ class SmaliMethodDef:
                 #     neighbor_node = self.cfg[neighbor]
                 #     if neighbor_node["visited"] == False:
                 #         cur_nodes.append(neighbor_node)
+
+                #print("\n\nNODE")
+                #for line in node["text"]:
+                #    print(line)
                 
                 #call type_update on each line of code inside the node. 
                 for index in range(len(node["text"])):

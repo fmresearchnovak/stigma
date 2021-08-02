@@ -238,22 +238,27 @@ class TypeSafetyChecker:
             
             
             elif(instruction == "aget-object"):
-                src_reg = registers[1]
-                # the node_type_list does not yet have a hashmap
-                # inserted for the current (aget) line.  So, to 
-                # look at the previous line, we have to query line_index-1
-                #src_type = self.type_query(src_reg, line_index-1)
-                
-                src_type = line_type_map_new[src_reg]
-                line_type_map_new[dest_reg] = self.check_aget_type(src_type)
+                # while aget and aget-boolean and others are explicit
+                # about their type, 'aget-object' may be operating on an array
+                # that is N-dimenstional.  e.g.,  [[[Landroid/blah/MyClass;
 
-            
+                # aget-object vx, vy, vz
+                # vx is the destination register
+                # vy is the array
+                # vz is the index (and int) into that array
+                src_reg = registers[1] 
+                src_type = line_type_map_new[src_reg]
+                #if(re.search(StigmaStringParsingLib.BEGINS_WITH_TWO_SQUARE_BRACKETS, src_type) is not None):
+                #    print("N-dimenstional array found: " + str(src_type))
+                line_type_map_new[dest_reg] = self.check_aget_object_type(src_type)
+                
+                
             #check-cast vx, type_id
             #Checks whether the object reference in vx can be cast to an instance of a class referenced by type_id. Throws ClassCastException if the cast is not possible, continues execution otherwise.
             elif(instruction == "check-cast"):
                 line_type_map_new[dest_reg] = tokens[-1]
-            
-                                
+                      
+                                                      
             else:
                 line_type_map_new[dest_reg] = self.check_type_list(instruction)
             
@@ -337,20 +342,22 @@ class TypeSafetyChecker:
             return "object"
         else:
             raise RuntimeError ("opcode seems to has no type", opcode)
-            
-    def check_aget_type(self, src_type):
+
+
+    def check_aget_object_type(self, src_type):
         """
-        This method handles the special case for checking types of array
-        it takes in the type of the source register from the aget instruction
-        and removes the first character to check the type
+        The special case for checking types of array with an aget-object instruction
+        Algorithm: remove the first character to check the type
         e.g
             1)
-                src_type: [I
-                return "I"
+                src_type: [[I
+                return "[I"
             2)
                 src_type: [Ljava/lang/String
                 return "object"
-        """        
+                
+            3) src_type= '?'
+        """      
         if(src_type == '?'):
             return '?'
         
@@ -369,11 +376,17 @@ class TypeSafetyChecker:
             if(value in smali.TYPE_LIST_WIDE):
                 return "64-bit"
             elif(value in smali.TYPE_LIST_WIDE_REMAINING):
+                # note: this should never happen!
                 return "64-bit-2"
             elif(value in smali.TYPE_LIST_WORD):
                 return "32-bit"
             else:
+                # scenario one
                 return value
+
+
+
+
 
     def check_parameter_type(self,value):
         '''

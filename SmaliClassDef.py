@@ -84,7 +84,6 @@ class SmaliClassDef:
             # print("idx: " + str(idx))
             idx = idx + 1
 
-
     @staticmethod
     def is_function(line):
         # check this line is a method (begins with "invoke-*")
