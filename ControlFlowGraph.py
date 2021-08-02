@@ -222,16 +222,29 @@ class ControlFlowGraph:
 
     @staticmethod
     def is_not_branching(line):
-        if ((re.search(StigmaStringParsingLib.BEGINS_WITH_IF, line) is not None) or 
-           (re.search(StigmaStringParsingLib.BEGINS_WITH_CMP, line) is not None) or 
-           (re.search(StigmaStringParsingLib.BEGINS_WITH_GOTO, line) is not None) or 
-           (re.search(StigmaStringParsingLib.BEGINS_WITH_PACKED_SWITCH, line) is not None) or
-           (re.search(StigmaStringParsingLib.BEGINS_WITH_SPARSE_SWITCH, line) is not None) or
-           (re.search(StigmaStringParsingLib.BEGINS_WITH_RETURN, line) is not None) or
-           (re.search(StigmaStringParsingLib.BEGINS_WITH_COLON, line) is not None)): # begins with colon indicates a label
+        if (re.search(StigmaStringParsingLib.BEGINS_WITH_IF, line) is not None):
             return False
-        else:
-            return True
+            
+        if (re.search(StigmaStringParsingLib.BEGINS_WITH_CMP, line) is not None):
+            return False
+
+        if (re.search(StigmaStringParsingLib.BEGINS_WITH_COLON, line) is not None): # begins with colon indicates a label
+            return False
+            
+        if (re.search(StigmaStringParsingLib.BEGINS_WITH_RETURN, line) is not None):
+            return False
+            
+        if (re.search(StigmaStringParsingLib.BEGINS_WITH_GOTO, line) is not None):
+            return False
+        
+        if (re.search(StigmaStringParsingLib.BEGINS_WITH_PACKED_SWITCH, line) is not None):
+            return False
+            
+        if (re.search(StigmaStringParsingLib.BEGINS_WITH_SPARSE_SWITCH, line) is not None):
+            return False
+            
+
+        return True
 
 
     @staticmethod
