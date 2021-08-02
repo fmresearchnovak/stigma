@@ -509,7 +509,7 @@ class SmaliMethodDef:
             #if the cur_nodes is not empty process the smallest node
             node = self.cfg[counter]
             node_counter = node["node_counter"]
-
+            
             if(not node["visited"]):
                 node["visited"] = True 
                 #get neighbors of current node and store for breadth first search
@@ -523,7 +523,7 @@ class SmaliMethodDef:
                 for index in range(len(node["text"])):
                     line = node["text"][index]
                     self.tsc.type_update(line, index, node_counter)
-                    node["type_list"] = self.tsc.node_type_list                
+                    node["type_list"] = self.tsc.node_type_list                                            
                     self._do_instrumentation_plugins(free_regs, node, line, index)
 
                 #assign the register type list to this current node after its processed processed
@@ -637,7 +637,7 @@ class SmaliMethodDef:
         opcode = StigmaStringParsingLib.extract_opcode(line)
         if self.is_relevant(line, node) and opcode in Instrumenter.instrumentation_map:
             instrumentation_method = Instrumenter.instrumentation_map[opcode][0]
-            insert_original_lines_after = Instrumenter.instrumentation_map[opcode][1]
+            instrumeter_inserts_original_lines = Instrumenter.instrumentation_map[opcode][1]
             
             if(re.search(StigmaStringParsingLib.BEGINS_WITH_INVOKE, line) is not None or re.search(StigmaStringParsingLib.BEGINS_WITH_FILLED_NEW_ARRAY, line) is not None):
                 next_line = self.tsc.obtain_next_instruction(node["node_counter"], idx+1)
@@ -662,7 +662,7 @@ class SmaliMethodDef:
                 #2)Internal Functions, -> new code comes before and after the original lines (invoke,move-result)
                 #3)External Functions, -> new code comes before/after the original line
             #Note: No valid code can come in between an invoke and a move result
-            if(insert_original_lines_after):
+            if(not instrumeter_inserts_original_lines):
                 self.instrumented_code.extend(self.moves_before)
                 self.instrumented_code.extend(new_block)
                 self.instrumented_code.extend(self.moves_after)

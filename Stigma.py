@@ -133,6 +133,8 @@ def runStigma():
         scd_hashmap[scd.class_name] = scd
         comparison_instruction_count = comparison_instruction_count + scd.get_num_comparison_instructions()    
     
+    print("Parsing finished in %.1f seconds" % (time.time() - start_time2))
+    
     fh = open(analytics_path, "w")
     fh.write("Number of Comparisons: " + str(comparison_instruction_count) + "\n")
     fh.close()

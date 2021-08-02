@@ -16,14 +16,14 @@ instrumentation_map = {}
 storage_handler = TaintStorageHandler.get_instance()
 
 
-def sign_up(opcode, new_method, insert_original_lines_after = True):
+def sign_up(opcode, new_method, instrumeter_inserts_original_lines = False):
 
     # Needs to also check num args of new method but I don't know how
     # to do that in python (reflection)
     # this is _ideally_ to allow a sort of "plugin" system where
     # other developers could add instrumentation
     if opcode not in instrumentation_map:
-        instrumentation_map[opcode] = (new_method, insert_original_lines_after)
+        instrumentation_map[opcode] = (new_method, instrumeter_inserts_original_lines)
     else:
         raise Exception(str(opcode) + " is already registered for:" + str(instrumentation_map[opcode]))
 

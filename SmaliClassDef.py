@@ -14,11 +14,6 @@ class SmaliClassDef:
     # self.class_name: extracted from the first line of the smali file
     #       example: Lcom/google/android/material/animation/AnimationUtils;
 
-    @staticmethod
-    def is_function(line):
-        # check this line is a method (begins with "invoke-*")
-        match_object = re.match(StigmaStringParsingLib.REGEX_BEGINS_WITH_INVOKE, line)
-        return match_object is not None
 
     def __init__(self, file_name):
         # These are just lists of strings
@@ -42,12 +37,7 @@ class SmaliClassDef:
         fh.close()
 
         self.class_name = lines[0].split()[-1].strip("\n")
-        #print("Class: " + self.class_name + " lines: ", lines)
-        
 
-            # for line in lines:
-            #     print(line)
-            
 
         cur_dest = self.header
         pre_methods = True
@@ -93,17 +83,14 @@ class SmaliClassDef:
             #
             # print("idx: " + str(idx))
             idx = idx + 1
-            
-            
-            
-        if("Main.smali" in self.file_name):
-            print(self.class_name)
-            print(self.file_name)
-            
-            self.write_to_file("/Users/saadmahboob/Desktop/Main.smali")
-        
 
 
+    @staticmethod
+    def is_function(line):
+        # check this line is a method (begins with "invoke-*")
+        match_object = re.match(StigmaStringParsingLib.REGEX_BEGINS_WITH_INVOKE, line)
+        return match_object is not None            
+            
     @staticmethod
     def _get_taint_storage_name_pair(identifier, reg_name):
         # computes the name of a taint_storage field given the
@@ -135,7 +122,6 @@ class SmaliClassDef:
         full_name = ".field public static " + static_f_name + "\n"
 
         return (static_f_name, full_name)
-
 
 
     def create_taint_field(self, identifier, reg_name=""):
@@ -232,6 +218,7 @@ class SmaliClassDef:
 
         fh.close()
         
+        
     def overwrite_to_file(self):
         self.write_to_file(self.file_name)
 
@@ -241,7 +228,6 @@ class SmaliClassDef:
         for m in self.methods:
             total_lines = total_lines + len(m.raw_text)
         return total_lines
-        
         
 
     def verbose(self):
@@ -253,12 +239,14 @@ class SmaliClassDef:
                 print(str(line))
             print("\n")
 
+
     def get_num_comparison_instructions(self):
         count = 0
         for m in self.methods:
             count = count + m.get_num_comparison_instructions()
             #print("count: " + str(count))
         return count
+
 
     def get_num_field_declarations(self):
         return self.get_num_static_fields() + self.get_num_instance_fields()

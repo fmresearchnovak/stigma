@@ -1054,6 +1054,7 @@ def type_safety_checker_aget_test3():
     print("Instrumenting")
     smd.instrument()
 
+
 def type_safety_checker_aget2_test():
     method_text = '''.method private static diffPartial(Landroid/support/v7/util/DiffUtil$Callback;IIII[I[II)Landroid/support/v7/util/DiffUtil$Snake;
     .locals 18
@@ -1615,6 +1616,581 @@ def type_safety_checker_aget2_test():
     smd.instrument()
 
 
+def type_safety_weather_app_test():
+    method_text = '''.method public static A08(Ljava/util/Vector;)I
+    .locals 13
+    .annotation system Ldalvik/annotation/Signature;
+        value = {
+            "(",
+            "Ljava/util/Vector<",
+            "Landroid/graphics/Rect;",
+            ">;)I"
+        }
+    .end annotation
+
+    .line 48854
+    .local v9, "rectangles":Ljava/util/Vector;, "Ljava/util/Vector<Landroid/graphics/Rect;>;"
+    invoke-virtual {p0}, Ljava/util/Vector;->size()I
+
+    move-result v8
+
+    .line 48855
+    .local p0, "size":I
+    mul-int/lit8 v0, v8, 0x2
+
+    new-array v7, v0, [I
+
+    .line 48856
+    .local v8, "x":[I
+    mul-int/lit8 v0, v8, 0x2
+
+    new-array v6, v0, [I
+
+    .line 48857
+    .local v0, "y":[I
+    mul-int/lit8 v1, v8, 0x2
+
+    mul-int/lit8 v0, v8, 0x2
+
+    filled-new-array {v1, v0}, [I
+
+    move-result-object v1
+
+    const-class v0, Z
+
+    invoke-static {v0, v1}, Ljava/lang/reflect/Array;->newInstance(Ljava/lang/Class;[I)Ljava/lang/Object;
+
+    move-result-object v5
+
+    check-cast v5, [[Z
+
+    .line 48858
+    .local v7, "isCovered":[[Z
+    const/4 v2, 0x0
+
+    .line 48859
+    .local v0, "xPos":I
+    const/4 v1, 0x0
+
+    .line 48860
+    .local v6, "yPos":I
+    const/4 v10, 0x0
+
+    .local v1, "i":I
+    :goto_0
+    if-ge v10, v8, :cond_0
+
+    .line 48861
+    invoke-virtual {p0, v10}, Ljava/util/Vector;->elementAt(I)Ljava/lang/Object;
+
+    move-result-object v9
+
+    check-cast v9, Landroid/graphics/Rect;
+
+    .line 48862
+    .local v0, "r":Landroid/graphics/Rect;
+    add-int/lit8 v4, v2, 0x1
+
+    .end local v0    # "r":Landroid/graphics/Rect;
+    .local v1, "xPos":I
+    iget v0, v9, Landroid/graphics/Rect;->left:I
+
+    aput v0, v7, v2
+
+    .line 48863
+    add-int/lit8 v3, v1, 0x1
+
+    .end local v6    # "yPos":I
+    .local v0, "yPos":I
+    iget v0, v9, Landroid/graphics/Rect;->bottom:I
+
+    aput v0, v6, v1
+
+    .line 48864
+    add-int/lit8 v2, v4, 0x1
+
+    .end local v1    # "xPos":I
+    .local v6, "xPos":I
+    iget v0, v9, Landroid/graphics/Rect;->right:I
+
+    aput v0, v7, v4
+
+    .line 48865
+    add-int/lit8 v1, v3, 0x1
+
+    .end local v0    # "yPos":I
+    .local v1, "yPos":I
+    iget v0, v9, Landroid/graphics/Rect;->top:I
+
+    aput v0, v6, v3
+
+    .line 48866
+    .end local v0
+    add-int/lit8 v10, v10, 0x1
+
+    goto :goto_0
+
+    .line 48867
+    .end local v1    # "yPos":I
+    .end local v1
+    .local v0, "xPos":I
+    .local v6, "yPos":I
+    :cond_0
+    invoke-static {v7}, Ljava/util/Arrays;->sort([I)V
+
+    .line 48868
+    invoke-static {v6}, Ljava/util/Arrays;->sort([I)V
+
+    .line 48869
+    const/4 v10, 0x0
+
+    .restart local v1    # "yPos":I
+    :goto_1
+    if-ge v10, v8, :cond_4
+
+    .line 48870
+    invoke-virtual {p0, v10}, Ljava/util/Vector;->elementAt(I)Ljava/lang/Object;
+
+    move-result-object v1
+
+    check-cast v1, Landroid/graphics/Rect;
+
+    .line 48871
+    .restart local v0    # "xPos":I
+    iget v0, v1, Landroid/graphics/Rect;->left:I
+
+    invoke-static {v7, v0}, Lcom/facebook/ads/redexgen/X/QE;->A09([II)I
+
+    move-result v12
+
+    .line 48872
+    .local v1, "leftEdgeIndex":I
+    iget v0, v1, Landroid/graphics/Rect;->right:I
+
+    invoke-static {v7, v0}, Lcom/facebook/ads/redexgen/X/QE;->A09([II)I
+
+    move-result v9
+
+    .line 48873
+    .local v0, "rightEdgeIndex":I
+    iget v0, v1, Landroid/graphics/Rect;->top:I
+
+    invoke-static {v6, v0}, Lcom/facebook/ads/redexgen/X/QE;->A09([II)I
+
+    move-result v11
+
+    .line 48874
+    .local v5, "topEdgeIndex":I
+    iget v3, v1, Landroid/graphics/Rect;->bottom:I
+
+    sget-object v1, Lcom/facebook/ads/redexgen/X/QE;->A0H:[Ljava/lang/String;
+
+    const/4 v0, 0x0
+
+    aget-object v1, v1, v0
+
+    const/16 v0, 0x18
+
+    invoke-virtual {v1, v0}, Ljava/lang/String;->charAt(I)C
+
+    move-result v1
+
+    const/16 v0, 0x65
+
+    if-eq v1, v0, :cond_1
+
+    new-instance v0, Ljava/lang/RuntimeException;
+
+    invoke-direct {v0}, Ljava/lang/RuntimeException;-><init>()V
+
+    throw v0
+
+    :cond_1
+    sget-object v2, Lcom/facebook/ads/redexgen/X/QE;->A0H:[Ljava/lang/String;
+
+    const-string v1, "OkBp9M6GoSG"
+
+    const/4 v0, 0x5
+
+    aput-object v1, v2, v0
+
+    invoke-static {v6, v3}, Lcom/facebook/ads/redexgen/X/QE;->A09([II)I
+
+    move-result v4
+
+    .line 48875
+    .local v5, "bottomEdgeIndex":I
+    add-int/lit8 v3, v12, 0x1
+
+    .local v2, "m":I
+    :goto_2
+    if-gt v3, v9, :cond_3
+
+    .line 48876
+    add-int/lit8 v2, v11, 0x1
+
+    .local v1, "n":I
+    :goto_3
+    if-gt v2, v4, :cond_2
+
+    .line 48877
+    aget-object v1, v5, v3
+
+    const/4 v0, 0x1
+
+    aput-boolean v0, v1, v2
+
+    .line 48878
+    add-int/lit8 v2, v2, 0x1
+
+    goto :goto_3
+
+    .line 48879
+    .end local v1    # "n":I
+    :cond_2
+    add-int/lit8 v3, v3, 0x1
+
+    goto :goto_2
+
+    .line 48880
+    .end local v0    # "rightEdgeIndex":I
+    .end local v1
+    .end local v0
+    .end local v5    # "bottomEdgeIndex":I
+    .end local v5
+    .end local v2    # "m":I
+    :cond_3
+    add-int/lit8 v10, v10, 0x1
+
+    goto :goto_1
+
+    .line 48881
+    .end local v1
+    :cond_4
+    const/4 v10, 0x0
+
+    .line 48882
+    .local v1, "area":I
+    const/4 v4, 0x0
+
+    .local v0, "i":I
+    :goto_4
+    mul-int/lit8 v0, v8, 0x2
+
+    if-ge v4, v0, :cond_9
+
+    .line 48883
+    const/4 v3, 0x0
+
+    .local v1, "j":I
+    :goto_5
+    mul-int/lit8 v9, v8, 0x2
+
+    sget-object v2, Lcom/facebook/ads/redexgen/X/QE;->A0H:[Ljava/lang/String;
+
+    const/4 v0, 0x3
+
+    aget-object v1, v2, v0
+
+    const/4 v0, 0x6
+
+    aget-object v0, v2, v0
+
+    invoke-virtual {v1}, Ljava/lang/String;->length()I
+
+    move-result v1
+
+    invoke-virtual {v0}, Ljava/lang/String;->length()I
+
+    move-result v0
+
+    if-eq v1, v0, :cond_8
+
+    sget-object v2, Lcom/facebook/ads/redexgen/X/QE;->A0H:[Ljava/lang/String;
+
+    const-string v1, "8mdjYFfHzfR"
+
+    const/4 v0, 0x5
+
+    aput-object v1, v2, v0
+
+    if-ge v3, v9, :cond_7
+
+    .line 48884
+    aget-object v0, v5, v4
+
+    aget-boolean v0, v0, v3
+
+    if-eqz v0, :cond_6
+
+    aget v2, v7, v4
+
+    add-int/lit8 v0, v4, -0x1
+
+    aget v0, v7, v0
+
+    sub-int/2addr v2, v0
+
+    aget v1, v6, v3
+
+    add-int/lit8 v0, v3, -0x1
+
+    aget v0, v6, v0
+
+    sub-int/2addr v1, v0
+
+    mul-int/2addr v2, v1
+
+    :goto_6
+    add-int/2addr v10, v2
+
+    sget-object v2, Lcom/facebook/ads/redexgen/X/QE;->A0H:[Ljava/lang/String;
+
+    const/4 v0, 0x3
+
+    aget-object v1, v2, v0
+
+    const/4 v0, 0x6
+
+    aget-object v0, v2, v0
+
+    invoke-virtual {v1}, Ljava/lang/String;->length()I
+
+    move-result v1
+
+    invoke-virtual {v0}, Ljava/lang/String;->length()I
+
+    move-result v0
+
+    if-eq v1, v0, :cond_5
+
+    .line 48885
+    sget-object v2, Lcom/facebook/ads/redexgen/X/QE;->A0H:[Ljava/lang/String;
+
+    const-string v1, "Lo9ucXqSR57"
+
+    const/4 v0, 0x5
+
+    aput-object v1, v2, v0
+
+    add-int/lit8 v3, v3, 0x1
+
+    goto :goto_5
+
+    :cond_5
+    sget-object v2, Lcom/facebook/ads/redexgen/X/QE;->A0H:[Ljava/lang/String;
+
+    const-string v1, "Va2huEuqJLy8G9"
+
+    const/4 v0, 0x3
+
+    aput-object v1, v2, v0
+
+    const-string v1, "xLD3f1Ctst12pSyAioan4nQjy"
+
+    const/4 v0, 0x6
+
+    aput-object v1, v2, v0
+
+    add-int/lit8 v3, v3, 0x0
+
+    goto :goto_5
+
+    .line 48886
+    :cond_6
+    const/4 v2, 0x0
+
+    goto :goto_6
+
+    .line 48887
+    .end local v1    # "j":I
+    :cond_7
+    add-int/lit8 v4, v4, 0x1
+
+    goto :goto_4
+
+    :cond_8
+    new-instance v0, Ljava/lang/RuntimeException;
+
+    invoke-direct {v0}, Ljava/lang/RuntimeException;-><init>()V
+
+    throw v0
+
+    .line 48888
+    .end local v0    # "i":I
+    :cond_9
+    return v10
+    .end method'''
+    
+    method_list = method_text.split("\n")
+    print("Building SMD")
+    smd = SmaliMethodDef.SmaliMethodDef(method_list, None)
+    print("Instrumenting")
+    smd.instrument()
+
+
+def type_safety_weather_app_test2():
+    method_text = '''.method private allocArrays(I)V
+    .locals 5
+
+    const/4 v0, 0x0
+
+    const/4 v1, 0x0
+
+    const/4 v2, 0x1
+
+    const/16 v3, 0x8
+
+    if-ne p1, v3, :cond_1
+
+    .line 161
+    const-class v3, Landroidx/collection/ArraySet;
+
+    monitor-enter v3
+
+    .line 162
+    :try_start_0
+    sget-object v4, Landroidx/collection/ArraySet;->sTwiceBaseCache:[Ljava/lang/Object;
+
+    if-eqz v4, :cond_0
+
+    .line 164
+    iput-object v4, p0, Landroidx/collection/ArraySet;->mArray:[Ljava/lang/Object;
+
+    .line 165
+    aget-object p1, v4, v1
+
+    check-cast p1, [Ljava/lang/Object;
+
+    sput-object p1, Landroidx/collection/ArraySet;->sTwiceBaseCache:[Ljava/lang/Object;
+
+    .line 166
+    aget-object p1, v4, v2
+
+    check-cast p1, [I
+
+    iput-object p1, p0, Landroidx/collection/ArraySet;->mHashes:[I
+
+    .line 167
+    aput-object v0, v4, v2
+
+    aput-object v0, v4, v1
+
+    .line 168
+    sget p1, Landroidx/collection/ArraySet;->sTwiceBaseCacheSize:I
+
+    sub-int/2addr p1, v2
+
+    sput p1, Landroidx/collection/ArraySet;->sTwiceBaseCacheSize:I
+
+    .line 173
+    monitor-exit v3
+
+    return-void
+
+    .line 175
+    :cond_0
+    monitor-exit v3
+
+    goto :goto_0
+
+    :catchall_0
+    move-exception p1
+
+    monitor-exit v3
+    :try_end_0
+    .catchall {:try_start_0 .. :try_end_0} :catchall_0
+
+    throw p1
+
+    :cond_1
+    const/4 v3, 0x4
+
+    if-ne p1, v3, :cond_3
+
+    .line 177
+    const-class v3, Landroidx/collection/ArraySet;
+
+    monitor-enter v3
+
+    .line 178
+    :try_start_1
+    sget-object v4, Landroidx/collection/ArraySet;->sBaseCache:[Ljava/lang/Object;
+
+    if-eqz v4, :cond_2
+
+    .line 180
+    iput-object v4, p0, Landroidx/collection/ArraySet;->mArray:[Ljava/lang/Object;
+
+    .line 181
+    aget-object p1, v4, v1
+
+    check-cast p1, [Ljava/lang/Object;
+
+    sput-object p1, Landroidx/collection/ArraySet;->sBaseCache:[Ljava/lang/Object;
+
+    .line 182
+    aget-object p1, v4, v2
+
+    check-cast p1, [I
+
+    iput-object p1, p0, Landroidx/collection/ArraySet;->mHashes:[I
+
+    .line 183
+    aput-object v0, v4, v2
+
+    aput-object v0, v4, v1
+
+    .line 184
+    sget p1, Landroidx/collection/ArraySet;->sBaseCacheSize:I
+
+    sub-int/2addr p1, v2
+
+    sput p1, Landroidx/collection/ArraySet;->sBaseCacheSize:I
+
+    .line 189
+    monitor-exit v3
+
+    return-void
+
+    .line 191
+    :cond_2
+    monitor-exit v3
+
+    goto :goto_0
+
+    :catchall_1
+    move-exception p1
+
+    monitor-exit v3
+    :try_end_1
+    .catchall {:try_start_1 .. :try_end_1} :catchall_1
+
+    throw p1
+
+    .line 194
+    :cond_3
+    :goto_0
+    new-array v0, p1, [I
+
+    iput-object v0, p0, Landroidx/collection/ArraySet;->mHashes:[I
+
+    .line 195
+    new-array p1, p1, [Ljava/lang/Object;
+
+    iput-object p1, p0, Landroidx/collection/ArraySet;->mArray:[Ljava/lang/Object;
+
+    return-void
+    .end method'''
+    
+    method_list = method_text.split("\n")
+    print("Building SMD")
+    smd = SmaliMethodDef.SmaliMethodDef(method_list, None)
+    print("Instrumenting")
+    smd.instrument()
+
+
+
 def comparison_count_test1():
     global method_text
 
@@ -1753,7 +2329,8 @@ def main():
     
     #type_safety_checker_aget_test()
     #type_safety_checker_aget2_test()
-    type_safety_checker_aget_test3()
+    #type_safety_checker_aget_test3()
+    type_safety_weather_app_test()
 
 
     

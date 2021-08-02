@@ -889,16 +889,16 @@ def main():
     Instrumenter.sign_up("div-double", BINARYOP_instrumenter)
     
     #invoke-
-    Instrumenter.sign_up("invoke-virtual", INVOKE_instrumentation, False)
-    Instrumenter.sign_up("invoke-super", INVOKE_instrumentation, False)
-    Instrumenter.sign_up("invoke-direct", INVOKE_instrumentation, False)
-    Instrumenter.sign_up("invoke-static", INVOKE_instrumentation, False)
-    Instrumenter.sign_up("invoke-interface", INVOKE_instrumentation, False)
-    Instrumenter.sign_up("invoke-virtual/range", INVOKE_instrumentation, False)
-    Instrumenter.sign_up("invoke-super/range", INVOKE_instrumentation, False)
-    Instrumenter.sign_up("invoke-direct/range", INVOKE_instrumentation, False)
-    Instrumenter.sign_up("invoke-static/range", INVOKE_instrumentation, False)
-    Instrumenter.sign_up("invoke-interface/range", INVOKE_instrumentation, False)
+    Instrumenter.sign_up("invoke-virtual", INVOKE_instrumentation, True)
+    Instrumenter.sign_up("invoke-super", INVOKE_instrumentation, True)
+    Instrumenter.sign_up("invoke-direct", INVOKE_instrumentation, True)
+    Instrumenter.sign_up("invoke-static", INVOKE_instrumentation, True)
+    Instrumenter.sign_up("invoke-interface", INVOKE_instrumentation, True)
+    Instrumenter.sign_up("invoke-virtual/range", INVOKE_instrumentation, True)
+    Instrumenter.sign_up("invoke-super/range", INVOKE_instrumentation, True)
+    Instrumenter.sign_up("invoke-direct/range", INVOKE_instrumentation, True)
+    Instrumenter.sign_up("invoke-static/range", INVOKE_instrumentation, True)
+    Instrumenter.sign_up("invoke-interface/range", INVOKE_instrumentation, True)
     
     #convert list
     CONVERTER_INSTRUCTION_LIST = ["int-to-long",  "int-to-float", 

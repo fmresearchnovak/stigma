@@ -215,6 +215,7 @@ class TypeSafetyChecker:
                     instruction_type = prev_line_tokens[-1]
                     line_type_map_new[dest_reg] = instruction_type
                           
+                          
             #if instruction == new-array , get the whole type, including the ['s
             elif(instruction == "new-array"):
                 instruction_type = tokens[-1]
@@ -225,17 +226,18 @@ class TypeSafetyChecker:
                 # iget-object v6, p0, Landroid/support/design/widget/CoordinatorLayout;->mKeylines:[I
                 # aget v7, v6, v5
             #not sure if have to consider aget-object
-            elif(instruction == "iget-object" or instruction == "sget-object" or instruction == "iget-object-quick"):
+            #iput-object can also contain an array, so we need to consider that case also while checking for array
+            elif(instruction == "iget-object" or instruction == "sget-object" or instruction == "iget-object-quick" or instruction == "iput-object"):
                 instruction_type = tokens[-1]
                 idx = instruction_type.find("[")
                 if(idx != -1):
                     reg_type = instruction_type[idx:]
                     line_type_map_new[dest_reg] = reg_type
                 else:
-                    line_type_map_new[dest_reg] = "object"
+                    line_type_map_new[dest_reg] = "object"                
             
             
-            elif(instruction == "aget"):
+            elif(instruction == "aget-object"):
                 src_reg = registers[1]
                 # the node_type_list does not yet have a hashmap
                 # inserted for the current (aget) line.  So, to 
@@ -244,7 +246,13 @@ class TypeSafetyChecker:
                 
                 src_type = line_type_map_new[src_reg]
                 line_type_map_new[dest_reg] = self.check_aget_type(src_type)
-                      
+
+            
+            #check-cast vx, type_id
+            #Checks whether the object reference in vx can be cast to an instance of a class referenced by type_id. Throws ClassCastException if the cast is not possible, continues execution otherwise.
+            elif(instruction == "check-cast"):
+                line_type_map_new[dest_reg] = tokens[-1]
+            
                                 
             else:
                 line_type_map_new[dest_reg] = self.check_type_list(instruction)
@@ -343,10 +351,18 @@ class TypeSafetyChecker:
                 src_type: [Ljava/lang/String
                 return "object"
         """        
+        if(src_type == '?'):
+            return '?'
+        
         value = src_type[1:]
+        
         if(value == "bject"):
+            print("------ERROR IN TYPE SAFETY CHECKCER------")
+            print("src type: ", src_type)
+            print(str(self.signature))
             print("value had bject in this method")
             input("Continue???")
+            
         if(value[0] == "L"):
             return "object"
         else:
@@ -470,7 +486,7 @@ class TypeSafetyChecker:
             return smali.MOVE_16
         elif type == "64-bit":
             return smali.MOVE_WIDE_16
-        elif type == "object" or type[0] == "[":
+        elif type == "object" or type[0] == "[" or type[0] == "L":
             return smali.MOVE_OBJECT_16
         else:
             raise Exception("Invalid type to move", type)
