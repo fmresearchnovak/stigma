@@ -93,14 +93,6 @@ class SmaliClassDef:
             #
             # print("idx: " + str(idx))
             idx = idx + 1
-            
-            
-            
-        if("Main.smali" in self.file_name):
-            print(self.class_name)
-            print(self.file_name)
-            
-            self.write_to_file("/Users/saadmahboob/Desktop/Main.smali")
         
 
 

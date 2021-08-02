@@ -67,6 +67,7 @@ BEGINS_WITH_APUT = r"^\s*aput"
 BEGINS_WITH_ARRAY_LENGTH = r"^\s*array-length"
 BEGINS_WITH_NEW_ARRAY = r"^\s*new-array"
 BEGINS_WITH_FILLED_NEW_ARRAY = r"^\s*filled-new-array"
+BEGINS_WITH_TWO_SQUARE_BRACKETS = r"^\s*\[\["
 
 
 BEGINS_WITH_MOVE = r"^\s*move"
@@ -257,7 +258,7 @@ THIRTY_TWO_BIT_TYPE_LIST = ["move", "move/from16", "move/16", "return",
     "instance-of", "array-length", "packed-switch", "sparse-switch",
     "cmpl-float", "cmpg-float", "if-eq", "if-ne", "if-lt", "if-ge",
     "if-gt", "if-le", "if-eqz", "if-nez", "if-ltz", "if-gez", 
-    "if-gtz", "if-lez", "aget-boolean" , "aget-byte" , "aget-char", 
+    "if-gtz", "if-lez", "aget", "aget-boolean" , "aget-byte" , "aget-char", 
     "aget-short", "aput", "aput-boolean", "aput-byte", "aput-char",
     "aput-short", "iget", "iget-boolean", "iget-byte", "iget-char",
     "iget-short", "iput", "iput-boolean", "iput-byte", "iput-char", 
