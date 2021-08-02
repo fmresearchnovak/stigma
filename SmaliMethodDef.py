@@ -172,8 +172,8 @@ class SmaliMethodDef:
 
 
         #print("Running Smali Method Def on: " + str(self.signature) + " in " + str(scd))
-        self.cfg = ControlFlowGraph(text)
-        self.tsc = TypeSafetyChecker(self.signature, self.cfg) 
+        # self.cfg = ControlFlowGraph(text)
+        # self.tsc = TypeSafetyChecker(self.signature, self.cfg) 
             
 
     def grow_locals(self, n):
@@ -437,6 +437,10 @@ class SmaliMethodDef:
         res = smali.LABEL(self.num_jumps)
         self.num_jumps += 1
         if self.num_jumps > 500:
+            
+            for line in self.instrumented_code:
+                print(line)
+            
             raise Exception("too many jumps")
         return res
         
@@ -494,6 +498,9 @@ class SmaliMethodDef:
         self.cfg = ControlFlowGraph(self.raw_text)
         self.tsc = TypeSafetyChecker(self.signature, self.cfg) 
         
+        if(str(self.signature) == '.method public static final convertToForecastCode(Ljava/lang/Integer;)Ljava/lang/Integer;'):
+            self.cfg.show();
+        
         #incase the graph is empty, we dont instrument
         if(len(self.cfg.G)) == 1:
             return     
@@ -527,7 +534,11 @@ class SmaliMethodDef:
                 for index in range(len(node["text"])):
                     line = node["text"][index]
                     self.tsc.type_update(line, index, node_counter)
-                    node["type_list"] = self.tsc.node_type_list                                            
+                    node["type_list"] = self.tsc.node_type_list        
+                    
+                    # print("line: ", line)
+                    # print("type_list", node["type_list"][index])
+                                                        
                     self._do_instrumentation_plugins(free_regs, node, line, index)
 
                 #assign the register type list to this current node after its processed processed

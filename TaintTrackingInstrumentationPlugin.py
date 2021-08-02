@@ -847,7 +847,7 @@ def main():
     Instrumenter.sign_up("new-array", NEW_ARRAY_instrumentation)
     Instrumenter.sign_up("array-length", ARRAY_LENGTH_instrumentation)
     Instrumenter.sign_up("filled-new-array", FILLED_NEW_ARRAY_instrumentation)
-    Instrumenter.sign_up("filled-new-array-range", FILLED_NEW_ARRAY_instrumentation)
+    Instrumenter.sign_up("filled-new-array/range", FILLED_NEW_ARRAY_instrumentation)
 
     #return 
     Instrumenter.sign_up("return", RETURN_instrumentation)

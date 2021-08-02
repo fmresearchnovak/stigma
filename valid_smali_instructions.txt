@@ -35,7 +35,7 @@ array-length
 new-instance
 new-array
 filled-new-array
-filled-new-array-range
+filled-new-array/range
 fill-array-data
 throw
 goto
@@ -111,7 +111,7 @@ invoke-virtual/range
 invoke-super/range
 invoke-direct/range
 invoke-static/range
-invoke-interface-range
+invoke-interface/range
 neg-int
 not-int
 neg-long

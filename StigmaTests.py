@@ -738,133 +738,323 @@ def type_safety_checker_action_bar_try_catch_leaks():
 #catch label can be :catch_0 format or also :catchall
 def type_safety_checker_leaks_test():
     
-    method_text ='''.method public doViewsOverlap(Landroid/view/View;Landroid/view/View;)Z
-    .locals 6
-    .param p1, "first"    # Landroid/view/View;
-    .param p2, "second"    # Landroid/view/View;
+    method_text ='''.method public static a(Lorg/mozilla/javascript/Context;Lorg/mozilla/javascript/ScriptableObject;Z)Lorg/mozilla/javascript/ScriptableObject;
+    .locals 17
 
-    .line 1686
-    invoke-virtual {p1}, Landroid/view/View;->getVisibility()I
+    move-object/from16 v0, p0
 
-    move-result v0
+    move/from16 v7, p2
 
-    const/4 v1, 0x0
+    if-nez p1, :cond_0
 
-    if-nez v0, :cond_3
+    new-instance v1, Lorg/mozilla/javascript/aB;
 
-    invoke-virtual {p2}, Landroid/view/View;->getVisibility()I
+    invoke-direct {v1}, Lorg/mozilla/javascript/aB;-><init>()V
 
-    move-result v0
-
-    if-nez v0, :cond_3
-
-    .line 1687
-    invoke-static {}, Landroid/support/design/widget/CoordinatorLayout;->acquireTempRect()Landroid/graphics/Rect;
-
-    move-result-object v0
-
-    .line 1688
-    .local v0, "firstRect":Landroid/graphics/Rect;
-    invoke-virtual {p1}, Landroid/view/View;->getParent()Landroid/view/ViewParent;
-
-    move-result-object v2
-
-    const/4 v3, 0x1
-
-    if-eq v2, p0, :cond_0
-
-    const/4 v2, 0x1
+    move-object v8, v1
 
     goto :goto_0
 
     :cond_0
-    const/4 v2, 0x0
+    move-object/from16 v8, p1
 
     :goto_0
-    invoke-virtual {p0, p1, v2, v0}, Landroid/support/design/widget/CoordinatorLayout;->getChildRect(Landroid/view/View;ZLandroid/graphics/Rect;)V
+    sget-object v1, Lorg/mozilla/javascript/bk;->x:Ljava/lang/Object;
 
-    .line 1689
-    invoke-static {}, Landroid/support/design/widget/CoordinatorLayout;->acquireTempRect()Landroid/graphics/Rect;
+    invoke-virtual {v8, v1, v8}, Lorg/mozilla/javascript/ScriptableObject;->b(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+
+    new-instance v1, Lorg/mozilla/javascript/e;
+
+    invoke-direct {v1}, Lorg/mozilla/javascript/e;-><init>()V
+
+    invoke-virtual {v1, v8}, Lorg/mozilla/javascript/e;->a(Lorg/mozilla/javascript/ScriptableObject;)Z
+
+    invoke-static {v8, v7}, Lorg/mozilla/javascript/b;->a(Lorg/mozilla/javascript/Scriptable;Z)V
+
+    invoke-static {v8, v7}, Lorg/mozilla/javascript/aB;->a(Lorg/mozilla/javascript/Scriptable;Z)V
+
+    invoke-static {v8}, Lorg/mozilla/javascript/ScriptableObject;->e(Lorg/mozilla/javascript/Scriptable;)Lorg/mozilla/javascript/Scriptable;
+
+    move-result-object v1
+
+    const-string v2, "Function"
+
+    invoke-static {v8, v2}, Lorg/mozilla/javascript/ScriptableObject;->b(Lorg/mozilla/javascript/Scriptable;Ljava/lang/String;)Lorg/mozilla/javascript/Scriptable;
 
     move-result-object v2
 
-    .line 1690
-    .local v2, "secondRect":Landroid/graphics/Rect;
-    invoke-virtual {p2}, Landroid/view/View;->getParent()Landroid/view/ViewParent;
+    invoke-interface {v2, v1}, Lorg/mozilla/javascript/Scriptable;->setPrototype(Lorg/mozilla/javascript/Scriptable;)V
 
-    move-result-object v4
+    invoke-virtual {v8}, Lorg/mozilla/javascript/ScriptableObject;->c()Lorg/mozilla/javascript/Scriptable;
 
-    if-eq v4, p0, :cond_1
+    move-result-object v2
 
-    const/4 v4, 0x1
+    if-nez v2, :cond_1
 
-    goto :goto_1
+    invoke-virtual {v8, v1}, Lorg/mozilla/javascript/ScriptableObject;->setPrototype(Lorg/mozilla/javascript/Scriptable;)V
 
     :cond_1
-    const/4 v4, 0x0
+    invoke-static {v8, v7}, Lorg/mozilla/javascript/aj;->a(Lorg/mozilla/javascript/Scriptable;Z)V
 
-    :goto_1
-    invoke-virtual {p0, p2, v4, v2}, Landroid/support/design/widget/CoordinatorLayout;->getChildRect(Landroid/view/View;ZLandroid/graphics/Rect;)V
+    invoke-static {v0, v8, v7}, Lorg/mozilla/javascript/ao;->a(Lorg/mozilla/javascript/Context;Lorg/mozilla/javascript/Scriptable;Z)V
 
-    .line 1692
-    :try_start_0
-    iget v4, v0, Landroid/graphics/Rect;->left:I
+    invoke-static {v8, v7}, Lorg/mozilla/javascript/aa;->a(Lorg/mozilla/javascript/Scriptable;Z)V
 
-    iget v5, v2, Landroid/graphics/Rect;->right:I
+    invoke-virtual/range {p0 .. p0}, Lorg/mozilla/javascript/Context;->e()I
 
-    if-gt v4, v5, :cond_2
+    move-result v1
 
-    iget v4, v0, Landroid/graphics/Rect;->top:I
+    if-lez v1, :cond_2
 
-    iget v5, v2, Landroid/graphics/Rect;->bottom:I
+    const v1, 0x30d40
 
-    if-gt v4, v5, :cond_2
+    invoke-static {v1}, Lorg/mozilla/javascript/aa;->f(I)V
 
-    iget v4, v0, Landroid/graphics/Rect;->right:I
+    :cond_2
+    invoke-static {v8, v7}, Lorg/mozilla/javascript/aK;->a(Lorg/mozilla/javascript/Scriptable;Z)V
 
-    iget v5, v2, Landroid/graphics/Rect;->left:I
+    invoke-static {v8, v7}, Lorg/mozilla/javascript/ae;->a(Lorg/mozilla/javascript/Scriptable;Z)V
 
-    if-lt v4, v5, :cond_2
+    invoke-static {v8, v7}, Lorg/mozilla/javascript/aA;->a(Lorg/mozilla/javascript/Scriptable;Z)V
 
-    iget v4, v0, Landroid/graphics/Rect;->bottom:I
+    invoke-static {v8, v7}, Lorg/mozilla/javascript/ai;->a(Lorg/mozilla/javascript/Scriptable;Z)V
 
-    iget v5, v2, Landroid/graphics/Rect;->top:I
-    :try_end_0
-    .catchall {:try_start_0 .. :try_end_0} :catchall_0
+    invoke-static {v8, v7}, Lorg/mozilla/javascript/az;->a(Lorg/mozilla/javascript/Scriptable;Z)V
 
-    if-lt v4, v5, :cond_2
+    invoke-static {v8, v7}, Lorg/mozilla/javascript/as;->a(Lorg/mozilla/javascript/Scriptable;Z)V
+
+    invoke-static {v8, v7}, Lorg/mozilla/javascript/aL;->a(Lorg/mozilla/javascript/Scriptable;Z)V
+
+    invoke-static {v8, v7}, Lorg/mozilla/javascript/af;->a(Lorg/mozilla/javascript/Scriptable;Z)V
+
+    invoke-static {v8, v7}, Lorg/mozilla/javascript/aJ;->b(Lorg/mozilla/javascript/Scriptable;Z)V
+
+    invoke-static {v8, v7}, Lorg/mozilla/javascript/ap;->a(Lorg/mozilla/javascript/ScriptableObject;Z)V
+
+    const/4 v1, 0x6
+
+    invoke-virtual {v0, v1}, Lorg/mozilla/javascript/Context;->a(I)Z
+
+    move-result v1
+
+    const/4 v9, 0x0
+
+    if-eqz v1, :cond_3
+
+    invoke-virtual/range {p0 .. p0}, Lorg/mozilla/javascript/Context;->i()Lbl;
+
+    move-result-object v1
+
+    if-eqz v1, :cond_3
 
     const/4 v1, 0x1
 
-    .line 1695
-    :cond_2
-    invoke-static {v0}, Landroid/support/design/widget/CoordinatorLayout;->releaseTempRect(Landroid/graphics/Rect;)V
+    move v10, v1
 
-    .line 1696
-    invoke-static {v2}, Landroid/support/design/widget/CoordinatorLayout;->releaseTempRect(Landroid/graphics/Rect;)V
+    goto :goto_1
 
-    return v1
-
-    .line 1695
-    :catchall_0
-    move-exception v1
-
-    invoke-static {v0}, Landroid/support/design/widget/CoordinatorLayout;->releaseTempRect(Landroid/graphics/Rect;)V
-
-    .line 1696
-    invoke-static {v2}, Landroid/support/design/widget/CoordinatorLayout;->releaseTempRect(Landroid/graphics/Rect;)V
-
-    throw v1
-
-    .line 1699
-    .end local v0    # "firstRect":Landroid/graphics/Rect;
-    .end local v2    # "secondRect":Landroid/graphics/Rect;
     :cond_3
-    return v1
-    .end method '''
+    move v10, v9
+
+    :goto_1
+    new-instance v1, Lorg/mozilla/javascript/X;
+
+    const/4 v6, 0x1
+
+    const-string v3, "RegExp"
+
+    const-string v4, "org.mozilla.javascript.regexp.NativeRegExp"
+
+    move-object v2, v8
+
+    move/from16 v5, p2
+
+    invoke-direct/range {v1 .. v6}, Lorg/mozilla/javascript/X;-><init>(Lorg/mozilla/javascript/ScriptableObject;Ljava/lang/String;Ljava/lang/String;ZZ)V
+
+    new-instance v1, Lorg/mozilla/javascript/X;
+
+    const-string v3, "Continuation"
+
+    const-string v4, "org.mozilla.javascript.NativeContinuation"
+
+    invoke-direct/range {v1 .. v6}, Lorg/mozilla/javascript/X;-><init>(Lorg/mozilla/javascript/ScriptableObject;Ljava/lang/String;Ljava/lang/String;ZZ)V
+
+    if-eqz v10, :cond_4
+
+    invoke-virtual/range {p0 .. p0}, Lorg/mozilla/javascript/Context;->i()Lbl;
+
+    move-result-object v0
+
+    invoke-virtual {v0}, Lbl;->a()Ljava/lang/String;
+
+    move-result-object v6
+
+    new-instance v0, Lorg/mozilla/javascript/X;
+
+    const/4 v5, 0x1
+
+    const-string v2, "XML"
+
+    move-object v1, v8
+
+    move-object v3, v6
+
+    move/from16 v4, p2
+
+    invoke-direct/range {v0 .. v5}, Lorg/mozilla/javascript/X;-><init>(Lorg/mozilla/javascript/ScriptableObject;Ljava/lang/String;Ljava/lang/String;ZZ)V
+
+    new-instance v0, Lorg/mozilla/javascript/X;
+
+    const-string v2, "XMLList"
+
+    invoke-direct/range {v0 .. v5}, Lorg/mozilla/javascript/X;-><init>(Lorg/mozilla/javascript/ScriptableObject;Ljava/lang/String;Ljava/lang/String;ZZ)V
+
+    new-instance v0, Lorg/mozilla/javascript/X;
+
+    const-string v2, "Namespace"
+
+    invoke-direct/range {v0 .. v5}, Lorg/mozilla/javascript/X;-><init>(Lorg/mozilla/javascript/ScriptableObject;Ljava/lang/String;Ljava/lang/String;ZZ)V
+
+    new-instance v0, Lorg/mozilla/javascript/X;
+
+    const-string v2, "QName"
+
+    invoke-direct/range {v0 .. v5}, Lorg/mozilla/javascript/X;-><init>(Lorg/mozilla/javascript/ScriptableObject;Ljava/lang/String;Ljava/lang/String;ZZ)V
+
+    :cond_4
+    instance-of v0, v8, Lorg/mozilla/javascript/bC;
+
+    if-eqz v0, :cond_5
+
+    move-object v0, v8
+
+    check-cast v0, Lorg/mozilla/javascript/bC;
+
+    invoke-virtual {v0}, Lorg/mozilla/javascript/bC;->g()V
+
+    :cond_5
+    new-instance v0, Lorg/mozilla/javascript/X;
+
+    const/4 v5, 0x1
+
+    const-string v2, "Packages"
+
+    const-string v3, "org.mozilla.javascript.NativeJavaTopPackage"
+
+    move-object v1, v8
+
+    move/from16 v4, p2
+
+    invoke-direct/range {v0 .. v5}, Lorg/mozilla/javascript/X;-><init>(Lorg/mozilla/javascript/ScriptableObject;Ljava/lang/String;Ljava/lang/String;ZZ)V
+
+    new-instance v0, Lorg/mozilla/javascript/X;
+
+    const-string v2, "getClass"
+
+    const-string v3, "org.mozilla.javascript.NativeJavaTopPackage"
+
+    invoke-direct/range {v0 .. v5}, Lorg/mozilla/javascript/X;-><init>(Lorg/mozilla/javascript/ScriptableObject;Ljava/lang/String;Ljava/lang/String;ZZ)V
+
+    new-instance v0, Lorg/mozilla/javascript/X;
+
+    const-string v2, "JavaAdapter"
+
+    const-string v3, "org.mozilla.javascript.JavaAdapter"
+
+    invoke-direct/range {v0 .. v5}, Lorg/mozilla/javascript/X;-><init>(Lorg/mozilla/javascript/ScriptableObject;Ljava/lang/String;Ljava/lang/String;ZZ)V
+
+    new-instance v0, Lorg/mozilla/javascript/X;
+
+    const-string v2, "JavaImporter"
+
+    const-string v3, "org.mozilla.javascript.ImporterTopLevel"
+
+    invoke-direct/range {v0 .. v5}, Lorg/mozilla/javascript/X;-><init>(Lorg/mozilla/javascript/ScriptableObject;Ljava/lang/String;Ljava/lang/String;ZZ)V
+
+    const-string v0, "java.vm.name"
+
+    invoke-static {v0}, Ljava/lang/System;->getProperty(Ljava/lang/String;)Ljava/lang/String;
+
+    move-result-object v0
+
+    const-string v1, "Dalvik"
+
+    invoke-virtual {v1, v0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+
+    move-result v0
+
+    if-eqz v0, :cond_6
+
+    const-string v10, "java"
+
+    const-string v11, "javax"
+
+    const-string v12, "org"
+
+    const-string v13, "com"
+
+    const-string v14, "edu"
+
+    const-string v15, "net"
+
+    const-string v16, "android"
+
+    filled-new-array/range {v10 .. v16}, [Ljava/lang/String;
+
+    move-result-object v0
+
+    goto :goto_2
+
+    :cond_6
+    const-string v1, "java"
+
+    const-string v2, "javax"
+
+    const-string v3, "org"
+
+    const-string v4, "com"
+
+    const-string v5, "edu"
+
+    const-string v6, "net"
+
+    filled-new-array/range {v1 .. v6}, [Ljava/lang/String;
+
+    move-result-object v0
+
+    :goto_2
+    move-object v6, v0
+
+    array-length v10, v6
+
+    :goto_3
+    if-ge v9, v10, :cond_7
+
+    aget-object v2, v6, v9
+
+    new-instance v0, Lorg/mozilla/javascript/X;
+
+    const/4 v5, 0x1
+
+    const-string v3, "org.mozilla.javascript.NativeJavaTopPackage"
+
+    move-object v1, v8
+
+    move/from16 v4, p2
+
+    invoke-direct/range {v0 .. v5}, Lorg/mozilla/javascript/X;-><init>(Lorg/mozilla/javascript/ScriptableObject;Ljava/lang/String;Ljava/lang/String;ZZ)V
+
+    add-int/lit8 v9, v9, 0x1
+
+    goto :goto_3
+
+    :cond_7
+    return-object v8
+    .end method'''
     
     method_list = method_text.split("\n")
     smd = SmaliMethodDef.SmaliMethodDef(method_list, None)
+    smd.instrument()
 
 
 def type_safety_checker_aget_test():
@@ -1617,412 +1807,9 @@ def type_safety_checker_aget2_test():
 
 
 def type_safety_weather_app_test():
-    method_text = '''.method public static A08(Ljava/util/Vector;)I
-    .locals 13
-    .annotation system Ldalvik/annotation/Signature;
-        value = {
-            "(",
-            "Ljava/util/Vector<",
-            "Landroid/graphics/Rect;",
-            ">;)I"
-        }
-    .end annotation
-
-    .line 48854
-    .local v9, "rectangles":Ljava/util/Vector;, "Ljava/util/Vector<Landroid/graphics/Rect;>;"
-    invoke-virtual {p0}, Ljava/util/Vector;->size()I
-
-    move-result v8
-
-    .line 48855
-    .local p0, "size":I
-    mul-int/lit8 v0, v8, 0x2
-
-    new-array v7, v0, [I
-
-    .line 48856
-    .local v8, "x":[I
-    mul-int/lit8 v0, v8, 0x2
-
-    new-array v6, v0, [I
-
-    .line 48857
-    .local v0, "y":[I
-    mul-int/lit8 v1, v8, 0x2
-
-    mul-int/lit8 v0, v8, 0x2
-
-    filled-new-array {v1, v0}, [I
-
-    move-result-object v1
-
-    const-class v0, Z
-
-    invoke-static {v0, v1}, Ljava/lang/reflect/Array;->newInstance(Ljava/lang/Class;[I)Ljava/lang/Object;
-
-    move-result-object v5
-
-    check-cast v5, [[Z
-
-    .line 48858
-    .local v7, "isCovered":[[Z
-    const/4 v2, 0x0
-
-    .line 48859
-    .local v0, "xPos":I
-    const/4 v1, 0x0
-
-    .line 48860
-    .local v6, "yPos":I
-    const/4 v10, 0x0
-
-    .local v1, "i":I
-    :goto_0
-    if-ge v10, v8, :cond_0
-
-    .line 48861
-    invoke-virtual {p0, v10}, Ljava/util/Vector;->elementAt(I)Ljava/lang/Object;
-
-    move-result-object v9
-
-    check-cast v9, Landroid/graphics/Rect;
-
-    .line 48862
-    .local v0, "r":Landroid/graphics/Rect;
-    add-int/lit8 v4, v2, 0x1
-
-    .end local v0    # "r":Landroid/graphics/Rect;
-    .local v1, "xPos":I
-    iget v0, v9, Landroid/graphics/Rect;->left:I
-
-    aput v0, v7, v2
-
-    .line 48863
-    add-int/lit8 v3, v1, 0x1
-
-    .end local v6    # "yPos":I
-    .local v0, "yPos":I
-    iget v0, v9, Landroid/graphics/Rect;->bottom:I
-
-    aput v0, v6, v1
-
-    .line 48864
-    add-int/lit8 v2, v4, 0x1
-
-    .end local v1    # "xPos":I
-    .local v6, "xPos":I
-    iget v0, v9, Landroid/graphics/Rect;->right:I
-
-    aput v0, v7, v4
-
-    .line 48865
-    add-int/lit8 v1, v3, 0x1
-
-    .end local v0    # "yPos":I
-    .local v1, "yPos":I
-    iget v0, v9, Landroid/graphics/Rect;->top:I
-
-    aput v0, v6, v3
-
-    .line 48866
-    .end local v0
-    add-int/lit8 v10, v10, 0x1
-
-    goto :goto_0
-
-    .line 48867
-    .end local v1    # "yPos":I
-    .end local v1
-    .local v0, "xPos":I
-    .local v6, "yPos":I
-    :cond_0
-    invoke-static {v7}, Ljava/util/Arrays;->sort([I)V
-
-    .line 48868
-    invoke-static {v6}, Ljava/util/Arrays;->sort([I)V
-
-    .line 48869
-    const/4 v10, 0x0
-
-    .restart local v1    # "yPos":I
-    :goto_1
-    if-ge v10, v8, :cond_4
-
-    .line 48870
-    invoke-virtual {p0, v10}, Ljava/util/Vector;->elementAt(I)Ljava/lang/Object;
-
-    move-result-object v1
-
-    check-cast v1, Landroid/graphics/Rect;
-
-    .line 48871
-    .restart local v0    # "xPos":I
-    iget v0, v1, Landroid/graphics/Rect;->left:I
-
-    invoke-static {v7, v0}, Lcom/facebook/ads/redexgen/X/QE;->A09([II)I
-
-    move-result v12
-
-    .line 48872
-    .local v1, "leftEdgeIndex":I
-    iget v0, v1, Landroid/graphics/Rect;->right:I
-
-    invoke-static {v7, v0}, Lcom/facebook/ads/redexgen/X/QE;->A09([II)I
-
-    move-result v9
-
-    .line 48873
-    .local v0, "rightEdgeIndex":I
-    iget v0, v1, Landroid/graphics/Rect;->top:I
-
-    invoke-static {v6, v0}, Lcom/facebook/ads/redexgen/X/QE;->A09([II)I
-
-    move-result v11
-
-    .line 48874
-    .local v5, "topEdgeIndex":I
-    iget v3, v1, Landroid/graphics/Rect;->bottom:I
-
-    sget-object v1, Lcom/facebook/ads/redexgen/X/QE;->A0H:[Ljava/lang/String;
-
-    const/4 v0, 0x0
-
-    aget-object v1, v1, v0
-
-    const/16 v0, 0x18
-
-    invoke-virtual {v1, v0}, Ljava/lang/String;->charAt(I)C
-
-    move-result v1
-
-    const/16 v0, 0x65
-
-    if-eq v1, v0, :cond_1
-
-    new-instance v0, Ljava/lang/RuntimeException;
-
-    invoke-direct {v0}, Ljava/lang/RuntimeException;-><init>()V
-
-    throw v0
-
-    :cond_1
-    sget-object v2, Lcom/facebook/ads/redexgen/X/QE;->A0H:[Ljava/lang/String;
-
-    const-string v1, "OkBp9M6GoSG"
-
-    const/4 v0, 0x5
-
-    aput-object v1, v2, v0
-
-    invoke-static {v6, v3}, Lcom/facebook/ads/redexgen/X/QE;->A09([II)I
-
-    move-result v4
-
-    .line 48875
-    .local v5, "bottomEdgeIndex":I
-    add-int/lit8 v3, v12, 0x1
-
-    .local v2, "m":I
-    :goto_2
-    if-gt v3, v9, :cond_3
-
-    .line 48876
-    add-int/lit8 v2, v11, 0x1
-
-    .local v1, "n":I
-    :goto_3
-    if-gt v2, v4, :cond_2
-
-    .line 48877
-    aget-object v1, v5, v3
-
-    const/4 v0, 0x1
-
-    aput-boolean v0, v1, v2
-
-    .line 48878
-    add-int/lit8 v2, v2, 0x1
-
-    goto :goto_3
-
-    .line 48879
-    .end local v1    # "n":I
-    :cond_2
-    add-int/lit8 v3, v3, 0x1
-
-    goto :goto_2
-
-    .line 48880
-    .end local v0    # "rightEdgeIndex":I
-    .end local v1
-    .end local v0
-    .end local v5    # "bottomEdgeIndex":I
-    .end local v5
-    .end local v2    # "m":I
-    :cond_3
-    add-int/lit8 v10, v10, 0x1
-
-    goto :goto_1
-
-    .line 48881
-    .end local v1
-    :cond_4
-    const/4 v10, 0x0
-
-    .line 48882
-    .local v1, "area":I
-    const/4 v4, 0x0
-
-    .local v0, "i":I
-    :goto_4
-    mul-int/lit8 v0, v8, 0x2
-
-    if-ge v4, v0, :cond_9
-
-    .line 48883
-    const/4 v3, 0x0
-
-    .local v1, "j":I
-    :goto_5
-    mul-int/lit8 v9, v8, 0x2
-
-    sget-object v2, Lcom/facebook/ads/redexgen/X/QE;->A0H:[Ljava/lang/String;
-
-    const/4 v0, 0x3
-
-    aget-object v1, v2, v0
-
-    const/4 v0, 0x6
-
-    aget-object v0, v2, v0
-
-    invoke-virtual {v1}, Ljava/lang/String;->length()I
-
-    move-result v1
-
-    invoke-virtual {v0}, Ljava/lang/String;->length()I
-
-    move-result v0
-
-    if-eq v1, v0, :cond_8
-
-    sget-object v2, Lcom/facebook/ads/redexgen/X/QE;->A0H:[Ljava/lang/String;
-
-    const-string v1, "8mdjYFfHzfR"
-
-    const/4 v0, 0x5
-
-    aput-object v1, v2, v0
-
-    if-ge v3, v9, :cond_7
-
-    .line 48884
-    aget-object v0, v5, v4
-
-    aget-boolean v0, v0, v3
-
-    if-eqz v0, :cond_6
-
-    aget v2, v7, v4
-
-    add-int/lit8 v0, v4, -0x1
-
-    aget v0, v7, v0
-
-    sub-int/2addr v2, v0
-
-    aget v1, v6, v3
-
-    add-int/lit8 v0, v3, -0x1
-
-    aget v0, v6, v0
-
-    sub-int/2addr v1, v0
-
-    mul-int/2addr v2, v1
-
-    :goto_6
-    add-int/2addr v10, v2
-
-    sget-object v2, Lcom/facebook/ads/redexgen/X/QE;->A0H:[Ljava/lang/String;
-
-    const/4 v0, 0x3
-
-    aget-object v1, v2, v0
-
-    const/4 v0, 0x6
-
-    aget-object v0, v2, v0
-
-    invoke-virtual {v1}, Ljava/lang/String;->length()I
-
-    move-result v1
-
-    invoke-virtual {v0}, Ljava/lang/String;->length()I
-
-    move-result v0
-
-    if-eq v1, v0, :cond_5
-
-    .line 48885
-    sget-object v2, Lcom/facebook/ads/redexgen/X/QE;->A0H:[Ljava/lang/String;
-
-    const-string v1, "Lo9ucXqSR57"
-
-    const/4 v0, 0x5
-
-    aput-object v1, v2, v0
-
-    add-int/lit8 v3, v3, 0x1
-
-    goto :goto_5
-
-    :cond_5
-    sget-object v2, Lcom/facebook/ads/redexgen/X/QE;->A0H:[Ljava/lang/String;
-
-    const-string v1, "Va2huEuqJLy8G9"
-
-    const/4 v0, 0x3
-
-    aput-object v1, v2, v0
-
-    const-string v1, "xLD3f1Ctst12pSyAioan4nQjy"
-
-    const/4 v0, 0x6
-
-    aput-object v1, v2, v0
-
-    add-int/lit8 v3, v3, 0x0
-
-    goto :goto_5
-
-    .line 48886
-    :cond_6
-    const/4 v2, 0x0
-
-    goto :goto_6
-
-    .line 48887
-    .end local v1    # "j":I
-    :cond_7
-    add-int/lit8 v4, v4, 0x1
-
-    goto :goto_4
-
-    :cond_8
-    new-instance v0, Ljava/lang/RuntimeException;
-
-    invoke-direct {v0}, Ljava/lang/RuntimeException;-><init>()V
-
-    throw v0
-
-    .line 48888
-    .end local v0    # "i":I
-    :cond_9
-    return v10
-    .end method'''
     
-    method_list = method_text.split("\n")
+    f = open('test/test_method_code_snapshot.smali', 'r')
+    method_list = f.readlines()
     print("Building SMD")
     smd = SmaliMethodDef.SmaliMethodDef(method_list, None)
     print("Instrumenting")
@@ -2330,6 +2117,8 @@ def main():
     #type_safety_checker_aget_test()
     #type_safety_checker_aget2_test()
     #type_safety_checker_aget_test3()
+    # type_safety_checker_leaks_test()
+    
     type_safety_weather_app_test()
 
 

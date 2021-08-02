@@ -151,8 +151,10 @@ class TypeSafetyChecker:
         
         #if the current line is a :catch label, reset everything because we dont know which line has caused the catch 
         elif(re.search(StigmaStringParsingLib.BEGINS_WITH_CATCH_LABEL, line) is not None):
-            self.node_type_list.append({})
-            self.most_recent_type_map = {}
+            for key, value in self.most_recent_type_map.items():
+                self.most_recent_type_map[key] = '?'  
+            
+            self.node_type_list.append(self.most_recent_type_map)
             
         #if the current line is a start of a label, check if there is a correlating if or goto statement that we have seen before this condition
         elif(re.search(StigmaStringParsingLib.BEGINS_WITH_COLON, line) is not None):
@@ -200,7 +202,7 @@ class TypeSafetyChecker:
                 prev_line = self.obtain_previous_instruction(node_counter, line_index-1)
                 prev_line_tokens = StigmaStringParsingLib.break_into_tokens(prev_line)
                 prev_line_instruction = prev_line_tokens[0]
-                
+                                
                 if(re.search(StigmaStringParsingLib.BEGINS_WITH_INVOKE, prev_line_instruction) is not None):
                     type_start_index = prev_line.rfind(")")
                     if(type_start_index != -1):
@@ -247,6 +249,13 @@ class TypeSafetyChecker:
                 # vy is the array
                 # vz is the index (and int) into that array
                 src_reg = registers[1] 
+                
+                if(src_reg not in line_type_map_new):
+                    print("line: ", line)
+                    print("src reg ", src_reg)
+                    print("line type map: ", line_type_map_new)
+                    input("????????")
+                
                 src_type = line_type_map_new[src_reg]
                 #if(re.search(StigmaStringParsingLib.BEGINS_WITH_TWO_SQUARE_BRACKETS, src_type) is not None):
                 #    print("N-dimenstional array found: " + str(src_type))
@@ -343,7 +352,6 @@ class TypeSafetyChecker:
         else:
             raise RuntimeError ("opcode seems to has no type", opcode)
 
-
     def check_aget_object_type(self, src_type):
         """
         The special case for checking types of array with an aget-object instruction
@@ -383,10 +391,6 @@ class TypeSafetyChecker:
             else:
                 # scenario one
                 return value
-
-
-
-
 
     def check_parameter_type(self,value):
         '''

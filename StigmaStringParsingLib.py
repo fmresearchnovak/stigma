@@ -313,7 +313,7 @@ NON_RELEVANT_INSTRUCTION_LIST = ["nop","monitor-enter" , "monitor-exit", "throw"
  "sparse-switch", "neg-int","not-int" ,"neg-long" ,"not-long" ,"neg-float" ,"neg-double" ,"execute-inline" ,"invoke-virtual" ,"invoke-super","invoke-direct" ,
  "invoke-static","invoke-interface","invoke-interface/range","invoke-static/range","invoke-direct/range","invoke-virtual/range",
  "invoke-super/range","invoke-direct-empty","invoke-virtual-quick","invoke-virtual-quick/range","invoke-super-quick",
- "invoke-super-quick/range","invoke-direct-empty", "fill-array-data", "filled-new-array", "filled-new-array-range",
+ "invoke-super-quick/range","invoke-direct-empty", "fill-array-data", "filled-new-array", "filled-new-array/range",
  ".local", ".param", ".line", "aput", "aput-wide",  "aput-object", "aput-boolean", "aput-byte",
  "aput-char", "aput-short"]
         

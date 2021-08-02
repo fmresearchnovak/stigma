@@ -38,6 +38,7 @@ import re
 import networkx as nx
 import matplotlib.pyplot as plt
 from networkx.drawing.nx_pydot import graphviz_layout
+import time
 
 class ControlFlowGraph:
 
@@ -62,7 +63,9 @@ class ControlFlowGraph:
         self.node_counter+=1
         
         #this will go to the end of the method and store all the packed-switch and sparse-switch labels in a list of hashmaps
+        start_time = time.time()
         self.store_switch_labels()
+        
         
         #some of the lines can be SMALI ASSEMBLY OBJECTS, because we call grow_locals before building the control flow graph, so we convert each line to a string before processing it. 
         while (re.search(StigmaStringParsingLib.BEGINS_WITH_DOT_END_METHOD, text[line_index]) is None and re.search(StigmaStringParsingLib.BEGINS_WITH_PSWITCH_DATA, text[line_index]) is None and re.search(StigmaStringParsingLib.BEGINS_WITH_SSWITCH_DATA, text[line_index]) is None):
@@ -272,6 +275,7 @@ class ControlFlowGraph:
             if re.search(StigmaStringParsingLib.BEGINS_WITH_COLON, self.text[i]):
                 return i
         return line_index+1
+    
     
     def store_switch_labels(self):
         '''
