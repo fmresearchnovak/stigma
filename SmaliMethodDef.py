@@ -728,288 +728,7 @@ class SmaliMethodDef:
         else:
             return True
     
-
-    # This method was pulled from VRegisterPool
-    def get_spot(self, max_val, type_code, exclude_list = []):
-        # Look for empty spot to use
-        # 1) empty spots prioritized
-        # 2) spots of the matching type
-        # 3) a convenient spot cannot be found:
-        #       just return a spot of different type
-        # 4) if the requested type is WIDE and a convenient
-        #       spot cannot be found: raise an exception
-
-        # 1
-        for i in range(max_val):
-            reg_name = "v" + str(i)
-            
-            if(reg_name in exclude_list):
-                continue
-            
-            if(self[reg_name] == None):
-                if(type_code == TYPE_CODE_WIDE):
-                    adjacent_reg_name = "v" + str(i+1)
-                    if(self[adjacent_reg_name] == None):
-                        return reg_name
-                    else:
-                        continue
-                        
-                else:
-                    return reg_name
-                    
-        # 2
-        for i in range(max_val):
-            reg_name = "v" + str(i)
-            
-            if(reg_name in exclude_list):
-                continue
-                
-            if(type_code == self[reg_name]):
-                return reg_name
-
-        # conclusions 3 and 4
-        # theoretically possible if user is looking for TYPE_CODE_OBJ_REF
-        # and max value is X and all registers below X are TYPE_CODE_WORD
-
-        # 4
-        if type_code == TYPE_CODE_WIDE:
-            #print(self.pretty_string(0, 20))
-            raise ValueError("Could not find a spot for type: " + type_code_name(type_code) + " in first " + str(max_val) + " registers.")  
-
-        # 3
-        for i in range(max_val):
-            reg_name = "v" + str(i)
-
-            if(reg_name in exclude_list):
-                continue
-
-            # this might return a TYPE_WIDE when user
-            # is actually looking for a TYPE_WORD
-            # but that should be ok, bigger problem
-            # is when user is looking for WIDE and can't
-            # get one, that is resolved by conclusion 4
-            return reg_name
-        
-        #return None
-
-    # This method was pulled from VRegisterPool
-    def get_consecutive_non_wide_reg_pair(self, max_val, exclude_list = []):
-        for i in range(max_val):
-            reg_name = "v" + str(i)
-            reg_name_adjoining = "v" + str(i+1)
-
-            if(reg_name in exclude_list):
-                continue
-
-            if(self[reg_name] != TYPE_CODE_WIDE and
-                self[reg_name] != TYPE_CODE_WIDE_REMAINING):
-                return (reg_name, reg_name_adjoining)
-
-    
-    '''
-    @staticmethod
-    def _append_move_instr_frl(block, reg_pool, to_reg_name, from_reg_name):
-        custom_move = reg_pool.get_move_instr(from_reg_name)
-        
-        # this happens when the register has None type or WIDE_REM type
-        if(custom_move != None):
-            CUSTOM_MOVE = custom_move(to_reg_name, from_reg_name)
-            block.append(CUSTOM_MOVE)
-            block.append(smali.BLANK_LINE())
-
-            reg_pool.update(str(CUSTOM_MOVE))
-
-    @staticmethod
-    def fix_register_limit_for_line(line, shadows, reg_pool):
-        
-        # imagine...
-
-        # reg_pool =
-        # v0: TYPE_CODE_OBJ_REF
-        # v1: TYPE_CODE_WIDE
-        # ...
-
-        # line  = "    instance-of v3, v16, Ljava/lang/String;\n"
-
-        # shadow_registers = ["v16", "v17", "v18"]
-
-
-        # shad <- corr
-        # corr <-- high
-
-        # low/corr, shadow, high
-
-        asm_obj = smali.parse_line(line)
-        
-        original_registers = asm_obj.get_registers() + asm_obj.get_implicit_registers()
-        # implicit registers are necessary for example:
-        # int-to-long v0, v18
-        # v18 is a long, v0 is currently undefined / open
-        # the corresponding register should NOT be v0 and it should NOT be v1
-        # yet both v0 and v1 will be listed in the reg_pool as None
-
-        new_line = line # will be used for the re-write
-        
-        # before block
-        before_block = []
-        after_block = []
-        shadow_idx = 0
-        
-        for reg_high_name in asm_obj.get_unique_registers():
-            if(reg_pool.is_high_numbered(reg_high_name)):
-                #print("fixing reg: " + str(reg_high_name))
-
-                is_wide = (reg_pool[reg_high_name] == smali.TYPE_CODE_WIDE)
-
-        
-                try:
-                    reg_corr_name = reg_pool.get_spot(15, reg_pool[reg_high_name], exclude_list = original_registers)
-                
-                except ValueError:
-                    # this happens when there is no appropriate spot
-                    # to be given.  e.g., a WIDE is needed, but all
-                    # low numbered registers are filled with WORD and/or OBJ_REF
-                    pair = reg_pool.get_consecutive_non_wide_reg_pair(15, exclude_list = original_registers)
-                    #print("self.scd.file_name: " + str(self.scd.file_name))
-                    #print("pair: " + str(pair))
-                    #print("shadows: " + str(shadows))
-                    #print("shadow_idx: " + str(shadow_idx))
-                    #print("reg_pool: " + reg_pool.pretty_string(0, 21))
-                    reg_corr_name = pair[0]
-                    reg_corr_name_second = pair[1]
-                    reg_shad_name_second = shadows[shadow_idx+1]
-                    
-                    SmaliMethodDef._append_move_instr_frl(before_block, reg_pool, reg_shad_name_second, reg_corr_name_second)
-                    SmaliMethodDef._append_move_instr_frl(after_block, reg_pool, reg_corr_name_second, reg_shad_name_second)
-                    
-                    # it goes right here!!
-
-                # corresponding register might be empty in which case
-                # we should not do a move on it
-                # the "previous" is referring to the fact that this is
-                # the type held in the register BEFORE the instruction 
-                # on line is executed.  For example instruction might be
-                # add-int corr, vx, vy wherein corr has type OBJ_REF before
-                # instruction, it will have type WORD after this instruction
-                corr_previous_type = reg_pool[reg_corr_name]
-                if(corr_previous_type != None):
-                    reg_shad_name = shadows[shadow_idx]
-                    if(is_wide):
-                        shadow_idx += 2
-                    else:
-                        shadow_idx += 1
-                    SmaliMethodDef._append_move_instr_frl(before_block, reg_pool, reg_shad_name, reg_corr_name)
-                
-                if(reg_pool[reg_high_name] != None):
-                    # high register might be empty / might not exist / might have type "None"
-                    # for example in const v32, 0x1 
-                    # v32 might not contain any data before this instruction
-                    # in such a situation it's appropriate to not do any move on it
-                    # before, but it is still necessary to do a move after
-                    SmaliMethodDef._append_move_instr_frl(before_block, reg_pool, reg_corr_name, reg_high_name)
-                
-                
-                # the "occurrences" at the end here means that only X occurrences will be replaced
-                occurrences = asm_obj.get_registers().count(reg_high_name)
-                new_line = new_line.replace(reg_high_name, reg_corr_name, occurrences)
-                
-
-                # Reason, Bug:
-                # v0 is int, v21 is obje
-                # move-obj v0, v21
-                # const/4 v0(v21)
-                # move-int v21, v0
-                reg_pool.update(new_line)
-
-                SmaliMethodDef._append_move_instr_frl(after_block, reg_pool, reg_high_name, reg_corr_name)
-
-                if(corr_previous_type != None):
-                    SmaliMethodDef._append_move_instr_frl(after_block, reg_pool, reg_corr_name, reg_shad_name)
-
-     
-            
-        ans_block = before_block + [new_line, smali.BLANK_LINE()] + after_block
-        #print("block produced: " + str(ans_block))
-        #print("\n\n")
-        return ans_block
    
-
-    def fix_register_limit(self):
-        #print("self.scd.file_name: " + str(self.scd.file_name))
-        #print("fix_register_limit(" + str(self.signature) + ")")
-
-        # Step 1: Initiate shadow registers
-        # -- Example --  MyMethod(JI)  .locals = 17
-        # Before: [v0, v1, ... , v15, v16, v17(p0), v18(p1), v19(p2), v20(p3)]
-        # After:  [v0, v1, ... , v15, v16, v17,     v18,     v19,     v20,     v21, v22(p0), v23(p1), v24(p2), v25(p3)]
-        #                             |_|  |_____________________________________|  |________________________________|
-        #                              |                      |                                     |
-        #              "higher numbered" regsiters      "Shadow" registers                "higher numbered" registers
-        #       
-        # In the above example, get_num_regisers() is 21 so we will create
-        # (21 - 16) = 5 new registers
-        #                     
-        # v17 up to v21 are the shadow registers (free temp registers) that we can use as general purpose
-        # The 'corresponding' registers are lower numberd registers that will be used temporarily
-        # for a specific instruction
-        shadows = []
-        # The number of remanining shadows is number of high-num registers * 2 because
-        # Each of the high-num registers could be a word (single-registered  type)
-        # While each of the corresponding could store a wide (double-registered type)
-        # So to store each corresponding temporarily in a shadow, we would need
-        # 2 times the number of higher-numbered registers
-        for i in range((self.get_num_registers() - 16) * 2): 
-            #print("creating shadow register: " + str(i))
-            shadows.append(self.make_new_reg())
-        
-        #print("remaining shadows: " + str(self.remaining_shadows))
-
-        # Step 2: Initiate reg_pool with parameters of funciton
-        # -- Example -- MyMethod(JI)  .locals = 17
-        # p0 = v22 type: object reference ("this") => TYPE_CODE_OBJ_REF
-        # p1 = v23 type: long => TYPE_CODE_WIDE
-        # p2 = v24 type: long2 => TYPE_CODE_WIDE_REM
-        # p3 = v25 type: int => TYPE_CODE_WORD
-        # key: register name (v's only)
-        # value: smali.TYPE_CODE corresponding to register type
-        reg_pool = VRegisterPool.VRegisterPool(self.signature, self.get_locals_directive_num())
-        
-        #print(self)
-        
-        line_num = 1;
-        while line_num < len(self.raw_text):
-            cur_line = str(self.raw_text[line_num])
-            #print(cur_line)
-            # Check if this line is actually a smali instruction (starts with a valid opcode)
-            if(not StigmaStringParsingLib.is_valid_instruction(cur_line)):
-                line_num += 1
-                continue
-                
-            # Step 3: Dereference p registers
-            locals_num = self.get_locals_directive_num()
-            cur_line = SmaliMethodDef._dereference_p_registers_frl(cur_line, locals_num)
-            self.raw_text[line_num] = cur_line
-            
-            # Step 4: Update move_type_hashmap with this instruction
-            #print("line: " + cur_line)
-            reg_pool.update(cur_line)
-            
-            # identify lines that should be skipped for the rest of this
-            if(SmaliMethodDef._should_skip_line_frl(cur_line)):
-                line_num += 1
-                continue
-                    
-           
-            
-            # Step 5: Call algorithm to fix each line
-            ans_block = SmaliMethodDef.fix_register_limit_for_line(cur_line, shadows, reg_pool)
-            
-            self.embed_block_with_replace(line_num, ans_block)
-
-
-            # go to next line!
-            line_num += len(ans_block)
-    '''
     
     def __repr__(self):
         return self.get_signature()
@@ -1036,28 +755,28 @@ def tests():
     
     
     print("\tSmaliMethodSignature...")
-    sig = SmaliMethodSignature(".method public setBackgroundResource(I)V")
+    sig = SmaliMethodSignature(".method public setBackgroundResource(I)V", "Lmy/package/MyClass;")
     assert(sig.name == "setBackgroundResource")
     assert(sig.is_static == False)
-    assert(sig.parameter_type_map == {"p0": "THIS", "p1": "I"})
+    assert(sig.parameter_type_map == {"p0": "Lmy/package/MyClass;", "p1": "I"})
     assert(sig.num_of_parameters == 2)
     assert(sig.num_of_parameter_registers == 2)
     
-    sig = SmaliMethodSignature(".method private constructor <init>(Ljava/lang/String;I)V")
+    sig = SmaliMethodSignature(".method private constructor <init>(Ljava/lang/String;I)V", "Lmy/package/MyClass;")
     assert(sig.name == "<init>")
     assert(sig.is_static == False)
-    assert(sig.parameter_type_map == {"p0": "THIS", "p1": "L", "p2": "I"})
+    assert(sig.parameter_type_map == {"p0": "Lmy/package/MyClass;", "p1": "L", "p2": "I"})
     assert(sig.num_of_parameters == 3)
     assert(sig.num_of_parameter_registers == 3)
     
-    sig = SmaliMethodSignature(".method private prefetchInnerRecyclerViewWithDeadline(Landroid/support/v7/widget/RecyclerView;J)V")
+    sig = SmaliMethodSignature(".method private prefetchInnerRecyclerViewWithDeadline(Landroid/support/v7/widget/RecyclerView;J)V", "Lmy/package/MyOtherClass;")
     assert(sig.name == "prefetchInnerRecyclerViewWithDeadline")
     assert(sig.is_static == False)
-    assert(sig.parameter_type_map == {"p0": "THIS", "p1": "L", "p2": "J", "p3": "J2"})
+    assert(sig.parameter_type_map == {"p0": "Lmy/package/MyOtherClass;", "p1": "L", "p2": "J", "p3": "J2"})
     assert(sig.num_of_parameters == 3)
     assert(sig.num_of_parameter_registers == 4)
     
-    sig = SmaliMethodSignature(".method public static reverseTransit(I)I")
+    sig = SmaliMethodSignature(".method public static reverseTransit(I)I", "Lmy/package/MyClass;")
     assert(sig.name == "reverseTransit")
     assert(sig.is_static)
     assert(sig.parameter_type_map == {"p0": "I"})
@@ -1065,32 +784,38 @@ def tests():
     assert(sig.num_of_parameter_registers == 1)
 
 
+    text = open("./test/leakPasswd.smali").readlines()
+    smd = SmaliMethodDef(text, None)
+    
+    print("\tfind_first_valid_instruction...")
+    assert(smd.find_first_valid_instruction() == 8)
+    
+    print("\tlocals...")
+    assert(smd.get_locals_directive_line() == ".locals 9")
+    assert(smd.get_locals_directive_num() == 9)
+    smd.set_locals_directive(10)
+    assert(smd.get_locals_directive_line() == ".locals 10")
+    assert(smd.get_locals_directive_num() == 10)
+    smd.set_locals_directive(9) # set it back for subsequent tests
+    
+    
+    print("\tregister counting...")
+    assert(smd.get_num_registers() == 11)
 
-    print("\t_should_skip_line_frl...")
-    assert(SmaliMethodDef._should_skip_line_frl("    .locals 3\n"))
-    assert(SmaliMethodDef._should_skip_line_frl("    filled-new-array/range {v19..v21}, [B\n"))
-    assert(SmaliMethodDef._should_skip_line_frl("    move-wide/16 v12, p2\n"))
-    assert(SmaliMethodDef._should_skip_line_frl("    new-array v1, v0, [J\n") == False)
-    assert(SmaliMethodDef._should_skip_line_frl("    move-object v1, v0 \n") == False)
-    assert(SmaliMethodDef._should_skip_line_frl("    invoke-super-quick/range {v0..v5}"))
-    assert(SmaliMethodDef._should_skip_line_frl("    invoke-super {v12, v13, v14, v15, v16}, Landroid/view/ViewGroup;->drawChild(Landroid/graphics/Canvas;Landroid/view/View;J)Z\n") == False)
-    assert(SmaliMethodDef._should_skip_line_frl("    move-object v0, p1\n") == False)
+
+    print("\tdereference_p_v_to_number")
+    assert(smd.dereference_p_to_v_number("p1") == "v10")
+    assert(smd.dereference_p_to_v_number("p0") == "v9")
+    assert(smd.dereference_p_to_v_number("p0") == "v9")
+    assert(smd.dereference_p_to_v_number("p3") == "v12")
 
 
-
-    print("\tStigmaStringParsingLib._get_v_from_p...")
-    assert(StigmaStringParsingLib.get_v_from_p("p2", 2) == "v4")
-    assert(StigmaStringParsingLib.get_v_from_p("p0", 5) == "v5")
-    assert(StigmaStringParsingLib.get_v_from_p("p0", 0) == "v0")
-    assert(StigmaStringParsingLib.get_v_from_p("p3", 0) == "v3")
-
-
-    print("\t_dereference_p_registers_frl...")
-    assert(SmaliMethodDef._dereference_p_registers_frl("    filled-new-array {v0, v1, p2}, [Ljava/lang/String;\n", 2) == "    filled-new-array {v0, v1, v4}, [Ljava/lang/String;\n")
-    assert(SmaliMethodDef._dereference_p_registers_frl("    throw p1\n", 16) == "    throw v17\n")
-    assert(SmaliMethodDef._dereference_p_registers_frl("    filled-new-array {p0, p1, p2}, [Ljava/lang/String;\n", 2) == "    filled-new-array {v2, v3, v4}, [Ljava/lang/String;\n")
-    assert(SmaliMethodDef._dereference_p_registers_frl("    if-eqz p3, :cond_6\n", 13) == "    if-eqz v16, :cond_6\n")
-    assert(SmaliMethodDef._dereference_p_registers_frl("    const-string p2, \"nasty p2 example\"\n", 2) == "    const-string v4, \"nasty p2 example\"\n")
+    print("\tdereference_p_to_v_numbers...")
+    assert(smd.dereference_p_to_v_numbers("    filled-new-array {v0, v1, p2}, [Ljava/lang/String;\n") == "    filled-new-array {v0, v1, v11}, [Ljava/lang/String;\n")
+    assert(smd.dereference_p_to_v_numbers("    throw p1\n") == "    throw v10\n")
+    assert(smd.dereference_p_to_v_numbers("    filled-new-array {p0, p1, p2}, [Ljava/lang/String;\n") == "    filled-new-array {v9, v10, v11}, [Ljava/lang/String;\n")
+    assert(smd.dereference_p_to_v_numbers("    if-eqz p3, :cond_6\n") == "    if-eqz v12, :cond_6\n")
+    assert(smd.dereference_p_to_v_numbers("    const-string p1, \"nasty p1 example\"\n") == "    const-string v10, \"nasty p1 example\"\n")
     
 
         
