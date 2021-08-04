@@ -1443,7 +1443,7 @@ class LABEL(SmaliAssemblyInstruction):
     def __repr__(self):
         # LABELS are weird.  If you change this code be careful of compatibility 
         # with instructions such as IF_EQZ that use a LABEL in-line
-        return ":taint_jump_label_" + str(self.n)
+        return ":stigma_jump_label_" + str(self.n)
 
 
 class LOG_D(INVOKE_STATIC):

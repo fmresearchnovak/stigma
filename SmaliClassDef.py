@@ -84,6 +84,12 @@ class SmaliClassDef:
             # print("idx: " + str(idx))
             idx = idx + 1
 
+        
+        #if "smali/com/appsflyer/internal/c.smali" in self.scd.file_name:
+        
+
+            
+
     @staticmethod
     def is_function(line):
         # check this line is a method (begins with "invoke-*")
@@ -194,8 +200,8 @@ class SmaliClassDef:
 
 
     def instrument(self):
-        if self.other_scds == {}:
-            raise ValueError("Other SCDs list not passed to scd")
+        # if self.other_scds == {}:
+        #     raise ValueError("Other SCDs list not passed to scd")
 
         #this will signup our methods for instrumentation with their related opcodes
         for m in self.methods:                

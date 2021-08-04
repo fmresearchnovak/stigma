@@ -1,5 +1,5 @@
 
-import SmaliMethodDef, SmaliClassDef, StigmaStringParsingLib, ControlFlowGraph
+import SmaliMethodDef, SmaliClassDef, StigmaStringParsingLib, ControlFlowGraph, TaintTrackingInstrumentationPlugin
 import sys, re
 
 method_text = '''.method public leakPasswd(Landroid/view/View;)V
@@ -1814,6 +1814,46 @@ def type_safety_weather_app_test():
     smd = SmaliMethodDef.SmaliMethodDef(method_list, None)
     print("Instrumenting")
     smd.instrument()
+    
+    
+def type_safety_weather_app_test1():
+        
+    f = open('test/weather_app_huge_method.smali', 'r')
+    method_list = f.readlines()
+    print("Building SMD")
+    smd = SmaliMethodDef.SmaliMethodDef(method_list, None)
+    print("Instrumenting")
+    smd.instrument()
+    
+    
+def type_safety_weather_app_test_huge():
+        
+    # f = open('test/uninstrumented_c_class.smali', 'r')
+    # method_list = f.readlines()
+    TaintTrackingInstrumentationPlugin.main()
+    print("Building SCD")
+    scd  = SmaliClassDef.SmaliClassDef('test/uninstrumented_c_class.smali')    
+    
+    print("Instrumenting")
+    scd.instrument()
+
+    # limit = 16380    
+    # print("Creating table for offsets bigger than ", limit)
+    # for m in scd.methods:
+    #     if str(m.signature) == '.method static constructor <clinit>()V':
+    #         table = m.make_if_offset_table()
+    
+    #         for row in table:
+    #             if row[-1] > limit:
+    #                 print(row)
+                
+    #         break
+    
+    path = "/Users/saadmahboob/Desktop/testing/Instrumented_c.smali"
+    print("Writing to file at:", path)
+    scd.write_to_file(path)
+    
+    print("done!")
 
 
 def type_safety_weather_app_test2():
@@ -1977,6 +2017,26 @@ def type_safety_weather_app_test2():
     smd.instrument()
 
 
+def type_safety_weather_app_test3():
+    method_text = '''.method private static native _getDirectBufferPointer(Ljava/nio/Buffer;)J
+    .end method'''
+    
+    method_list = method_text.split("\n")
+    print("Building SMD")
+    smd = SmaliMethodDef.SmaliMethodDef(method_list, None)
+    print("Instrumenting")
+    smd.instrument()
+    
+
+def check_type_safety_limits():
+    path = "/Users/saadmahboob/Desktop/testing/instrumented_testing_c.smali"
+    with open(path, 'a') as file:
+
+    # file = open(path, 'w')
+        file.write('\n\tif-eqz v2, :cond1')
+        for i in range(24000):        
+            file.write('\n\tconst/16 v1, 0x2e8')
+
 
 def comparison_count_test1():
     global method_text
@@ -2026,7 +2086,6 @@ def control_flow_graph_test_2():
     print("Query for v4 in const/4 v4, 0x0: ", query3)
 
     print("TEST PASSED NO CRASH!")
-
 
 
 def grow_locals_test_1():
@@ -2119,9 +2178,15 @@ def main():
     #type_safety_checker_aget_test3()
     # type_safety_checker_leaks_test()
     
-    type_safety_weather_app_test()
+    #type_safety_weather_app_test()
 
-
+    #type_safety_weather_app_test3()
+    #type_safety_weather_app_test1()
+    
+    type_safety_weather_app_test_huge()
+    
+    #check_type_safety_limits()
+    
     
 if __name__=="__main__":
     main()

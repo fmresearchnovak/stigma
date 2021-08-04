@@ -56,6 +56,7 @@ class ControlFlowGraph:
         self.try_start_flag = False
         line_index = 0
         
+        
         #create a dummy head node at start of the graph, so 
         self.G.add_node(self.node_counter, text = text[line_index], node_counter = self.node_counter, visited = False, is_in_try_block = self.try_start_flag )
         line_index+=1
@@ -297,9 +298,14 @@ class ControlFlowGraph:
         This map is then stored in a label list of switch statements, which can be used later to connect switch labels
         to their correct parent nodes. 
         e.g [ {':pswitch_data_0': [':pswitch_1', ':pswitch_0']}, {':sswitch_data_2': [':sswitch_4', ':pswitch_5']} ]
-        '''
+        '''   
+  
+        if(len(self.text) < 3):
+            return
+        
         index = 0 
         while(re.search(StigmaStringParsingLib.BEGINS_WITH_DOT_END_METHOD, self.text[index]) is None):
+            
             if(re.search(StigmaStringParsingLib.BEGINS_WITH_PSWITCH_DATA, self.text[index]) is not None):
                 switch_label_map = {}
                 data_label = StigmaStringParsingLib.extract_opcode(self.text[index])
@@ -339,7 +345,7 @@ class ControlFlowGraph:
         nx.draw(self.G, pos, font_size = 6, labels=self.label_dict, with_labels = True)
         plt.show()
 
-                
+               
     @staticmethod
     def get_smallest_node(cur_nodes):
         smallest_node = cur_nodes[0]
@@ -358,10 +364,8 @@ class ControlFlowGraph:
                 return True
         return False
     
-    
     def neighbors(self, node_counter):
         return self.G.neighbors(node_counter) 
-
     
     def __getitem__(self, node_counter):
         # print("node counter: ", node_counter)

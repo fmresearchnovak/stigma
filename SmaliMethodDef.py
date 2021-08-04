@@ -6,7 +6,7 @@ import Instrumenter
 
 from ControlFlowGraph import ControlFlowGraph
 from TypeSafetyChecker import TypeSafetyChecker
-
+import inspect
         
 class SmaliMethodSignature:
 
@@ -169,7 +169,7 @@ class SmaliMethodDef:
         
         self.instrumented_code = [] #this is a list containing new instrumented code
         self.moves_after = []
-
+        
 
         #print("Running Smali Method Def on: " + str(self.signature) + " in " + str(scd))
         # self.cfg = ControlFlowGraph(text)
@@ -306,6 +306,7 @@ class SmaliMethodDef:
         for i in range(len(block)):
             block[i] = str(block[i])
         
+        
         insert_idx = self.find_first_valid_instruction()
         self.embed_block(insert_idx, block)
         
@@ -436,12 +437,6 @@ class SmaliMethodDef:
     def make_new_jump_label(self):
         res = smali.LABEL(self.num_jumps)
         self.num_jumps += 1
-        if self.num_jumps > 500:
-            
-            for line in self.instrumented_code:
-                print(line)
-            
-            raise Exception("too many jumps")
         return res
         
         
@@ -483,9 +478,17 @@ class SmaliMethodDef:
         # print("\n\n")
 
                 
-    def instrument(self):        
+    def instrument(self):
+        
+        #print("size before: ", len(self.raw_text))
+        
+        #dont instrument methods without any text
+        if(len(self.raw_text) < 3):
+            return
         
         #print("Instrumenting Method: ", str(self.signature), " in file: ", self.scd.file_name)
+        #print("Instrumenting Method: ", str(self.signature))
+
         #create the control flow graph for the method text and pass it to the type safety checker
         #this will check and track types of each register on each line 
         #self.cfg = ControlFlowGraph(text)
@@ -494,12 +497,11 @@ class SmaliMethodDef:
         #this will check and track types of each register on each line 
         #print("Running Smali Method Def on: " + str(self.signature) + " in " + str(scd))
         # these are the newly freed registers at the top
-        free_regs = self.grow_locals(Instrumenter.NUM_REGISTER)
-        self.cfg = ControlFlowGraph(self.raw_text)
+        free_regs = self.grow_locals(Instrumenter.NUM_REGISTER)        
+        self.cfg = ControlFlowGraph(self.raw_text)        
         self.tsc = TypeSafetyChecker(self.signature, self.cfg) 
         
-        if(str(self.signature) == '.method public static final convertToForecastCode(Ljava/lang/Integer;)Ljava/lang/Integer;'):
-            self.cfg.show();
+        
         
         #incase the graph is empty, we dont instrument
         if(len(self.cfg.G)) == 1:
@@ -512,23 +514,11 @@ class SmaliMethodDef:
         self.instrumented_code.append(self.raw_text[0])
         
         while(self.cfg.nodes_left_to_visit()):
-            
-            #if the cur_nodes is not empty process the smallest node
             node = self.cfg[counter]
             node_counter = node["node_counter"]
             
             if(not node["visited"]):
                 node["visited"] = True 
-                #get neighbors of current node and store for breadth first search
-                # neighbors = self.cfg.neighbors(node_counter)    
-                # for neighbor in neighbors:                               
-                #     neighbor_node = self.cfg[neighbor]
-                #     if neighbor_node["visited"] == False:
-                #         cur_nodes.append(neighbor_node)
-
-                #print("\n\nNODE")
-                #for line in node["text"]:
-                #    print(line)
                 
                 #call type_update on each line of code inside the node. 
                 for index in range(len(node["text"])):
@@ -554,15 +544,11 @@ class SmaliMethodDef:
         # assign the newly instrumented code to the orignal raw text of the method, 
         # and add the tail from teh cfg, which contains the ending lines of the method
         # such as the .end method and the pswitch data and the sswitch data. 
-        self.raw_text = self.instrumented_code
+        self.raw_text = self.instrumented_code    
         self.raw_text.extend(self.cfg.tail)
-        
-        
-        # for line in self.raw_text:
-        #     print(line)
-        # input("?")
-        
-                   
+        self.fix_larger_if_offsets()
+    
+                       
     def gen_list_of_safe_registers(self, free_regs, node, idx, goal_size):
         # "safe" registers are 
         #  (a) low numbered (less than v16)
@@ -728,7 +714,72 @@ class SmaliMethodDef:
         else:
             return True
     
+    
+    def fix_larger_if_offsets(self):
+        table = []
+        for i in range(len(self.raw_text)):
+            if re.search(StigmaStringParsingLib.BEGINS_WITH_IF, str(self.raw_text[i])) is not None or re.search(StigmaStringParsingLib.BEGINS_WITH_GOTO, str(self.raw_text[i])) is not None:
+                tokens = StigmaStringParsingLib.break_into_tokens(str(self.raw_text[i]))
+                label = tokens[-1]
+                row = [self.raw_text[i], tokens[0], i]
+                for j in range(len(self.raw_text)):
+                    if re.search(StigmaStringParsingLib.BEGINS_WITH_COLON, str(self.raw_text[j])) is not None:     
+                        tokens1 = StigmaStringParsingLib.break_into_tokens(str(self.raw_text[j]))
+                        if tokens1[0] == label:
+                            diff = j-i
+                            row.extend([label, j, diff])
+                            table.append(row)
+                            break
+                        
+        
+        #5461 is 1/6th of 32767
+        #This checks for any if statements which have a jump to the label line greater than 5461, because Stigma causes can error
+        #if the jump is bigger than that. We have computed a safe threshold limit based on different offsets from multiple opcodes. 
+        #The largest offset found is const-wide with an code offset of 6.
+        
+        opposite_if_map = {"if-eq":smali.IF_NE, "if-ne":smali.IF_EQ, "if-lt":smali.IF_GE, "if-ge":smali.IF_LT,  "if-gt":smali.IF_LE, "if-le":smali.IF_GT, "if-eqz":smali.IF_NEZ, "if-nez":smali.IF_EQZ, "if-ltz":smali.IF_GEZ, "if-gez":smali.IF_LTZ, 
+                           "if-gtz":smali.IF_LEZ, "if-lez":smali.IF_GTZ, "goto":smali.GOTO_32, "goto/16": smali.GOTO_32, "goto/32": smali.GOTO_32}
+        
+        
+        #when we use embed_replace it changes length of the raw text, so the current idx doesnt match 
+        #so we offset it by the length of the new block added each time - 1
+        #if you have one line and you replace it by 5, you have actually only inserted 4 new lines 
+        idx_offset = 0
+        for row in table:
+            if abs(row[-1] > 5461):
+                idx = row[2] + idx_offset
+                opcode = row[1]
+                original_line = row[0]
+                new_instr = opposite_if_map[opcode]
+                block = [smali.COMMENT(original_line.strip()), smali.BLANK_LINE()]
+                register = StigmaStringParsingLib.get_v_and_p_numbers(original_line)
 
+                old_label = row[3]
+                
+                if(re.search(StigmaStringParsingLib.BEGINS_WITH_GOTO, row[1]) is not None):
+                    block.append(new_instr(old_label))
+                    block.append(smali.BLANK_LINE())
+                    idx_offset += len(block)-1
+                    self.embed_block_with_replace(idx, block)
+                else:
+                    new_label = self.make_new_jump_label()
+                    if(len(inspect.signature(new_instr).parameters) == 3):
+                        block.append(new_instr(register[0], register[1], repr(new_label)))
+                    elif (len(inspect.signature(new_instr).parameters) == 2):
+                        block.append(new_instr(register[0], repr(new_label)))
+                    else:
+                        raise Exception("unable to convert if")
+                    
+                    block.append(smali.BLANK_LINE())
+                    block.append(smali.GOTO_32(old_label))
+                    block.append(smali.BLANK_LINE())
+                    block.append(new_label)
+                    block.append(smali.BLANK_LINE())
+                    
+                    idx_offset += len(block)-1
+                    self.embed_block_with_replace(idx, block)
+            
+    
     # This method was pulled from VRegisterPool
     def get_spot(self, max_val, type_code, exclude_list = []):
         # Look for empty spot to use
