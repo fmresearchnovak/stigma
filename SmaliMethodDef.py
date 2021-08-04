@@ -717,21 +717,42 @@ class SmaliMethodDef:
     
     def fix_larger_if_offsets(self):
         table = []
-        for i in range(len(self.raw_text)):
-            if re.search(StigmaStringParsingLib.BEGINS_WITH_IF, str(self.raw_text[i])) is not None or re.search(StigmaStringParsingLib.BEGINS_WITH_GOTO, str(self.raw_text[i])) is not None:
-                tokens = StigmaStringParsingLib.break_into_tokens(str(self.raw_text[i]))
-                label = tokens[-1]
-                row = [self.raw_text[i], tokens[0], i]
-                for j in range(len(self.raw_text)):
-                    if re.search(StigmaStringParsingLib.BEGINS_WITH_COLON, str(self.raw_text[j])) is not None:     
-                        tokens1 = StigmaStringParsingLib.break_into_tokens(str(self.raw_text[j]))
-                        if tokens1[0] == label:
-                            diff = j-i
-                            row.extend([label, j, diff])
-                            table.append(row)
-                            break
-                        
+        label_map = {} #this stores the label and the line number corresponding
         
+        for idx in range(len(self.raw_text)):
+            line = str(self.raw_text[idx])
+            tokens = StigmaStringParsingLib.break_into_tokens(line)
+            
+            #store the label of :cond and :goto in a map with their corresponding line number
+            if(re.search(StigmaStringParsingLib.BEGINS_WITH_COND, line) is not None or re.search(StigmaStringParsingLib.BEGINS_WITH_GOTO_LABEL, line) is not None):
+                 label_map[tokens[0]] = idx
+            
+            #when you see an if statement or a goto statement, there are two options
+            elif re.search(StigmaStringParsingLib.BEGINS_WITH_IF, line) is not None or re.search(StigmaStringParsingLib.BEGINS_WITH_GOTO, line) is not None:
+                
+                row = [line, tokens[0], idx]                
+                label = tokens[-1]
+                
+                #1) if the label was already seen, retreive it from existing map and fill all details for the row
+                if label in label_map:
+                    label_idx = label_map[label]
+                    label_offset = label_idx - idx
+                    row.extend([label, label_idx, label_offset])
+                    table.append(row)
+                
+                #2) if the label was not seen before, we can safetly loop from the current index to till the end and whenever u see a label fill the row and break the loop
+                else:
+                    for label_idx in range(idx, len(self.raw_text)):
+                        new_line = str(self.raw_text[label_idx])
+                        if re.search(StigmaStringParsingLib.BEGINS_WITH_COLON, new_line) is not None:     
+                            label_tokens = StigmaStringParsingLib.break_into_tokens(new_line)
+                            if label_tokens[0] == label:
+                                label_offset = label_idx-idx
+                                row.extend([label, label_idx, label_offset])
+                                table.append(row)
+                                break
+                            
+                    
         #5461 is 1/6th of 32767
         #This checks for any if statements which have a jump to the label line greater than 5461, because Stigma causes can error
         #if the jump is bigger than that. We have computed a safe threshold limit based on different offsets from multiple opcodes. 
@@ -779,7 +800,6 @@ class SmaliMethodDef:
                     idx_offset += len(block)-1
                     self.embed_block_with_replace(idx, block)
         
-   
     
     def __repr__(self):
         return self.get_signature()
