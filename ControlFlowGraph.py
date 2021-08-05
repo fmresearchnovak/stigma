@@ -70,10 +70,11 @@ class ControlFlowGraph:
         
         #some of the lines can be SMALI ASSEMBLY OBJECTS, because we call grow_locals before building the control flow graph, so we convert each line to a string before processing it. 
         while (re.search(StigmaStringParsingLib.BEGINS_WITH_DOT_END_METHOD, text[line_index]) is None and re.search(StigmaStringParsingLib.BEGINS_WITH_PSWITCH_DATA, text[line_index]) is None and re.search(StigmaStringParsingLib.BEGINS_WITH_SSWITCH_DATA, text[line_index]) is None):
-
+            
             line = text[line_index]
-
+            
             if (line_index not in self.visited_lines):  
+                # print(" univisted line in cfg", line, "not branching: ", ControlFlowGraph.is_not_branching(line))
                 tokens = StigmaStringParsingLib.break_into_tokens(line)
                 
                 if ControlFlowGraph.is_not_branching(line):
@@ -118,13 +119,16 @@ class ControlFlowGraph:
                     #add an edge for this block of code, to the previous node in graph
                     
                     #if we see a try start label, we raise a flag to indicate we are inside a try block and if we see a try_end, it should make the label false 
-                    if re.search(StigmaStringParsingLib.BEGINS_WITH_TRY, str(line)) is not None:
-                        self.try_start_flag = not self.try_start_flag
                     
                     #this must be done before bundling, otherwise the node counter would change once u bundle it returning the wrong previous line
                     prev_prev_line = self.G.nodes[self.node_counter-1]["text"][0] 
                     self.bundle_contingous_region()
                     prev_line = self.G.nodes[self.node_counter-1]["text"][0] 
+                    
+                    #flip the try flag after u have bundled
+                    if re.search(StigmaStringParsingLib.BEGINS_WITH_TRY, str(line)) is not None:
+                        #print("found try statement: ", line.strip(), " flag: ", self.try_start_flag)
+                        self.try_start_flag = not self.try_start_flag
                     
                     self.G.add_node(self.node_counter, text = [line], node_counter = self.node_counter, visited = False, is_in_try_block = self.try_start_flag )  #create a new node of the label statement, and connect the edge from corresponding if statement node to this node
                     self.label_dict[self.node_counter] = str(self.node_counter) + ". " + line.strip()     
@@ -214,13 +218,14 @@ class ControlFlowGraph:
                     raise Exception("Invalid line: ", line);                
                 
                 self.visited_lines.append(line_index)      
+        
 
             line_index+=1
             
-        
+        self.bundle_contingous_region()
         self.tail = self.text[line_index:]
+    
         
-
     @staticmethod
     def is_not_branching(line):
         if (re.search(StigmaStringParsingLib.BEGINS_WITH_IF, line) is not None):
@@ -246,7 +251,6 @@ class ControlFlowGraph:
             
 
         return True
-
 
     @staticmethod
     def get_key(val, label_list):
@@ -356,6 +360,7 @@ class ControlFlowGraph:
                 smallest_node = node
         return smallest_node
     
+    
     def nodes_left_to_visit(self):
         '''If any node in cfg is not marked visited yet, return True meaning keep processing the graph''' 
         for i in range(len(self.G)):
@@ -364,13 +369,16 @@ class ControlFlowGraph:
                 return True
         return False
     
+    
     def neighbors(self, node_counter):
         return self.G.neighbors(node_counter) 
+    
     
     def __getitem__(self, node_counter):
         # print("node counter: ", node_counter)
         # print("node: ", self.G.nodes[node_counter])
         return self.G.nodes[node_counter]  
+         
             
     def __str__(self):
         return str(self.G.nodes.data())

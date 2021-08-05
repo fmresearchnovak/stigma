@@ -84,12 +84,8 @@ class SmaliClassDef:
             # print("idx: " + str(idx))
             idx = idx + 1
 
+    
         
-        #if "smali/com/appsflyer/internal/c.smali" in self.scd.file_name:
-        
-
-            
-
     @staticmethod
     def is_function(line):
         # check this line is a method (begins with "invoke-*")
@@ -283,7 +279,6 @@ class SmaliClassDef:
         return self._count_references(StigmaStringParsingLib.is_method_call_instruction)
                     
                 
-
     @staticmethod
     def _count_fields(fieldsList):
         regexBeginsWithField = r"^\s*.field"

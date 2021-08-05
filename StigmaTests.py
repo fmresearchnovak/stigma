@@ -1837,24 +1837,97 @@ def type_safety_weather_app_test_huge():
     print("Instrumenting")
     scd.instrument()
 
-    # limit = 16380    
-    # print("Creating table for offsets bigger than ", limit)
-    # for m in scd.methods:
-    #     if str(m.signature) == '.method static constructor <clinit>()V':
-    #         table = m.make_if_offset_table()
-    
-    #         for row in table:
-    #             if row[-1] > limit:
-    #                 print(row)
-                
-    #         break
     
     path = "/Users/saadmahboob/Desktop/testing/Instrumented_c.smali"
     print("Writing to file at:", path)
     scd.write_to_file(path)
     
     print("done!")
+    
+    
+def type_safety_weather_app_test_try_class():
+        
+    # f = open('test/uninstrumented_c_class.smali', 'r')
+    # method_list = f.readlines()
+    print("Running on type_safety_weather_app_test_try_class")
+    print("Building SCD")
+    scd  = SmaliClassDef.SmaliClassDef('test/uninstrumented_weather_crash_tryblock_zzzd.smali')    
+    
+    print("Instrumenting")
+    scd.instrument()
 
+    path = "/Users/saadmahboob/Desktop/testing/Instrumented_class_zzzd.smali"
+    print("Writing to file at:", path)
+    scd.write_to_file(path)
+    
+    print("done!")
+
+
+def type_safety_crash_method_try_block():
+    
+    print("running type_safety_crash_method_try_block")
+    f = open('test/uninstrumented_disableMediationAdapter.smali', 'r')
+    method_list = f.readlines()
+    print("Building SMD")
+    smd = SmaliMethodDef.SmaliMethodDef(method_list, None)
+    print("Instrumenting")
+    smd.instrument()
+    
+    path = "/Users/saadmahboob/Desktop/testing/instrumented_testing_zzzd_method.smali"
+
+    print("writing to file at: ", path)
+    with open(path, 'a') as file:    
+        for line in smd.raw_text:
+            file.write(line)
+
+    # path = "/Users/saadmahboob/Desktop/testing/instrumented_disableMediationAdapter.smali"
+    # print("Writing to file at:", path)
+    # scd.write_to_file(path)
+    print("done")
+
+
+def stigma_annotation_crash():
+    
+    print("Running stigma_annotation_crash")
+    scd  = SmaliClassDef.SmaliClassDef('test/uninstrumented_offline_manager_class.smali')    
+    
+        
+    print("Instrumenting")
+    scd.instrument()
+    
+    path = "/Users/saadmahboob/Desktop/testing/instrumented_offline_manager_class.smali"
+    print("Writing to file at:", path)
+    scd.write_to_file(path)
+    
+    print("Done!")
+    
+def stigma_leaks_crash_fragment():
+    
+    f = open('test/instrumented_markFragment_method.smali', 'r')
+    method_list = f.readlines()
+    print("Building SMD")
+    smd = SmaliMethodDef.SmaliMethodDef(method_list, None)
+    print("Building CFG")
+    smd.instrument()
+    
+    smd.cfg.show()
+    
+    
+def stigma_leaks_crash_onNavigate():
+    
+    print("Running stigma_leaks_crash_onNavigate")
+    scd  = SmaliClassDef.SmaliClassDef('test/uninstrumented_leaks_onSupportNavigateUp.smali')    
+    print("Instrumenting")
+    scd.instrument()
+    
+    path = "/Users/saadmahboob/Desktop//instrumented_onNavgiateSupportUp.smali"
+
+    print("writing to file at: ", path)
+    with open(path, 'a') as file:    
+        for m in scd.methods:
+            for line in m.raw_text:
+                file.write(str(line))
+            
 
 def type_safety_weather_app_test2():
     method_text = '''.method private allocArrays(I)V
@@ -2152,6 +2225,8 @@ def grow_locals_test_2():
     
 
 def main():
+    TaintTrackingInstrumentationPlugin.main()
+
     # comparison_count_test1()
     
 
@@ -2183,10 +2258,19 @@ def main():
     #type_safety_weather_app_test3()
     #type_safety_weather_app_test1()
     
-    type_safety_weather_app_test_huge()
-    
+    #type_safety_weather_app_test_huge()
+    #type_safety_weather_app_test_try_block()
     #check_type_safety_limits()
     
+    
+    #type_safety_crash_method_try_block()
+    #type_safety_weather_app_test_try_class()
+    
+    #stigma_annotation_crash()
+    
+    #stigma_leaks_crash_fragment()
+    
+    stigma_leaks_crash_onNavigate()
     
 if __name__=="__main__":
     main()

@@ -22,6 +22,8 @@ def sign_up(opcode, new_method, instrumeter_inserts_original_lines = False):
     # to do that in python (reflection)
     # this is _ideally_ to allow a sort of "plugin" system where
     # other developers could add instrumentation
+    if opcode.startswith("move-result"):
+        raise Exception("Move-result cannot have an independent instrumenter, signup for the related preceding instruction.")
     if opcode not in instrumentation_map:
         instrumentation_map[opcode] = (new_method, instrumeter_inserts_original_lines)
     else:

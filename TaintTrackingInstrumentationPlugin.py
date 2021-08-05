@@ -768,7 +768,7 @@ def IF_instrumentation(scd, m, cur_line, free_reg): # if statement implicit flow
     return block
         
 
-def INVOKE_instrumentation(scd, m, cur_lines, free_reg):
+def INVOKE_instrumentation(scd, m, cur_lines, free_reg):        
     if(not isinstance(cur_lines, list)):
         # no move result in this case
         # determine that this is a write() call and is therefore
@@ -778,7 +778,7 @@ def INVOKE_instrumentation(scd, m, cur_lines, free_reg):
     else:
         return MOVE_RESULT_instrumentation(scd, m, cur_lines, free_reg)
         
-    return []
+    return [cur_lines]
     
     
 def main():
@@ -909,6 +909,7 @@ def main():
     for opcode in CONVERTER_INSTRUCTION_LIST:
         Instrumenter.sign_up(opcode, CONVERTER_instrumentation)
         
+    
     
     #if and cmp
     Instrumenter.sign_up("if-eq", IF_instrumentation)

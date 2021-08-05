@@ -39,8 +39,13 @@ class SmaliMethodSignature:
             self.is_static = True
             
         self.is_abstract = False
+        self.is_native = False
         if "abstract" in modifiers:
             self.is_abstract = True
+        
+        if "native" in modifiers:
+            self.is_native = True
+        
         
         #print("name: " + str(self.name))
         #print("static: " + str(self.is_static))
@@ -151,7 +156,6 @@ class SmaliMethodDef:
             raise ValueError("Attempting to instantiate method with no code!")
         
         self.raw_text = text
-        self.is_in_try_block = False
         
         self.num_jumps = 0 # not used except for a sanity check
         self.first_new_free_reg_num = None  #this is the first free reg after we grow the locals number for the method
@@ -163,6 +167,7 @@ class SmaliMethodDef:
         if(scd != None):
             self.scd = scd # smali class definition
             class_name = self.scd.class_name
+        
             
         self.signature = SmaliMethodSignature(self.raw_text[0], class_name)
 
@@ -219,10 +224,10 @@ class SmaliMethodDef:
         if(n < 0):
             raise ValueError("Cannot grow locals by a negative amount: " + str(n))
             
-        if(self.signature.is_abstract):
+        if(self.signature.is_abstract or self.signature.is_native):
             # We shouldn't grow abstract methods since they don't have 
             # code / locals
-            return
+            return []
         
         
         # Convert all "pX" references to their corresponding "vX" register
@@ -235,6 +240,7 @@ class SmaliMethodDef:
     
 
         old_locals_num = self.get_locals_directive_num()
+        
         
         # determine the names of the new registers (to return later)
         self.first_new_free_reg_num = old_locals_num + self.signature.num_of_parameter_registers
@@ -363,7 +369,7 @@ class SmaliMethodDef:
     def find_first_valid_instruction(self):
         for i in range(len(self.raw_text)):
             cur_line = self.raw_text[i]
-            if(StigmaStringParsingLib.is_valid_instruction(cur_line)):
+            if(StigmaStringParsingLib.is_valid_instruction(cur_line) or cur_line.startswith("    :")):
                 return i
 
 
@@ -500,9 +506,7 @@ class SmaliMethodDef:
         free_regs = self.grow_locals(Instrumenter.NUM_REGISTER)        
         self.cfg = ControlFlowGraph(self.raw_text)        
         self.tsc = TypeSafetyChecker(self.signature, self.cfg) 
-        
-        
-        
+
         #incase the graph is empty, we dont instrument
         if(len(self.cfg.G)) == 1:
             return     
@@ -515,39 +519,33 @@ class SmaliMethodDef:
         
         while(self.cfg.nodes_left_to_visit()):
             node = self.cfg[counter]
-            node_counter = node["node_counter"]
+            
+            # print("\n NEW NODE: --- node counter: ", counter)
+            # print("is in try: ", node["is_in_try_block"])
             
             if(not node["visited"]):
                 node["visited"] = True 
                 
                 #call type_update on each line of code inside the node. 
                 for index in range(len(node["text"])):
-                    line = node["text"][index]
-                    self.tsc.type_update(line, index, node_counter)
-                    node["type_list"] = self.tsc.node_type_list        
-                    
-                    # print("line: ", line)
-                    # print("type_list", node["type_list"][index])
-                                                        
+                    line = node["text"][index]                 
+                    self.tsc.type_update(line, index, counter)
+                    node["type_list"] = self.tsc.node_type_list    
                     self._do_instrumentation_plugins(free_regs, node, line, index)
 
                 #assign the register type list to this current node after its processed processed
                 # node["type_list"] = self.tsc.node_type_list
                 self.tsc.node_type_list = []
-                counter+=1  
+            
+            counter+=1  
 
-            else:
-                #if current node is visited, increment the counter, get the next node
-                counter+=1   
-
-    
-        # assign the newly instrumented code to the orignal raw text of the method, 
-        # and add the tail from teh cfg, which contains the ending lines of the method
-        # such as the .end method and the pswitch data and the sswitch data. 
+        # # assign the newly instrumented code to the orignal raw text of the method, 
+        # # and add the tail from teh cfg, which contains the ending lines of the method
+        # # such as the .end method and the pswitch data and the sswitch data. 
         self.raw_text = self.instrumented_code    
         self.raw_text.extend(self.cfg.tail)
         self.fix_larger_if_offsets()
-    
+        
                        
     def gen_list_of_safe_registers(self, free_regs, node, idx, goal_size):
         # "safe" registers are 
@@ -633,9 +631,7 @@ class SmaliMethodDef:
     def _do_instrumentation_plugins(self, free_regs, node, line, idx):
         # extract opcode
         # get the relevant instrumentation method from the instrumentation_map and call it
-        # print("calling _do_instrumentation_plugins on line: ", line)
-        
-        opcode = StigmaStringParsingLib.extract_opcode(line)
+        opcode = StigmaStringParsingLib.extract_opcode(line)        
         if self.is_relevant(line, node) and opcode in Instrumenter.instrumentation_map:
             instrumentation_method = Instrumenter.instrumentation_map[opcode][0]
             instrumeter_inserts_original_lines = Instrumenter.instrumentation_map[opcode][1]
@@ -677,23 +673,18 @@ class SmaliMethodDef:
                 self.instrumented_code.extend(self.moves_after)
                 
         else:
-            self.instrumented_code.append(line)
+            #if a line begins with move-result, it should have already been processed by the instrumenter of its preceding opcode (e.g invoke)
+            #so dont add that line again into the new method
+            if(not line.startswith("    move-result")):
+                self.instrumented_code.append(line)
             
             
-    def is_relevant(self, line, node):
-        # only do instrumentation if the length of the method is
-        # not too long.  This is specifically in place to avoid
-        # issues such as Invalid instruction offset: 36077. Offset must be in [-32768, 32767]
-        # which arises from instructions like this:
-        # if-nez v0, :cond_0
-        # the :cond_0 is actually a 16-bit number
-        if len(self.raw_text) > 32767:
-            return False
-        
+    def is_relevant(self, line, node):        
         # The lines of code that we add (instrument) will be instances of smali.SmaliAssemblyInstruction
         # the lines of code that are existing already will be type string
         # So, this check prevents us from instrumenting our new, additional code
-        elif isinstance(line, smali.SmaliAssemblyInstruction):
+        if isinstance(line, smali.SmaliAssemblyInstruction):
+            # print("is smali assembly")
             return False
         
         # we need to know if we are in a try block so we can avoid
