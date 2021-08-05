@@ -265,7 +265,7 @@ class SmaliMethodDef:
         # Write the necessary move values so that the vX
         # registers that originally contained the parameters
         # contain the correct values
-        block = Instrumenter.make_comment_block("")
+        block = Instrumenter.make_comment_block("for moving parameters")
 
         #print(self.signature.parameter_type_map)
         for param in self.signature.parameter_type_map:
@@ -303,7 +303,7 @@ class SmaliMethodDef:
         #    block.append(smali.BLANK_LINE())
         #    old_locals_num+=1
 
-        block = block + Instrumenter.make_comment_block("")
+        block = block + Instrumenter.make_comment_block("for moving parameters")
         
         # we converted the SMALI ASSEMBLY INSTRUCTION OBJECT to the string for each line in the block
         # so we donot ignore those lines while instrumenting
@@ -631,7 +631,21 @@ class SmaliMethodDef:
     def _do_instrumentation_plugins(self, free_regs, node, line, idx):
         # extract opcode
         # get the relevant instrumentation method from the instrumentation_map and call it
-        opcode = StigmaStringParsingLib.extract_opcode(line)        
+        opcode = StigmaStringParsingLib.extract_opcode(line)
+        
+        # we need to know if we are in a try block so we can avoid
+        # the one type of instrumentation where that matters
+        # internal-function move-result lines
+        # If we are in a try block, then adding instructions
+        # may affect the control flow / type checking done 
+        # by the verifier.  This causes java.lang.VerifyError
+        # with  messages like this:
+        # [0x35] register v0 has type Precise Reference: java.lang.String[] but expected Long
+        # https://github.com/JesusFreke/smali/issues/797
+        if(node["is_in_try_block"]):
+            self.instrumented_code.append(line)
+            return
+            
         if self.is_relevant(line, node) and opcode in Instrumenter.instrumentation_map:
             instrumentation_method = Instrumenter.instrumentation_map[opcode][0]
             instrumeter_inserts_original_lines = Instrumenter.instrumentation_map[opcode][1]
@@ -685,18 +699,6 @@ class SmaliMethodDef:
         # So, this check prevents us from instrumenting our new, additional code
         if isinstance(line, smali.SmaliAssemblyInstruction):
             # print("is smali assembly")
-            return False
-        
-        # we need to know if we are in a try block so we can avoid
-        # the one type of instrumentation where that matters
-        # internal-function move-result lines
-        # If we are in a try block, then adding instructions
-        # may affect the control flow / type checking done 
-        # by the verifier.  This causes java.lang.VerifyError
-        # with  messages like this:
-        # [0x35] register v0 has type Precise Reference: java.lang.String[] but expected Long
-        # https://github.com/JesusFreke/smali/issues/797
-        elif node["is_in_try_block"]:
             return False
         
         # Only do instrumentation if line is a valid instruction

@@ -407,7 +407,11 @@ def INTERNAL_FUNCTION_instrumentation(scd, m, cur_lines, free_reg):
         idx = idx + 1
         
     block = block + Instrumenter.make_comment_block("for INTERNAL METHOD")
-    block.extend(cur_lines)
+    
+    block.append(cur_lines[0])
+    block.append(smali.BLANK_LINE())
+    block.append(cur_lines[1])
+    block.append(smali.BLANK_LINE())
         
     
     # this point (for some reason) this stuff is causing the java verifier
@@ -445,7 +449,7 @@ def INTERNAL_FUNCTION_instrumentation(scd, m, cur_lines, free_reg):
 
 
 def EXTERNAL_FUNCTION_instrumentation(scd, m, cur_lines, free_reg):
-
+    
     # Note: This is a pitfall
     # Landroid/telephony/TelephonyManager;->getDeviceId() method (IMEI)
     # This function is both external (covered by this instrumentation)
@@ -474,7 +478,10 @@ def EXTERNAL_FUNCTION_instrumentation(scd, m, cur_lines, free_reg):
     block = block + Instrumenter.make_merge_block(scd, m, param_regs, taint_loc_dest, free_reg)
     block = block + Instrumenter.make_comment_block("for EXTERNAL METHOD")
     
-    block.extend(cur_lines)
+    block.append(cur_lines[0])
+    block.append(smali.BLANK_LINE())
+    block.append(cur_lines[1])
+    block.append(smali.BLANK_LINE())
     
     return block
 
@@ -689,7 +696,7 @@ def WRITE_instrumentation(scd, m, cur_line, free_reg):  # "write()" sinks
                 smali.BLANK_LINE(),
                 smali.CMPL_FLOAT(zero_reg, taint_tag_reg, zero_reg),
                 smali.BLANK_LINE(),
-                smali.IF_EQZ(zero_reg, jmp_label),
+                smali.IF_EQZ(zero_reg, repr(jmp_label)),
                 smali.BLANK_LINE(),
                 smali.CONST_STRING(logd_tag_reg, "\"STIGMAZZ\""),
                 smali.BLANK_LINE(),
@@ -746,7 +753,7 @@ def IF_instrumentation(scd, m, cur_line, free_reg): # if statement implicit flow
                     smali.BLANK_LINE(),
                     smali.CMPL_FLOAT(zero_reg, taint_tag_reg, zero_reg),
                     smali.BLANK_LINE(),
-                    smali.IF_EQZ(zero_reg, jmp_label),
+                    smali.IF_EQZ(zero_reg, repr(jmp_label)),
                     smali.BLANK_LINE(),
                     smali.CONST_STRING(logd_tag_reg, "\"STIGMA\""),
                     smali.BLANK_LINE(),
