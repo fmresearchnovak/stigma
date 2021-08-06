@@ -265,7 +265,7 @@ class TypeSafetyChecker:
             #check-cast vx, type_id
             #Checks whether the object reference in vx can be cast to an instance of a class referenced by type_id. Throws ClassCastException if the cast is not possible, continues execution otherwise.
             elif(instruction == "check-cast"):
-                line_type_map_new[dest_reg] = tokens[-1]
+                line_type_map_new[dest_reg] = self.check_cast_type(tokens[-1])
                       
                                                       
             else:
@@ -330,6 +330,12 @@ class TypeSafetyChecker:
                     return node, line_index
 
         raise ValueError("Line not found in any node:", line)
+    
+    def check_cast_type(self, cast_type):
+        if(cast_type[0] == "L"):
+            return "object"
+        else:
+            return cast_type
     
     def check_type_list(self, opcode):
         '''

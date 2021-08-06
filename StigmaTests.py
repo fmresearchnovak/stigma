@@ -1927,6 +1927,23 @@ def stigma_leaks_crash_onNavigate():
         for m in scd.methods:
             for line in m.raw_text:
                 file.write(str(line))
+                
+                
+def stigma_leaks_crash_removeAt():
+    
+    print("Running stigma_leaks_crash_removeAt")
+    scd  = SmaliClassDef.SmaliClassDef('test/uninstrumented_SimpleArrayMap_removeAt.smali')    
+    
+    print("Instrumenting")
+    scd.instrument()
+    
+    path = "/Users/saadmahboob/Desktop//instrumented_SimpleArrayMap.smali"
+
+    print("writing to file at: ", path)
+    with open(path, 'a') as file:    
+        for m in scd.methods:
+            for line in m.raw_text:
+                file.write(str(line))
             
 
 def type_safety_weather_app_test2():
@@ -2270,7 +2287,9 @@ def main():
     
     #stigma_leaks_crash_fragment()
     
-    stigma_leaks_crash_onNavigate()
+    #stigma_leaks_crash_onNavigate()
+    
+    stigma_leaks_crash_removeAt()
     
 if __name__=="__main__":
     main()

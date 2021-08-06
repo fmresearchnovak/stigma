@@ -868,32 +868,77 @@ def main():
     
     #const 
     Instrumenter.sign_up("const", CONST_instrumentation)
+    Instrumenter.sign_up("const/4", CONST_instrumentation)
+    Instrumenter.sign_up("const/16", CONST_instrumentation)
+    Instrumenter.sign_up("const/high16", CONST_instrumentation)
     Instrumenter.sign_up("const-wide", CONST_instrumentation)
+    Instrumenter.sign_up("const-wide/16", CONST_instrumentation)
+    Instrumenter.sign_up("const-wide/32", CONST_instrumentation)
+    Instrumenter.sign_up("const-wide/high16", CONST_instrumentation)
+    Instrumenter.sign_up("const-class", CONST_instrumentation)
+    Instrumenter.sign_up("const-string-jumbo", CONST_instrumentation)
     Instrumenter.sign_up("const-string", CONST_instrumentation)
 
     #binaryop int
     Instrumenter.sign_up("add-int", BINARYOP_instrumenter)
+    Instrumenter.sign_up("add-int/2addr", BINARYOP_instrumenter)
+    Instrumenter.sign_up("add-int/lit16", BINARYOP_instrumenter)
+    Instrumenter.sign_up("add-int/lit8", BINARYOP_instrumenter)
+
     Instrumenter.sign_up("sub-int", BINARYOP_instrumenter)
+    Instrumenter.sign_up("sub-int/2addr", BINARYOP_instrumenter)
+    Instrumenter.sign_up("sub-int/lit16", BINARYOP_instrumenter)
+    Instrumenter.sign_up("sub-int/lit8", BINARYOP_instrumenter)
+    
     Instrumenter.sign_up("mul-int", BINARYOP_instrumenter)
+    Instrumenter.sign_up("mul-int/2addr", BINARYOP_instrumenter)
+    Instrumenter.sign_up("mul-int/lit16", BINARYOP_instrumenter)
+    Instrumenter.sign_up("mul-int/lit8", BINARYOP_instrumenter)
+    
     Instrumenter.sign_up("div-int", BINARYOP_instrumenter)
+    Instrumenter.sign_up("div-int/2addr", BINARYOP_instrumenter)
+    Instrumenter.sign_up("div-int/lit16", BINARYOP_instrumenter)
+    Instrumenter.sign_up("div-int/lit8", BINARYOP_instrumenter)
     
     #binaryop long
     Instrumenter.sign_up("add-long", BINARYOP_instrumenter)
+    Instrumenter.sign_up("add-long/2addr", BINARYOP_instrumenter)
+        
     Instrumenter.sign_up("sub-long", BINARYOP_instrumenter)
+    Instrumenter.sign_up("sub-long/2addr", BINARYOP_instrumenter)
+
     Instrumenter.sign_up("mul-long", BINARYOP_instrumenter)
+    Instrumenter.sign_up("mul-long/2addr", BINARYOP_instrumenter)
+
     Instrumenter.sign_up("div-long", BINARYOP_instrumenter)
+    Instrumenter.sign_up("div-long/2addr", BINARYOP_instrumenter)
+
     
     #binaryop float
     Instrumenter.sign_up("add-float", BINARYOP_instrumenter)
+    Instrumenter.sign_up("add-float/2addr", BINARYOP_instrumenter)
+
     Instrumenter.sign_up("sub-float", BINARYOP_instrumenter)
+    Instrumenter.sign_up("sub-float/2addr", BINARYOP_instrumenter)
+
     Instrumenter.sign_up("mul-float", BINARYOP_instrumenter)
+    Instrumenter.sign_up("mul-float/2addr", BINARYOP_instrumenter)
+
     Instrumenter.sign_up("div-float", BINARYOP_instrumenter)
+    Instrumenter.sign_up("div-float/2addr", BINARYOP_instrumenter)
 
     #binaryop double
     Instrumenter.sign_up("add-double", BINARYOP_instrumenter)
+    Instrumenter.sign_up("add-double/2addr", BINARYOP_instrumenter)
+
     Instrumenter.sign_up("sub-double", BINARYOP_instrumenter)
+    Instrumenter.sign_up("sub-double/2addr", BINARYOP_instrumenter)
+    
     Instrumenter.sign_up("mul-double", BINARYOP_instrumenter)
+    Instrumenter.sign_up("mul-double/2addr", BINARYOP_instrumenter)
+    
     Instrumenter.sign_up("div-double", BINARYOP_instrumenter)
+    Instrumenter.sign_up("div-double/2addr", BINARYOP_instrumenter)
     
     #invoke-
     Instrumenter.sign_up("invoke-virtual", INVOKE_instrumentation, True)

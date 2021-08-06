@@ -158,7 +158,7 @@ class SmaliMethodDef:
         self.raw_text = text
         
         self.num_jumps = 0 # not used except for a sanity check
-        self.first_new_free_reg_num = None  #this is the first free reg after we grow the locals number for the method
+        self.first_new_free_reg_num = 0  #this is the first free reg after we grow the locals number for the method
         
         self.ORIGINAL_LOCAL_NUMBER_REGS = self.get_locals_directive_num()
         self.reg_number_float = self.ORIGINAL_LOCAL_NUMBER_REGS
@@ -531,6 +531,13 @@ class SmaliMethodDef:
                     line = node["text"][index]                 
                     self.tsc.type_update(line, index, counter)
                     node["type_list"] = self.tsc.node_type_list    
+                    
+                    # if(str(self.signature) == ".method private executeOpsTogether(Ljava/util/ArrayList;Ljava/util/ArrayList;II)V"):
+                    #     if "check-cast" in line or "moveToState" in line or "v11" in line:
+                    #         print("line: ", line)
+                    #         print(node["type_list"][-1])
+                    #         input("?\n")
+                    
                     self._do_instrumentation_plugins(free_regs, node, line, index)
 
                 #assign the register type list to this current node after its processed processed
@@ -562,23 +569,21 @@ class SmaliMethodDef:
         #empty the move lists
         self.moves_before = []
         self.moves_after = []
-
+        
         # generate a list of available registers        
         safe_regs = set()
         
-        # if "type_list" not in node:
-        #     print("no type list found")
-        #     print(node)
-        #     self.cfg.show()
-        
+        #this first free reg is later used as a destination to move instrutions so we need to count how many are already used in the safe reg list so we can ignore those        
+        count = self.first_new_free_reg_num
         line_type_map = node["type_list"][idx-1]
         # 1) Try to use the top registers available after growing
         for r in free_regs:
             n = int(r[1:])
             if(n < 16):
+                count = count + 1
                 safe_regs.add(r)
-                
-                
+        
+        
         if(len(safe_regs) >= goal_size):
             return list(safe_regs)
         
@@ -601,13 +606,14 @@ class SmaliMethodDef:
             # program.
             if(reg not in line_type_map):
                 safe_regs.add(reg)
-    
+
         safe_regs.difference_update(cur_line_reg)
+
         if(len(safe_regs) >= goal_size):
             return list(safe_regs)
         
         #3) implement moves to free up lower numbered registers if possible
-        dest_reg = self.first_new_free_reg_num
+        dest_reg = count
         for reg in line_type_map:
             # reg not in cur_line_reg 
             # it looks like that we can use the registers from the current line being processed, however there is a BIG UNSURE
@@ -616,7 +622,6 @@ class SmaliMethodDef:
                 self.moves_before.append(move_instr("v" + str(dest_reg),reg))
                 self.moves_after.append(move_instr(reg, "v" + str(dest_reg)))
                 safe_regs.add(reg)
-                
                 if(line_type_map[reg] == "64-bit"):
                     dest_reg+=2
                 else:
@@ -624,7 +629,7 @@ class SmaliMethodDef:
             
             if len(safe_regs) == goal_size:
                 break
-    
+            
         return list(safe_regs)               
          
         
@@ -646,6 +651,7 @@ class SmaliMethodDef:
             self.instrumented_code.append(line)
             return
             
+            
         if self.is_relevant(line, node) and opcode in Instrumenter.instrumentation_map:
             instrumentation_method = Instrumenter.instrumentation_map[opcode][0]
             instrumeter_inserts_original_lines = Instrumenter.instrumentation_map[opcode][1]
@@ -654,9 +660,9 @@ class SmaliMethodDef:
                 next_line = self.tsc.obtain_next_instruction(node["node_counter"], idx+1)
                 if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, next_line) is not None):
                     line = [line,next_line]
-            
+                        
             regs = self.gen_list_of_safe_registers(free_regs, node, idx, Instrumenter.NUM_REGISTER)
-            
+                        
             #if we are unable to get enough free registers, worse case possible if all the types are ?
             if(len(regs) < Instrumenter.NUM_REGISTER):
                 new_block = []
@@ -685,6 +691,7 @@ class SmaliMethodDef:
                 self.instrumented_code.extend(self.moves_before)
                 self.instrumented_code.extend(new_block)
                 self.instrumented_code.extend(self.moves_after)
+            
                 
         else:
             #if a line begins with move-result, it should have already been processed by the instrumenter of its preceding opcode (e.g invoke)
@@ -698,7 +705,6 @@ class SmaliMethodDef:
         # the lines of code that are existing already will be type string
         # So, this check prevents us from instrumenting our new, additional code
         if isinstance(line, smali.SmaliAssemblyInstruction):
-            # print("is smali assembly")
             return False
         
         # Only do instrumentation if line is a valid instruction
