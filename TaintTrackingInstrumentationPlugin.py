@@ -863,8 +863,16 @@ def main():
 
     #move 
     Instrumenter.sign_up("move", MOVE_instrumentation)
+    Instrumenter.sign_up("move/from16", MOVE_instrumentation)
+    Instrumenter.sign_up("move/16", MOVE_instrumentation)
+
     Instrumenter.sign_up("move-wide", MOVE_instrumentation)
+    Instrumenter.sign_up("move-wide/from16", MOVE_instrumentation)
+    Instrumenter.sign_up("move-wide/16", MOVE_instrumentation)
+
     Instrumenter.sign_up("move-object", MOVE_instrumentation)
+    Instrumenter.sign_up("move-object/from16", MOVE_instrumentation)
+    Instrumenter.sign_up("move-object/16", MOVE_instrumentation)
     
     #const 
     Instrumenter.sign_up("const", CONST_instrumentation)

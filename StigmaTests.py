@@ -1912,7 +1912,6 @@ def stigma_leaks_crash_fragment():
     
     smd.cfg.show()
     
-    
 def stigma_leaks_crash_onNavigate():
     
     print("Running stigma_leaks_crash_onNavigate")
@@ -1927,8 +1926,7 @@ def stigma_leaks_crash_onNavigate():
         for m in scd.methods:
             for line in m.raw_text:
                 file.write(str(line))
-                
-                
+                          
 def stigma_leaks_crash_removeAt():
     
     print("Running stigma_leaks_crash_removeAt")
@@ -1944,6 +1942,42 @@ def stigma_leaks_crash_removeAt():
         for m in scd.methods:
             for line in m.raw_text:
                 file.write(str(line))
+                            
+def stigma_leaks_crash_moveToState():
+    
+    print("Running stigma_leaks_crash_moveToState")
+    scd  = SmaliClassDef.SmaliClassDef('test/uninstrumented_moveToState.smali')    
+    
+    print("Instrumenting")
+    scd.instrument()
+    
+    path = "/Users/saadmahboob/Desktop/testing/instrumented_moveToState.smali"
+
+    print("writing to file at: ", path)
+    with open(path, 'a') as file:    
+        for m in scd.methods:
+            for line in m.raw_text:
+                file.write(str(line))
+    
+    print("Done!")
+    
+def stigma_leaks_crash_CoreComponentFactory():
+        
+    print("Running stigma_leaks_crash_CoreComponentFactory")
+    scd  = SmaliClassDef.SmaliClassDef('test/uninstrumented_CoreComponentFactory.smali')    
+    
+    print("Instrumenting")
+    scd.instrument()
+    
+    path = "/Users/saadmahboob/Desktop/testing/instrumented_CoreComponentFactory.smali"
+
+    print("writing to file at: ", path)
+    with open(path, 'a') as file:    
+        for m in scd.methods:
+            for line in m.raw_text:
+                file.write(str(line))
+    
+    print("Done!")
             
 
 def type_safety_weather_app_test2():
@@ -2284,12 +2318,12 @@ def main():
     #type_safety_weather_app_test_try_class()
     
     #stigma_annotation_crash()
-    
     #stigma_leaks_crash_fragment()
-    
     #stigma_leaks_crash_onNavigate()
+    #stigma_leaks_crash_removeAt()
+    #stigma_leaks_crash_moveToState()
+    stigma_leaks_crash_CoreComponentFactory()
     
-    stigma_leaks_crash_removeAt()
     
 if __name__=="__main__":
     main()

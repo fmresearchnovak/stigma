@@ -224,6 +224,8 @@ class SmaliMethodDef:
         if(n < 0):
             raise ValueError("Cannot grow locals by a negative amount: " + str(n))
             
+
+        old_locals_num = self.get_locals_directive_num()            
         if(self.signature.is_abstract or self.signature.is_native):
             # We shouldn't grow abstract methods since they don't have 
             # code / locals
@@ -236,10 +238,6 @@ class SmaliMethodDef:
         # the new location (after adjusting .locals) into their original
         # location    
         self.convert_all_lines_p_to_v_numbers()
-
-    
-
-        old_locals_num = self.get_locals_directive_num()
         
         
         # determine the names of the new registers (to return later)
@@ -468,45 +466,24 @@ class SmaliMethodDef:
 
     def embed_block(self, position, block):
         # put the code in this block just before the position
-        
-        
-        # print("embedding block as position: " + str(position))
-
-        # print("--- before ---")
-        # for i in range(position-5, position+len(block) + 5):
-        # print(self.raw_text[i], end="")
-        # print("\n\n")
         self.raw_text = self.raw_text[:position] + block + self.raw_text[position:]
-
-        # print("--- after ---")
-        # for i in range(position-5, position+len(block) + 5):
-        # print(self.raw_text[i], end="")
-        # print("\n\n")
 
                 
     def instrument(self):
-        
-        #print("size before: ", len(self.raw_text))
-        
+                        
         #dont instrument methods without any text
         if(len(self.raw_text) < 3):
             return
         
-        #print("Instrumenting Method: ", str(self.signature), " in file: ", self.scd.file_name)
-        #print("Instrumenting Method: ", str(self.signature))
-
+        
         #create the control flow graph for the method text and pass it to the type safety checker
         #this will check and track types of each register on each line 
-        #self.cfg = ControlFlowGraph(text)
-
-        #initialize the type checker as a instance variable for each method. 
         #this will check and track types of each register on each line 
-        #print("Running Smali Method Def on: " + str(self.signature) + " in " + str(scd))
-        # these are the newly freed registers at the top
+        #these are the newly freed registers at the top
         free_regs = self.grow_locals(Instrumenter.NUM_REGISTER)        
         self.cfg = ControlFlowGraph(self.raw_text)        
         self.tsc = TypeSafetyChecker(self.signature, self.cfg) 
-
+        
         #incase the graph is empty, we dont instrument
         if(len(self.cfg.G)) == 1:
             return     
@@ -520,9 +497,6 @@ class SmaliMethodDef:
         while(self.cfg.nodes_left_to_visit()):
             node = self.cfg[counter]
             
-            # print("\n NEW NODE: --- node counter: ", counter)
-            # print("is in try: ", node["is_in_try_block"])
-            
             if(not node["visited"]):
                 node["visited"] = True 
                 
@@ -530,20 +504,12 @@ class SmaliMethodDef:
                 for index in range(len(node["text"])):
                     line = node["text"][index]                 
                     self.tsc.type_update(line, index, counter)
-                    node["type_list"] = self.tsc.node_type_list    
-                    
-                    # if(str(self.signature) == ".method private executeOpsTogether(Ljava/util/ArrayList;Ljava/util/ArrayList;II)V"):
-                    #     if "check-cast" in line or "moveToState" in line or "v11" in line:
-                    #         print("line: ", line)
-                    #         print(node["type_list"][-1])
-                    #         input("?\n")
-                    
+                    node["type_list"] = self.tsc.node_type_list
                     self._do_instrumentation_plugins(free_regs, node, line, index)
 
                 #assign the register type list to this current node after its processed processed
-                # node["type_list"] = self.tsc.node_type_list
                 self.tsc.node_type_list = []
-            
+                        
             counter+=1  
 
         # # assign the newly instrumented code to the orignal raw text of the method, 
@@ -576,6 +542,7 @@ class SmaliMethodDef:
         #this first free reg is later used as a destination to move instrutions so we need to count how many are already used in the safe reg list so we can ignore those        
         count = self.first_new_free_reg_num
         line_type_map = node["type_list"][idx-1]
+        
         # 1) Try to use the top registers available after growing
         for r in free_regs:
             n = int(r[1:])
@@ -634,23 +601,28 @@ class SmaliMethodDef:
          
         
     def _do_instrumentation_plugins(self, free_regs, node, line, idx):
-        # extract opcode
-        # get the relevant instrumentation method from the instrumentation_map and call it
-        opcode = StigmaStringParsingLib.extract_opcode(line)
         
-        # we need to know if we are in a try block so we can avoid
-        # the one type of instrumentation where that matters
-        # internal-function move-result lines
-        # If we are in a try block, then adding instructions
-        # may affect the control flow / type checking done 
-        # by the verifier.  This causes java.lang.VerifyError
-        # with  messages like this:
-        # [0x35] register v0 has type Precise Reference: java.lang.String[] but expected Long
-        # https://github.com/JesusFreke/smali/issues/797
-        if(node["is_in_try_block"]):
+        opcode = StigmaStringParsingLib.extract_opcode(line)        
+        #1)        
+            # we need to know if we are in a try block so we can avoid
+            # the one type of instrumentation where that matters
+            # internal-function move-result lines
+            # If we are in a try block, then adding instructions
+            # may affect the control flow / type checking done 
+            # by the verifier.  This causes java.lang.VerifyError
+            # with  messages like this:
+            # [0x35] register v0 has type Precise Reference: java.lang.String[] but expected Long
+            # https://github.com/JesusFreke/smali/issues/797
+        #2  
+            #if a line begins with move-result, it should have already been processed 
+            # by the instrumenter of its preceding opcode (e.g invoke)
+            # so dont add that line again into the new method
+        if node["is_in_try_block"]:
             self.instrumented_code.append(line)
             return
-            
+        
+        if re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, line) is not None:
+            return
             
         if self.is_relevant(line, node) and opcode in Instrumenter.instrumentation_map:
             instrumentation_method = Instrumenter.instrumentation_map[opcode][0]
@@ -660,44 +632,55 @@ class SmaliMethodDef:
                 next_line = self.tsc.obtain_next_instruction(node["node_counter"], idx+1)
                 if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, next_line) is not None):
                     line = [line,next_line]
-                        
+
+                            
             regs = self.gen_list_of_safe_registers(free_regs, node, idx, Instrumenter.NUM_REGISTER)
-                        
+            
+            
             #if we are unable to get enough free registers, worse case possible if all the types are ?
-            if(len(regs) < Instrumenter.NUM_REGISTER):
+            if(len(regs) < Instrumenter.NUM_REGISTER and instrumeter_inserts_original_lines):
                 new_block = []
+                if(isinstance(line,list)):
+                    new_block.extend(line)
+                else:
+                    new_block.append(line)
+                self.insert_instrumented_code(line, new_block, instrumeter_inserts_original_lines)            
+                return
+            elif len(regs) < Instrumenter.NUM_REGISTER:
+                new_block = []
+                self.insert_instrumented_code(line, new_block, instrumeter_inserts_original_lines)     
+                return       
             else:
                 new_block = instrumentation_method(self.scd, self, line, regs)
-        
-            #invoke foo()
-            #move-result vx
-            #for such a line which contains a move result, we cannot put the new block of code between the 
-            #move-result and the invoke as it would case a java verifier error, so in for this case, the instrumenter for move result
-            #returns the new block with the orignal line inerted at the correct spot, so we donot need to append the line again
-            #there are three cases for the invokes, preceding the move-result
-                #1)Sources (getLastKnownLocation, IMEI etc) -> new code comes before/after the original line
-                #2)Internal Functions, -> new code comes before and after the original lines (invoke,move-result)
-                #3)External Functions, -> new code comes before/after the original line
-            #Note: No valid code can come in between an invoke and a move result
-            if(not instrumeter_inserts_original_lines):
-                self.instrumented_code.extend(self.moves_before)
-                self.instrumented_code.extend(new_block)
-                self.instrumented_code.extend(self.moves_after)
-                if(isinstance(line,list)):
-                    self.instrumented_code.extend(line)
-                else:
-                    self.instrumented_code.append(line)
-            else:
-                self.instrumented_code.extend(self.moves_before)
-                self.instrumented_code.extend(new_block)
-                self.instrumented_code.extend(self.moves_after)
-            
-                
+                self.insert_instrumented_code(line, new_block, instrumeter_inserts_original_lines)
+
         else:
-            #if a line begins with move-result, it should have already been processed by the instrumenter of its preceding opcode (e.g invoke)
-            #so dont add that line again into the new method
-            if(not line.startswith("    move-result")):
+            self.instrumented_code.append(line)
+            
+    
+    def insert_instrumented_code(self, line, new_block, instrumeter_inserts_original_lines):
+        #invoke foo()
+        #move-result vx
+        #for such a line which contains a move result, we cannot put the new block of code between the 
+        #move-result and the invoke as it would case a java verifier error, so in for this case, the instrumenter for move result
+        #returns the new block with the orignal line inerted at the correct spot, so we donot need to append the line again
+        #there are three cases for the invokes, preceding the move-result
+            #1)Sources (getLastKnownLocation, IMEI etc) -> new code comes before/after the original line
+            #2)Internal Functions, -> new code comes before and after the original lines (invoke,move-result)
+            #3)External Functions, -> new code comes before/after the original line
+        #Note: No valid code can come in between an invoke and a move result
+        if(not instrumeter_inserts_original_lines):
+            self.instrumented_code.extend(self.moves_before)
+            self.instrumented_code.extend(new_block)
+            self.instrumented_code.extend(self.moves_after)
+            if(isinstance(line,list)):
+                self.instrumented_code.extend(line)
+            else:
                 self.instrumented_code.append(line)
+        else:
+            self.instrumented_code.extend(self.moves_before)
+            self.instrumented_code.extend(new_block)
+            self.instrumented_code.extend(self.moves_after)
             
             
     def is_relevant(self, line, node):        
