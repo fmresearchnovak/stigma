@@ -36,9 +36,92 @@
 # _TWO_REGISTER_BINARY_INSTRUCTION
 # _TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION
 
+import StigmaStringParsingLib
+
 
 class SmaliAssemblyInstruction():
 
+    
+    @staticmethod
+    def from_line(raw_line_string):
+        #print("constructing SmaliAssemblyInstruction From: " + str(raw_line_string))
+
+        line = raw_line_string.strip("\n")
+        if(line.strip().startswith("#")):
+            return COMMENT(line)
+
+        hash_pos = line.find("#")
+        if hash_pos != -1:
+            # for now, delete "in-line" comments since they're a pain to retain
+            line = line[:hash_pos] 
+
+
+        
+        tokens = StigmaStringParsingLib.break_into_tokens(line)
+        #tokens = list(filter(lambda x: x != "", tokens)) # removes ""
+        #print("tokens: " + str(tokens))
+        if(len(tokens) == 0):
+            return BLANK_LINE()
+
+
+        opcode = tokens[0]
+
+        if(opcode == "const-string"):
+            return CONST_STRING(tokens[1].strip(","), "\"" + line.split("\"")[1] + "\"")
+        
+
+        if(opcode_has_parameter_list(opcode) or opcode_has_parameter_range(opcode)):
+            start = line.index("{")
+            end = line.index("}")
+            args = line[start+1:end]
+            #print("HERE")
+            #print(args)
+            if args == "":
+                args = "[]"
+            else:
+                args = args.split(" ")
+                args = str(list(map(lambda x : x.strip(","), args)))
+            
+            args = [ args ]
+            args.append("\"" + tokens[-1] + "\"")
+            #print("args before: " + str(args))
+            
+            
+        else:
+            args = tokens[1:]
+            #print("args before: " + str(args))
+            args = list(map(lambda x : "\"" + str(x.strip(",")) + "\"", args))
+            
+        #print("args: " + str(args))
+
+
+        opcode = opcode.upper()
+        opcode = opcode.replace("/", "_")
+        opcode = opcode.replace("-", "_")
+
+        # this next part is very very technical and feels
+        # pretty hacky
+        # https://www.programiz.com/python-programming/methods/built-in/eval
+        # https://stackoverflow.com/questions/3941517/converting-list-to-args-when-calling-function#3941529
+        # example input line: "    move/from16 v1, v25"
+        # output eval_string: "MOVE_FROM16("v1", "v25")"
+        eval_string = opcode + "(" + ", ".join(args) + ")"
+        #print("eval_string: " + eval_string)
+
+        try:
+            #print("eval string: " + str(eval_string))
+            smali_assembly_instruction_obj = eval(eval_string)
+            return smali_assembly_instruction_obj
+        except Exception as e:
+            print("Excpetion in eval, parse_line(): " + str(e))
+
+    
+    
+    #def __init__(self, should_be_targeted_for_instrumentation = True):
+        # specifies if this instruction should
+        # be considered in instrumentation
+        # self.targeted_for_instrumentation = should_be_targeted_for_instrumentation
+    
     def __str__(self):
         return "    " + repr(self) + "\n"
 
@@ -80,9 +163,6 @@ class ImplicitFirstRegisterInstruction():
 
 
 class NOP(SmaliAssemblyInstruction):
-    def __init__(self):
-        pass
-
     def __repr__(self):
         return self.opcode()
         
@@ -102,9 +182,6 @@ class INVOKE_DIRECT_EMPY(NOP):
 
 
 class BLANK_LINE(SmaliAssemblyInstruction):
-    def __init__(self):
-        pass
-
     def __repr__(self):
         return ""
 
@@ -205,7 +282,6 @@ class _SINGLE_DEST_REGISTER_INSTRUCTION(SmaliAssemblyInstruction):
 
     def get_registers(self):
         return [self.rd]
-
         
     def __repr__(self):
         return self.opcode() + " " + str(self.rd) + ", " + str(self.value_arg)
@@ -296,6 +372,7 @@ class CONST_STRING_JUMBO(SmaliAssemblyInstruction):
     #       const-string/jumbo v5, "stackTrace"
     def __init__(self, ):
         print("not yet implemented: const-string/jumbo")
+        raise Execption("Not Yet Implemented!")
         pass
         
 
@@ -885,6 +962,7 @@ class INVOKE_INTERFACE_RANGE(SmaliAssemblyInstruction):
 class _TWO_REGISTER_UNARY_INSTRUCTION(SmaliAssemblyInstruction):
     # A parent class that should never be instantiated directly
     def __init__(self, reg_dest, reg_arg):
+        super().__init__()
         self.rd = reg_dest
         self.ra = reg_arg
 
@@ -1129,6 +1207,7 @@ class _TWO_REGISTER_BINARY_INSTRUCTION(SmaliAssemblyInstruction):
     # A parent class that should never be instantiated directly
     
     def __init__(self, reg_dest_and_arg1, reg_arg2):
+        super().__init__()
         self.rd = reg_dest_and_arg1
         self.ra1 = reg_dest_and_arg1
         self.ra2 = reg_arg2
@@ -1494,78 +1573,8 @@ def type_code_name(type_code):
         raise ValueError("Invalid Type Code: " + str(type_code))
 
 
-def parse_line(line):
-    #print("parsing: " + line)
-    # function to take a list (a string)
-    # and convert it to the appropriate SmaliAssemblyInstruction
-    line = line.strip("\n")
-    
-
-    if(line.strip().startswith("#")):
-        return COMMENT(line)
-
-    hash_pos = line.find("#")
-    if hash_pos != -1:
-        line = line[:hash_pos]
-
-    tokens = line.split(" ")
-    tokens = list(filter(lambda x: x != "", tokens)) # removes ""
-    #print("tokens: " + str(tokens))
-    if(len(tokens) == 0):
-        return BLANK_LINE()
 
 
-    opcode = tokens[0]
-    
-
-    if(opcode == "const-string"):
-        return CONST_STRING(tokens[1].strip(","), "\"" + line.split("\"")[1] + "\"")
-    
-
-    if(opcode_has_parameter_list(opcode) or opcode_has_parameter_range(opcode)):
-        start = line.index("{")
-        end = line.index("}")
-        args = line[start+1:end]
-        #print("HERE")
-        #print(args)
-        if args == "":
-            args = "[]"
-        else:
-            args = args.split(" ")
-            args = str(list(map(lambda x : x.strip(","), args)))
-        
-        args = [ args ]
-        args.append("\"" + tokens[-1] + "\"")
-        #print("args before: " + str(args))
-        
-    else:
-        args = tokens[1:]
-        #print("args before: " + str(args))
-        args = list(map(lambda x : "\"" + str(x.strip(",")) + "\"", args))
-        
-    #print("args: " + str(args))
-
-
-    opcode = opcode.upper()
-    opcode = opcode.replace("/", "_")
-    opcode = opcode.replace("-", "_")
-
-    # this next part is very very technical and feels
-    # pretty hacky
-    # https://www.programiz.com/python-programming/methods/built-in/eval
-    # https://stackoverflow.com/questions/3941517/converting-list-to-args-when-calling-function#3941529
-    # example input line: "    move/from16 v1, v25"
-    # output eval_string: "MOVE_FROM16("v1", "v25")"
-    eval_string = opcode + "(" + ", ".join(args) + ")"
-    #print("eval_string: " + eval_string)
-
-    try:
-        smali_assembly_instruction_obj = eval(eval_string)
-        return smali_assembly_instruction_obj
-    except Exception as e:
-        print("Excpetion in eval, parse_line(): " + str(e))
-
-    return None
 
 
 def opcode_has_parameter_list(opcode):
@@ -1683,51 +1692,68 @@ def main():
     ]
 
 
+    obj = NOP()
+    print("obj: ", obj)
+
     print("constructor tests...")
     for cur_line in TESTS:
         print("\t" + cur_line.strip())
-        obj = parse_line(cur_line)
+        obj = SmaliAssemblyInstruction.from_line(cur_line)
         #print(type(obj), ": " + str(obj))
         assert(str(obj) == cur_line)
         
 
 
     print("implicit registers tests...")
-    asm_obj = parse_line("    move-wide v0, v15\n")
+    asm_obj = SmaliAssemblyInstruction.from_line("    move-wide v0, v15\n")
     #print(asm_obj)
     #print(asm_obj.get_registers())
     #print(asm_obj.get_implicit_registers())
     assert(asm_obj.get_registers() == ["v0", "v15"])
     assert(asm_obj.get_implicit_registers() == ["v1", "v16"])
     
-    asm_obj = parse_line("    cmpl-double v0, v1, v15\n")
+    asm_obj = SmaliAssemblyInstruction.from_line("    cmpl-double v0, v1, v15\n")
     assert(asm_obj.get_registers() == ["v0", "v1", "v15"])
     assert(asm_obj.get_implicit_registers() == ["v2", "v16"])
     
-    asm_obj = parse_line("    cmp-long v2, v3, v5")
+    asm_obj = SmaliAssemblyInstruction.from_line("    cmp-long v2, v3, v5")
     assert(asm_obj.get_registers() == ["v2", "v3", "v5"])
     assert(asm_obj.get_implicit_registers() == ["v4", "v6"])
     
-    asm_obj = parse_line("    aget-wide v15, v1, v2\n")
+    asm_obj = SmaliAssemblyInstruction.from_line("    aget-wide v15, v1, v2\n")
     assert(asm_obj.get_registers() == ["v15", "v1", "v2"])
     assert(asm_obj.get_implicit_registers() == ["v16"])
     
-    asm_obj = parse_line("    iput-wide v2, v4, Ljava/lang/String;")
+    asm_obj = SmaliAssemblyInstruction.from_line("    iput-wide v2, v4, Ljava/lang/String;")
     assert(asm_obj.get_registers() == ["v2", "v4"])
     assert(asm_obj.get_implicit_registers() == ["v3"])
     
-    asm_obj = parse_line("    sget-wide v2, Ljava/lang/String;->length:J")
+    asm_obj = SmaliAssemblyInstruction.from_line("    sget-wide v2, Ljava/lang/String;->length:J")
     assert(asm_obj.get_registers() == ["v2"])
     assert(asm_obj.get_implicit_registers() == ["v3"])
     
-    asm_obj = parse_line("    int-to-long v2, v4\n")
+    asm_obj = SmaliAssemblyInstruction.from_line("    int-to-long v2, v4\n")
     assert(asm_obj.get_registers() == ["v2", "v4"])
     assert(asm_obj.get_implicit_registers() == ["v3"])
     
-    asm_obj = parse_line("    long-to-int v0, v15\n")
+    asm_obj = SmaliAssemblyInstruction.from_line("    long-to-int v0, v15\n")
     assert(asm_obj.get_registers() == ["v0", "v15"])
     assert(asm_obj.get_implicit_registers() == ["v16"])
-
+    
+    
+    
+    #print("is targeted tests...")
+    #asm_obj = SmaliAssemblyInstruction.from_line("    move-wide v0, v15\n")
+    #assert(asm_obj.targeted_for_instrumentation == True)
+    #asm_obj.targeted_for_instrumentation = False
+    #assert(asm_obj.targeted_for_instrumentation == False)
+    
+    #asm_obj = SmaliAssemblyInstruction.from_line("    nop\n")
+    #assert(asm_obj.targeted_for_instrumentation == False)
+    #asm_obj.targeted_for_instrumentation = True
+    #assert(asm_obj.targeted_for_instrumentation == True)
+    
+    
     print("ALL SmaliAssemblyInstructions TESTS PASSED!")
 
 # Do nothing if this file is called directly

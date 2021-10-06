@@ -2274,6 +2274,12 @@ def grow_locals_test_2():
     scd.grow_locals(3)
     scd.write_to_file("./test/Main_After.smali")
     
+    
+def stigma_leaks_crash_SupportActivity():
+    scd = SmaliClassDef.SmaliClassDef("./test/SupportActivity.smali")
+    scd.grow_locals(4)
+    scd.write_to_file("./test/SupportActivity_After.smali")
+    
 
 def main():
     TaintTrackingInstrumentationPlugin.main()
@@ -2322,7 +2328,11 @@ def main():
     #stigma_leaks_crash_onNavigate()
     #stigma_leaks_crash_removeAt()
     #stigma_leaks_crash_moveToState()
-    stigma_leaks_crash_CoreComponentFactory()
+    # stigma_leaks_crash_CoreComponentFactory()
+    
+    
+    
+    stigma_leaks_crash_SupportActivity()
     
     
 if __name__=="__main__":

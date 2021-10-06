@@ -610,6 +610,37 @@ def MOVE_instrumentation(scd, m, cur_line, free_reg):
     block = block + Instrumenter.make_comment_block("for MOVE")
     
     return block
+
+def MOVE_special_instrumentation(scd, m, cur_line, free_reg):
+    # when calling grow locals some new moves are inserted which
+    # are a special edge-case.  Consider the exmaple below (after grow)
+
+    '''
+    .method private prependToLog(Ljava/lang/String;)V
+    .locals 8
+    .param p1, "newPart"    # Ljava/lang/String;
+
+    .line 368
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    
+    move-object/16 v4, p0
+    
+    move-object/16 v5, p1
+    
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    '''
+
+    # the solution is that we can use the destination register
+    # for the tag propagation real quick before it is used to
+    # store pX (i.e., use v4 and v5 for the two instructions
+    # in the example respectively)
+
+    tokens = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
+    free_reg = tokens[0]
+    return MOVE_instrumentation(scd, m, cur_line, [free_reg])
+
     
 
 def CONST_instrumentation(scd, m, cur_line, free_reg):
@@ -864,15 +895,20 @@ def main():
     #move 
     Instrumenter.sign_up("move", MOVE_instrumentation)
     Instrumenter.sign_up("move/from16", MOVE_instrumentation)
-    Instrumenter.sign_up("move/16", MOVE_instrumentation)
 
     Instrumenter.sign_up("move-wide", MOVE_instrumentation)
     Instrumenter.sign_up("move-wide/from16", MOVE_instrumentation)
-    Instrumenter.sign_up("move-wide/16", MOVE_instrumentation)
 
     Instrumenter.sign_up("move-object", MOVE_instrumentation)
     Instrumenter.sign_up("move-object/from16", MOVE_instrumentation)
-    Instrumenter.sign_up("move-object/16", MOVE_instrumentation)
+
+
+    # these are special cases because the grow_locals algorithm
+    # writes some move(s) which cannot use the typical "free registers"
+    # see the move_special_instrumentation for more details
+    Instrumenter.sign_up("move/16", MOVE_special_instrumentation)
+    Instrumenter.sign_up("move-wide/16", MOVE_special_instrumentation)
+    Instrumenter.sign_up("move-object/16", MOVE_special_instrumentation)
     
     #const 
     Instrumenter.sign_up("const", CONST_instrumentation)

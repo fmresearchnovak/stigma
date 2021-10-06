@@ -67,21 +67,24 @@ class ControlFlowGraph:
         start_time = time.time()
         self.store_switch_labels()
         
+        line_str = str(text[line_index])
+        line_obj = text[line_index]
         
         #some of the lines can be SMALI ASSEMBLY OBJECTS, because we call grow_locals before building the control flow graph, so we convert each line to a string before processing it. 
-        while (re.search(StigmaStringParsingLib.BEGINS_WITH_DOT_END_METHOD, text[line_index]) is None and re.search(StigmaStringParsingLib.BEGINS_WITH_PSWITCH_DATA, text[line_index]) is None and re.search(StigmaStringParsingLib.BEGINS_WITH_SSWITCH_DATA, text[line_index]) is None):
+        while (re.search(StigmaStringParsingLib.BEGINS_WITH_DOT_END_METHOD, line_str) is None and re.search(StigmaStringParsingLib.BEGINS_WITH_PSWITCH_DATA, line_str) is None and re.search(StigmaStringParsingLib.BEGINS_WITH_SSWITCH_DATA, line_str) is None):
             
-            line = text[line_index]
+            line_str = str(text[line_index])
+            line_obj = text[line_index]
             
             if (line_index not in self.visited_lines):  
                 # print(" univisted line in cfg", line, "not branching: ", ControlFlowGraph.is_not_branching(line))
-                tokens = StigmaStringParsingLib.break_into_tokens(line)
+                tokens = StigmaStringParsingLib.break_into_tokens(line_str)
                 
-                if ControlFlowGraph.is_not_branching(line):
-                    self.contingous_region.append(line)
+                if ControlFlowGraph.is_not_branching(line_str):
+                    self.contingous_region.append(line_str)
 
-                #e.g line: if-eqz vx :cond_8
-                elif re.search(StigmaStringParsingLib.BEGINS_WITH_IF, str(line)) is not None or re.search(StigmaStringParsingLib.BEGINS_WITH_CMP, str(line)) is not None: 
+                #e.g line_str: if-eqz vx :cond_8
+                elif re.search(StigmaStringParsingLib.BEGINS_WITH_IF, line_str) is not None or re.search(StigmaStringParsingLib.BEGINS_WITH_CMP, line_str) is not None: 
                     #create a node for the existing lines of code in the continguous region and empty the contigious_region_list
                     self.bundle_contingous_region()
 
@@ -92,9 +95,9 @@ class ControlFlowGraph:
                     self.label_list.append(label_map)
                     
                     #create a new node of the if statement, and connect the edge from previous continious regiion node to this node
-                    self.G.add_node(self.node_counter, text = [line], node_counter = self.node_counter, visited = False , is_in_try_block = self.try_start_flag )
+                    self.G.add_node(self.node_counter, text = [line_obj], node_counter = self.node_counter, visited = False , is_in_try_block = self.try_start_flag )
                     self.G.add_edge(self.node_counter-1, self.node_counter)
-                    self.label_dict[self.node_counter] = str(self.node_counter) + ". " + line.strip()     
+                    self.label_dict[self.node_counter] = str(self.node_counter) + ". " + line_str.strip()     
                     
                     #if this destination was already seen, we connect it
                     for label_map in self.looping_label_list:
@@ -104,42 +107,42 @@ class ControlFlowGraph:
                     self.node_counter+=1
 
                 #e.g line: :catch_1
-                elif re.search(StigmaStringParsingLib.BEGINS_WITH_CATCH_LABEL, str(line)) is not None:
+                elif re.search(StigmaStringParsingLib.BEGINS_WITH_CATCH_LABEL, line_str) is not None:
                     self.bundle_contingous_region()
                     
-                    self.G.add_node(self.node_counter, text = [line], node_counter = self.node_counter, visited = False , is_in_try_block = self.try_start_flag )
+                    self.G.add_node(self.node_counter, text = [line_obj], node_counter = self.node_counter, visited = False , is_in_try_block = self.try_start_flag )
                     #create a new node of the catch statement, and connect the edge from corresponding if statement node to this node
-                    self.label_dict[self.node_counter] = str(self.node_counter) + ". " + line.strip()     
+                    self.label_dict[self.node_counter] = str(self.node_counter) + ". " + line_str.strip()     
 
                     self.node_counter+=1
 
                 #e.g line-> :cond_8 or line-> :goto_8 , :pswitch_1 or :sswitch_1
-                elif re.search(StigmaStringParsingLib.BEGINS_WITH_COLON, str(line)) is not None:
+                elif re.search(StigmaStringParsingLib.BEGINS_WITH_COLON, str(line_str)) is not None:
                     #create a node for the existing lines of code in the continguous region and empty the contigious_region_list
                     #add an edge for this block of code, to the previous node in graph
                     
                     #if we see a try start label, we raise a flag to indicate we are inside a try block and if we see a try_end, it should make the label false 
                     
                     #this must be done before bundling, otherwise the node counter would change once u bundle it returning the wrong previous line
-                    prev_prev_line = self.G.nodes[self.node_counter-1]["text"][0] 
+                    prev_prev_line = str(self.G.nodes[self.node_counter-1]["text"][0])
                     self.bundle_contingous_region()
-                    prev_line = self.G.nodes[self.node_counter-1]["text"][0] 
+                    prev_line = str(self.G.nodes[self.node_counter-1]["text"][0])
                     
                     #flip the try flag after u have bundled
-                    if re.search(StigmaStringParsingLib.BEGINS_WITH_TRY, str(line)) is not None:
+                    if re.search(StigmaStringParsingLib.BEGINS_WITH_TRY, line_str) is not None:
                         #print("found try statement: ", line.strip(), " flag: ", self.try_start_flag)
                         self.try_start_flag = not self.try_start_flag
                     
-                    self.G.add_node(self.node_counter, text = [line], node_counter = self.node_counter, visited = False, is_in_try_block = self.try_start_flag )  #create a new node of the label statement, and connect the edge from corresponding if statement node to this node
-                    self.label_dict[self.node_counter] = str(self.node_counter) + ". " + line.strip()     
+                    self.G.add_node(self.node_counter, text = [line_obj], node_counter = self.node_counter, visited = False, is_in_try_block = self.try_start_flag )  #create a new node of the label statement, and connect the edge from corresponding if statement node to this node
+                    self.label_dict[self.node_counter] = str(self.node_counter) + ". " + line_str.strip()     
 
-                    if(StigmaStringParsingLib.extract_opcode(prev_line) != "goto" and re.search(StigmaStringParsingLib.BEGINS_WITH_RETURN, str(prev_line)) is None and re.search(StigmaStringParsingLib.BEGINS_WITH_CATCH_LABEL, str(prev_prev_line)) is None):
+                    if(StigmaStringParsingLib.extract_opcode(prev_line) != "goto" and re.search(StigmaStringParsingLib.BEGINS_WITH_RETURN, prev_line) is None and re.search(StigmaStringParsingLib.BEGINS_WITH_CATCH_LABEL, prev_prev_line) is None):
                         self.G.add_edge(self.node_counter-1, self.node_counter)
                     
                     cur_label = tokens[0]
                     
                     #e.g line-> :pswitch_1 or :sswitch_1, in this case we need to find the matching label parent from our switch label list
-                    if re.search(StigmaStringParsingLib.BEGINS_WITH_PSWITCH_LABEL, str(line)) is not None or  re.search(StigmaStringParsingLib.BEGINS_WITH_SSWITCH_LABEL, str(line)) is not None:
+                    if re.search(StigmaStringParsingLib.BEGINS_WITH_PSWITCH_LABEL, line_str) is not None or  re.search(StigmaStringParsingLib.BEGINS_WITH_SSWITCH_LABEL, line_str) is not None:
                         cur_label = ControlFlowGraph.get_key(cur_label, self.switch_label_list)
                     
                     #get all the corresponding if statement nodes for this condition, and create an edge from all those if statements to this condition
@@ -158,7 +161,7 @@ class ControlFlowGraph:
                     self.node_counter+=1
 
                 #e.g line: goto :goto_8
-                elif re.search(StigmaStringParsingLib.BEGINS_WITH_GOTO, str(line)) is not None:
+                elif re.search(StigmaStringParsingLib.BEGINS_WITH_GOTO, line_str) is not None:
                     self.bundle_contingous_region()
                     
                     #create a lable for :goto_8 and store current node counter to connect the label later
@@ -168,8 +171,8 @@ class ControlFlowGraph:
                     self.label_list.append(label_map)
                     
                     #add the current line as a node and make a edge with previous node in tree. 
-                    self.G.add_node(self.node_counter, text = [line], node_counter = self.node_counter, visited = False , is_in_try_block = self.try_start_flag )
-                    self.label_dict[self.node_counter] = str(self.node_counter) + ". " + line.strip()     
+                    self.G.add_node(self.node_counter, text = [line_obj], node_counter = self.node_counter, visited = False , is_in_try_block = self.try_start_flag )
+                    self.label_dict[self.node_counter] = str(self.node_counter) + ". " + line_str.strip()     
                     self.G.add_edge(self.node_counter-1, self.node_counter)
                     
                     
@@ -185,11 +188,11 @@ class ControlFlowGraph:
                     line_index = self.find_label(line_index)-1
 
                 #e.g line: return-object vx or throw v1
-                elif re.search(StigmaStringParsingLib.BEGINS_WITH_RETURN, str(line)) is not None or re.search(StigmaStringParsingLib.BEGINS_WITH_THROW, str(line)) is not None:
+                elif re.search(StigmaStringParsingLib.BEGINS_WITH_RETURN, line_str) is not None or re.search(StigmaStringParsingLib.BEGINS_WITH_THROW, line_str) is not None:
                     self.bundle_contingous_region()
                     
-                    self.G.add_node(self.node_counter, text = [line], node_counter = self.node_counter, visited = False , is_in_try_block = self.try_start_flag )
-                    self.label_dict[self.node_counter] = str(self.node_counter) + ". " + line.strip()     
+                    self.G.add_node(self.node_counter, text = [line_obj], node_counter = self.node_counter, visited = False , is_in_try_block = self.try_start_flag )
+                    self.label_dict[self.node_counter] = str(self.node_counter) + ". " + line_str.strip()     
                     self.G.add_edge(self.node_counter-1, self.node_counter)
                     self.node_counter+=1
 
@@ -198,7 +201,7 @@ class ControlFlowGraph:
                         line_index= new_line_index - 1
                 
                 #when u see a parse-switch statement, go down, store all relevant switch cases
-                elif re.search(StigmaStringParsingLib.BEGINS_WITH_PACKED_SWITCH, str(line)) is not None or re.search(StigmaStringParsingLib.BEGINS_WITH_SPARSE_SWITCH, str(line)) is not None:
+                elif re.search(StigmaStringParsingLib.BEGINS_WITH_PACKED_SWITCH, line_str) is not None or re.search(StigmaStringParsingLib.BEGINS_WITH_SPARSE_SWITCH, line_str) is not None:
                     self.bundle_contingous_region()
                     
                     #store the data label in list with current counter, dest_label = ':pswitch_data_0'
@@ -208,9 +211,9 @@ class ControlFlowGraph:
                     self.label_list.append(label_map)
                     
                     #create a new node of the switch statement, and connect the edge from previous continious regiion node to this node
-                    self.G.add_node(self.node_counter, text = [line], node_counter = self.node_counter, visited = False , is_in_try_block = self.try_start_flag )
+                    self.G.add_node(self.node_counter, text = [line_obj], node_counter = self.node_counter, visited = False , is_in_try_block = self.try_start_flag )
                     self.G.add_edge(self.node_counter-1, self.node_counter)
-                    self.label_dict[self.node_counter] = str(self.node_counter) + ". " + line.strip()     
+                    self.label_dict[self.node_counter] = str(self.node_counter) + ". " + line_str.strip()     
                     self.node_counter+=1
                                         
                 #catch an invalid line, which doesnt fit any of the if statements above    
@@ -221,6 +224,7 @@ class ControlFlowGraph:
         
 
             line_index+=1
+
             
         self.bundle_contingous_region()
         self.tail = self.text[line_index:]
@@ -308,27 +312,27 @@ class ControlFlowGraph:
             return
         
         index = 0 
-        while(re.search(StigmaStringParsingLib.BEGINS_WITH_DOT_END_METHOD, self.text[index]) is None):
+        while(re.search(StigmaStringParsingLib.BEGINS_WITH_DOT_END_METHOD, str(self.text[index])) is None):
             
-            if(re.search(StigmaStringParsingLib.BEGINS_WITH_PSWITCH_DATA, self.text[index]) is not None):
+            if(re.search(StigmaStringParsingLib.BEGINS_WITH_PSWITCH_DATA, str(self.text[index])) is not None):
                 switch_label_map = {}
                 data_label = StigmaStringParsingLib.extract_opcode(self.text[index])
                 index+=1
                 label_list = []
-                while(re.search(StigmaStringParsingLib.BEGINS_WITH_DOT_END_PACKED_SWITCH, self.text[index]) is None):
-                    if(re.search(StigmaStringParsingLib.BEGINS_WITH_PSWITCH_LABEL, self.text[index]) is not None):
+                while(re.search(StigmaStringParsingLib.BEGINS_WITH_DOT_END_PACKED_SWITCH, str(self.text[index])) is None):
+                    if(re.search(StigmaStringParsingLib.BEGINS_WITH_PSWITCH_LABEL, str(self.text[index])) is not None):
                         label_list.append(self.text[index].strip())
                     index+=1            
                 switch_label_map[data_label] = label_list
                 self.switch_label_list.append(switch_label_map)
                 
                 
-            elif(re.search(StigmaStringParsingLib.BEGINS_WITH_SSWITCH_DATA, self.text[index]) is not None):
+            elif(re.search(StigmaStringParsingLib.BEGINS_WITH_SSWITCH_DATA, str(self.text[index])) is not None):
                 switch_label_map = {}
                 data_label = StigmaStringParsingLib.extract_opcode(self.text[index])
                 index+=1
                 label_list = []
-                while(re.search(StigmaStringParsingLib.BEGINS_WITH_DOT_END_SPARSE_SWITCH, self.text[index]) is None):
+                while(re.search(StigmaStringParsingLib.BEGINS_WITH_DOT_END_SPARSE_SWITCH, str(self.text[index])) is None):
                     tokens = StigmaStringParsingLib.break_into_tokens(self.text[index])
                     if(re.search(StigmaStringParsingLib.BEGINS_WITH_SSWITCH_LABEL, tokens[-1]) is not None):
                         label_list.append(tokens[-1].strip())

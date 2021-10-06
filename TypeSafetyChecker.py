@@ -9,6 +9,7 @@ hashmap -> key: string (register name)
 import StigmaStringParsingLib 
 import SmaliAssemblyInstructions as smali
 import re
+import SmaliTypes
 
 
 class TypeSafetyChecker:
@@ -359,44 +360,20 @@ class TypeSafetyChecker:
             raise RuntimeError ("opcode seems to has no type", opcode)
 
     def check_aget_object_type(self, src_type):
-        """
-        The special case for checking types of array with an aget-object instruction
-        Algorithm: remove the first character to check the type
-        e.g
-            1)
-                src_type: [[I
-                return "[I"
-            2)
-                src_type: [Ljava/lang/String
-                return "object"
-                
-            3) src_type= '?'
-        """      
-        if(src_type == '?'):
-            return '?'
-        
-        value = src_type[1:]
-        
-        if(value == "bject"):
-            print("------ERROR IN TYPE SAFETY CHECKCER------")
-            print("src type: ", src_type)
-            print(str(self.signature))
-            print("value had bject in this method")
-            input("Continue???")
+        # src_type = [[I
+        #   return [I
+        smali_array_type_obj = SmaliTypes.SmaliType.from_string(src_type)
+        if(isinstance(smali_array_type_obj, SmaliTypes.UnknownType)):
+            return smali_array_type_obj
             
-        if(value[0] == "L"):
-            return "object"
-        else:
-            if(value in smali.TYPE_LIST_WIDE):
-                return "64-bit"
-            elif(value in smali.TYPE_LIST_WIDE_REMAINING):
-                # note: this should never happen!
-                return "64-bit-2"
-            elif(value in smali.TYPE_LIST_WORD):
-                return "32-bit"
-            else:
-                # scenario one
-                return value
+        result = smali_array_type_obj.unwrap_layer()
+        
+        # it's probably better to return the object itself
+        # and not a string version of the object
+        # but I tdon't think the rest of the code is ready for
+        # that yet!
+        return str(result)
+
 
     def check_parameter_type(self,value):
         '''

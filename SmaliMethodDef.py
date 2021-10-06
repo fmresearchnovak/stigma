@@ -1,5 +1,6 @@
 import re
 
+import SmaliTypes
 import SmaliAssemblyInstructions as smali
 import StigmaStringParsingLib
 import Instrumenter
@@ -187,14 +188,14 @@ class SmaliMethodDef:
         # moves the parameters so that they don't incur maximum register value
         # issues when used in instructions
 
-        # Only v0 - v16 registers are allowed for general purpose use.
+        # Only registers v0 - v15 are allowed for general purpose use.
         # This is enforced by apktool.  The documentation indicates that
         # some instrucions allow many many more registers (up to v65535)
         # https://source.android.com/devices/tech/dalvik/dalvik-bytecode
 
         # Consider the following method which came from whatsapp
-        # This is a very special case
-        # the .locals is 1 indicating that v0 is the only local register.
+        # This is a rare edge-case
+        # the .locals is originally 1 indicating that v0 is the only local register.
         # that is true. BUT, the first use of v0 is to store a long (J)
         # so actually v0 and v1 are used.  I assume that p0 is v1, but p0 is
         # over-written immediately after it's first and only use.
@@ -224,14 +225,14 @@ class SmaliMethodDef:
         if(n < 0):
             raise ValueError("Cannot grow locals by a negative amount: " + str(n))
             
-
-        old_locals_num = self.get_locals_directive_num()            
         if(self.signature.is_abstract or self.signature.is_native):
             # We shouldn't grow abstract methods since they don't have 
             # code / locals
             return []
-        
-        
+            
+
+        old_locals_num = self.get_locals_directive_num()
+                
         # Convert all "pX" references to their corresponding "vX" register
         # names BEFORE adjusting .locals so the references are correct
         # Note: part of the algorithm is to move the values from
@@ -246,7 +247,7 @@ class SmaliMethodDef:
         for num in range(self.first_new_free_reg_num, self.first_new_free_reg_num+n):
             new_regs.append("v" + str(num))
         
-        #orig_locals_num = old_locals_num
+
         # Set the new locals number
         # this is the "main event" / primary purpose
         # of this method
@@ -254,62 +255,41 @@ class SmaliMethodDef:
         #   (a) all of the existing locals used in the mod
         #   (b) all of the parameters for this method
         #   (c) n new registers, which will be used for taint-tracking
-        
         new_locals_num = old_locals_num + n
         self.set_locals_directive(new_locals_num)
         
 
-    
         # Write the necessary move values so that the vX
         # registers that originally contained the parameters
-        # contain the correct values
-        block = Instrumenter.make_comment_block("for moving parameters")
+        # contain the parameter values
+        block = []
 
         #print(self.signature.parameter_type_map)
         for param in self.signature.parameter_type_map:
 
-            param_type = self.signature.parameter_type_map[param]
-            if(param_type in smali.TYPE_LIST_OBJECT_REF or param_type[0] in smali.TYPE_LIST_OBJECT_REF):
-                # param_type might be "THIS" or "Lsome/class;" etc.
-                mv_cmd = smali.MOVE_OBJECT_16
-            elif(param_type in smali.TYPE_LIST_WIDE):
-                mv_cmd = smali.MOVE_WIDE_16
-            elif(param_type in smali.TYPE_LIST_WIDE_REMAINING):
-                # the MOVE_WIDE_16 from the first part of the wide
-                # will move both the first part and this second part
-                mv_cmd = None 
-                old_locals_num += 1
-                continue
-            elif(param_type in smali.TYPE_LIST_WORD):
-                mv_cmd = smali.MOVE_16
-            else:
-                raise ValueError("Unknown type for parameter " + str(param) + ": " + str(param_type))
-
-
-            mv_cmd = mv_cmd("v" + str(old_locals_num), param)
-
-            block.append(mv_cmd)
-            block.append(smali.BLANK_LINE())
+            param_type_str = self.signature.parameter_type_map[param]
+            #print("param_type: " + str(param_type_str))
+            smali_type_obj = SmaliTypes.SmaliType.from_string(param_type_str)
+            mv_cmd = smali_type_obj.move_instr
             
+            if(smali_type_obj.get_generic_type() != "64-bit-2"):
+                mv_cmd = mv_cmd("v" + str(old_locals_num), param)
+                mv_cmd.targeted_for_instrumentation = False
+                
+                block.append(mv_cmd)
+                block.append(smali.BLANK_LINE())
+                
             old_locals_num += 1
-            
-        
-        #while(old_locals_num < new_locals_num):
-            # this loop should repeat n times
-            #   (n is the input parameter to this function)
-        #    block.append(smali.CONST("v" + str(old_locals_num), "0x1"))
-        #    block.append(smali.BLANK_LINE())
-        #    old_locals_num+=1
 
-        block = block + Instrumenter.make_comment_block("for moving parameters")
+
+        if(len(block) != 0):
+            block = Instrumenter.make_comment_block("for moving parameters") + block
+            block = block + Instrumenter.make_comment_block("for moving parameters")
         
-        # we converted the SMALI ASSEMBLY INSTRUCTION OBJECT to the string for each line in the block
-        # so we donot ignore those lines while instrumenting
-        # we need to instrument on these new moves added, because the tags also move from orignal p0 to the new p0 location
-        # the while loop in the control flow graph assumes that all the lines in the input text are a string , otherwise it would crash while parsing
+        # convert all of these from SmaliAssemblyObjects to string so that
+        # the instrumentation plugins can interact with them
         for i in range(len(block)):
             block[i] = str(block[i])
-        
         
         insert_idx = self.find_first_valid_instruction()
         self.embed_block(insert_idx, block)
@@ -478,7 +458,6 @@ class SmaliMethodDef:
         
         #create the control flow graph for the method text and pass it to the type safety checker
         #this will check and track types of each register on each line 
-        #this will check and track types of each register on each line 
         #these are the newly freed registers at the top
         free_regs = self.grow_locals(Instrumenter.NUM_REGISTER)        
         self.cfg = ControlFlowGraph(self.raw_text)        
@@ -502,7 +481,8 @@ class SmaliMethodDef:
                 
                 #call type_update on each line of code inside the node. 
                 for index in range(len(node["text"])):
-                    line = node["text"][index]                 
+                    line = node["text"][index]        
+                    #print(type(line), ": " + str(line))         
                     self.tsc.type_update(line, index, counter)
                     node["type_list"] = self.tsc.node_type_list
                     self._do_instrumentation_plugins(free_regs, node, line, index)
@@ -872,111 +852,6 @@ def tests():
     
 
         
-
-    '''
-    
-    print("\tfix_register_limit()...")
-    ans_block = smali.parse_line("    const v21, 0x800053\n").fix_register_limit()
-    #print(ans_block)
-    assert(ans_block == ["    const/16 v21, 0x800053\n"])
-    # This test raises a concern about introducing logical bugs
-    # -0x1 is 1111 in 4bit 2's compliment binary
-    # -0x1 is 1111 1111 1111 1111 in 16bit 2's compliment binary
-    
-    # 0xFFFF = 65535 = 0000 0000 0000 0000 1111 1111 1111 1111 (in 32-bit binary)
-    # imagine the instruction const/32 vx 0xFFFF
-    # if we convert this to const/16 without changing anything else we have
-    # const/16 vx, 0xFFFF
-    # 1111 1111 1111 1111 which is now interpreted as
-    # -1 (two's compliment).
-    ans_block = smali.parse_line("    const/4 v25, -0x1\n").fix_register_limit()
-    assert(ans_block == ["    const/16 v25, -0x1\n"])
-
-    asm_obj = smali.parse_line("    const-string v16, \"hey there! v4, test string!\"\n")
-    #print(test2_shadow_map)
-    ans_block = asm_obj.fix_register_limit(test2_shadow_map, {"v0": smali.MOVE_OBJECT_16})
-    #print("TEST HERE")
-    soln_block = [smali.COMMENT("FRL MOVE ADDED BY STIGMA"), 
-            smali.BLANK_LINE(),
-            smali.MOVE_OBJECT_16("v19", "v0"),
-            smali.BLANK_LINE(),
-            smali.CONST_STRING("v0", "\"hey there! v4, test string!\""),
-            smali.BLANK_LINE(),
-            smali.MOVE_OBJECT_16("v16", "v0"),
-            smali.BLANK_LINE(),
-            smali.MOVE_OBJECT_16("v0", "v19"),
-            smali.BLANK_LINE(),
-            smali.COMMENT("END OF FRL MOVE ADDED BY STIGMA"),
-            smali.BLANK_LINE()]
-    
-    #print(ans_block)
-    #print(soln_block)
-    assert(ans_block == soln_block)
-
-    asm_obj = smali.parse_line("    const-class v16, Ljavax/swingx/JFrame;")
-    #print(test2_shadow_map)
-    ans_block = asm_obj.fix_register_limit(test2_shadow_map, {"v0": smali.MOVE_OBJECT_16})
-    soln_block = [smali.COMMENT("FRL MOVE ADDED BY STIGMA"), 
-            smali.BLANK_LINE(),
-            smali.MOVE_OBJECT_16("v19", "v0"),
-            smali.BLANK_LINE(),
-            smali.CONST_CLASS("v0", "Ljavax/swingx/JFrame;"),
-            smali.BLANK_LINE(),
-            smali.MOVE_OBJECT_16("v16", "v0"),
-            smali.BLANK_LINE(),
-            smali.MOVE_OBJECT_16("v0", "v19"),
-            smali.BLANK_LINE(),
-            smali.COMMENT("END OF FRL MOVE ADDED BY STIGMA"),
-            smali.BLANK_LINE()]
-    
-    #print(ans_block)
-    #print(soln_block)
-    assert(ans_block == soln_block)
-
-    asm_obj = smali.parse_line("    move-result v16")
-    #print(test2_shadow_map)
-    ans_block = asm_obj.fix_register_limit(test2_shadow_map, {"v0": smali.MOVE_OBJECT_16})
-    soln_block = [smali.COMMENT("FRL MOVE ADDED BY STIGMA"), 
-            smali.BLANK_LINE(),
-            smali.MOVE_OBJECT_16("v19", "v0"),
-            smali.BLANK_LINE(),
-            smali.MOVE_RESULT("v0"),
-            smali.BLANK_LINE(),
-            smali.MOVE_16("v16", "v0"),
-            smali.BLANK_LINE(),
-            smali.MOVE_OBJECT_16("v0", "v19"),
-            smali.BLANK_LINE(),
-            smali.COMMENT("END OF FRL MOVE ADDED BY STIGMA"),
-            smali.BLANK_LINE()]
-    
-    #print(ans_block)
-    #print(soln_block)
-    assert(ans_block == soln_block)
-    
-    asm_obj = smali.parse_line("    throw v16")
-    #print(test2_shadow_map)
-    ans_block = asm_obj.fix_register_limit(test2_shadow_map, {"v0": smali.MOVE_16, "v16" : smali.MOVE_OBJECT_16})
-    soln_block = [smali.COMMENT("FRL MOVE ADDED BY STIGMA"), 
-            smali.BLANK_LINE(),
-            smali.MOVE_16("v19", "v0"),
-            smali.BLANK_LINE(),
-            smali.MOVE_OBJECT_16("v0", "v16"),
-            smali.BLANK_LINE(),
-            smali.THROW("v0"),
-            smali.BLANK_LINE(),
-            smali.MOVE_OBJECT_16("v16", "v0"),
-            smali.BLANK_LINE(),
-            smali.MOVE_16("v0", "v19"),
-            smali.BLANK_LINE(),
-            smali.COMMENT("END OF FRL MOVE ADDED BY STIGMA"),
-            smali.BLANK_LINE()]
-    
-    #print(ans_block)
-    #print(soln_block)
-    assert(ans_block == soln_block)
-    '''
-    
-
     print("ALL SmaliMethodDef TESTS PASSED!")
 
 
@@ -993,6 +868,6 @@ Problem:
     Updated Instruction:     aget v3, v7, v2
     {'p0': 'object', 'p1': '32-bit', 'p2': '[Ljava/lang/String;', 'p3': '[I', 'v4': 'object', 'v5': '32-bit', 'v6': 'object', 'v7': 'object'}
 
-    The reason type of v7 is "object" is because, when we used our move instruction to move p3 into v7 (move-object/16 v7, p3)
+    The reason type of v7 is "object" because, when we used our move instruction to move p3 into v7 (move-object/16 v7, p3)
     Type safety checker assigned an object to v7 where as v7 which was originally p3, had a type of [I
 '''
