@@ -206,7 +206,7 @@ def LOCATION_instrumentation(scd, m, cur_lines, free_reg):
     #invoke -> getLastKnownLocation()
     #move-result
         
-    result_line = cur_lines[1]
+    result_line = cur_lines[2]
     dest_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
     taint_loc_dest = storage_handler.add_taint_location(scd.class_name, m.get_name(), dest_reg)
     
@@ -232,7 +232,7 @@ def LONGITUDE_instrumentation(scd, m, cur_lines, free_reg):
     #invoke -> Landroid/location/Location;->getLongitude()D
     #move-result
     
-    result_line = cur_lines[1]        
+    result_line = cur_lines[2]        
     dest_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
     taint_loc_dest = storage_handler.add_taint_location(scd.class_name, m.get_name(), dest_reg)
     
@@ -258,7 +258,7 @@ def LATITUDE_instrumentation(scd, m, cur_lines, free_reg):
     #invoke -> Landroid/location/Location;->getLatitude()D
     #move-result
     
-    result_line = cur_lines[1]        
+    result_line = cur_lines[2]        
     dest_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
     taint_loc_dest = storage_handler.add_taint_location(scd.class_name, m.get_name(), dest_reg)
     
@@ -340,7 +340,7 @@ def FILLED_NEW_ARRAY_instrumentation(scd, m, cur_lines, free_reg):
     #filled-new-array {parameters},type_id ; new array reference goten by move line
 
     regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_lines[0])
-    result_line = cur_lines[1]    
+    result_line = cur_lines[2]    
     result_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
 
     #taint_loc_result = scd.create_taint_field(m.get_name(), result_reg)
@@ -410,7 +410,7 @@ def INTERNAL_FUNCTION_instrumentation(scd, m, cur_lines, free_reg):
     
     block.append(cur_lines[0])
     block.append(smali.BLANK_LINE())
-    block.append(cur_lines[1])
+    block.append(cur_lines[2])
     block.append(smali.BLANK_LINE())
         
     
@@ -427,7 +427,7 @@ def INTERNAL_FUNCTION_instrumentation(scd, m, cur_lines, free_reg):
     # move-result line
 
 
-    result_line = cur_lines[1]
+    result_line = cur_lines[2]
         
     reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
     
@@ -462,8 +462,8 @@ def EXTERNAL_FUNCTION_instrumentation(scd, m, cur_lines, free_reg):
     invoke_line = cur_lines[0]
     param_regs = StigmaStringParsingLib.get_v_and_p_numbers(invoke_line)
     
-    #result_line = m.raw_text[line_num + 2]
-    result_line = cur_lines[1]
+    # blank line inbetween 
+    result_line = cur_lines[2]
         
     # if result_line is None then the 
     # only data flow possible is "side-effects"
@@ -480,7 +480,7 @@ def EXTERNAL_FUNCTION_instrumentation(scd, m, cur_lines, free_reg):
     
     block.append(cur_lines[0])
     block.append(smali.BLANK_LINE())
-    block.append(cur_lines[1])
+    block.append(cur_lines[2])
     block.append(smali.BLANK_LINE())
     
     return block

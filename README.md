@@ -36,6 +36,10 @@ Stigma has many limitations.  It can only track very limited sources of sensitiv
 * aapt (available in Ubuntu repository)
 
 
+### Unnecessary Dependencies
+* pydot version 1.2.3 python3 module - to see control flow graphs ( `ControlFlowGraph.show()` ) (available in Ubuntu repository under python3-pydot)
+
+
 
 
 # Troubleshooting

@@ -84,13 +84,7 @@ class TypeSafetyChecker:
             self.cfg.G.nodes[0]["visited"] = True
             self.cfg.G.nodes[0]["type_list"] = self.node_type_list    
             return 
-        else:
-            #method in smali method def does similar parsing(can be used in future)
-            #just store the p registers, because during instrumentation if .locals changes 
-            #the v numbers would shift from their corresponding p registers 
-            for p_num,value in self.signature.parameter_type_map.items():
-                type_val = self.check_parameter_type(value)
-                line_type_map[p_num] = type_val
+
 
         self.most_recent_type_map = line_type_map
         self.node_type_list.append(line_type_map) 
@@ -351,11 +345,11 @@ class TypeSafetyChecker:
         '''
         
         if(opcode in StigmaStringParsingLib.THIRTY_TWO_BIT_TYPE_LIST):
-            return "32-bit"
+            return SmaliTypes.ThirtyTwoBit()
         elif(opcode in StigmaStringParsingLib.SIXTY_FOUR_BIT_TYPE_LIST):
-            return "64-bit"
+            return SmaliTypes.SixtyFourBit()
         elif(opcode in StigmaStringParsingLib.OBJECT_TYPE_LIST):
-            return "object"
+            return SmaliTypes.ObjectReference("?")
         else:
             raise RuntimeError ("opcode seems to has no type", opcode)
 
@@ -375,29 +369,6 @@ class TypeSafetyChecker:
         return str(result)
 
 
-    def check_parameter_type(self,value):
-        '''
-        This method takes in the value from the parameter_type_map of the signature class 
-        and converts it to equivalent types required for type safety checker class.
-        e.g
-            1)value:THIS
-            return object,
-            2)value:Z
-            return 32-bit
-        '''
-
-        if("[" in value):
-            return value
-        elif(value in smali.TYPE_LIST_OBJECT_REF or value[0] == "L"):
-            return "object"
-        elif (value in smali.TYPE_LIST_WORD):
-            return "32-bit"
-        elif (value in smali.TYPE_LIST_WIDE):
-            return "64-bit"
-        elif (value in smali.TYPE_LIST_WIDE_REMAINING):
-            return "64-bit-2"
-        else:
-            raise Exception("Invalid Value: ", value)
         
     def check_invoke_type(self, value):
         if(value in smali.TYPE_LIST_OBJECT_REF):

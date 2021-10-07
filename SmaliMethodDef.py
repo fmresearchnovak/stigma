@@ -66,13 +66,15 @@ class SmaliMethodSignature:
             # p0 holds the object reference and p1 the second 
             # parameter register.
 
-            self.parameter_type_map["p0"] = class_name
+            self.parameter_type_map["p0"] = SmaliTypes.SmaliType.from_string(class_name)
             self.num_of_parameters = 1
             self.num_of_parameter_registers = 1
             p_idx = 1
 
         
         parameter_raw = re.search(StigmaStringParsingLib.PARAMETERS, sig_line).group(1)
+        # e.g., Landroid/support/design/widget/CoordinatorLayout;Landroid/view/View;Landroid/view/View;II[I
+        
         i = 0
         while i < len(parameter_raw):
             self.num_of_parameters += 1
@@ -80,28 +82,30 @@ class SmaliMethodSignature:
             if parameter_raw[i] in smali.TYPE_LIST_WORD: 
                 self.num_of_parameter_registers += 1
                 p_name = "p" + str(p_idx)
-                self.parameter_type_map[p_name] = parameter_raw[i]
+                self.parameter_type_map[p_name] = SmaliTypes.SmaliType.from_string(parameter_raw[i])
                 
                 
             elif parameter_raw[i] in smali.TYPE_LIST_WIDE: # long or double
                 self.num_of_parameter_registers += 2
                 p_name = "p" + str(p_idx)
-                self.parameter_type_map[p_name] = parameter_raw[i]
+                self.parameter_type_map[p_name] = SmaliTypes.SmaliType.from_string(parameter_raw[i])
                 p_idx+=1
                 p_name = "p" + str(p_idx)
-                self.parameter_type_map[p_name] = parameter_raw[i]+"2"
+                self.parameter_type_map[p_name] = SmaliTypes.SmaliType.from_string(parameter_raw[i]+"2")
                 
                 
             elif parameter_raw[i] == "L": # some object
                 self.num_of_parameter_registers += 1
                 p_name = "p" + str(p_idx)
-                self.parameter_type_map[p_name] = parameter_raw[i]
-
-            
+                
                 # skip past all the characters in the type
                 # e.g., MyMethod(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;
                 # we should skip from "L" all the way to ";" for each parameter
-                i = SmaliMethodSignature.fast_forward_to_semicolon(i, parameter_raw)
+                end = parameter_raw.find(";", i)
+                obj_str = parameter_raw[i:end+1]
+                self.parameter_type_map[p_name] = SmaliTypes.SmaliType.from_string(obj_str)
+                i = end
+                
                     
                     
             elif parameter_raw[i] == "[": # an array
@@ -121,7 +125,7 @@ class SmaliMethodSignature:
 
                 self.num_of_parameter_registers += 1
                 p_name = "p" + str(p_idx)
-                self.parameter_type_map[p_name] = parameter_raw[start_index:end_index]
+                self.parameter_type_map[p_name] = SmaliTypes.SmaliType.from_string(parameter_raw[start_index:end_index])
 
             p_idx += 1        
             i += 1
@@ -174,6 +178,8 @@ class SmaliMethodDef:
 
         
         self.instrumented_code = [] #this is a list containing new instrumented code
+        
+        self.moves_before = []
         self.moves_after = []
         
 
@@ -267,12 +273,11 @@ class SmaliMethodDef:
         #print(self.signature.parameter_type_map)
         for param in self.signature.parameter_type_map:
 
-            param_type_str = self.signature.parameter_type_map[param]
-            #print("param_type: " + str(param_type_str))
-            smali_type_obj = SmaliTypes.SmaliType.from_string(param_type_str)
-            mv_cmd = smali_type_obj.move_instr
+            param_type_obj = self.signature.parameter_type_map[param]
+            #print("smali type object: " + str(param_type_obj) + "  :  " + str(type(param_type_obj)))
+            mv_cmd = param_type_obj.get_move_instr()
             
-            if(smali_type_obj.get_generic_type() != "64-bit-2"):
+            if(param_type_obj.get_generic_type() != "64-bit-2"):
                 mv_cmd = mv_cmd("v" + str(old_locals_num), param)
                 mv_cmd.targeted_for_instrumentation = False
                 
@@ -288,6 +293,8 @@ class SmaliMethodDef:
         
         # convert all of these from SmaliAssemblyObjects to string so that
         # the instrumentation plugins can interact with them
+        # I think this may be unnecessary due to some changes
+        # recently made in the TypeSafteyChecker
         for i in range(len(block)):
             block[i] = str(block[i])
         
@@ -458,9 +465,9 @@ class SmaliMethodDef:
         
         #create the control flow graph for the method text and pass it to the type safety checker
         #this will check and track types of each register on each line 
-        #these are the newly freed registers at the top
-        free_regs = self.grow_locals(Instrumenter.NUM_REGISTER)        
-        self.cfg = ControlFlowGraph(self.raw_text)        
+        #these are the newly freed registers at the top, they might be large numbered! (> v15)
+        free_regs = self.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)        
+        self.cfg = ControlFlowGraph(self.raw_text)
         self.tsc = TypeSafetyChecker(self.signature, self.cfg) 
         
         #incase the graph is empty, we dont instrument
@@ -485,7 +492,7 @@ class SmaliMethodDef:
                     #print(type(line), ": " + str(line))         
                     self.tsc.type_update(line, index, counter)
                     node["type_list"] = self.tsc.node_type_list
-                    self._do_instrumentation_plugins(free_regs, node, line, index)
+                    self._do_instrumentation_plugins(free_regs, node, line, index, counter)
 
                 #assign the register type list to this current node after its processed processed
                 self.tsc.node_type_list = []
@@ -500,28 +507,104 @@ class SmaliMethodDef:
         self.fix_larger_if_offsets()
         
                        
-    def gen_list_of_safe_registers(self, free_regs, node, idx, goal_size):
-        # "safe" registers are 
-        #  (a) low numbered (less than v16)
-        #  (b) not used in the instruction on line idx
-        #  (c) not currently assigned a type in the method on line idx
-        #  (d) not the second 1/2 of a wide value
+
         
-        # The algorithm aims to get to goal_size
-        # for the number of registers return
-        # it will stop early if possible and it will
-        # throw an exception if goal_size cannot be reached
-        
-        #empty the move lists
+    def _do_instrumentation_plugins(self, free_regs, node, line, idx, counter):
         self.moves_before = []
         self.moves_after = []
+        
+        opcode = StigmaStringParsingLib.extract_opcode(line)        
+        #1)        
+            # we need to know if we are in a try block so we can avoid
+            # the one type of instrumentation where that matters
+            # internal-function move-result lines
+            # If we are in a try block, then adding instructions
+            # may affect the control flow / type checking done 
+            # by the verifier.  This causes java.lang.VerifyError
+            # with  messages like this:
+            # [0x35] register v0 has type Precise Reference: java.lang.String[] but expected Long
+            # https://github.com/JesusFreke/smali/issues/797
+        if node["is_in_try_block"]:
+            self.instrumented_code.append(line)
+            return
+        
+        #2  
+            #if a line begins with move-result, it should have already been processed 
+            # by the instrumenter of its preceding opcode (e.g invoke)
+            # so dont add that line again into the new method
+        #if re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, line) is not None:
+            #return
+        # Commented out, I think the instrumentation plugin should handle this situation
+        # by simplying not "signing-up" for move-result-* instructions
+        # move-result, move-result-wide, move-result-object
+            
+        if not self.is_relevant(line):
+            self.instrumented_code.append(line)
+            
+        else:
+            instrumentation_method = Instrumenter.instrumentation_map[opcode][0]
+            instrumeter_inserts_original_lines = Instrumenter.instrumentation_map[opcode][1]
+            
+            if(re.search(StigmaStringParsingLib.BEGINS_WITH_INVOKE, line) is not None or re.search(StigmaStringParsingLib.BEGINS_WITH_FILLED_NEW_ARRAY, line) is not None):
+                next_line = self.tsc.obtain_next_instruction(node["node_counter"], idx+1)
+                if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, next_line) is not None):
+                    line = [line, str(smali.BLANK_LINE()), next_line]
+            
+            try:
+                regs = self.gen_list_of_safe_registers(free_regs, node, idx)
+            except ValueError as ve:
+                print(ve)
+                print(self.scd.file_name)
+                print(self.signature)
+                print("node number: " + str(counter))
+                print()
+                print(node["text"])
+                print()
+                print("line " + str(idx) + ":  " + str(line))
+                self.cfg.show()
+                exit(1)
+                
+            
+            
+            #if we are unable to get enough free registers, worse case possible if all the types are ?
+            if(len(regs) < Instrumenter.DESIRED_NUM_REGISTERS and instrumeter_inserts_original_lines):
+                new_block = []
+                if(isinstance(line,list)):
+                    new_block.extend(line)
+                else:
+                    new_block.append(line)
+
+            elif len(regs) < Instrumenter.DESIRED_NUM_REGISTERS:
+                new_block = []
+   
+            else:
+                new_block = instrumentation_method(self.scd, self, line, regs)
+            
+            
+            self.insert_instrumented_code(line, new_block, instrumeter_inserts_original_lines)
+            
+            
+
+    def gen_list_of_safe_registers(self, free_regs, node, idx):
+        # "safe" registers are 
+        #  (a) low numbered (less than v16)
+        #  (b) not containing original program data
+        #      (or such original program data has been moved to another register)
+        #  (c) not the second 1/2 of a wide value
+        
+        # The algorithm aims to get to goal_size
+        # for the number of registers returned
+        # it will stop early if possible and it will
+        # throw an exception if goal_size cannot be reached
+
         
         # generate a list of available registers        
         safe_regs = set()
         
-        #this first free reg is later used as a destination to move instrutions so we need to count how many are already used in the safe reg list so we can ignore those        
+        #this first free reg is later used as a destination for the "register juggling" move instructions, 
+        # so we need to count how many are already used in the safe reg list so we can ignore those
+        # for the moves implemented later in this algorithm      
         count = self.first_new_free_reg_num
-        line_type_map = node["type_list"][idx-1]
         
         # 1) Try to use the top registers available after growing
         for r in free_regs:
@@ -531,9 +614,11 @@ class SmaliMethodDef:
                 safe_regs.add(r)
         
         
-        if(len(safe_regs) >= goal_size):
+        if(len(safe_regs) >= Instrumenter.DESIRED_NUM_REGISTERS):
             return list(safe_regs)
         
+        
+        # 2) Try to use the regiters not yet used uptil now in this method according to tsc
         #get the registers being used in the current line
         line = node["text"][idx]
         cur_line_reg = set(StigmaStringParsingLib.get_v_and_p_numbers(line))
@@ -545,7 +630,7 @@ class SmaliMethodDef:
             prev_line_reg = set(StigmaStringParsingLib.get_v_and_p_numbers(prev_line))
             cur_line_reg = cur_line_reg.union(prev_line_reg)
     
-        # 2) Try to use the regiters not yet used uptil now in this method according to tsc
+        line_type_map = node["type_list"][idx-1]
         for i in range(16):
             reg = "v" + str(i)
             # each node has a list of hashmaps (typelist)
@@ -556,10 +641,15 @@ class SmaliMethodDef:
 
         safe_regs.difference_update(cur_line_reg)
 
-        if(len(safe_regs) >= goal_size):
+        if(len(safe_regs) >= Instrumenter.DESIRED_NUM_REGISTERS):
             return list(safe_regs)
         
+        
         #3) implement moves to free up lower numbered registers if possible
+        
+        #empty old / pre-existing move lists
+        self.moves_before = [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers")]
+        self.moves_after = []
         dest_reg = count
         for reg in line_type_map:
             # reg not in cur_line_reg 
@@ -574,70 +664,14 @@ class SmaliMethodDef:
                 else:
                     dest_reg+=1
             
-            if len(safe_regs) == goal_size:
-                break
-            
-        return list(safe_regs)               
-         
+            if len(safe_regs) == Instrumenter.DESIRED_NUM_REGISTERS:
+                self.moves_after.append(smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers"))
+                return list(safe_regs)
+                
+        raise ValueError("Unable to find enough safe registers.  Trying for " + str(Instrumenter.DESIRED_NUM_REGISTERS) + "  got: " + str(safe_regs))
         
-    def _do_instrumentation_plugins(self, free_regs, node, line, idx):
         
-        opcode = StigmaStringParsingLib.extract_opcode(line)        
-        #1)        
-            # we need to know if we are in a try block so we can avoid
-            # the one type of instrumentation where that matters
-            # internal-function move-result lines
-            # If we are in a try block, then adding instructions
-            # may affect the control flow / type checking done 
-            # by the verifier.  This causes java.lang.VerifyError
-            # with  messages like this:
-            # [0x35] register v0 has type Precise Reference: java.lang.String[] but expected Long
-            # https://github.com/JesusFreke/smali/issues/797
-        #2  
-            #if a line begins with move-result, it should have already been processed 
-            # by the instrumenter of its preceding opcode (e.g invoke)
-            # so dont add that line again into the new method
-        if node["is_in_try_block"]:
-            self.instrumented_code.append(line)
-            return
         
-        if re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, line) is not None:
-            return
-            
-        if self.is_relevant(line, node) and opcode in Instrumenter.instrumentation_map:
-            instrumentation_method = Instrumenter.instrumentation_map[opcode][0]
-            instrumeter_inserts_original_lines = Instrumenter.instrumentation_map[opcode][1]
-            
-            if(re.search(StigmaStringParsingLib.BEGINS_WITH_INVOKE, line) is not None or re.search(StigmaStringParsingLib.BEGINS_WITH_FILLED_NEW_ARRAY, line) is not None):
-                next_line = self.tsc.obtain_next_instruction(node["node_counter"], idx+1)
-                if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, next_line) is not None):
-                    line = [line,next_line]
-
-                            
-            regs = self.gen_list_of_safe_registers(free_regs, node, idx, Instrumenter.NUM_REGISTER)
-            
-            
-            #if we are unable to get enough free registers, worse case possible if all the types are ?
-            if(len(regs) < Instrumenter.NUM_REGISTER and instrumeter_inserts_original_lines):
-                new_block = []
-                if(isinstance(line,list)):
-                    new_block.extend(line)
-                else:
-                    new_block.append(line)
-                self.insert_instrumented_code(line, new_block, instrumeter_inserts_original_lines)            
-                return
-            elif len(regs) < Instrumenter.NUM_REGISTER:
-                new_block = []
-                self.insert_instrumented_code(line, new_block, instrumeter_inserts_original_lines)     
-                return       
-            else:
-                new_block = instrumentation_method(self.scd, self, line, regs)
-                self.insert_instrumented_code(line, new_block, instrumeter_inserts_original_lines)
-
-        else:
-            self.instrumented_code.append(line)
-            
-    
     def insert_instrumented_code(self, line, new_block, instrumeter_inserts_original_lines):
         #invoke foo()
         #move-result vx
@@ -663,7 +697,9 @@ class SmaliMethodDef:
             self.instrumented_code.extend(self.moves_after)
             
             
-    def is_relevant(self, line, node):        
+    def is_relevant(self, line):     
+        opcode = StigmaStringParsingLib.extract_opcode(line)  
+         
         # The lines of code that we add (instrument) will be instances of smali.SmaliAssemblyInstruction
         # the lines of code that are existing already will be type string
         # So, this check prevents us from instrumenting our new, additional code
@@ -673,7 +709,8 @@ class SmaliMethodDef:
         # Only do instrumentation if line is a valid instruction
         elif not StigmaStringParsingLib.is_valid_instruction(line):
             return False
-        else:
+            
+        elif opcode in Instrumenter.instrumentation_map:
             return True
     
     
@@ -798,14 +835,16 @@ def tests():
     sig = SmaliMethodSignature(".method private constructor <init>(Ljava/lang/String;I)V", "Lmy/package/MyClass;")
     assert(sig.name == "<init>")
     assert(sig.is_static == False)
-    assert(sig.parameter_type_map == {"p0": "Lmy/package/MyClass;", "p1": "L", "p2": "I"})
+    #print("map: " + str(sig.parameter_type_map))
+    assert(str(sig.parameter_type_map) == "{'p0': 'Lmy/package/MyClass;', 'p1': Ljava/lang/String;, 'p2': I}")
     assert(sig.num_of_parameters == 3)
     assert(sig.num_of_parameter_registers == 3)
     
     sig = SmaliMethodSignature(".method private prefetchInnerRecyclerViewWithDeadline(Landroid/support/v7/widget/RecyclerView;J)V", "Lmy/package/MyOtherClass;")
     assert(sig.name == "prefetchInnerRecyclerViewWithDeadline")
     assert(sig.is_static == False)
-    assert(sig.parameter_type_map == {"p0": "Lmy/package/MyOtherClass;", "p1": "L", "p2": "J", "p3": "J2"})
+    #print("map: " + str(sig.parameter_type_map))
+    assert(str(sig.parameter_type_map) == "{'p0': 'Lmy/package/MyOtherClass;', 'p1': Landroid/support/v7/widget/RecyclerView;, 'p2': J, 'p3': J2}")
     assert(sig.num_of_parameters == 3)
     assert(sig.num_of_parameter_registers == 4)
     

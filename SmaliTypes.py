@@ -4,15 +4,16 @@ import SmaliAssemblyInstructions
 
 class SmaliType:
 	
+	@staticmethod
 	def from_string(raw_type_string):
 		
 		constructor_map = {"32-bit": ThirtyTwoBit, "Z": Boolean, "B": Byte,
 			"S": Short, "C": Char, "I": Int, "F": Float, 
 			"64-bit": SixtyFourBit, "64-bit-2": SixtyFourBit_2, 
-			"J": Long, "D": Double, "J2": SixtyFourBit_2, "D2": SixtyFourBit_2}
+			"J": Long, "D": Double, "J2": Long_2, "D2": Double_2}
 			
 		if raw_type_string in constructor_map:
-			obj = constructor_map[raw_type_string](raw_type_string)
+			obj = constructor_map[raw_type_string]()
 		
 		elif raw_type_string[0] == "[":
 			obj = Array(raw_type_string)
@@ -29,13 +30,29 @@ class SmaliType:
 		return obj
 		
 		
+	def get_move_instr(self):
+		return self.move_instr
+		
+	def __repr__(self):
+		return str(self)
+		
+		
 		
 class UnknownType(SmaliType):
 	def __init__(self):
 		self.raw_type_string = "?"
 	
 	def __str__(self):
-		return "?"
+		return self.raw_type_string
+		
+	def __eq__(self, other):
+		if(isinstance(other, str)):
+			return other == self.raw_type_string
+			
+		if(isinstance(other, UnknownType)):
+			return True
+			
+		return False
 		
 	def get_generic_type(self):
 		# the children inherit this method
@@ -46,12 +63,24 @@ class UnknownType(SmaliType):
 		
 		
 class ThirtyTwoBit(SmaliType):
-	def __init__(self, new_raw_type_string):
-		self.raw_type_string = new_raw_type_string
+	def __init__(self):
 		self.move_instr = SmaliAssemblyInstructions.MOVE_16
 	
 	def __str__(self):
 		return "32-bit"
+		
+	def __eq__(self, other):
+		if(isinstance(other, str)):
+			# maybe instead do this:
+			# return other == self.get_generic_type()
+			#print("comparing" + other + "  and " + str(self))
+			return other == str(self)
+			
+		if(isinstance(other, ThirtyTwoBit)):
+			# I'm not sure about this!
+			return True
+			
+		return False
 		
 	def get_generic_type(self):
 		# the children inherit this method
@@ -89,12 +118,22 @@ class Float(ThirtyTwoBit):
 		
 class SixtyFourBit(SmaliType):
 	# A.K.A. "wide"
-	def __init__(self, new_raw_type_string):
-		self.raw_type_string = new_raw_type_string
+	def __init__(self):
 		self.move_instr = SmaliAssemblyInstructions.MOVE_WIDE_16
 		
 	def __str__(self):
 		return "64-bit"
+		
+	def __eq__(self, other):
+		if(isinstance(other, str)):
+			# maybe instead do this:
+			# return other == self.get_generic_type()
+			return other == str(self)
+			
+		if(isinstance(other, SixtyFourBit)):
+			return True
+			
+		return False
 	
 	def get_generic_type(self):
 		# the children inherit this method
@@ -102,9 +141,28 @@ class SixtyFourBit(SmaliType):
 		# which is convenient to figure out the generic type
 		return "64-bit"
 		
+class Long(SixtyFourBit):
+	def __str__(self):
+		return "J"
+		
+class Double(SixtyFourBit):
+	def __str__(Self):
+		return "D"
+		
+		
+		
 class SixtyFourBit_2(SixtyFourBit):
 	def __str__(self):
 		return "64-bit-2"
+		
+	def __eq__(self, other):
+		if(isinstance(other, str)):
+			# maybe instead do this:
+			# return other == self.get_generic_type()
+			return other == str(self)
+			
+		if(isinstance(other, SixtyFourBit_2)):
+			return True
 	
 	def get_generic_type(self):
 		# the children inherit this method
@@ -115,30 +173,36 @@ class SixtyFourBit_2(SixtyFourBit):
 	def get_move_instr(self):
 		raise Exception("No valid move instruction for 64-bit-2: " + str(raw_line_string))
 	
-		
-class Long(SixtyFourBit):
+class Long_2(SixtyFourBit):
 	def __str__(self):
-		return "L"
+		return "J2"
 		
-class Double(SixtyFourBit):
+class Double_2(SixtyFourBit):
 	def __str__(Self):
-		return "D"
+		return "D2"
+
 		
 		
-
-
 
 class ObjectReference(SmaliType):
 	def __init__(self, new_raw_type_string):
 		self.move_instr = SmaliAssemblyInstructions.MOVE_OBJECT_16
 		
-		if(new_raw_type_string[0] != "[" and new_raw_type_string[0] != "L"):
-			raise Exception("Invalid specification of object: " + str(new_full_type))
+		if(new_raw_type_string[0] != "[" and new_raw_type_string[0] != "L" and new_raw_type_string != "?"):
+			raise Exception("Invalid specification of object: " + str(new_raw_type_string))
 			
 		self.raw_type_string = new_raw_type_string
 		
 	def __str__(self):
 		return self.raw_type_string
+		
+	def __eq__(self, other):
+		if(isinstance(other, str)):
+			# maybe instead do this:
+			# return other == self.get_generic_type()
+			return other == str(self)
+		if(isinstance(other, ObjectReference)):
+			return str(other) == str(self)
 		
 	def get_generic_type(self):
 		# the children inherit this method
@@ -179,4 +243,46 @@ class Array(ObjectReference):
 		return obj
 
 
+def main():
+	print("Testing SmaliType")
+	print("  ...testing 32-bit types")
+	int1 = Int()
+	int2 = SmaliType.from_string("I")
+	assert(str(int1) == "I")
+	assert(int1 == "I")
+	assert(int1 == int2) 
+	assert(isinstance(int1, Int))
+	assert(isinstance(int1, ThirtyTwoBit))
+	assert(isinstance(int2, Int))
+	assert(isinstance(int2, ThirtyTwoBit))
+	
+	vague1 = SmaliType.from_string("32-bit")
+	assert(vague1 == "32-bit")
+	assert(isinstance(vague1, ThirtyTwoBit))
+	
+	
+	print("  ...testing array types")
+	arr = Array("[[I")
+	arr2 = Array("[[I")
+	arr3 = Array("[J")
+	arr4 = arr.unwrap_layer()
+	int3 = arr4.unwrap_layer()
+	
+	assert(arr == "[[I")
+	assert(arr4 == "[I")
+	assert(int3 == "I")
+	assert(isinstance(int3, Int))
+	assert(isinstance(int3, ThirtyTwoBit))
+	assert(arr2 == arr)
+	
+	print("  ...testing object types")
+	obj = ObjectReference("Ljava/lang/String;")
+	obj2 = SmaliType.from_string("Ljava/lang/String;")
+	assert(obj == obj2)
+	assert(obj == "Ljava/lang/String;")
+	
+	print("ALL TESTS PASSED!")
 
+
+if __name__ == "__main__":
+	main()
