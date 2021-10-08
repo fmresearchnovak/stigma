@@ -2,34 +2,33 @@
 import SmaliAssemblyInstructions
 
 
+
+def from_string(raw_type_string):
+	
+	constructor_map = {"32-bit": ThirtyTwoBit, "Z": Boolean, "B": Byte,
+		"S": Short, "C": Char, "I": Int, "F": Float, 
+		"64-bit": SixtyFourBit, "64-bit-2": SixtyFourBit_2, 
+		"J": Long, "D": Double, "J2": Long_2, "D2": Double_2}
+		
+	if raw_type_string in constructor_map:
+		obj = constructor_map[raw_type_string]()
+	
+	elif raw_type_string[0] == "[":
+		obj = Array(raw_type_string)
+		
+	elif raw_type_string[0] == "L":
+		obj = ObjectReference(raw_type_string)
+		
+	elif raw_type_string == "?":
+		obj = UnknownType()
+		
+	else:
+		raise Exception("Invalid type string: " + str(raw_type_string))
+		
+	return obj
+
 class SmaliType:
 	
-	@staticmethod
-	def from_string(raw_type_string):
-		
-		constructor_map = {"32-bit": ThirtyTwoBit, "Z": Boolean, "B": Byte,
-			"S": Short, "C": Char, "I": Int, "F": Float, 
-			"64-bit": SixtyFourBit, "64-bit-2": SixtyFourBit_2, 
-			"J": Long, "D": Double, "J2": Long_2, "D2": Double_2}
-			
-		if raw_type_string in constructor_map:
-			obj = constructor_map[raw_type_string]()
-		
-		elif raw_type_string[0] == "[":
-			obj = Array(raw_type_string)
-			
-		elif raw_type_string[0] == "L":
-			obj = ObjectReference(raw_type_string)
-			
-		elif raw_type_string == "?":
-			obj = UnknownType()
-			
-		else:
-			raise Exception("Invalid type string: " + str(raw_type_string))
-			
-		return obj
-		
-		
 	def get_move_instr(self):
 		return self.move_instr
 		
@@ -239,7 +238,7 @@ class Array(ObjectReference):
         """ 
 		unwrapped = self.raw_type_string[1:]
 		# assert(unwrapped != 64-bit-2)
-		obj = SmaliType.from_string(unwrapped)
+		obj = from_string(unwrapped)
 		return obj
 
 

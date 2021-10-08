@@ -104,8 +104,6 @@ class TypeSafetyChecker:
         #find all unrelevant instructions and put a -1 for them in the type list
         if(self.non_relevent_line(line)):
             self.node_type_list.append(self.most_recent_type_map)
-            # print("\n------NON RELECVENT LINE:", line.strip())
-            # print(self.node_type_list[-1])
             return
         
         tokens = StigmaStringParsingLib.break_into_tokens(line)
@@ -115,9 +113,10 @@ class TypeSafetyChecker:
             line_type_map_new = self.most_recent_type_map.copy()
             #in this case the types might not be known to us
             if(reg[-1] not in self.most_recent_type_map):
-                reg_type = '?'
+                reg_type = SmaliTypes.UnknownType()
             else:
                 reg_type = self.most_recent_type_map[reg[-1]]
+                
             line_type_map_new[reg[0]] = reg_type
             self.most_recent_type_map = line_type_map_new.copy()
             self.node_type_list.append(line_type_map_new)
@@ -147,7 +146,7 @@ class TypeSafetyChecker:
         #if the current line is a :catch label, reset everything because we dont know which line has caused the catch 
         elif(re.search(StigmaStringParsingLib.BEGINS_WITH_CATCH_LABEL, line) is not None):
             for key, value in self.most_recent_type_map.items():
-                self.most_recent_type_map[key] = '?'  
+                self.most_recent_type_map[key] = SmaliTypes.UnknownType() 
             
             self.node_type_list.append(self.most_recent_type_map)
             
@@ -200,23 +199,24 @@ class TypeSafetyChecker:
                                 
                 if(re.search(StigmaStringParsingLib.BEGINS_WITH_INVOKE, prev_line_instruction) is not None):
                     type_start_index = prev_line.rfind(")")
-                    if(type_start_index != -1):
-                        instruction_type = prev_line[type_start_index+1:]
-                        if("[" not in instruction_type):
-                            line_type_map_new[dest_reg] = self.check_invoke_type(instruction_type[0])
-                        else:
-                            instruction_type = instruction_type.replace("\n", "")  #need to replace new line char from end, otherwise stores [I\n -> we need only [I
-                            line_type_map_new[dest_reg] = instruction_type
+                    tmp = prev_line[type_start_index+1:].strip() 
+                    # note: .strip() removes the \n at the end of the line
+                    # e.g., if the return type is: [I\n   we need only [I
+                        
                         
                 elif("new-array" in prev_line_instruction):
-                    instruction_type = prev_line_tokens[-1]
-                    line_type_map_new[dest_reg] = instruction_type
+                    tmp = prev_line_tokens[-1]
+
+                return_type = SmaliTypes.from_string(tmp)    
+                line_type_map_new[dest_reg] = return_type
                           
-                          
+            
+            # seems like this should be combined with the preceeding lines
             #if instruction == new-array , get the whole type, including the ['s
             elif(instruction == "new-array"):
-                instruction_type = tokens[-1]
-                line_type_map_new[dest_reg] = instruction_type
+                tmp = tokens[-1]
+                return_type = SmaliTypes.from_string(tmp)  
+                line_type_map_new[dest_reg] = return_type
 
             #if iget-object is an array, we have to store the exact type of array, otherwise just store object
             #error:     
@@ -225,13 +225,9 @@ class TypeSafetyChecker:
             #not sure if have to consider aget-object
             #iput-object can also contain an array, so we need to consider that case also while checking for array
             elif(instruction == "iget-object" or instruction == "sget-object" or instruction == "iget-object-quick" or instruction == "iput-object"):
-                instruction_type = tokens[-1]
-                idx = instruction_type.find("[")
-                if(idx != -1):
-                    reg_type = instruction_type[idx:]
-                    line_type_map_new[dest_reg] = reg_type
-                else:
-                    line_type_map_new[dest_reg] = "object"                
+                tmp = tokens[-1]
+                return_type = SmaliTypes.from_string(tmp)  
+                line_type_map_new[dest_reg] = return_type
             
             
             elif(instruction == "aget-object"):
@@ -252,19 +248,19 @@ class TypeSafetyChecker:
                     input("????????")
                 
                 src_type = line_type_map_new[src_reg]
-                #if(re.search(StigmaStringParsingLib.BEGINS_WITH_TWO_SQUARE_BRACKETS, src_type) is not None):
-                #    print("N-dimenstional array found: " + str(src_type))
                 line_type_map_new[dest_reg] = self.check_aget_object_type(src_type)
                 
                 
             #check-cast vx, type_id
             #Checks whether the object reference in vx can be cast to an instance of a class referenced by type_id. Throws ClassCastException if the cast is not possible, continues execution otherwise.
             elif(instruction == "check-cast"):
-                line_type_map_new[dest_reg] = self.check_cast_type(tokens[-1])
+                line_type_map_new[dest_reg] = SmaliTypes.from_string(tokens[-1])
                       
-                                                      
+                      
             else:
                 line_type_map_new[dest_reg] = self.check_type_list(instruction)
+                # if self.check_type_list(instruction) == 64-bit:
+                #   dest_reg +1 = SmaliTypes.SixtyFourBit_2
             
             self.most_recent_type_map = line_type_map_new.copy()
             self.node_type_list.append(line_type_map_new)
@@ -326,11 +322,6 @@ class TypeSafetyChecker:
 
         raise ValueError("Line not found in any node:", line)
     
-    def check_cast_type(self, cast_type):
-        if(cast_type[0] == "L"):
-            return "object"
-        else:
-            return cast_type
     
     def check_type_list(self, opcode):
         '''
@@ -356,31 +347,14 @@ class TypeSafetyChecker:
     def check_aget_object_type(self, src_type):
         # src_type = [[I
         #   return [I
-        smali_array_type_obj = SmaliTypes.SmaliType.from_string(src_type)
+        smali_array_type_obj = src_type
         if(isinstance(smali_array_type_obj, SmaliTypes.UnknownType)):
             return smali_array_type_obj
             
         result = smali_array_type_obj.unwrap_layer()
         
-        # it's probably better to return the object itself
-        # and not a string version of the object
-        # but I tdon't think the rest of the code is ready for
-        # that yet!
-        return str(result)
+        return result
 
-
-        
-    def check_invoke_type(self, value):
-        if(value in smali.TYPE_LIST_OBJECT_REF):
-            return "object"
-        elif (value in smali.TYPE_LIST_WORD):
-            return "32-bit"
-        elif (value in smali.TYPE_LIST_WIDE):
-            return "64-bit"
-        elif (value in smali.TYPE_LIST_WIDE_REMAINING):
-            return "64-bit-2"
-        else:
-            raise Exception("Invalid Value: ", value)
     
     def obtain_previous_instruction(self, node_counter, start):
         # I found a situation in the whatsapp.apk which 
@@ -439,8 +413,7 @@ class TypeSafetyChecker:
         if(start>=len(text)):
             return ""
 
-        cur_line = text[start]        
-        # print("text: ", text)
+        cur_line = text[start]
         
         while(not StigmaStringParsingLib.is_valid_instruction(cur_line) and start < len(text)):
             cur_line = text[start]
@@ -450,17 +423,6 @@ class TypeSafetyChecker:
               
     def __str__(self):
         return str(self.node_type_list)
-
-    @staticmethod
-    def get_move_instr(type):
-        if type == "32-bit":
-            return smali.MOVE_16
-        elif type == "64-bit":
-            return smali.MOVE_WIDE_16
-        elif type == "object" or type[0] == "[" or type[0] == "L":
-            return smali.MOVE_OBJECT_16
-        else:
-            raise Exception("Invalid type to move", type)
             
     @staticmethod
     def merge_maps(map_list):
@@ -480,12 +442,12 @@ class TypeSafetyChecker:
             presumed_type = TypeSafetyChecker.get_register_presumed_type(reg,map_list)
             for m in map_list:
                 if(reg not in m):
-                    new_map[reg] = '?'
+                    new_map[reg] = SmaliTypes.UnknownType()
                     break
                 else:
                     t = m[reg]
                     if(t != presumed_type):
-                        new_map[reg] = '?'
+                        new_map[reg] = SmaliTypes.UnknownType()
                         break
             
             if reg not in new_map:

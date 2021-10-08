@@ -66,7 +66,7 @@ class SmaliMethodSignature:
             # p0 holds the object reference and p1 the second 
             # parameter register.
 
-            self.parameter_type_map["p0"] = SmaliTypes.SmaliType.from_string(class_name)
+            self.parameter_type_map["p0"] = SmaliTypes.from_string(class_name)
             self.num_of_parameters = 1
             self.num_of_parameter_registers = 1
             p_idx = 1
@@ -82,16 +82,16 @@ class SmaliMethodSignature:
             if parameter_raw[i] in smali.TYPE_LIST_WORD: 
                 self.num_of_parameter_registers += 1
                 p_name = "p" + str(p_idx)
-                self.parameter_type_map[p_name] = SmaliTypes.SmaliType.from_string(parameter_raw[i])
+                self.parameter_type_map[p_name] = SmaliTypes.from_string(parameter_raw[i])
                 
                 
             elif parameter_raw[i] in smali.TYPE_LIST_WIDE: # long or double
                 self.num_of_parameter_registers += 2
                 p_name = "p" + str(p_idx)
-                self.parameter_type_map[p_name] = SmaliTypes.SmaliType.from_string(parameter_raw[i])
+                self.parameter_type_map[p_name] = SmaliTypes.from_string(parameter_raw[i])
                 p_idx+=1
                 p_name = "p" + str(p_idx)
-                self.parameter_type_map[p_name] = SmaliTypes.SmaliType.from_string(parameter_raw[i]+"2")
+                self.parameter_type_map[p_name] = SmaliTypes.from_string(parameter_raw[i]+"2")
                 
                 
             elif parameter_raw[i] == "L": # some object
@@ -103,7 +103,7 @@ class SmaliMethodSignature:
                 # we should skip from "L" all the way to ";" for each parameter
                 end = parameter_raw.find(";", i)
                 obj_str = parameter_raw[i:end+1]
-                self.parameter_type_map[p_name] = SmaliTypes.SmaliType.from_string(obj_str)
+                self.parameter_type_map[p_name] = SmaliTypes.from_string(obj_str)
                 i = end
                 
                     
@@ -125,7 +125,7 @@ class SmaliMethodSignature:
 
                 self.num_of_parameter_registers += 1
                 p_name = "p" + str(p_idx)
-                self.parameter_type_map[p_name] = SmaliTypes.SmaliType.from_string(parameter_raw[start_index:end_index])
+                self.parameter_type_map[p_name] = SmaliTypes.from_string(parameter_raw[start_index:end_index])
 
             p_idx += 1        
             i += 1
@@ -492,7 +492,7 @@ class SmaliMethodDef:
                     #print(type(line), ": " + str(line))         
                     self.tsc.type_update(line, index, counter)
                     node["type_list"] = self.tsc.node_type_list
-                    self._do_instrumentation_plugins(free_regs, node, line, index, counter)
+                    self._do_instrumentation_plugins(free_regs, node, line, index)
 
                 #assign the register type list to this current node after its processed processed
                 self.tsc.node_type_list = []
@@ -509,7 +509,7 @@ class SmaliMethodDef:
                        
 
         
-    def _do_instrumentation_plugins(self, free_regs, node, line, idx, counter):
+    def _do_instrumentation_plugins(self, free_regs, node, line, idx):
         self.moves_before = []
         self.moves_after = []
         
@@ -556,11 +556,12 @@ class SmaliMethodDef:
                 print(ve)
                 print(self.scd.file_name)
                 print(self.signature)
-                print("node number: " + str(counter))
+                print("node number: " + str(node["node_counter"]))
                 print()
                 print(node["text"])
                 print()
                 print("line " + str(idx) + ":  " + str(line))
+                print("type map: " + str(node["type_list"][idx-1]))
                 self.cfg.show()
                 exit(1)
                 
@@ -655,7 +656,8 @@ class SmaliMethodDef:
             # reg not in cur_line_reg 
             # it looks like that we can use the registers from the current line being processed, however there is a BIG UNSURE
             if reg not in safe_regs and line_type_map[reg] != '?' and line_type_map[reg] != '64-bit-2' and reg[0] != 'p' and int(reg[1:]) < 16 and reg not in cur_line_reg:
-                move_instr = TypeSafetyChecker.get_move_instr(line_type_map[reg])
+                #print(str(line_type_map[reg]) + "  " + str(type(line_type_map[reg])))
+                move_instr = line_type_map[reg].get_move_instr()
                 self.moves_before.append(move_instr("v" + str(dest_reg),reg))
                 self.moves_after.append(move_instr(reg, "v" + str(dest_reg)))
                 safe_regs.add(reg)
