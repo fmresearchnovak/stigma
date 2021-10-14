@@ -189,6 +189,9 @@ class ObjectReference(SmaliType):
 		
 		if(new_raw_type_string[0] != "[" and new_raw_type_string[0] != "L" and new_raw_type_string != "?"):
 			raise Exception("Invalid specification of object: " + str(new_raw_type_string))
+		
+		if("->" in new_raw_type_string):
+			raise Exception("Invalid specification of object: " + str(new_raw_type_string))
 			
 		self.raw_type_string = new_raw_type_string
 		
@@ -246,7 +249,7 @@ def main():
 	print("Testing SmaliType")
 	print("  ...testing 32-bit types")
 	int1 = Int()
-	int2 = SmaliType.from_string("I")
+	int2 = from_string("I")
 	assert(str(int1) == "I")
 	assert(int1 == "I")
 	assert(int1 == int2) 
@@ -255,7 +258,7 @@ def main():
 	assert(isinstance(int2, Int))
 	assert(isinstance(int2, ThirtyTwoBit))
 	
-	vague1 = SmaliType.from_string("32-bit")
+	vague1 = from_string("32-bit")
 	assert(vague1 == "32-bit")
 	assert(isinstance(vague1, ThirtyTwoBit))
 	
@@ -276,7 +279,7 @@ def main():
 	
 	print("  ...testing object types")
 	obj = ObjectReference("Ljava/lang/String;")
-	obj2 = SmaliType.from_string("Ljava/lang/String;")
+	obj2 = from_string("Ljava/lang/String;")
 	assert(obj == obj2)
 	assert(obj == "Ljava/lang/String;")
 	

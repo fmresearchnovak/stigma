@@ -352,6 +352,10 @@ class ControlFlowGraph:
         pos = graphviz_layout(self.G, prog="dot")
         nx.draw(self.G, pos, font_size = 6, labels=self.label_dict, with_labels = True)
         plt.show()
+        
+        
+    def generate_adjlist(self):
+        return nx.generate_adjlist(self.G)
 
                
     @staticmethod

@@ -1,453 +1,18 @@
 
-import SmaliMethodDef, SmaliClassDef, StigmaStringParsingLib, ControlFlowGraph, TaintTrackingInstrumentationPlugin
+import SmaliMethodDef
+import SmaliClassDef
+import StigmaStringParsingLib
+import ControlFlowGraph
+import TypeSafetyChecker
+import TaintTrackingInstrumentationPlugin
+
 import sys, re
 
-method_text = '''.method public leakPasswd(Landroid/view/View;)V
-    .locals 6
-    .param p1, "v"    # Landroid/view/View;
 
-    .line 181
-    const v0, 0x7f070050
 
-    invoke-virtual {p0, v0}, Ledu/fandm/enovak/leaks/Main;->findViewById(I)Landroid/view/View;
 
-    move-result-object v0
 
-    check-cast v0, Landroid/widget/EditText;
 
-    .line 182
-    .local v0, "et":Landroid/widget/EditText;
-    invoke-virtual {v0}, Landroid/widget/EditText;->getText()Landroid/text/Editable;
-
-    move-result-object v1
-
-    invoke-virtual {v1}, Ljava/lang/Object;->toString()Ljava/lang/String;
-
-    move-result-object v1
-
-    .line 184
-    .local v1, "pass":Ljava/lang/String;
-    new-instance v2, Ljava/lang/StringBuilder;
-
-    invoke-direct {v2}, Ljava/lang/StringBuilder;-><init>()V
-
-    const-string v3, "Leaked Password: "
-
-    invoke-virtual {v2, v3}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    invoke-virtual {v2, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    invoke-virtual {v2}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
-
-    move-result-object v2
-
-    invoke-direct {p0, v2}, Ledu/fandm/enovak/leaks/Main;->prependToLog(Ljava/lang/String;)V
-
-    .line 186
-    new-instance v2, Ledu/fandm/enovak/leaks/Main$ServerLeakTask;
-
-    invoke-direct {v2, p0}, Ledu/fandm/enovak/leaks/Main$ServerLeakTask;-><init>(Ledu/fandm/enovak/leaks/Main;)V
-
-    .line 189
-    .local v2, "slt":Ledu/fandm/enovak/leaks/Main$ServerLeakTask;
-    const-string v3, "password"
-
-    invoke-virtual {v1, v3}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
-
-    move-result v3
-
-    const/4 v4, 0x0
-
-    const/4 v5, 0x1
-
-    if-eqz v3, :cond_0
-
-    .line 190
-    const-string v3, "a"
-
-    .line 191
-    .local v3, "coded":Ljava/lang/String;
-    new-array v5, v5, [Ljava/lang/String;
-
-    aput-object v3, v5, v4
-
-    invoke-virtual {v2, v5}, Ledu/fandm/enovak/leaks/Main$ServerLeakTask;->execute([Ljava/lang/Object;)Landroid/os/AsyncTask;
-
-    .line 192
-    .end local v3    # "coded":Ljava/lang/String;
-    goto :goto_0
-
-    .line 193
-    :cond_0
-    new-array v3, v5, [Ljava/lang/String;
-
-    aput-object v1, v3, v4
-
-    invoke-virtual {v2, v3}, Ledu/fandm/enovak/leaks/Main$ServerLeakTask;->execute([Ljava/lang/Object;)Landroid/os/AsyncTask;
-
-    .line 198
-    :goto_0
-    return-void
-.end method'''
-
-method_text_static = '''.method public static leakPasswd()V
-    .locals 1
-
-    .line 181
-    const v0, 0x7f070050
-
-    return-void
-.end method'''
-
-method_text_switch = '''.method public onOptionsItemSelected(Landroid/view/MenuItem;)Z
-
-    .locals 2
-
-    .param p1, "item"    # Landroid/view/MenuItem;
-
-    .line 120
-
-    invoke-interface {p1}, Landroid/view/MenuItem;->getItemId()I
-
-    move-result v0
-
-    packed-switch v0, :pswitch_data_0
-
-    goto :goto_0
-
-    .line 128
-
-    :pswitch_0
-
-    new-instance v0, Landroid/content/Intent;
-
-    const-class v1, Ledu/fandm/enovak/leaks/SimpleLeak;
-
-    invoke-direct {v0, p0, v1}, Landroid/content/Intent;-><init>(Landroid/content/Context;Ljava/lang/Class;)V
-
-    .line 129
-
-    .local v0, "i":Landroid/content/Intent;
-
-    invoke-virtual {p0, v0}, Ledu/fandm/enovak/leaks/Main;->startActivity(Landroid/content/Intent;)V
-
-    goto :goto_0
-
-    .line 122
-
-    .end local v0    # "i":Landroid/content/Intent;
-
-    :pswitch_1
-
-    new-instance v0, Landroid/content/Intent;
-
-    const-class v1, Ledu/fandm/enovak/leaks/SettingsAct;
-
-    invoke-direct {v0, p0, v1}, Landroid/content/Intent;-><init>(Landroid/content/Context;Ljava/lang/Class;)V
-
-    .line 123
-
-    .restart local v0    # "i":Landroid/content/Intent;
-
-    invoke-virtual {p0, v0}, Ledu/fandm/enovak/leaks/Main;->startActivity(Landroid/content/Intent;)V
-
-    .line 124
-
-    nop
-
-    .line 133
-
-    .end local v0    # "i":Landroid/content/Intent;
-
-    :goto_0
-
-    const/4 v0, 0x1
-
-    return v0
-
-    :pswitch_data_0
-    .packed-switch 0x7f070056
-        :pswitch_1
-        :pswitch_0
-    .end packed-switch
-    
-    .end method
-    '''
-
-
-method_text_sparse = '''.method public static getOpticalBounds(Landroid/graphics/drawable/Drawable;)Landroid/graphics/Rect;
-    .locals 14
-    .param p0, "drawable"    # Landroid/graphics/drawable/Drawable;
-
-    .line 69
-    sget-object v0, Landroid/support/v7/widget/DrawableUtils;->sInsetsClazz:Ljava/lang/Class;
-
-    if-eqz v0, :cond_7
-
-    .line 73
-    :try_start_0
-    invoke-static {p0}, Landroid/support/v4/graphics/drawable/DrawableCompat;->unwrap(Landroid/graphics/drawable/Drawable;)Landroid/graphics/drawable/Drawable;
-
-    move-result-object v0
-
-    move-object p0, v0
-
-    .line 75
-    invoke-virtual {p0}, Ljava/lang/Object;->getClass()Ljava/lang/Class;
-
-    move-result-object v0
-
-    const-string v1, "getOpticalInsets"
-
-    const/4 v2, 0x0
-
-    new-array v3, v2, [Ljava/lang/Class;
-
-    .line 76
-    invoke-virtual {v0, v1, v3}, Ljava/lang/Class;->getMethod(Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;
-
-    move-result-object v0
-
-    .line 77
-    .local v0, "getOpticalInsetsMethod":Ljava/lang/reflect/Method;
-    new-array v1, v2, [Ljava/lang/Object;
-
-    invoke-virtual {v0, p0, v1}, Ljava/lang/reflect/Method;->invoke(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;
-
-    move-result-object v1
-
-    .line 79
-    .local v1, "insets":Ljava/lang/Object;
-    if-eqz v1, :cond_6
-
-    .line 81
-    new-instance v3, Landroid/graphics/Rect;
-
-    invoke-direct {v3}, Landroid/graphics/Rect;-><init>()V
-
-    .line 83
-    .local v3, "result":Landroid/graphics/Rect;
-    sget-object v4, Landroid/support/v7/widget/DrawableUtils;->sInsetsClazz:Ljava/lang/Class;
-
-    invoke-virtual {v4}, Ljava/lang/Class;->getFields()[Ljava/lang/reflect/Field;
-
-    move-result-object v4
-
-    array-length v5, v4
-
-    const/4 v6, 0x0
-
-    :goto_0
-    if-ge v6, v5, :cond_5
-
-    aget-object v7, v4, v6
-
-    .line 84
-    .local v7, "field":Ljava/lang/reflect/Field;
-    invoke-virtual {v7}, Ljava/lang/reflect/Field;->getName()Ljava/lang/String;
-
-    move-result-object v8
-
-    const/4 v9, -0x1
-
-    invoke-virtual {v8}, Ljava/lang/String;->hashCode()I
-
-    move-result v10
-
-    const/4 v11, 0x3
-
-    const/4 v12, 0x2
-
-    const/4 v13, 0x1
-
-    sparse-switch v10, :sswitch_data_0
-
-    :cond_0
-    goto :goto_1
-
-    :sswitch_0
-    const-string v10, "right"
-
-    invoke-virtual {v8, v10}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
-
-    move-result v8
-
-    if-eqz v8, :cond_0
-
-    const/4 v9, 0x2
-
-    goto :goto_1
-
-    :sswitch_1
-    const-string v10, "left"
-
-    invoke-virtual {v8, v10}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
-
-    move-result v8
-
-    if-eqz v8, :cond_0
-
-    const/4 v9, 0x0
-
-    goto :goto_1
-
-    :sswitch_2
-    const-string v10, "top"
-
-    invoke-virtual {v8, v10}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
-
-    move-result v8
-
-    if-eqz v8, :cond_0
-
-    const/4 v9, 0x1
-
-    goto :goto_1
-
-    :sswitch_3
-    const-string v10, "bottom"
-
-    invoke-virtual {v8, v10}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
-
-    move-result v8
-
-    if-eqz v8, :cond_0
-
-    const/4 v9, 0x3
-
-    :goto_1
-    if-eqz v9, :cond_4
-
-    if-eq v9, v13, :cond_3
-
-    if-eq v9, v12, :cond_2
-
-    if-eq v9, v11, :cond_1
-
-    goto :goto_2
-
-    .line 95
-    :cond_1
-    invoke-virtual {v7, v1}, Ljava/lang/reflect/Field;->getInt(Ljava/lang/Object;)I
-
-    move-result v8
-
-    iput v8, v3, Landroid/graphics/Rect;->bottom:I
-
-    goto :goto_2
-
-    .line 92
-    :cond_2
-    invoke-virtual {v7, v1}, Ljava/lang/reflect/Field;->getInt(Ljava/lang/Object;)I
-
-    move-result v8
-
-    iput v8, v3, Landroid/graphics/Rect;->right:I
-
-    .line 93
-    goto :goto_2
-
-    .line 89
-    :cond_3
-    invoke-virtual {v7, v1}, Ljava/lang/reflect/Field;->getInt(Ljava/lang/Object;)I
-
-    move-result v8
-
-    iput v8, v3, Landroid/graphics/Rect;->top:I
-
-    .line 90
-    goto :goto_2
-
-    .line 86
-    :cond_4
-    invoke-virtual {v7, v1}, Ljava/lang/reflect/Field;->getInt(Ljava/lang/Object;)I
-
-    move-result v8
-
-    iput v8, v3, Landroid/graphics/Rect;->left:I
-    :try_end_0
-    .catch Ljava/lang/Exception; {:try_start_0 .. :try_end_0} :catch_0
-
-    .line 87
-    nop
-
-    .line 83
-    .end local v7    # "field":Ljava/lang/reflect/Field;
-    :goto_2
-    add-int/lit8 v6, v6, 0x1
-
-    goto :goto_0
-
-    .line 99
-    :cond_5
-    return-object v3
-
-    .line 104
-    .end local v0    # "getOpticalInsetsMethod":Ljava/lang/reflect/Method;
-    .end local v1    # "insets":Ljava/lang/Object;
-    .end local v3    # "result":Landroid/graphics/Rect;
-    :cond_6
-    goto :goto_3
-
-    .line 101
-    :catch_0
-    move-exception v0
-
-    .line 103
-    .local v0, "e":Ljava/lang/Exception;
-    const-string v1, "DrawableUtils"
-
-    const-string v2, "Couldn\'t obtain the optical insets. Ignoring."
-
-    invoke-static {v1, v2}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
-
-    .line 109
-    .end local v0    # "e":Ljava/lang/Exception;
-    :cond_7
-    :goto_3
-    sget-object v0, Landroid/support/v7/widget/DrawableUtils;->INSETS_NONE:Landroid/graphics/Rect;
-
-    return-object v0
-
-    nop
-
-    :sswitch_data_0
-    .sparse-switch
-        -0x527265d5 -> :sswitch_3
-        0x1c155 -> :sswitch_2
-        0x32a007 -> :sswitch_1
-        0x677c21c -> :sswitch_0
-    .end sparse-switch
-.end method'''
-
-def type_safety_checker_test():
-    global method_text
-
-    method_list = method_text.split("\n")
-    smd =  SmaliMethodDef.SmaliMethodDef(method_list, None)
-    
-    # for i in range(len(method_list)):
-    #     print(method_list[i], smd.tsc.method_type_list[i])
-        
-
-def type_saftey_checker_test2():
-        
-        
-    method_text = '''.method public leakPasswd(Landroid/view/View;)V
-    .locals 6
-    .param p1, "v"    # Landroid/view/View;
-
-    .line 181
-    const v0, 0x7f070050
-    .end method'''
-
-
-    method_list = method_text.split("\n")
-    smd =  SmaliMethodDef.SmaliMethodDef(method_list, None)
-    
-    print("list of hashmaps length: " + str(len(smd.tsc.method_type_list)))
-    print("method code length: " + str(len(smd.tsc.text)))
-    
         
 def type_saftey_checker_test3():
     
@@ -567,10 +132,26 @@ def type_saftey_checker_test3():
     
 def type_safety_checker_control_flow_test():
     
-    print("\nRunning Test on resolve method from UriUtil Class and testing for if statement")
-    method_list = ['.method public static resolve(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;', '    .locals 10', '    .param p0    # Ljava/lang/String;', '        .annotation build Landroidx/annotation/Nullable;', '        .end annotation', '    .end param', '    .param p1    # Ljava/lang/String;', '        .annotation build Landroidx/annotation/Nullable;', '        .end annotation', '    .end param', '', '    #p0:object, p1:object', '', '    .line 86', '    new-instance v0, Ljava/lang/StringBuilder; #v0:object, ', '', '    invoke-direct {v0}, Ljava/lang/StringBuilder;-><init>()V  ', '', '    const-string v1, "" #v1:object', '', '    if-nez p0, :cond_0', '', '    move-object p0, v1  #p0:object', '', '    :cond_0', '    if-nez p1, :cond_1', '', '    move-object p1, v1  #p1:object', '', '    .line 92', '    :cond_1             #p0:object, p1:object, v1:object', '    invoke-static {p1}, Lcom/google/android/exoplayer2/util/UriUtil;->getUriIndices(Ljava/lang/String;)[I', '', '    move-result-object v1  #p0:object, p1:object, v1:[I', '', '    const/4 v2, 0x0      #p0:object, p1:object, v1:[I, v2:32-bit', '', '    .line 93', '    aget v3, v1, v2      #p0:object, p1:object, v1:[I, v2:32-bit, v3:I', '', '    const/4 v4, -0x1', '', '    const/4 v5, 0x2', '', '    const/4 v6, 0x1      #p0:object, p1:object, v1:[I, v2:32-bit, v3:I, v4:32-bit, v5:32-bit, v6:32-bit', '', '    if-eq v3, v4, :cond_2', '', '    .line 95', '    invoke-virtual {v0, p1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;', '', '    .line 96', '    aget p0, v1, v6        #p0:I, p1:object, v1:[I, v2:32-bit, v3:I, v4:32-bit, v5:32-bit, v6:32-bit', '', '    aget p1, v1, v5        #p0:I, p1:I, v1:[I, v2:32-bit, v3:I, v4:32-bit, v5:32-bit, v6:32-bit', '', '    invoke-static {v0, p0, p1}, Lcom/google/android/exoplayer2/util/UriUtil;->removeDotSegments(Ljava/lang/StringBuilder;II)Ljava/lang/String;', '', '    .line 97', '    invoke-virtual {v0}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;', '', '    move-result-object p0    #p0:object, p1:I, v1:[I, v2:32-bit, v3:I, v4:32-bit, v5:32-bit, v6:32-bit', '', '    return-object p0    ', '', '    .line 100', '    :cond_2         #p0:object, p1:object, v1:[I, v2:32-bit, v3:I, v4:32-bit, v5:32-bit, v6:32-bit', '    invoke-static {p0}, Lcom/google/android/exoplayer2/util/UriUtil;->getUriIndices(Ljava/lang/String;)[I', '', '    move-result-object v3   #p0:object, p1:object, v1:[I, v2:32-bit, v3:[I, v4:32-bit, v5:32-bit, v6:32-bit', '', '    const/4 v7, 0x3  #p0:object, p1:object, v1:[I, v2:32-bit, v3:[I, v4:32-bit, v5:32-bit, v6:32-bit, v7:32-bit', '', '    .line 101', '    aget v8, v1, v7    #p0:object, p1:object, v1:[I, v2:32-bit, v3:[I, v4:32-bit, v5:32-bit, v6:32-bit, v7:32-bit, v8:I', '', '    if-nez v8, :cond_3', '', '    .line 104', '    aget v1, v3, v7', '', '    invoke-virtual {v0, p0, v2, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/CharSequence;II)Ljava/lang/StringBuilder;', '', '    invoke-virtual {v0, p1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;', '', '    invoke-virtual {v0}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;', '', '    move-result-object p0', '', '    return-object p0', '', '    .line 107', '    :cond_3', '    aget v7, v1, v5', '', '    if-nez v7, :cond_4', '', '    .line 110', '    aget v1, v3, v5', '', '    invoke-virtual {v0, p0, v2, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/CharSequence;II)Ljava/lang/StringBuilder;', '', '    invoke-virtual {v0, p1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;', '', '    invoke-virtual {v0}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;', '', '    move-result-object p0', '', '    return-object p0', '', '    .line 113', '    :cond_4', '    aget v7, v1, v6', '', '    if-eqz v7, :cond_5', '', '    .line 115', '    aget v3, v3, v2', '', '    add-int/2addr v3, v6', '', '    .line 116', '    invoke-virtual {v0, p0, v2, v3}, Ljava/lang/StringBuilder;->append(Ljava/lang/CharSequence;II)Ljava/lang/StringBuilder;', '', '    invoke-virtual {v0, p1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;', '', '    .line 117', '    aget p0, v1, v6', '', '    add-int/2addr p0, v3', '', '    aget p1, v1, v5', '', '    add-int/2addr v3, p1', '', '    invoke-static {v0, p0, v3}, Lcom/google/android/exoplayer2/util/UriUtil;->removeDotSegments(Ljava/lang/StringBuilder;II)Ljava/lang/String;', '', '    move-result-object p0', '', '    return-object p0', '', '    .line 120', '    :cond_5', '    aget v7, v1, v6', '', '    invoke-virtual {p1, v7}, Ljava/lang/String;->charAt(I)C', '', '    move-result v7', '', '    const/16 v8, 0x2f', '', '    if-ne v7, v8, :cond_6', '', '    .line 123', '    aget v4, v3, v6', '', '    invoke-virtual {v0, p0, v2, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/CharSequence;II)Ljava/lang/StringBuilder;', '', '    invoke-virtual {v0, p1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;', '', '    .line 124', '    aget p0, v3, v6', '', '    aget p1, v3, v6', '', '    aget v1, v1, v5', '', '    add-int/2addr p1, v1', '', '    invoke-static {v0, p0, p1}, Lcom/google/android/exoplayer2/util/UriUtil;->removeDotSegments(Ljava/lang/StringBuilder;II)Ljava/lang/String;', '', '    move-result-object p0', '', '    return-object p0', '', '    .line 129', '    :cond_6', '    aget v7, v3, v2', '', '    add-int/2addr v7, v5', '', '    aget v9, v3, v6', '', '    if-ge v7, v9, :cond_7', '', '    aget v7, v3, v6', '', '    aget v9, v3, v5', '', '    if-ne v7, v9, :cond_7', '', '    .line 133', '    aget v4, v3, v6', '', '    invoke-virtual {v0, p0, v2, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/CharSequence;II)Ljava/lang/StringBuilder;', '', '    invoke-virtual {v0, v8}, Ljava/lang/StringBuilder;->append(C)Ljava/lang/StringBuilder;', '', '    invoke-virtual {v0, p1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;', '', '    .line 134', '    aget p0, v3, v6', '', '    aget p1, v3, v6', '', '    aget v1, v1, v5', '', '    add-int/2addr p1, v1', '', '    add-int/2addr p1, v6', '', '    invoke-static {v0, p0, p1}, Lcom/google/android/exoplayer2/util/UriUtil;->removeDotSegments(Ljava/lang/StringBuilder;II)Ljava/lang/String;', '', '    move-result-object p0', '', '    return-object p0', '', '    .line 140', '    :cond_7', '    aget v7, v3, v5', '', '    sub-int/2addr v7, v6', '', '    invoke-virtual {p0, v8, v7}, Ljava/lang/String;->lastIndexOf(II)I', '', '    move-result v7', '', '    if-ne v7, v4, :cond_8', '', '    .line 141', '    aget v4, v3, v6', '', '    goto :goto_0', '', '    :cond_8', '    add-int/lit8 v4, v7, 0x1', '', '    .line 142', '    :goto_0', '    invoke-virtual {v0, p0, v2, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/CharSequence;II)Ljava/lang/StringBuilder;', '', '    invoke-virtual {v0, p1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;', '', '    .line 143', '    aget p0, v3, v6', '', '    aget p1, v1, v5', '', '    add-int/2addr v4, p1', '', '    invoke-static {v0, p0, v4}, Lcom/google/android/exoplayer2/util/UriUtil;->removeDotSegments(Ljava/lang/StringBuilder;II)Ljava/lang/String;', '', '    move-result-object p0', '', '    return-object p0', '    .end method']
-    smd =  SmaliMethodDef.SmaliMethodDef(method_list, None)   
-    print("Looks like it didnt crash!, congragulations!!!")
+    #print("\nRunning Test on resolve method from UriUtil Class and testing for if statement")
+    fh = open("./test/control_flow_test.smali", "r")
+    method_text = fh.readlines()
+    fh.close()
+    
+    smd =  SmaliMethodDef.SmaliMethodDef(method_text, None)   
+    #print("Looks like it didnt crash!, congragulations!!!")
+    cfg = ControlFlowGraph.ControlFlowGraph(method_text)
+    assert(cfg.node_counter == 50)
+    
+    fh = open("./test/control_flow_test_adjlist_soln.txt", "r")
+    adjlist_soln = fh.readline()
+    fh.close()    
+        
+    adjlist_result = str(list(cfg.generate_adjlist()))
+    assert(adjlist_result == adjlist_soln)
+    
+    #cfg.show()
+
+    
 
 #this edge case contains :cond shows up before the if statement shows up
 def type_safety_checker_control_flow_test_edge_case_1():
@@ -604,32 +185,20 @@ def type_safety_checker_switch_statements():
 
 
 def type_safety_checker_small_constructor_test():
-    constructor_text = '''.method static constructor <clinit>()V
-    .locals 1
-
-    .line 19
-    const-class v0, Ledu/fandm/enovak/leaks/SimpleLeak;
-
-    invoke-virtual {v0}, Ljava/lang/Class;->getName()Ljava/lang/String;
-
-    move-result-object v0
-
-    sput-object v0, Ledu/fandm/enovak/leaks/SimpleLeak;->TAG:Ljava/lang/String;
-
-    return-void
-    .end method'''
-    method_list = constructor_text.split("\n")
+    fh = open("./test/small_constructor_method.smali", "r")
+    method_list = fh.readlines()
     smd = SmaliMethodDef.SmaliMethodDef(method_list, None)
-    print("Passed no crash!!")
+    #print(smd.get_num_registers())
+    assert(smd.get_num_registers() == 1)
 
 
 def type_safety_checker_empty_method_test():
-    empty_method = '''# virtual methods
-    .method public abstract allowSerialization()Z
-    .end method'''
-    method_list = empty_method.split("\n")
-    smd = SmaliMethodDef.SmaliMethodDef(method_list, None)
-    print("Passed no crash!!")
+    fh  = open("./test/empty_method.smali", "r")
+    method_text = fh.readlines()
+    smd = SmaliMethodDef.SmaliMethodDef(method_text, None)
+    #print("regs: " + str(smd.get_num_registers()))
+    assert(smd.get_num_registers() == 1) # "this"
+    assert(smd.signature.is_abstract)
 
 
 def type_safety_checker_action_bar_try_catch_leaks():
@@ -738,323 +307,13 @@ def type_safety_checker_action_bar_try_catch_leaks():
 #catch label can be :catch_0 format or also :catchall
 def type_safety_checker_leaks_test():
     
-    method_text ='''.method public static a(Lorg/mozilla/javascript/Context;Lorg/mozilla/javascript/ScriptableObject;Z)Lorg/mozilla/javascript/ScriptableObject;
-    .locals 17
-
-    move-object/from16 v0, p0
-
-    move/from16 v7, p2
-
-    if-nez p1, :cond_0
-
-    new-instance v1, Lorg/mozilla/javascript/aB;
-
-    invoke-direct {v1}, Lorg/mozilla/javascript/aB;-><init>()V
-
-    move-object v8, v1
-
-    goto :goto_0
-
-    :cond_0
-    move-object/from16 v8, p1
-
-    :goto_0
-    sget-object v1, Lorg/mozilla/javascript/bk;->x:Ljava/lang/Object;
-
-    invoke-virtual {v8, v1, v8}, Lorg/mozilla/javascript/ScriptableObject;->b(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-    new-instance v1, Lorg/mozilla/javascript/e;
-
-    invoke-direct {v1}, Lorg/mozilla/javascript/e;-><init>()V
-
-    invoke-virtual {v1, v8}, Lorg/mozilla/javascript/e;->a(Lorg/mozilla/javascript/ScriptableObject;)Z
-
-    invoke-static {v8, v7}, Lorg/mozilla/javascript/b;->a(Lorg/mozilla/javascript/Scriptable;Z)V
-
-    invoke-static {v8, v7}, Lorg/mozilla/javascript/aB;->a(Lorg/mozilla/javascript/Scriptable;Z)V
-
-    invoke-static {v8}, Lorg/mozilla/javascript/ScriptableObject;->e(Lorg/mozilla/javascript/Scriptable;)Lorg/mozilla/javascript/Scriptable;
-
-    move-result-object v1
-
-    const-string v2, "Function"
-
-    invoke-static {v8, v2}, Lorg/mozilla/javascript/ScriptableObject;->b(Lorg/mozilla/javascript/Scriptable;Ljava/lang/String;)Lorg/mozilla/javascript/Scriptable;
-
-    move-result-object v2
-
-    invoke-interface {v2, v1}, Lorg/mozilla/javascript/Scriptable;->setPrototype(Lorg/mozilla/javascript/Scriptable;)V
-
-    invoke-virtual {v8}, Lorg/mozilla/javascript/ScriptableObject;->c()Lorg/mozilla/javascript/Scriptable;
-
-    move-result-object v2
-
-    if-nez v2, :cond_1
-
-    invoke-virtual {v8, v1}, Lorg/mozilla/javascript/ScriptableObject;->setPrototype(Lorg/mozilla/javascript/Scriptable;)V
-
-    :cond_1
-    invoke-static {v8, v7}, Lorg/mozilla/javascript/aj;->a(Lorg/mozilla/javascript/Scriptable;Z)V
-
-    invoke-static {v0, v8, v7}, Lorg/mozilla/javascript/ao;->a(Lorg/mozilla/javascript/Context;Lorg/mozilla/javascript/Scriptable;Z)V
-
-    invoke-static {v8, v7}, Lorg/mozilla/javascript/aa;->a(Lorg/mozilla/javascript/Scriptable;Z)V
-
-    invoke-virtual/range {p0 .. p0}, Lorg/mozilla/javascript/Context;->e()I
-
-    move-result v1
-
-    if-lez v1, :cond_2
-
-    const v1, 0x30d40
-
-    invoke-static {v1}, Lorg/mozilla/javascript/aa;->f(I)V
-
-    :cond_2
-    invoke-static {v8, v7}, Lorg/mozilla/javascript/aK;->a(Lorg/mozilla/javascript/Scriptable;Z)V
-
-    invoke-static {v8, v7}, Lorg/mozilla/javascript/ae;->a(Lorg/mozilla/javascript/Scriptable;Z)V
-
-    invoke-static {v8, v7}, Lorg/mozilla/javascript/aA;->a(Lorg/mozilla/javascript/Scriptable;Z)V
-
-    invoke-static {v8, v7}, Lorg/mozilla/javascript/ai;->a(Lorg/mozilla/javascript/Scriptable;Z)V
-
-    invoke-static {v8, v7}, Lorg/mozilla/javascript/az;->a(Lorg/mozilla/javascript/Scriptable;Z)V
-
-    invoke-static {v8, v7}, Lorg/mozilla/javascript/as;->a(Lorg/mozilla/javascript/Scriptable;Z)V
-
-    invoke-static {v8, v7}, Lorg/mozilla/javascript/aL;->a(Lorg/mozilla/javascript/Scriptable;Z)V
-
-    invoke-static {v8, v7}, Lorg/mozilla/javascript/af;->a(Lorg/mozilla/javascript/Scriptable;Z)V
-
-    invoke-static {v8, v7}, Lorg/mozilla/javascript/aJ;->b(Lorg/mozilla/javascript/Scriptable;Z)V
-
-    invoke-static {v8, v7}, Lorg/mozilla/javascript/ap;->a(Lorg/mozilla/javascript/ScriptableObject;Z)V
-
-    const/4 v1, 0x6
-
-    invoke-virtual {v0, v1}, Lorg/mozilla/javascript/Context;->a(I)Z
-
-    move-result v1
-
-    const/4 v9, 0x0
-
-    if-eqz v1, :cond_3
-
-    invoke-virtual/range {p0 .. p0}, Lorg/mozilla/javascript/Context;->i()Lbl;
-
-    move-result-object v1
-
-    if-eqz v1, :cond_3
-
-    const/4 v1, 0x1
-
-    move v10, v1
-
-    goto :goto_1
-
-    :cond_3
-    move v10, v9
-
-    :goto_1
-    new-instance v1, Lorg/mozilla/javascript/X;
-
-    const/4 v6, 0x1
-
-    const-string v3, "RegExp"
-
-    const-string v4, "org.mozilla.javascript.regexp.NativeRegExp"
-
-    move-object v2, v8
-
-    move/from16 v5, p2
-
-    invoke-direct/range {v1 .. v6}, Lorg/mozilla/javascript/X;-><init>(Lorg/mozilla/javascript/ScriptableObject;Ljava/lang/String;Ljava/lang/String;ZZ)V
-
-    new-instance v1, Lorg/mozilla/javascript/X;
-
-    const-string v3, "Continuation"
-
-    const-string v4, "org.mozilla.javascript.NativeContinuation"
-
-    invoke-direct/range {v1 .. v6}, Lorg/mozilla/javascript/X;-><init>(Lorg/mozilla/javascript/ScriptableObject;Ljava/lang/String;Ljava/lang/String;ZZ)V
-
-    if-eqz v10, :cond_4
-
-    invoke-virtual/range {p0 .. p0}, Lorg/mozilla/javascript/Context;->i()Lbl;
-
-    move-result-object v0
-
-    invoke-virtual {v0}, Lbl;->a()Ljava/lang/String;
-
-    move-result-object v6
-
-    new-instance v0, Lorg/mozilla/javascript/X;
-
-    const/4 v5, 0x1
-
-    const-string v2, "XML"
-
-    move-object v1, v8
-
-    move-object v3, v6
-
-    move/from16 v4, p2
-
-    invoke-direct/range {v0 .. v5}, Lorg/mozilla/javascript/X;-><init>(Lorg/mozilla/javascript/ScriptableObject;Ljava/lang/String;Ljava/lang/String;ZZ)V
-
-    new-instance v0, Lorg/mozilla/javascript/X;
-
-    const-string v2, "XMLList"
-
-    invoke-direct/range {v0 .. v5}, Lorg/mozilla/javascript/X;-><init>(Lorg/mozilla/javascript/ScriptableObject;Ljava/lang/String;Ljava/lang/String;ZZ)V
-
-    new-instance v0, Lorg/mozilla/javascript/X;
-
-    const-string v2, "Namespace"
-
-    invoke-direct/range {v0 .. v5}, Lorg/mozilla/javascript/X;-><init>(Lorg/mozilla/javascript/ScriptableObject;Ljava/lang/String;Ljava/lang/String;ZZ)V
-
-    new-instance v0, Lorg/mozilla/javascript/X;
-
-    const-string v2, "QName"
-
-    invoke-direct/range {v0 .. v5}, Lorg/mozilla/javascript/X;-><init>(Lorg/mozilla/javascript/ScriptableObject;Ljava/lang/String;Ljava/lang/String;ZZ)V
-
-    :cond_4
-    instance-of v0, v8, Lorg/mozilla/javascript/bC;
-
-    if-eqz v0, :cond_5
-
-    move-object v0, v8
-
-    check-cast v0, Lorg/mozilla/javascript/bC;
-
-    invoke-virtual {v0}, Lorg/mozilla/javascript/bC;->g()V
-
-    :cond_5
-    new-instance v0, Lorg/mozilla/javascript/X;
-
-    const/4 v5, 0x1
-
-    const-string v2, "Packages"
-
-    const-string v3, "org.mozilla.javascript.NativeJavaTopPackage"
-
-    move-object v1, v8
-
-    move/from16 v4, p2
-
-    invoke-direct/range {v0 .. v5}, Lorg/mozilla/javascript/X;-><init>(Lorg/mozilla/javascript/ScriptableObject;Ljava/lang/String;Ljava/lang/String;ZZ)V
-
-    new-instance v0, Lorg/mozilla/javascript/X;
-
-    const-string v2, "getClass"
-
-    const-string v3, "org.mozilla.javascript.NativeJavaTopPackage"
-
-    invoke-direct/range {v0 .. v5}, Lorg/mozilla/javascript/X;-><init>(Lorg/mozilla/javascript/ScriptableObject;Ljava/lang/String;Ljava/lang/String;ZZ)V
-
-    new-instance v0, Lorg/mozilla/javascript/X;
-
-    const-string v2, "JavaAdapter"
-
-    const-string v3, "org.mozilla.javascript.JavaAdapter"
-
-    invoke-direct/range {v0 .. v5}, Lorg/mozilla/javascript/X;-><init>(Lorg/mozilla/javascript/ScriptableObject;Ljava/lang/String;Ljava/lang/String;ZZ)V
-
-    new-instance v0, Lorg/mozilla/javascript/X;
-
-    const-string v2, "JavaImporter"
-
-    const-string v3, "org.mozilla.javascript.ImporterTopLevel"
-
-    invoke-direct/range {v0 .. v5}, Lorg/mozilla/javascript/X;-><init>(Lorg/mozilla/javascript/ScriptableObject;Ljava/lang/String;Ljava/lang/String;ZZ)V
-
-    const-string v0, "java.vm.name"
-
-    invoke-static {v0}, Ljava/lang/System;->getProperty(Ljava/lang/String;)Ljava/lang/String;
-
-    move-result-object v0
-
-    const-string v1, "Dalvik"
-
-    invoke-virtual {v1, v0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
-
-    move-result v0
-
-    if-eqz v0, :cond_6
-
-    const-string v10, "java"
-
-    const-string v11, "javax"
-
-    const-string v12, "org"
-
-    const-string v13, "com"
-
-    const-string v14, "edu"
-
-    const-string v15, "net"
-
-    const-string v16, "android"
-
-    filled-new-array/range {v10 .. v16}, [Ljava/lang/String;
-
-    move-result-object v0
-
-    goto :goto_2
-
-    :cond_6
-    const-string v1, "java"
-
-    const-string v2, "javax"
-
-    const-string v3, "org"
-
-    const-string v4, "com"
-
-    const-string v5, "edu"
-
-    const-string v6, "net"
-
-    filled-new-array/range {v1 .. v6}, [Ljava/lang/String;
-
-    move-result-object v0
-
-    :goto_2
-    move-object v6, v0
-
-    array-length v10, v6
-
-    :goto_3
-    if-ge v9, v10, :cond_7
-
-    aget-object v2, v6, v9
-
-    new-instance v0, Lorg/mozilla/javascript/X;
-
-    const/4 v5, 0x1
-
-    const-string v3, "org.mozilla.javascript.NativeJavaTopPackage"
-
-    move-object v1, v8
-
-    move/from16 v4, p2
-
-    invoke-direct/range {v0 .. v5}, Lorg/mozilla/javascript/X;-><init>(Lorg/mozilla/javascript/ScriptableObject;Ljava/lang/String;Ljava/lang/String;ZZ)V
-
-    add-int/lit8 v9, v9, 0x1
-
-    goto :goto_3
-
-    :cond_7
-    return-object v8
-    .end method'''
-    
-    method_list = method_text.split("\n")
-    smd = SmaliMethodDef.SmaliMethodDef(method_list, None)
+    method_text = open("./test/edge_case_method1.smali", "r").readlines()
+    smd = SmaliMethodDef.SmaliMethodDef(method_text, None)
+    print(smd.get_num_registers())
+    assert(smd.get_num_registers() == 20)
     smd.instrument()
+    
+    input("continue?")
 
 
 def type_safety_checker_aget_test():
@@ -2163,53 +1422,72 @@ def check_type_safety_limits():
 
 
 def comparison_count_test1():
-    global method_text
+    fh = open ("./test/random_method1.smali", "r")
+    method_text = fh.readlines()
 
-    method_list = method_text.split("\n")
-    smd =  SmaliMethodDef.SmaliMethodDef(method_list, None)
+    smd =  SmaliMethodDef.SmaliMethodDef(method_text, None)
     
-    print("count: " + str(smd.get_num_comparison_instructions()))
+    #print("count: " + str(smd.get_num_comparison_instructions()))
     assert(smd.get_num_comparison_instructions() == 1)
         
         
-def control_flow_graph_test_1():
-    global method_text
-    global method_text_switch
-    global method_text_sparse
 
     
-    method_list = method_text_sparse.split("\n")
-    #method_list = ['.method private registerListeners()V\n', '    .locals 9\n', '\n', '    .line 272\n', '    const-string v0, "network"\n', '\n', '    sget-object v1, Ledu/fandm/enovak/leaks/Main;->TAG:Ljava/lang/String;\n', '\n', '    const-string v2, "Registering listeners"\n', '\n', '    invoke-static {v1, v2}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I\n', '\n', '    .line 276\n', '    const/4 v1, 0x0\n', '\n', '    .line 277\n', '    .local v1, "success":Z\n', '    :try_start_0\n', '    iget-object v2, p0, Ledu/fandm/enovak/leaks/Main;->locationManager:Landroid/location/LocationManager;\n', '\n', '    const-string v3, "passive"\n', '\n', '    invoke-virtual {v2, v3}, Landroid/location/LocationManager;->isProviderEnabled(Ljava/lang/String;)Z\n', '\n', '    move-result v2\n', '\n', '    if-eqz v2, :cond_0\n', '\n', '    .line 278\n', '    iget-object v3, p0, Ledu/fandm/enovak/leaks/Main;->locationManager:Landroid/location/LocationManager;\n', '\n', '    const-string v4, "passive"\n', '\n', '    const-wide/16 v5, 0x0\n', '\n', '    const/4 v7, 0x0\n', '\n', '    iget-object v8, p0, Ledu/fandm/enovak/leaks/Main;->locationListener:Landroid/location/LocationListener;\n', '\n', '    invoke-virtual/range {v3 .. v8}, Landroid/location/LocationManager;->requestLocationUpdates(Ljava/lang/String;JFLandroid/location/LocationListener;)V\n', '\n', '    .line 279\n', '    const/4 v1, 0x1\n', '\n', '    .line 280\n', '    sget-object v2, Ledu/fandm/enovak/leaks/Main;->TAG:Ljava/lang/String;\n', '\n', '    const-string v3, "Passive Provider Listening Enabled"\n', '\n', '    invoke-static {v2, v3}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I\n', '\n', '    .line 283\n', '    :cond_0\n', '    iget-object v2, p0, Ledu/fandm/enovak/leaks/Main;->locationManager:Landroid/location/LocationManager;\n', '\n', '    invoke-virtual {v2, v0}, Landroid/location/LocationManager;->isProviderEnabled(Ljava/lang/String;)Z\n', '\n', '    move-result v2\n', '\n', '    if-eqz v2, :cond_1\n', '\n', '    .line 284\n', '    iget-object v3, p0, Ledu/fandm/enovak/leaks/Main;->locationManager:Landroid/location/LocationManager;\n', '\n', '    const-string v4, "network"\n', '\n', '    const-wide/16 v5, 0x0\n', '\n', '    const/4 v7, 0x0\n', '\n', '    iget-object v8, p0, Ledu/fandm/enovak/leaks/Main;->locationListener:Landroid/location/LocationListener;\n', '\n', '    invoke-virtual/range {v3 .. v8}, Landroid/location/LocationManager;->requestLocationUpdates(Ljava/lang/String;JFLandroid/location/LocationListener;)V\n', '\n', '    .line 285\n', '    const/4 v1, 0x1\n', '\n', '    .line 286\n', '    sget-object v2, Ledu/fandm/enovak/leaks/Main;->TAG:Ljava/lang/String;\n', '\n', '    const-string v3, "Network Provider Listening Enabled"\n', '\n', '    invoke-static {v2, v3}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I\n', '\n', '    .line 289\n', '    :cond_1\n', '    iget-object v2, p0, Ledu/fandm/enovak/leaks/Main;->locationManager:Landroid/location/LocationManager;\n', '\n', '    const-string v3, "gps"\n', '\n', '    invoke-virtual {v2, v3}, Landroid/location/LocationManager;->isProviderEnabled(Ljava/lang/String;)Z\n', '\n', '    move-result v2\n', '\n', '    if-eqz v2, :cond_2\n', '\n', '    .line 290\n', '    iget-object v3, p0, Ledu/fandm/enovak/leaks/Main;->locationManager:Landroid/location/LocationManager;\n', '\n', '    const-string v4, "gps"\n', '\n', '    const-wide/16 v5, 0x0\n', '\n', '    const/4 v7, 0x0\n', '\n', '    iget-object v8, p0, Ledu/fandm/enovak/leaks/Main;->locationListener:Landroid/location/LocationListener;\n', '\n', '    invoke-virtual/range {v3 .. v8}, Landroid/location/LocationManager;->requestLocationUpdates(Ljava/lang/String;JFLandroid/location/LocationListener;)V\n', '\n', '    .line 291\n', '    const/4 v1, 0x1\n', '\n', '    .line 292\n', '    sget-object v2, Ledu/fandm/enovak/leaks/Main;->TAG:Ljava/lang/String;\n', '\n', '    const-string v3, "GPS Provider Listening Enabled"\n', '\n', '    invoke-static {v2, v3}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I\n', '\n', '    .line 295\n', '    :cond_2\n', '    if-eqz v1, :cond_4\n', '\n', '    .line 296\n', '    sget-object v2, Ledu/fandm/enovak/leaks/Main;->TAG:Ljava/lang/String;\n', '\n', '    const-string v3, "Leaking turned on!!"\n', '\n', '    invoke-static {v2, v3}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I\n', '\n', '    .line 299\n', '    iget-object v2, p0, Ledu/fandm/enovak/leaks/Main;->locationManager:Landroid/location/LocationManager;\n', '\n', '    invoke-virtual {v2, v0}, Landroid/location/LocationManager;->getLastKnownLocation(Ljava/lang/String;)Landroid/location/Location;\n', '\n', '    move-result-object v0\n', '\n', '    .line 300\n', '    .local v0, "lastKnownLocation":Landroid/location/Location;\n', '    if-eqz v0, :cond_3\n', '\n', '    .line 301\n', '    invoke-virtual {p0, v0}, Ledu/fandm/enovak/leaks/Main;->leakLoc(Landroid/location/Location;)V\n', '\n', '    .line 304\n', '    .end local v0    # "lastKnownLocation":Landroid/location/Location;\n', '    :cond_3\n', '    nop\n', '\n', '    .line 314\n', '    .end local v1    # "success":Z\n', '    goto :goto_0\n', '\n', '    .line 305\n', '    .restart local v1    # "success":Z\n', '    :cond_4\n', '    const-string v0, "No providers available!"\n', '\n', '    const/4 v2, 0x0\n', '\n', '    invoke-static {p0, v0, v2}, Landroid/widget/Toast;->makeText(Landroid/content/Context;Ljava/lang/CharSequence;I)Landroid/widget/Toast;\n', '\n', '    move-result-object v0\n', '\n', '    invoke-virtual {v0}, Landroid/widget/Toast;->show()V\n', '\n', '    .line 306\n', '    sget-object v0, Ledu/fandm/enovak/leaks/Main;->TAG:Ljava/lang/String;\n', '\n', '    const-string v2, "Could not get a provider"\n', '\n', '    invoke-static {v0, v2}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I\n', '\n', '    .line 307\n', '    invoke-virtual {p0}, Ledu/fandm/enovak/leaks/Main;->stopLocationUpdates()V\n', '    :try_end_0\n', '    .catch Ljava/lang/SecurityException; {:try_start_0 .. :try_end_0} :catch_0\n', '\n', '    .line 308\n', '    return-void\n', '\n', '    .line 311\n', '    .end local v1    # "success":Z\n', '    :catch_0\n', '    move-exception v0\n', '\n', '    .line 312\n', '    .local v0, "se":Ljava/lang/SecurityException;\n', '    const/4 v1, 0x1\n', '\n', '    const-string v2, "Insufficient permissions to get location data"\n', '\n', '    invoke-static {p0, v2, v1}, Landroid/widget/Toast;->makeText(Landroid/content/Context;Ljava/lang/CharSequence;I)Landroid/widget/Toast;\n', '\n', '    move-result-object v1\n', '\n', '    invoke-virtual {v1}, Landroid/widget/Toast;->show()V\n', '\n', '    .line 313\n', '    invoke-virtual {p0}, Ledu/fandm/enovak/leaks/Main;->stopLocationUpdates()V\n', '\n', '    .line 315\n', '    .end local v0    # "se":Ljava/lang/SecurityException;\n', '    :goto_0\n', '    return-void\n', '.end method\n']
-    cfg = ControlFlowGraph.ControlFlowGraph(method_list)    
-    #print("cfg lines: " + str(cfg))
-    cfg.show()
+    
+def types_from_parameters_test():
+    fh = open ("./test/random_method1.smali", "r")
+    method_text = fh.readlines()
+    smd = SmaliMethodDef.SmaliMethodDef(method_text, None)
+    
+    cfg = ControlFlowGraph.ControlFlowGraph(smd.raw_text)
+    tsc = TypeSafetyChecker.TypeSafetyChecker(smd.signature, cfg) 
+    
+    #print(tsc.most_recent_type_map)
+    # test that type map is valid (from parameters)
+    assert(str(tsc.most_recent_type_map) == "{'p0': Lunknownclass;, 'p1': Landroid/view/View;}")
+    
+    # test that parameter_type_map is signature and tsc.most_recent_type_map are separate instances
+    smd.signature.parameter_type_map["p1"] = "something else!"
+    #print(tsc.most_recent_type_map)
+    assert(str(tsc.most_recent_type_map) == "{'p0': Lunknownclass;, 'p1': Landroid/view/View;}")
     
     
-def control_flow_graph_test_2():
-    global method_text
-    global method_text_switch
-    global method_text_sparse
+def type_saftey_checker_tests():
+    fh = open("test/random_method1_cropped.smali", "r")
+    method_text = fh.readlines()
+
+    smd =  SmaliMethodDef.SmaliMethodDef(method_text, None)
+    cfg = ControlFlowGraph.ControlFlowGraph(smd.raw_text)
+
+    tsc = TypeSafetyChecker.TypeSafetyChecker(smd.signature, cfg) 
+    #print(str(tsc.most_recent_type_map))
+    assert(str(tsc.most_recent_type_map) == "{'p0': Lunknownclass;, 'p1': Landroid/view/View;}")
     
-    method_list = method_text.split("\n")
-    smd = SmaliMethodDef.SmaliMethodDef(method_list, None)
-    
-    query = smd.tsc.type_query("v0", "const v0, 0x7f070050")
-    print("Query for v0 in const v0, 0x7f070050: ", query)
-    assert(query == "32-bit")
+    counter = 0
+    while(cfg.nodes_left_to_visit()):
+        node = cfg[counter]
+        
+        if(not node["visited"]):
+            node["visited"] = True 
+            
+            #call type_update on each line of code inside the node. 
+            for index in range(len(node["text"])):
+                line = node["text"][index]        
+                #print(type(line), ": " + str(line))         
+                tsc.type_update(line, index, counter)
+                node["type_list"] = tsc.node_type_list
 
-    query1 = smd.tsc.type_query("v0", "move-result-object v0")
-    assert(query1 == "object")
-    print("Query for v0 in move-result-object v0: ", query1)
-
-    query2 = smd.tsc.type_query("v0", "const/4 v4, 0x0")
-    query3 = smd.tsc.type_query("v4", "const/4 v4, 0x0")
-    assert(query2 == "object")
-    assert(query3 == "32-bit")
-
-    print("Query for v0 in const/4 v4, 0x0: ", query2)
-    print("Query for v4 in const/4 v4, 0x0: ", query3)
-
-    print("TEST PASSED NO CRASH!")
+        counter+=1  
+        
+    #print(tsc.node_type_list)
+    #print("list of hashmaps length: " + str(len(tsc.node_type_list)))
+    assert(len(tsc.node_type_list) == 7)
+    assert(tsc.node_type_list[-1] == tsc.most_recent_type_map)
+    assert(str(tsc.most_recent_type_map) == "{'p0': Lunknownclass;, 'p1': Landroid/view/View;, 'v0': 32-bit}")
+    #print("method code length: " + str(len(smd.tsc.text)))
+    assert(len(smd.raw_text) == 7)
+    assert(len(tsc.node_type_list) == 7)
+    assert(cfg.node_counter == 2)
 
 
 def grow_locals_test_1():
@@ -2284,55 +1562,59 @@ def stigma_leaks_crash_SupportActivity():
 def main():
     TaintTrackingInstrumentationPlugin.main()
 
-    # comparison_count_test1()
+    comparison_count_test1()
     
 
-    # control_flow_graph_test_2()
-    # control_flow_graph_test_1()
-    # type_safety_checker_test()
-    # type_saftey_checker_test2()
-    # type_saftey_checker_test3()
-    # type_safety_checker_control_flow_test()                   #tested
-    # type_safety_checker_control_flow_test_edge_case_1()       #tested
-    # type_safety_checker_control_flow_test_edge_case_2()       #tested
-    # type_safety_checker_control_flow_test_edge_case_3()       #tested
-    # type_safety_checker_switch_statements()
-    # type_safety_checker_small_constructor_test()
-    # type_safety_checker_empty_method_test()
-    # type_safety_checker_leaks_test()
-    # type_safety_checker_action_bar_try_catch_leaks() #failed
+    types_from_parameters_test()
+    type_saftey_checker_tests()
+    
+    
+    type_saftey_checker_test3()
+    type_safety_checker_control_flow_test()                   
+    type_safety_checker_control_flow_test_edge_case_1()       
+    type_safety_checker_control_flow_test_edge_case_2()      
+    type_safety_checker_control_flow_test_edge_case_3()      
+    type_safety_checker_switch_statements()
+    type_safety_checker_small_constructor_test()
+    type_safety_checker_empty_method_test()
 
-    # grow_locals_test_1()
-    # grow_locals_test_2()
-    
-    #type_safety_checker_aget_test()
-    #type_safety_checker_aget2_test()
-    #type_safety_checker_aget_test3()
-    # type_safety_checker_leaks_test()
-    
-    #type_safety_weather_app_test()
+    type_safety_checker_action_bar_try_catch_leaks() 
 
-    #type_safety_weather_app_test3()
-    #type_safety_weather_app_test1()
-    
-    #type_safety_weather_app_test_huge()
-    #type_safety_weather_app_test_try_block()
-    #check_type_safety_limits()
+    grow_locals_test_1()
+    grow_locals_test_2()
     
     
-    #type_safety_crash_method_try_block()
-    #type_safety_weather_app_test_try_class()
+    type_safety_checker_aget_test()
+    type_safety_checker_aget2_test()
+    type_safety_checker_aget_test3()
+    type_safety_checker_leaks_test()
     
-    #stigma_annotation_crash()
-    #stigma_leaks_crash_fragment()
-    #stigma_leaks_crash_onNavigate()
-    #stigma_leaks_crash_removeAt()
-    #stigma_leaks_crash_moveToState()
-    # stigma_leaks_crash_CoreComponentFactory()
+    type_safety_weather_app_test()
+
+    type_safety_weather_app_test3()
+    type_safety_weather_app_test1()
+    
+    type_safety_weather_app_test_huge()
+    type_safety_weather_app_test_try_block()
+    check_type_safety_limits()
+    
+    
+    type_safety_crash_method_try_block()
+    type_safety_weather_app_test_try_class()
+    
+    stigma_annotation_crash()
+    stigma_leaks_crash_fragment()
+    stigma_leaks_crash_onNavigate()
+    stigma_leaks_crash_removeAt()
+    stigma_leaks_crash_moveToState()
+    stigma_leaks_crash_CoreComponentFactory()
     
     
     
     stigma_leaks_crash_SupportActivity()
+    
+    
+    print("ALL TESTS PASSED!")
     
     
 if __name__=="__main__":

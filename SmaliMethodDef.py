@@ -129,6 +129,7 @@ class SmaliMethodSignature:
 
             p_idx += 1        
             i += 1
+            
 
     @staticmethod
     def fast_forward_to_semicolon(idx, string):
@@ -182,10 +183,9 @@ class SmaliMethodDef:
         self.moves_before = []
         self.moves_after = []
         
-
-        #print("Running Smali Method Def on: " + str(self.signature) + " in " + str(scd))
-        # self.cfg = ControlFlowGraph(text)
-        # self.tsc = TypeSafetyChecker(self.signature, self.cfg) 
+        # Used to count the number of times the instrumentation process cannot
+        # free up Instrumenter.DESIRED_NUM_REGISTERS
+        self.not_enough_free_registers_count = 0
             
 
     def grow_locals(self, n):
@@ -494,7 +494,8 @@ class SmaliMethodDef:
                     node["type_list"] = self.tsc.node_type_list
                     self._do_instrumentation_plugins(free_regs, node, line, index)
 
-                #assign the register type list to this current node after its processed processed
+                #assign the register type list to this current node after its processed
+                # I'm very suspicious of this step.  Why?
                 self.tsc.node_type_list = []
                         
             counter+=1  
@@ -550,21 +551,8 @@ class SmaliMethodDef:
                 if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, next_line) is not None):
                     line = [line, str(smali.BLANK_LINE()), next_line]
             
-            try:
-                regs = self.gen_list_of_safe_registers(free_regs, node, idx)
-            except ValueError as ve:
-                print(ve)
-                print(self.scd.file_name)
-                print(self.signature)
-                print("node number: " + str(node["node_counter"]))
-                print()
-                print(node["text"])
-                print()
-                print("line " + str(idx) + ":  " + str(line))
-                print("type map: " + str(node["type_list"][idx-1]))
-                self.cfg.show()
-                exit(1)
-                
+
+            regs = self.gen_list_of_safe_registers(free_regs, node, idx)                
             
             
             #if we are unable to get enough free registers, worse case possible if all the types are ?
@@ -669,8 +657,27 @@ class SmaliMethodDef:
             if len(safe_regs) == Instrumenter.DESIRED_NUM_REGISTERS:
                 self.moves_after.append(smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers"))
                 return list(safe_regs)
-                
-        raise ValueError("Unable to find enough safe registers.  Trying for " + str(Instrumenter.DESIRED_NUM_REGISTERS) + "  got: " + str(safe_regs))
+        
+        
+        if len(safe_regs) < Instrumenter.DESIRED_NUM_REGISTERS:
+            self.not_enough_free_registers_count += 1
+            print("not enough registers! This has occurred: " + str(self.not_enough_free_registers_count) + " times in this method.")
+            #raise ValueError("Unable to find enough safe registers.  Trying for " + str(Instrumenter.DESIRED_NUM_REGISTERS) + "  got: " + str(safe_regs))
+            #print(ve)
+            #print(self.scd.file_name)
+            #print(self.signature)
+            #print("node number: " + str(node["node_counter"]))
+            #print()
+            #print(node["text"])
+            #print()
+            #print("line " + str(idx) + ":  " + str(line))
+            #print("type map: " + str(node["type_list"][idx-1]))
+            #self.cfg.show()
+            #exit(1)
+        
+        
+        return list(safe_regs)        
+        
         
         
         
@@ -838,7 +845,7 @@ def tests():
     assert(sig.name == "<init>")
     assert(sig.is_static == False)
     #print("map: " + str(sig.parameter_type_map))
-    assert(str(sig.parameter_type_map) == "{'p0': 'Lmy/package/MyClass;', 'p1': Ljava/lang/String;, 'p2': I}")
+    assert(str(sig.parameter_type_map) == "{'p0': Lmy/package/MyClass;, 'p1': Ljava/lang/String;, 'p2': I}")
     assert(sig.num_of_parameters == 3)
     assert(sig.num_of_parameter_registers == 3)
     
@@ -846,7 +853,7 @@ def tests():
     assert(sig.name == "prefetchInnerRecyclerViewWithDeadline")
     assert(sig.is_static == False)
     #print("map: " + str(sig.parameter_type_map))
-    assert(str(sig.parameter_type_map) == "{'p0': 'Lmy/package/MyOtherClass;', 'p1': Landroid/support/v7/widget/RecyclerView;, 'p2': J, 'p3': J2}")
+    assert(str(sig.parameter_type_map) == "{'p0': Lmy/package/MyOtherClass;, 'p1': Landroid/support/v7/widget/RecyclerView;, 'p2': J, 'p3': J2}")
     assert(sig.num_of_parameters == 3)
     assert(sig.num_of_parameter_registers == 4)
     

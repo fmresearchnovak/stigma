@@ -8,8 +8,10 @@ hashmap -> key: string (register name)
 
 import StigmaStringParsingLib 
 import SmaliAssemblyInstructions as smali
-import re
 import SmaliTypes
+
+import re
+
 
 
 class TypeSafetyChecker:
@@ -28,71 +30,20 @@ class TypeSafetyChecker:
         if(len(cfg.G)) == 1:
             return        
 
-        self.most_recent_type_map = {}                             #this map is the latest hashmap at that current line
+                                   #this map is the latest hashmap at that current line
         self.looping_conditions_list = []                          #We need to check if the corresponding condition exists already, if yes, we do not put it in our control flow list, assuming it is a loop e.g [':cond_7', ':cond_8']
 
-        #this is a list of all the mappings for the a node
+        #this is a list of all the mappings for a node
         self.node_type_list = []
 
-        #check for the signature and create a new hashmap for the types of parameters from the first line
-        self.type_update_parameter()
+        # create a the first "types" hashmap for the types of parameters from the first line
+        self.most_recent_type_map = self.signature.parameter_type_map.copy()
         
-        #traverse through the control flow graph to build a type safety list for each node
-        #self.walk()
-  
-    def walk(self):
-        #start processing the graph from second node, frst is just the signature       
-        counter = 1
-        cur_nodes = [self.cfg.G.nodes[1]]    
-        
-        while(self.nodes_left_to_visit()):
-
-            #if the cur_nodes is not empty process the smallest node
-            if(len(cur_nodes) != 0):
-                node = self.get_smallest_node(cur_nodes)
-                cur_nodes.remove(node)
-                node_counter = node["node_counter"]
-
-                if(not node["visited"]):
-                    node["visited"] = True 
-                    #get neighbors of current node and store for breadth first search
-                    neighbors = self.cfg.G.neighbors(node_counter)    
-                    for neighbor in neighbors:                               
-                        neighbor_node = self.cfg.G.nodes[neighbor]
-                        if neighbor_node["visited"] == False:
-                            cur_nodes.append(neighbor_node)
-                    
-                    #call type_update on each line of code inside the node. 
-                    for index in range(len(node["text"])):
-                        self.type_update(node["text"][index], index, node_counter)
-                    
-                    #assign the register type list to this current node after its processed processed
-                    node["type_list"] = self.node_type_list
-                    self.node_type_list = []
-                    #self.debug_node(node, cur_nodes)
-
-            else:
-                #if cur_nodes was empty, insert a new node
-                cur_nodes = [self.cfg.G.nodes[counter]]
-                counter+=1    
-                                                
-    def type_update_parameter(self):  
-        
-        line_type_map = {}
-        #checks for number of parameters in the method
-        if(self.signature.num_of_parameters == 0):
-            self.cfg.G.nodes[0]["visited"] = True
-            self.cfg.G.nodes[0]["type_list"] = self.node_type_list    
-            return 
-
-
-        self.most_recent_type_map = line_type_map
-        self.node_type_list.append(line_type_map) 
-        self.node_type_list = []
-        
-        #mark the first node visited, and assign it the method type list containing parameter types
+        self.node_type_list.append(self.most_recent_type_map)
         self.cfg.G.nodes[0]["visited"] = True
-        self.cfg.G.nodes[0]["type_list"] = self.node_type_list    
+        self.cfg.G.nodes[0]["type_list"] = self.node_type_list
+    
+                                            
   
     def type_update(self, line, line_index, node_counter):     
         '''
@@ -180,10 +131,10 @@ class TypeSafetyChecker:
                 line_type_map_new = self.get_most_recent_type_map(node_counter).copy()
             else:
                 line_type_map_new = self.most_recent_type_map.copy()
-
             #SHALLOW COPY
             #the keys and values are strings (immutable), so a shallow copy is adequateable
             #https://stackoverflow.com/questions/2465921/how-to-copy-a-dictionary-and-only-edit-the-copy
+            
 
             if(instruction == "move-result-object"):
                 # this is a very special case.   move-result-object vx
@@ -226,6 +177,8 @@ class TypeSafetyChecker:
             #iput-object can also contain an array, so we need to consider that case also while checking for array
             elif(instruction == "iget-object" or instruction == "sget-object" or instruction == "iget-object-quick" or instruction == "iput-object"):
                 tmp = tokens[-1]
+                tmp = tmp.split(":")[1]
+                    
                 return_type = SmaliTypes.from_string(tmp)  
                 line_type_map_new[dest_reg] = return_type
             
@@ -299,15 +252,7 @@ class TypeSafetyChecker:
             parent_type_map = parent_type_list[-1]
             return parent_type_map
 
-    def type_query(self, register, line):
-        #find which node contains the given line number
-        #extract the type map for that line from the node type list
-        node, line_index = self.get_relevent_node_for_line(line)
-        line_map = node["type_list"][line_index]
-        if register in line_map:
-            return line_map[register]
-        else:
-            raise ValueError("query cannot be resolved for " + str(register) + " " + str(line))
+
         
     def get_relevent_node_for_line(self, line):
         #this loops over the each line of text in each line and tries to find which node contains
@@ -347,6 +292,8 @@ class TypeSafetyChecker:
     def check_aget_object_type(self, src_type):
         # src_type = [[I
         #   return [I
+        
+        #print("src type: " + str(src_type) + "    type: " + str(type(src_type)))
         smali_array_type_obj = src_type
         if(isinstance(smali_array_type_obj, SmaliTypes.UnknownType)):
             return smali_array_type_obj
