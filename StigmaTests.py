@@ -178,12 +178,6 @@ def type_safety_checker_control_flow_test_edge_case_3():
     print("Looks like it didnt crash!, congragulations!!!")
 
 
-def type_safety_checker_switch_statements():
-    method_list = ['.method public onOptionsItemSelected(Landroid/view/MenuItem;)Z\n', '    .locals 2\n', '    .param p1, "item"    # Landroid/view/MenuItem;\n', '\n', '    .line 120\n', '    invoke-interface {p1}, Landroid/view/MenuItem;->getItemId()I\n', '\n', '    move-result v0\n', '\n', '    packed-switch v0, :pswitch_data_0\n', '\n', '    goto :goto_0\n', '\n', '    .line 128\n', '    :pswitch_0\n', '    new-instance v0, Landroid/content/Intent;\n', '\n', '    const-class v1, Ledu/fandm/enovak/leaks/SimpleLeak;\n', '\n', '    invoke-direct {v0, p0, v1}, Landroid/content/Intent;-><init>(Landroid/content/Context;Ljava/lang/Class;)V\n', '\n', '    .line 129\n', '    .local v0, "i":Landroid/content/Intent;\n', '    invoke-virtual {p0, v0}, Ledu/fandm/enovak/leaks/Main;->startActivity(Landroid/content/Intent;)V\n', '\n', '    goto :goto_0\n', '\n', '    .line 122\n', '    .end local v0    # "i":Landroid/content/Intent;\n', '    :pswitch_1\n', '    new-instance v0, Landroid/content/Intent;\n', '\n', '    const-class v1, Ledu/fandm/enovak/leaks/SettingsAct;\n', '\n', '    invoke-direct {v0, p0, v1}, Landroid/content/Intent;-><init>(Landroid/content/Context;Ljava/lang/Class;)V\n', '\n', '    .line 123\n', '    .restart local v0    # "i":Landroid/content/Intent;\n', '    invoke-virtual {p0, v0}, Ledu/fandm/enovak/leaks/Main;->startActivity(Landroid/content/Intent;)V\n', '\n', '    .line 124\n', '    nop\n', '\n', '    .line 133\n', '    .end local v0    # "i":Landroid/content/Intent;\n', '    :goto_0\n', '    const/4 v0, 0x1\n', '\n', '    return v0\n', '\n', '    :pswitch_data_0\n', '    .packed-switch 0x7f070056\n', '        :pswitch_1\n', '        :pswitch_0\n', '    .end packed-switch\n', '.end method\n']
-    for line in method_list:
-        print(line)
-
-
 def type_safety_checker_small_constructor_test():
     fh = open("./test/small_constructor_method.smali", "r")
     method_list = fh.readlines()
@@ -317,138 +311,9 @@ def type_safety_checker_leaks_test():
 
 
 def type_safety_checker_aget_test():
-    method_text = '''.method private invokeAndReturnWithDefault(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/Object;
-    .locals 6
-    .param p1, "object"    # Ljava/lang/Object;
-    .param p2, "methodName"    # Ljava/lang/String;
-    .annotation system Ldalvik/annotation/Signature;
-        value = {
-            "<T:",
-            "Ljava/lang/Object;",
-            ">(",
-            "Ljava/lang/Object;",
-            "Ljava/lang/String;",
-            "TT;)TT;"
-        }
-    .end annotation
-
-    .line 764
-    .local p3, "defaultValue":Ljava/lang/Object;, "TT;"
-    const/4 v0, 0x0
-
-    .line 765
-    .local v0, "result":Ljava/lang/Object;, "TT;"
-    const/4 v1, 0x0
-
-    .line 769
-    .local v1, "exceptionThrown":Z
-    :try_start_0
-    invoke-direct {p0, p2}, Landroid/support/v7/widget/AppCompatTextViewAutoSizeHelper;->getTextViewMethod(Ljava/lang/String;)Ljava/lang/reflect/Method;
-
-    move-result-object v2
-
-    .line 770
-    .local v2, "method":Ljava/lang/reflect/Method;
-    const/4 v3, 0x0
-
-    new-array v3, v3, [Ljava/lang/Object;
-
-    invoke-virtual {v2, p1, v3}, Ljava/lang/reflect/Method;->invoke(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;
-
-    move-result-object v3
-    :try_end_0
-    .catch Ljava/lang/Exception; {:try_start_0 .. :try_end_0} :catch_0
-    .catchall {:try_start_0 .. :try_end_0} :catchall_0
-
-    move-object v0, v3
-
-    .line 775
-    .end local v2    # "method":Ljava/lang/reflect/Method;
-    if-nez v0, :cond_0
-
-    if-eqz v1, :cond_0
-
-    .line 776
-    :goto_0
-    move-object v0, p3
-
-    goto :goto_1
-
-    .line 775
-    :catchall_0
-    move-exception v2
-
-    goto :goto_2
-
-    .line 771
-    :catch_0
-    move-exception v2
-
-    .line 772
-    .local v2, "ex":Ljava/lang/Exception;
-    const/4 v1, 0x1
-
-    .line 773
-    :try_start_1
-    const-string v3, "ACTVAutoSizeHelper"
-
-    new-instance v4, Ljava/lang/StringBuilder;
-
-    invoke-direct {v4}, Ljava/lang/StringBuilder;-><init>()V
-
-    const-string v5, "Failed to invoke TextView#"
-
-    invoke-virtual {v4, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    invoke-virtual {v4, p2}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    const-string v5, "() method"
-
-    invoke-virtual {v4, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    invoke-virtual {v4}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
-
-    move-result-object v4
-
-    invoke-static {v3, v4, v2}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
-    :try_end_1
-    .catchall {:try_start_1 .. :try_end_1} :catchall_0
-
-    .line 775
-    nop
-
-    .end local v2    # "ex":Ljava/lang/Exception;
-    if-nez v0, :cond_0
-
-    if-eqz v1, :cond_0
-
-    .line 776
-    goto :goto_0
-
-    .line 780
-    :cond_0
-    :goto_1
-    return-object v0
-
-    .line 775
-    :goto_2
-    if-nez v0, :cond_1
-
-    if-eqz v1, :cond_1
-
-    .line 776
-    move-object v0, p3
-
-    :cond_1
-    throw v2
-    .end method'''
     
-        
-    method_list = method_text.split("\n")
-    print("Building SMD")
-    smd = SmaliMethodDef.SmaliMethodDef(method_list, None)
-    print("Instrumenting")
-    smd.instrument()
+    scd = SmaliClassDef.SmaliClassDef("./test/aget_test_class.smali")
+    scd.instrument()
 
 
 def type_safety_checker_aget_test3():
@@ -1086,10 +951,7 @@ def type_safety_weather_app_test1():
     
     
 def type_safety_weather_app_test_huge():
-        
-    # f = open('test/uninstrumented_c_class.smali', 'r')
-    # method_list = f.readlines()
-    TaintTrackingInstrumentationPlugin.main()
+
     print("Building SCD")
     scd  = SmaliClassDef.SmaliClassDef('test/uninstrumented_c_class.smali')    
     
@@ -1491,8 +1353,9 @@ def type_saftey_checker_tests():
 
 
 def grow_locals_test_1():
-    global method_text
-    method_list = method_text.split("\n")
+    fh = open("./test/random_method1.smali", "r")
+    method_list = fh.readlines()
+    fh.close()
 
     smd = SmaliMethodDef.SmaliMethodDef(method_list, None)
     smd.grow_locals(3)
@@ -1554,9 +1417,64 @@ def grow_locals_test_2():
     
     
 def stigma_leaks_crash_SupportActivity():
+    print("\nTesting grow() functionality...")
+    
     scd = SmaliClassDef.SmaliClassDef("./test/SupportActivity.smali")
+    
+    
+    
+    
     scd.grow_locals(4)
     scd.write_to_file("./test/SupportActivity_After.smali")
+    
+
+    # Make sure locals cannot be grown twice
+    smd = scd.methods[0]
+    try:
+        smd.grow_locals(4)
+        assert(False)
+    except ValueError:
+        pass
+        
+    arbitrary_method = scd.methods[0]
+    assert(arbitrary_method.has_grown == 4)
+    #print(arbitrary_method.top_regs)
+    assert(arbitrary_method.top_regs == ['v2', 'v3', 'v4', 'v5'])
+    #print(arbitrary_method.first_new_free_reg_num)
+    assert(arbitrary_method.first_new_free_reg_num == 2)
+    
+    print("passed!")
+    
+    
+    
+def double_move_result_bug():
+    print("\nRunning basic wholistic taint tracking instrumentation tests...")
+    
+    scd = SmaliClassDef.SmaliClassDef("./test/double_move_result_line.smali")
+    putExtraData_method = scd.methods[0]
+    #print(str(putExtraData_method))
+    #print(putExtraData_method.get_locals_directive_line())
+    assert(str(putExtraData_method.get_locals_directive_line()) == ".locals 2")
+    #print(putExtraData_method.get_register_meta_data())
+    assert(putExtraData_method.get_register_meta_data() == "['v0', 'v1', 'v2/p0', 'v3/p1']")
+
+    
+    scd.instrument()
+    scd.write_to_file("./test/double_move_result_line_result.smali")
+    
+    #print(str(putExtraData_method))
+    #print(putExtraData_method.get_locals_directive_line())
+    assert(str(putExtraData_method.get_locals_directive_line()) == ".locals 6")
+    #print(putExtraData_method.get_register_meta_data())
+    assert(putExtraData_method.get_register_meta_data() == "['v0', 'v1', 'v2/p0', 'v3/p1', 'v4', 'v5', 'v6', 'v7']")
+    
+    
+    result = open("./test/double_move_result_line_result.smali", "r").readlines()
+    soln = open("./test/double_move_result_line_soln.smali", "r").readlines()
+    assert(result == soln)
+    
+    print("passed!")
+    
     
 
 def main():
@@ -1574,7 +1492,7 @@ def main():
     type_safety_checker_control_flow_test_edge_case_1()       
     type_safety_checker_control_flow_test_edge_case_2()      
     type_safety_checker_control_flow_test_edge_case_3()      
-    type_safety_checker_switch_statements()
+
     type_safety_checker_small_constructor_test()
     type_safety_checker_empty_method_test()
 
@@ -1585,33 +1503,34 @@ def main():
     
     
     type_safety_checker_aget_test()
-    type_safety_checker_aget2_test()
-    type_safety_checker_aget_test3()
-    type_safety_checker_leaks_test()
+    #type_safety_checker_aget2_test()
+    #type_safety_checker_aget_test3()
+    #type_safety_checker_leaks_test()
     
-    type_safety_weather_app_test()
+    #type_safety_weather_app_test()
 
-    type_safety_weather_app_test3()
-    type_safety_weather_app_test1()
+    #type_safety_weather_app_test3()
+    #type_safety_weather_app_test1()
     
-    type_safety_weather_app_test_huge()
-    type_safety_weather_app_test_try_block()
-    check_type_safety_limits()
+    #type_safety_weather_app_test_huge()
+    #type_safety_weather_app_test_try_block()
+    #check_type_safety_limits()
     
     
-    type_safety_crash_method_try_block()
-    type_safety_weather_app_test_try_class()
+    #type_safety_crash_method_try_block()
+    #type_safety_weather_app_test_try_class()
     
-    stigma_annotation_crash()
-    stigma_leaks_crash_fragment()
-    stigma_leaks_crash_onNavigate()
-    stigma_leaks_crash_removeAt()
-    stigma_leaks_crash_moveToState()
-    stigma_leaks_crash_CoreComponentFactory()
+    #stigma_annotation_crash()
+    #stigma_leaks_crash_fragment()
+    #stigma_leaks_crash_onNavigate()
+    #stigma_leaks_crash_removeAt()
+    #stigma_leaks_crash_moveToState()
+    #stigma_leaks_crash_CoreComponentFactory()
     
     
     
     stigma_leaks_crash_SupportActivity()
+    double_move_result_bug()
     
     
     print("ALL TESTS PASSED!")

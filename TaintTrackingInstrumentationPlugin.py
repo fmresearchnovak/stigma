@@ -198,7 +198,11 @@ def MOVE_RESULT_instrumentation(scd, m, cur_lines, free_reg):
         # We call this an "external" method
         elif(callee_class_obj is None):
             block = EXTERNAL_FUNCTION_instrumentation(scd, m, cur_lines, free_reg)
-
+            
+    #print(block)
+    # the spacing might be wrong in the final result
+    # see EXTERNAL_FUNCTION
+    # .rstrip() is necessary to remove \n characters
     return block
 
 
@@ -224,6 +228,9 @@ def LOCATION_instrumentation(scd, m, cur_lines, free_reg):
     
     block = block + logBlock
     block.extend(cur_lines)
+    # the spacing might be wrong in the final result
+    # see EXTERNAL_FUNCTION
+    # .rstrip() is necessary to remove \n characters
         
     return block
     
@@ -250,6 +257,9 @@ def LONGITUDE_instrumentation(scd, m, cur_lines, free_reg):
     
     block = block + logBlock
     block.extend(cur_lines)
+    # the spacing might be wrong in the final result
+    # see EXTERNAL_FUNCTION
+    # .rstrip() is necessary to remove \n characters
         
     return block
     
@@ -276,6 +286,9 @@ def LATITUDE_instrumentation(scd, m, cur_lines, free_reg):
     
     block = block + logBlock
     block.extend(cur_lines)
+    # the spacing might be wrong in the final result
+    # see EXTERNAL_FUNCTION
+    # .rstrip() is necessary to remove \n characters
         
     return block
     
@@ -303,6 +316,9 @@ def PHONE_NUM_instrumentation(scd, m, cur_lines, free_reg):
 
     block = block + logBlock
     block.extend(cur_lines)
+    # the spacing might be wrong in the final result
+    # see EXTERNAL_FUNCTION
+    # .rstrip() is necessary to remove \n characters
 
     return block
 
@@ -348,6 +364,12 @@ def FILLED_NEW_ARRAY_instrumentation(scd, m, cur_lines, free_reg):
     block = Instrumenter.make_comment_block("for FILLED-NEW-ARRAY")
     block = block + Instrumenter.make_merge_block(scd, m, regs, taint_loc_result, free_reg)
     block = block + Instrumenter.make_comment_block("for FILLED-NEW-ARRAY")
+    
+    # seems like the re-insertion of the original cur_lines is missing?
+    
+    # the spacing might be wrong in the final result
+    # see EXTERNAL_FUNCTION
+    # .rstrip() is necessary to remove \n characters
 
     return block
 
@@ -412,6 +434,12 @@ def INTERNAL_FUNCTION_instrumentation(scd, m, cur_lines, free_reg):
     block.append(smali.BLANK_LINE())
     block.append(cur_lines[2])
     block.append(smali.BLANK_LINE())
+    
+    # the spacing might be wrong in the final result
+    # see EXTERNAL_FUNCTION
+    # .rstrip() is necessary to remove \n characters
+    
+    
         
     
     # this point (for some reason) this stuff is causing the java verifier
@@ -443,6 +471,10 @@ def INTERNAL_FUNCTION_instrumentation(scd, m, cur_lines, free_reg):
     smali.BLANK_LINE(),
     smali.SPUT(free_reg[0], taint_field_dest)]
     block = block + Instrumenter.make_comment_block("for MOVE-RESULT")
+    
+    # the spacing might be wrong in the final result
+    # see EXTERNAL_FUNCTION
+    # .rstrip() is necessary to remove \n characters
     
     
     return block
@@ -478,10 +510,10 @@ def EXTERNAL_FUNCTION_instrumentation(scd, m, cur_lines, free_reg):
     block = block + Instrumenter.make_merge_block(scd, m, param_regs, taint_loc_dest, free_reg)
     block = block + Instrumenter.make_comment_block("for EXTERNAL METHOD")
     
+    # .rstrip() is necessary to remove \n characters
     block.append(cur_lines[0])
     block.append(smali.BLANK_LINE())
-    block.append(cur_lines[2])
-    block.append(smali.BLANK_LINE())
+    block.append(cur_lines[2].rstrip())
     
     return block
 
@@ -815,6 +847,9 @@ def INVOKE_instrumentation(scd, m, cur_lines, free_reg):
             return WRITE_instrumentation(scd, m, cur_lines, free_reg)
     else:
         return MOVE_RESULT_instrumentation(scd, m, cur_lines, free_reg)
+        
+        
+
         
     return [cur_lines]
     

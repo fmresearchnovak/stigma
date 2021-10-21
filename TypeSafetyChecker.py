@@ -72,8 +72,8 @@ class TypeSafetyChecker:
             self.most_recent_type_map = line_type_map_new.copy()
             self.node_type_list.append(line_type_map_new)
             
-            # print("\n*****line:", line.strip())
-            # print(self.node_type_list[-1])
+            #print("\n*****line:", line.strip())
+            #print(self.node_type_list[-1])
             
             return
         
@@ -218,11 +218,11 @@ class TypeSafetyChecker:
             self.most_recent_type_map = line_type_map_new.copy()
             self.node_type_list.append(line_type_map_new)
         
-        # print("\n*****line:", line.strip())
-        # print(self.node_type_list[-1])
-        # input("Continue???")
-        # Debugging the smali line-by-line as program runs
-        # self.debugging(line, line_index)
+        #print("\n*****line:", line.strip())
+        #print(self.node_type_list[-1])
+        #input("Continue???")
+        #Debugging the smali line-by-line as program runs
+        #self.debugging(line, line_index)
     
     def get_relevant_maps_to_merge(self,node_counter):
         '''This gets all maps from the predecessor nodes to merge'''

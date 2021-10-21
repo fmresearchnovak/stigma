@@ -77,7 +77,7 @@ class ControlFlowGraph:
             line_obj = text[line_index]
             
             if (line_index not in self.visited_lines):  
-                # print(" univisted line in cfg", line, "not branching: ", ControlFlowGraph.is_not_branching(line))
+                #print(" univisted line in cfg", line, "not branching: ", ControlFlowGraph.is_not_branching(line))
                 tokens = StigmaStringParsingLib.break_into_tokens(line_str)
                 
                 if ControlFlowGraph.is_not_branching(line_str):
@@ -383,8 +383,8 @@ class ControlFlowGraph:
     
     
     def __getitem__(self, node_counter):
-        # print("node counter: ", node_counter)
-        # print("node: ", self.G.nodes[node_counter])
+        #print("node counter: ", node_counter)
+        #print("node: ", self.G.nodes[node_counter])
         return self.G.nodes[node_counter]  
          
             

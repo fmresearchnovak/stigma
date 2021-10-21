@@ -46,7 +46,7 @@ class SmaliClassDef:
             #print("processing line: " + str(lines[idx]))
             match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_METHOD, lines[idx])
             if match_object is not None:  # This is the start of a method defintion
-                # print(str(match_object) + " in line: " + lines[idx])
+                #print(str(match_object) + " in line: " + lines[idx])
                 method_code = []
 
                 match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_END_METHOD, lines[idx])
@@ -56,7 +56,7 @@ class SmaliClassDef:
                     match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_END_METHOD, lines[idx])
                     idx += 1
 
-                # print(str(match_object) + " in line: " + lines[idx])
+                #print(str(match_object) + " in line: " + lines[idx])
                 smd = SmaliMethodDef(method_code, self)
                 self.methods.append(smd)
             
@@ -76,12 +76,12 @@ class SmaliClassDef:
 
             if pre_methods:
                 cur_dest.append(lines[idx])
-            # debugging left in
-            # print("\n")
-            # print(lines)
-            # print("len(lines): " + str(len(lines)))
+            #debugging left in
+            #print("\n")
+            #print(lines)
+            #print("len(lines): " + str(len(lines)))
             #
-            # print("idx: " + str(idx))
+            #print("idx: " + str(idx))
             idx = idx + 1
 
     

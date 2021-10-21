@@ -164,7 +164,7 @@ class SmaliMethodDef:
         self.raw_text = text
         
         self.num_jumps = 0 # not used except for a sanity check
-        self.first_new_free_reg_num = 0  #this is the first free reg after we grow the locals number for the method
+
         
         self.ORIGINAL_LOCAL_NUMBER_REGS = self.get_locals_directive_num()
         self.reg_number_float = self.ORIGINAL_LOCAL_NUMBER_REGS
@@ -186,6 +186,35 @@ class SmaliMethodDef:
         # Used to count the number of times the instrumentation process cannot
         # free up Instrumenter.DESIRED_NUM_REGISTERS
         self.not_enough_free_registers_count = 0
+        
+        # state that is modified when "grow_locals()" is called
+        self.has_grown = 0 # number passed to grow locals
+        self.top_regs = None # list of the registers established at the top
+        #this is the first free reg after we grow the locals number for the method
+        self.first_new_free_reg_num = 0  
+        
+        
+    def get_register_meta_data(self):
+        num_locals = self.get_locals_directive_num()
+        num_params = self.signature.num_of_parameter_registers
+        num_regs = self.get_num_registers()
+        #print("num regs: " + str(num_regs))
+        
+        l = []
+        for i in range(num_regs):
+            l.append("v" + str(i))
+        #print("l: " + str(l))
+        
+        p_idx_start = num_locals - self.has_grown
+        #print("p_idx_start: " + str(p_idx_start))
+        p_num = 0
+        for p_idx in range(p_idx_start, p_idx_start+num_params):
+            #print("p_idx: " + str(p_idx))
+            l[p_idx] = l[p_idx] + "/p" + str(p_num)
+            p_num += 1
+        
+        return str(l)
+        
             
 
     def grow_locals(self, n):
@@ -235,6 +264,10 @@ class SmaliMethodDef:
             # We shouldn't grow abstract methods since they don't have 
             # code / locals
             return []
+            
+        if(self.has_grown > 0):
+            raise ValueError("Cannot grow locals twice on the same method!")
+        self.has_grown = n
             
 
         old_locals_num = self.get_locals_directive_num()
@@ -301,7 +334,8 @@ class SmaliMethodDef:
         insert_idx = self.find_first_valid_instruction()
         self.embed_block(insert_idx, block)
         
-        return new_regs
+        self.top_regs = new_regs
+
 
 
     def dereference_p_to_v_number(self, p_register):
@@ -371,7 +405,7 @@ class SmaliMethodDef:
         search_object = re.search(r"[0-9]+", line)
         if search_object is not None:
             num = search_object.group()
-            # print("number: " +  str(num))
+            #print("number: " +  str(num))
             return int(num)
         else:
             return 0
@@ -410,18 +444,17 @@ class SmaliMethodDef:
         return count
 
     
-    def get_signature(self):
-        return str(self.signature)
+
 
 
     def get_name(self):
         # kinda hacky!  Sorry 'bout that!
-        s = self.get_signature()
+        s = str(self)
         s = s.split("(")
-        # print("name: " + str(s))
+        #print("name: " + str(s))
         s = s[0].split(" ")
         name = s[-1]
-        # print("name: " + str(name))
+        #print("name: " + str(name))
         return name
 
 
@@ -463,10 +496,12 @@ class SmaliMethodDef:
             return
         
         
+        # grow the local variables in this method to make
+        # some spare registers (at the top)
+        self.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)        
+
         #create the control flow graph for the method text and pass it to the type safety checker
         #this will check and track types of each register on each line 
-        #these are the newly freed registers at the top, they might be large numbered! (> v15)
-        free_regs = self.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)        
         self.cfg = ControlFlowGraph(self.raw_text)
         self.tsc = TypeSafetyChecker(self.signature, self.cfg) 
         
@@ -492,7 +527,7 @@ class SmaliMethodDef:
                     #print(type(line), ": " + str(line))         
                     self.tsc.type_update(line, index, counter)
                     node["type_list"] = self.tsc.node_type_list
-                    self._do_instrumentation_plugins(free_regs, node, line, index)
+                    self._do_instrumentation_plugins(node, line, index)
 
                 #assign the register type list to this current node after its processed
                 # I'm very suspicious of this step.  Why?
@@ -510,7 +545,7 @@ class SmaliMethodDef:
                        
 
         
-    def _do_instrumentation_plugins(self, free_regs, node, line, idx):
+    def _do_instrumentation_plugins(self, node, line, idx):
         self.moves_before = []
         self.moves_after = []
         
@@ -530,14 +565,18 @@ class SmaliMethodDef:
             return
         
         #2  
-            #if a line begins with move-result, it should have already been processed 
-            # by the instrumenter of its preceding opcode (e.g invoke)
-            # so dont add that line again into the new method
-        #if re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, line) is not None:
-            #return
-        # Commented out, I think the instrumentation plugin should handle this situation
-        # by simplying not "signing-up" for move-result-* instructions
-        # move-result, move-result-wide, move-result-object
+            # if a line begins with "move-result", it has already been processed 
+            # by the instrumenter of its preceding opcode (i.e., an invoke instruction)
+            #
+            # a thought that might occur is that the instrumentation plugin should 
+            # handle this by simply not "signing-up" for move-result-* instructions
+            # this solution is not valid.  If we pass in a move-result-* line
+            # even if there is no instrumentation done, that line will be 
+            # added to the method code.  So, it will be added twice (once 
+            # passed on it's own, and again passed by the preceeding invoke-* 
+            # instruction
+        if re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, line) is not None:
+            return
             
         if not self.is_relevant(line):
             self.instrumented_code.append(line)
@@ -552,7 +591,7 @@ class SmaliMethodDef:
                     line = [line, str(smali.BLANK_LINE()), next_line]
             
 
-            regs = self.gen_list_of_safe_registers(free_regs, node, idx)                
+            regs = self.gen_list_of_safe_registers(node, idx)                
             
             
             #if we are unable to get enough free registers, worse case possible if all the types are ?
@@ -569,12 +608,11 @@ class SmaliMethodDef:
             else:
                 new_block = instrumentation_method(self.scd, self, line, regs)
             
-            
             self.insert_instrumented_code(line, new_block, instrumeter_inserts_original_lines)
             
             
 
-    def gen_list_of_safe_registers(self, free_regs, node, idx):
+    def gen_list_of_safe_registers(self, node, idx):
         # "safe" registers are 
         #  (a) low numbered (less than v16)
         #  (b) not containing original program data
@@ -585,6 +623,7 @@ class SmaliMethodDef:
         # for the number of registers returned
         # it will stop early if possible and it will
         # throw an exception if goal_size cannot be reached
+        
 
         
         # generate a list of available registers        
@@ -596,7 +635,7 @@ class SmaliMethodDef:
         count = self.first_new_free_reg_num
         
         # 1) Try to use the top registers available after growing
-        for r in free_regs:
+        for r in self.top_regs:
             n = int(r[1:])
             if(n < 16):
                 count = count + 1
@@ -604,7 +643,7 @@ class SmaliMethodDef:
         
         
         if(len(safe_regs) >= Instrumenter.DESIRED_NUM_REGISTERS):
-            return list(safe_regs)
+            return sorted_list(safe_regs)
         
         
         # 2) Try to use the regiters not yet used uptil now in this method according to tsc
@@ -631,7 +670,7 @@ class SmaliMethodDef:
         safe_regs.difference_update(cur_line_reg)
 
         if(len(safe_regs) >= Instrumenter.DESIRED_NUM_REGISTERS):
-            return list(safe_regs)
+            return sorted_list(safe_regs)
         
         
         #3) implement moves to free up lower numbered registers if possible
@@ -656,7 +695,7 @@ class SmaliMethodDef:
             
             if len(safe_regs) == Instrumenter.DESIRED_NUM_REGISTERS:
                 self.moves_after.append(smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers"))
-                return list(safe_regs)
+                return sorted_list(safe_regs)
         
         
         if len(safe_regs) < Instrumenter.DESIRED_NUM_REGISTERS:
@@ -676,9 +715,8 @@ class SmaliMethodDef:
             #exit(1)
         
         
-        return list(safe_regs)        
-        
-        
+        return sorted_list(safe_regs)
+
         
         
     def insert_instrumented_code(self, line, new_block, instrumeter_inserts_original_lines):
@@ -814,7 +852,7 @@ class SmaliMethodDef:
 
 
     def __str__(self):
-        return self.get_signature()
+        return str(self.signature)
 
 
     def __eq__(self, other):
@@ -826,7 +864,16 @@ class SmaliMethodDef:
 
         else:
             return False
-            
+       
+
+# It is on purpose that this is not a member of the SmaliMethodDef 
+# class or the SmaliMethodSignature class.
+def sorted_list(x):
+    if not isinstance(x, set):
+        raise ValueError("Input parameter should be a set.  You passed a: " + str(type(x)))
+    
+    ans = sorted(list(x))
+    return ans
 
 
 def tests():

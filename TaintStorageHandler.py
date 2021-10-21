@@ -112,7 +112,7 @@ class StorageClass:
         # TODO: why is there an "f" at the beginning?
         # Also, python3 long strings should use three single quotes '''
         # it seems that double quotes works fine too.
-        smali_class_text_temp = f""".class public L{self.storage_class_fqn};
+        smali_class_text_temp = """.class public L{self.storage_class_fqn};
 .super Ljava/lang/Object;
 .source "{self.storage_class_name}.java"
 
