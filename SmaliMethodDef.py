@@ -700,7 +700,7 @@ class SmaliMethodDef:
         
         if len(safe_regs) < Instrumenter.DESIRED_NUM_REGISTERS:
             self.not_enough_free_registers_count += 1
-            print("not enough registers! This has occurred: " + str(self.not_enough_free_registers_count) + " times in this method.")
+            #print("not enough registers! This has occurred: " + str(self.not_enough_free_registers_count) + " times in this method.")
             #raise ValueError("Unable to find enough safe registers.  Trying for " + str(Instrumenter.DESIRED_NUM_REGISTERS) + "  got: " + str(safe_regs))
             #print(ve)
             #print(self.scd.file_name)

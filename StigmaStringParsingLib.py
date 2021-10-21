@@ -97,7 +97,14 @@ def get_v_and_p_numbers(line):
         #print("parts: " + str(parts))
         start = parts[0].strip(" {")
         end = parts[1].strip(" }")
-        registers = [start, end]
+        
+        # invoke-static/range {v0 .. v7} => [v0, v7]
+        # invoke-static/range {v1 .. p0} => [v1, p0]
+        # This is on purpose.  Everything that calls get_v_and_p_numbers()
+        # should know that it outputs only registers EXPLICITLY listed
+        # in the instruction
+        return [start, end]
+
 
     else:    
         number_registers = get_num_registers(line)
@@ -318,11 +325,12 @@ NON_RELEVANT_INSTRUCTION_LIST = ["nop","monitor-enter" , "monitor-exit", "throw"
  "aput-char", "aput-short"]
         
 def main():
-    print("Minimal Tests for String Parsing Library")
+    print("Testing String Parsing Library")
 
     assert(get_v_and_p_numbers("const-string v1, \"Parcelables cannot be written to an OutputStream\"\n") == ["v1"])
     assert(get_v_and_p_numbers("filled-new-array {v0, v1, v2}, [Ljava/lang/String;\n") == ["v0", "v1", "v2"])
-    assert(get_v_and_p_numbers("invoke-static/range {v0 .. v7}, Lcom/example/class1;->foo()Z;") == ["v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7"])
+    assert(get_v_and_p_numbers("invoke-static/range {v0 .. v7}, Lcom/example/class1;->foo()Z;") == ["v0", "v7"])
+    assert(get_v_and_p_numbers("invoke-static/range {v3 .. p1}, Lcom/example/class1;->foo()Z;") == ["v3", "p1"])
 
     assert(get_p_numbers("const-string p0, \"Parcelables cannot be written to an OutputStream\"\n") == ["p0"])
     assert(get_p_numbers("filled-new-array {v0, p1, v2}, [Ljava/lang/String;\n") == ["p1"])
@@ -334,6 +342,7 @@ def main():
     assert(is_valid_instruction("    .line 36") == False)
     
     assert(break_into_tokens("    invoke-static/range {v0 .. v7}, Lcom/example/class1;->foo()Z;")[-1] == "Lcom/example/class1;->foo()Z;")
+    
     print("ALL StringParsingLib TESTS PASSED")
 
 if __name__ == "__main__":

@@ -1,11 +1,11 @@
-#!/usr/bin/env python
 
 import SmaliAssemblyInstructions as smali
 import StigmaStringParsingLib
 from TaintStorageHandler import TaintStorageHandler
 import re
-DESIRED_NUM_REGISTERS = 4 #we grow our .locals by this number
 
+
+DESIRED_NUM_REGISTERS = 4 #we grow our .locals by this number
 
 # The structure of the constructor and the register_instrumentation_method functions
 # are an attempt to make this a "plugin" style application where others can write

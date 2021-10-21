@@ -1591,6 +1591,8 @@ def main():
 
     # One test for every isntruction in SmaliAssemblyInstructions.py
     # http://pallergabor.uw.hu/androidblog/dalvik_opcodes.html
+    
+    print("Testing SmaliAssemblyInstructions")
 
     # second line is intentionally a blank line
     TESTS = ["    nop\n",
@@ -1693,18 +1695,18 @@ def main():
 
 
     obj = NOP()
-    print("obj: ", obj)
+    #print("obj: ", obj)
 
-    print("constructor tests...")
+    print("\tconstructor tests...")
     for cur_line in TESTS:
-        print("\t" + cur_line.strip())
+        #print("\t" + cur_line.strip())
         obj = SmaliAssemblyInstruction.from_line(cur_line)
         #print(type(obj), ": " + str(obj))
         assert(str(obj) == cur_line)
         
 
 
-    print("implicit registers tests...")
+    print("\timplicit registers tests...")
     asm_obj = SmaliAssemblyInstruction.from_line("    move-wide v0, v15\n")
     #print(asm_obj)
     #print(asm_obj.get_registers())

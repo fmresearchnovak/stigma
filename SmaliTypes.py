@@ -247,7 +247,8 @@ class Array(ObjectReference):
 
 def main():
 	print("Testing SmaliType")
-	print("  ...testing 32-bit types")
+	
+	print("\ttesting 32-bit types...")
 	int1 = Int()
 	int2 = from_string("I")
 	assert(str(int1) == "I")
@@ -263,7 +264,7 @@ def main():
 	assert(isinstance(vague1, ThirtyTwoBit))
 	
 	
-	print("  ...testing array types")
+	print("\ttesting array types...")
 	arr = Array("[[I")
 	arr2 = Array("[[I")
 	arr3 = Array("[J")
@@ -277,13 +278,13 @@ def main():
 	assert(isinstance(int3, ThirtyTwoBit))
 	assert(arr2 == arr)
 	
-	print("  ...testing object types")
+	print("\ttesting object types...")
 	obj = ObjectReference("Ljava/lang/String;")
 	obj2 = from_string("Ljava/lang/String;")
 	assert(obj == obj2)
 	assert(obj == "Ljava/lang/String;")
 	
-	print("ALL TESTS PASSED!")
+	print("ALL SmaliType TESTS PASSED!")
 
 
 if __name__ == "__main__":

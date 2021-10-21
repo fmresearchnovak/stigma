@@ -21,31 +21,7 @@ sinkDict = {}
 sinkDict['Z'] = "Write"
 sinkDict['Y'] = "Logd"
 
-'''def internal_tests():
 
-    cmd = ["python3", "StigmaStringParsingLib.py"]
-    finished_proc = subprocess.run(cmd)
-    finished_proc.check_returncode()
-
-    cmd = ["python3", "SmaliMethodDef.py"]
-    finished_proc = subprocess.run(cmd)
-    finished_proc.check_returncode()
-
-    # no tests in SmaliClassDef, I included it for robustness
-    cmd = ["python3", "SmaliClassDef.py"]
-    finished_proc = subprocess.run(cmd)
-    finished_proc.check_returncode()
-
-    cmd = ["python3", "SmaliAssemblyInstructions.py"]
-    finished_proc = subprocess.run(cmd)
-    finished_proc.check_returncode()
-
-    # no tests in Instrumenter.py, I included it for robustness
-    cmd = ["python3", "Instrumenter.py"]
-    finished_proc = subprocess.run(cmd)
-    finished_proc.check_returncode()
-
-    print("\n--FINISHED RUNNING TESTS!--\n")'''
 
 def main():
     ## Note: run emulator before running test

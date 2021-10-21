@@ -6,7 +6,9 @@ import ControlFlowGraph
 import TypeSafetyChecker
 import TaintTrackingInstrumentationPlugin
 
-import sys, re
+import sys
+import re
+import subprocess
 
 
 
@@ -1476,8 +1478,29 @@ def double_move_result_bug():
     print("passed!")
     
     
+def internal_tests():
+	
+	print("--Running Internal Tests--")
+	
+	src_code_with_internal_tests = ["StigmaStringParsingLib.py", 
+		"SmaliMethodDef.py", "SmaliTypes.py", "SmaliAssemblyInstructions.py",
+		"Instrumenter.py", "TaintStorageHandler.py"]
+	
+	
+	for src in src_code_with_internal_tests:
+		cmd = ["python3", src]
+		finished_proc = subprocess.run(cmd)
+		finished_proc.check_returncode()
+		print()
+    
+
+	print("\n--Finished All Internal Tests!--\n")
 
 def main():
+    
+    internal_tests()
+    
+    
     TaintTrackingInstrumentationPlugin.main()
 
     comparison_count_test1()
@@ -1532,8 +1555,10 @@ def main():
     stigma_leaks_crash_SupportActivity()
     double_move_result_bug()
     
-    
-    print("ALL TESTS PASSED!")
+    print("\n\n")
+    print("+-------------------+")
+    print("| ALL TESTS PASSED! |")
+    print("+-------------------+")
     
     
 if __name__=="__main__":

@@ -127,16 +127,21 @@ def runStigma():
     #run stigma on all file paths
     print("...Parsing class files")
     comparison_instruction_count = 0
+    not_enough_registers_count = 0
     for path in relevantFilePaths:
         #print("Parsing: " + str(path))
         scd = SmaliClassDef.SmaliClassDef(path)
         scd_hashmap[scd.class_name] = scd
         comparison_instruction_count = comparison_instruction_count + scd.get_num_comparison_instructions()    
+        
+        for every_method in scd.methods:
+            not_enough_registers_count += every_method.not_enough_free_registers_count
     
     print("Parsing finished in %.1f seconds" % (time.time() - start_time2))
     
     fh = open(analytics_path, "w")
     fh.write("Number of Comparisons: " + str(comparison_instruction_count) + "\n")
+    fh.write("Number of instructions in which there were not enough registers to properly instrument: " + str(comparison_instruction_count))
     fh.close()
     
     
