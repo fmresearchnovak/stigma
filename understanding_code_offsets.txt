@@ -32,3 +32,176 @@ In this method:
     ...
 
 is referring to the line: if-nez v0, :cond_0
+
+
+
+
+
+This error:
+java.lang.VerifyError: Verifier rejected class edu.fandm.enovak.leaks.Main: void edu.fandm.enovak.leaks.Main.<clinit>() failed to verify: void edu.fandm.enovak.leaks.Main.<clinit>(): [0x2] copy1 v0<-v1 type=Undefined cat=3
+
+In this method:
+# direct methods
+.method static constructor <clinit>()V
+    .locals 4
+
+    .line 38
+    const-class v0, Ledu/fandm/enovak/leaks/Main;
+
+    move-object v0, v1
+
+    invoke-virtual {v0}, Ljava/lang/Class;->getName()Ljava/lang/String;
+
+    move-result-object v0
+
+    sput-object v0, Ledu/fandm/enovak/leaks/Main;->TAG:Ljava/lang/String;
+
+    .line 44
+    const-string v0, "android.permission.ACCESS_COARSE_LOCATION"
+
+    const-string v1, "android.permission.ACCESS_FINE_LOCATION"
+
+    const-string v2, "android.permission.INTERNET"
+
+    const-string v3, "android.permission.READ_PHONE_STATE"
+
+    filled-new-array {v0, v1, v2, v3}, [Ljava/lang/String;
+
+    move-result-object v0
+
+    sput-object v0, Ledu/fandm/enovak/leaks/Main;->PERMS:[Ljava/lang/String;
+
+    return-void
+.end method
+
+is referring to the line: move-object v0, v1
+
+
+
+
+This error:
+    java.lang.VerifyError: Verifier rejected class edu.fandm.enovak.leaks.Main: void edu.fandm.enovak.leaks.Main.<clinit>() failed to verify: void edu.fandm.enovak.leaks.Main.<clinit>(): [0x5] copy1 v0<-v1 type=Undefined cat=3 
+
+In This Method:
+# direct methods
+.method static constructor <clinit>()V
+    .locals 4
+
+    .line 38
+    const-class v0, Ledu/fandm/enovak/leaks/Main;
+
+    invoke-virtual {v0}, Ljava/lang/Class;->getName()Ljava/lang/String;
+
+    move-object v0, v1
+
+    move-result-object v0
+
+    sput-object v0, Ledu/fandm/enovak/leaks/Main;->TAG:Ljava/lang/String;
+
+    .line 44
+    const-string v0, "android.permission.ACCESS_COARSE_LOCATION"
+
+    const-string v1, "android.permission.ACCESS_FINE_LOCATION"
+
+    const-string v2, "android.permission.INTERNET"
+
+    const-string v3, "android.permission.READ_PHONE_STATE"
+
+    filled-new-array {v0, v1, v2, v3}, [Ljava/lang/String;
+
+    move-result-object v0
+
+    sput-object v0, Ledu/fandm/enovak/leaks/Main;->PERMS:[Ljava/lang/String;
+
+    return-void
+.end method
+
+is referring to the line: move-object v0, v1
+
+
+
+
+
+
+
+
+This error:
+java.lang.VerifyError: Verifier rejected class edu.fandm.enovak.leaks.Main: void edu.fandm.enovak.leaks.Main.<clinit>() failed to verify: void edu.fandm.enovak.leaks.Main.<clinit>(): [0xA] copy1 v0<-v1 type=Undefined cat=3 
+
+In this file:
+# direct methods
+.method static constructor <clinit>()V
+    .locals 4
+
+    .line 38
+    const-class v0, Ledu/fandm/enovak/leaks/Main;
+
+    invoke-virtual {v0}, Ljava/lang/Class;->getName()Ljava/lang/String;
+
+    move-result-object v0
+
+    sput-object v0, Ledu/fandm/enovak/leaks/Main;->TAG:Ljava/lang/String;
+
+    .line 44
+    const-string v0, "android.permission.ACCESS_COARSE_LOCATION"
+
+    move-object v0, v1
+
+    const-string v1, "android.permission.ACCESS_FINE_LOCATION"
+
+    const-string v2, "android.permission.INTERNET"
+
+    const-string v3, "android.permission.READ_PHONE_STATE"
+
+    filled-new-array {v0, v1, v2, v3}, [Ljava/lang/String;
+
+    move-result-object v0
+
+    sput-object v0, Ledu/fandm/enovak/leaks/Main;->PERMS:[Ljava/lang/String;
+
+    return-void
+.end method
+
+is referring to the line: move-object v0, v1
+
+
+This error:
+java.lang.VerifyError: Verifier rejected class edu.fandm.enovak.leaks.Main: void edu.fandm.enovak.leaks.Main.<clinit>() failed to verify: void edu.fandm.enovak.leaks.Main.<clinit>(): [0xA] copy1 v0<-v1 type=Undefined cat=3
+
+In this method:
+# direct methods
+.method static constructor <clinit>()V
+    .locals 4
+
+    .line 38
+    const-class v0, Ledu/fandm/enovak/leaks/Main;
+
+    invoke-virtual {v0}, Ljava/lang/Class;->getName()Ljava/lang/String;
+
+    move-result-object v0
+
+    sput-object v0, Ledu/fandm/enovak/leaks/Main;->TAG:Ljava/lang/String;
+
+    .line 44
+    const-string v0, "android.permission.ACCESS_COARSE_LOCATION"
+
+    # some comment that should be ignore
+
+    move-object v0, v1
+
+    const-string v1, "android.permission.ACCESS_FINE_LOCATION"
+
+    const-string v2, "android.permission.INTERNET"
+
+    const-string v3, "android.permission.READ_PHONE_STATE"
+
+    filled-new-array {v0, v1, v2, v3}, [Ljava/lang/String;
+
+    move-result-object v0
+
+    sput-object v0, Ledu/fandm/enovak/leaks/Main;->PERMS:[Ljava/lang/String;
+
+    return-void
+.end method
+
+is referring to the line: move-object v0, v1
