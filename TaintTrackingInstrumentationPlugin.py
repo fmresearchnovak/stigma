@@ -164,28 +164,24 @@ def MOVE_RESULT_instrumentation(scd, m, cur_lines, free_reg):
     #this instrumenter takes in two lines (the current move-result line and the preceding invoke line)
     #based on the invoke instruction method call, it decides which of the following instrumenter to call
     
-    if STRING_GET_LATITUDE in cur_lines[0]:
+    if STRING_GET_LATITUDE in cur_lines[0]: # short cut
         block = LATITUDE_instrumentation(scd, m, cur_lines, free_reg)
         
-    elif STRING_GET_LAST_KNOWN_LOCATION_FUNCTION in cur_lines[0]:
+    elif STRING_GET_LAST_KNOWN_LOCATION_FUNCTION in cur_lines[0]: # short cut
         block = LOCATION_instrumentation(scd, m, cur_lines, free_reg)
         
-    elif STRING_GET_LONGITUDE in cur_lines[0]:
+    elif STRING_GET_LONGITUDE in cur_lines[0]: # short cut
         block = LONGITUDE_instrumentation(scd, m, cur_lines, free_reg)
         
-    elif STRING_PHONE_NUM_FUNCTION in cur_lines[0]:
+    elif STRING_PHONE_NUM_FUNCTION in cur_lines[0]: # short cut
         block = PHONE_NUM_instrumentation(scd, m, cur_lines, free_reg)
         
-    elif re.search(StigmaStringParsingLib.BEGINS_WITH_FILLED_NEW_ARRAY, cur_lines[0]) is not None:
+    elif re.search(StigmaStringParsingLib.BEGINS_WITH_FILLED_NEW_ARRAY, cur_lines[0]) is not None: # short cut
         block = FILLED_NEW_ARRAY_instrumentation(scd, m, cur_lines, free_reg)  
           
     else:
-        tokens = StigmaStringParsingLib.break_into_tokens(cur_lines[0])
-        method_signature = tokens[-1]
-        parts = method_signature.split("->")
-        callee_class_name = parts[0]
-        callee_method_name = parts[1].split("(")[0]
-        callee_class_obj = scd.get_other_class(callee_class_name)
+        
+        callee_method_name, callee_class_obj = _get_callee_parts(cur_lines[0], scd)
         
         # At this point it is known that both this class (ClassA)
         # and the callee class (ClassB) are both inside this project.
@@ -204,6 +200,7 @@ def MOVE_RESULT_instrumentation(scd, m, cur_lines, free_reg):
     # see EXTERNAL_FUNCTION
     # .rstrip() is necessary to remove \n characters
     return block
+
 
 
 def LOCATION_instrumentation(scd, m, cur_lines, free_reg):
@@ -375,77 +372,16 @@ def FILLED_NEW_ARRAY_instrumentation(scd, m, cur_lines, free_reg):
 
 
 def INTERNAL_FUNCTION_instrumentation(scd, m, cur_lines, free_reg):
+
     # Part 1, instrumentation for the invoke-* line
+    block = ONE_LINE_INVOKE_instrumentation(scd, m, cur_lines[0], free_reg)
     
-    # Imagine we are in a Class "ClassA"
-    # inside this class is a method bar()
-    # and in method bar() is this instruction:
-    #
-    # invoke-direct {p0, v2} Lcom/example/ClassB;->foo(I)C
-    # 
-    # we need to create the following inside ClassB:
-    #   foo_p0_TAINT:I
-    #   foo_p1_TAINT:I
-    #
-    # 
-    # and they need to be given the taint-values from p0 and v2
-    # respectively.  Note: there are multiple "p0", the one in bar()
-    # the one in foo().  They are coincidentally the same value
-    # in this example.
-    # Note, static functions are not an issue since all parameters
-    # are always passed and p0 is always used.  Sometimes p0 is "this"
-    # but for static methods it is simply something else.
-        
-    # I'm not sure if this works for a child class calling a function
-    # defined in it's own parent.  Maybe that should be
-    # considered not "internal"
-    
-
-    invoke_line = cur_lines[0]
-
-    tokens = StigmaStringParsingLib.break_into_tokens(invoke_line)
-    method_sig = tokens[-1]
-    
-    parts = method_sig.split("->")
-    callee_class_name = parts[0]
-    callee_method_name = parts[1].split("(")[0]
-    callee_class_obj = scd.get_other_class(callee_class_name)
-
-
-    param_regs = StigmaStringParsingLib.get_v_and_p_numbers(invoke_line)
-
-
-    block = Instrumenter.make_comment_block("for INTERNAL METHOD")
-    idx = 0
-    for reg in param_regs:
-        taint_field_dest = storage_handler.add_taint_location(callee_class_obj.class_name, callee_method_name, "p" + str(idx))
-        taint_field_src = storage_handler.add_taint_location(scd.class_name, m.get_name(), reg)
-        
-        block = block + [smali.SGET(free_reg[0], taint_field_src),
-        smali.BLANK_LINE(),
-        smali.SPUT(free_reg[0], taint_field_dest)]
-            
-        block.append(smali.BLANK_LINE())
-        idx = idx + 1
-        
-    block = block + Instrumenter.make_comment_block("for INTERNAL METHOD")
-    
-    block.append(cur_lines[0])
     block.append(smali.BLANK_LINE())
     block.append(cur_lines[2])
     block.append(smali.BLANK_LINE())
+
     
-    # the spacing might be wrong in the final result
-    # see EXTERNAL_FUNCTION
-    # .rstrip() is necessary to remove \n characters
-    
-    
-        
-    
-    # this point (for some reason) this stuff is causing the java verifier
-    # to reject classes and I don't know why
-    
-    ## Part 2, instrumentation for move-result line (if one is present)
+    # Part 2, instrumentation for move-result line (if one is present)
     
     # note: I will be inserting these lines AFTER, the move-result 
     # this is highly unusual but I think necessary for two reasons
@@ -453,6 +389,8 @@ def INTERNAL_FUNCTION_instrumentation(scd, m, cur_lines, free_reg):
     # since the "return" instrumentation needs to have run
     # 2) We cannot add code between a invoke line and the corresponding
     # move-result line
+    
+    callee_method_name, callee_class_obj = _get_callee_parts(cur_lines[0], scd)
 
 
     result_line = cur_lines[2]
@@ -478,6 +416,79 @@ def INTERNAL_FUNCTION_instrumentation(scd, m, cur_lines, free_reg):
     
     
     return block
+    
+    
+
+    
+def ONE_LINE_INVOKE_instrumentation(scd, m, cur_line, free_reg):
+    
+    # Part 1, instrumentation for the invoke-* line
+    
+    # Imagine we are in a Class "ClassA"
+    # inside this class is a method bar()
+    # and in method bar() is this instruction:
+    #
+    # invoke-direct {p0, v2} Lcom/example/ClassB;->foo(I)C
+    # 
+    # we need to create the following inside ClassB:
+    # we assume for this method that ClassB is internal to the project
+    #   foo_p0_TAINT:I
+    #   foo_p1_TAINT:I
+    #
+    # 
+    # and they need to be given the taint-values from p0 and v2
+    # respectively.  Note: there are multiple "p0", the one in bar()
+    # the one in foo().  They are coincidentally the same value
+    # in this example.
+    # Note, static functions are not an issue since all parameters
+    # are always passed and p0 is always used.  Sometimes p0 is "this"
+    # but for static methods it is simply something else.
+        
+    # I'm not sure if this works for a child class calling a function
+    # defined in it's own parent.  Maybe that should be
+    # considered not "internal"    
+
+    invoke_line = cur_line
+    callee_method_name, callee_class_obj = _get_callee_parts(invoke_line, scd)
+
+    # I should replace this with a function like
+    # get implicit v and p
+    # for *-range functions
+    param_regs = StigmaStringParsingLib.get_v_and_p_numbers(invoke_line)
+
+
+    block = Instrumenter.make_comment_block("for INTERNAL METHOD")
+    idx = 0
+    for reg in param_regs:
+        taint_field_dest = storage_handler.add_taint_location(callee_class_obj.class_name, callee_method_name, "p" + str(idx))
+        taint_field_src = storage_handler.add_taint_location(scd.class_name, m.get_name(), reg)
+        
+        block = block + [smali.SGET(free_reg[0], taint_field_src),
+        smali.BLANK_LINE(),
+        smali.SPUT(free_reg[0], taint_field_dest)]
+            
+        block.append(smali.BLANK_LINE())
+        idx = idx + 1
+        
+    block = block + Instrumenter.make_comment_block("for INTERNAL METHOD")
+    
+    block.append(cur_line)
+    
+    return block
+    
+
+def _get_callee_parts(invoke_line, scd):
+
+    tokens = StigmaStringParsingLib.break_into_tokens(invoke_line)
+    method_sig = tokens[-1]
+    
+    parts = method_sig.split("->")
+    callee_class_name = parts[0]
+    callee_method_name = parts[1].split("(")[0]
+    callee_class_obj = scd.get_other_class(callee_class_name)
+    
+    return callee_method_name,callee_class_obj
+    
 
 
 def EXTERNAL_FUNCTION_instrumentation(scd, m, cur_lines, free_reg):
@@ -488,6 +499,10 @@ def EXTERNAL_FUNCTION_instrumentation(scd, m, cur_lines, free_reg):
     # and also a "source" of sensitive information (covered by IMEI_instrumentation())
     # So, the system would apply both instrumentation insertions which ended up as
     # incoherent / incorrect assembly.
+    
+    #print("INTERNAL FUNCTION")
+    #print("cur lines: " + str(cur_lines))
+    #print("\tfree regs given inside EXTERNAL_FUNCTION_instrumentation: " + str(free_reg))
 
     # Should the following few lines be a static
     # function in the SmaliClassDef somewhere?
@@ -664,16 +679,44 @@ def MOVE_special_instrumentation(scd, m, cur_line, free_reg):
     # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
     '''
 
-    # the solution is that we can use the destination register
+    # 1
+    # a proposed solution is that we can use the destination register
     # for the tag propagation real quick before it is used to
     # store pX (i.e., use v4 and v5 for the two instructions
     # in the example respectively)
+    # THIS SOLUTION DOES NOT WORK when the destination register
+    # is v16 or larger (could happen if .locals >= 16)
+    # 
+    # 2
+    # another solution is to just always use v0
+    #   if v0 is used in the method it will be written (re-written)
+    #   by the method's original code at some point before it is used
+    #   if v0 is not used in the method, then the method has no code?
+    #   in such a situation .locals = 0 and there are no parameters 
+    #   (if there were parameters, p0 would be v0)
 
-    tokens = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
-    free_reg = tokens[0]
+    #tokens = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
+    #free_reg = tokens[0] # solution 1
+    free_reg = "v0" # solution 2
     return MOVE_instrumentation(scd, m, cur_line, [free_reg])
 
     
+def NEW_INSTANCE_instrumentation(scd, m, cur_line, free_reg):
+    # new-instance v14, Landroid/graphics/Rect;
+
+    regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)    
+    taint_field_loc = storage_handler.add_taint_location(scd.class_name, m.get_name(), regs[0])
+
+    
+    block = Instrumenter.make_comment_block("for NEW-INSTANCE")
+    block.append(smali.CONST(free_reg[0], "0x0"))
+    block.append(smali.BLANK_LINE())
+    block.append(smali.SPUT(free_reg[0], taint_field_loc))
+    block = block + Instrumenter.make_comment_block("for NEW-INSTANCE")
+        
+    
+    return block
+
 
 def CONST_instrumentation(scd, m, cur_line, free_reg):
     # const v0, 0x2
@@ -836,16 +879,53 @@ def IF_instrumentation(scd, m, cur_line, free_reg): # if statement implicit flow
 
 
     return block
+    
+
+        
         
 
-def INVOKE_instrumentation(scd, m, cur_lines, free_reg):        
-    if(not isinstance(cur_lines, list)):
+def INVOKE_instrumentation(scd, m, cur_lines, free_reg):     
+    
+    ##############################
+    #           1 line | 2 lines #
+    # internal    yes  |   yes   #
+    # external    NO   |   yes   #
+    ##############################
+    # * 1 line external functions exist
+    #   but I can't do any instrumentation
+    #   for them.
+    #
+    
+    # INVOKE_instrumentation (this function)
+    #  |
+    #  |-WRITE_instrumentation (1 line)
+    #  |-ONE_LINE_INVOKE_instrumentation (1 line)
+    #  +-MOVE_RESULT_instrumentation (2 lines)
+    #     |
+    #     |- LOCATION_instrumentation
+    #     |- LATITUDE_instrumentation
+    #     |- LONGITUDE_instrumentation
+    #     |- PHONE_NUM_instrumentation
+    #     |- FILLED_NEW_ARRAY_instr...
+    #     |- EXTERNAL_FUNCTION_instr...
+    #     +- INTERNAL_FUNCTION_instr...
+    #         |
+    #         |- ONE_LINE_INVOKE_instr...
+    
+    #print("INVOKE instrumentation: ", cur_lines)   
+    
+    if(not isinstance(cur_lines, list)): # no move-result / 1 line only
         # no move result in this case
         # determine that this is a write() call and is therefore
-        # necessary for WRITE instrumentation
+        # necessary for WRITE instrumentation, (short cut)
         if STRING_STREAM_WRITE_FUNCTION in cur_lines or BYTE_STREAM_WRITE_FUNCTION in cur_lines or BYTE_STREAM_WRITE_FUNCTION_OVER in cur_lines or INT_STREAM_WRITE_FUNCTION in cur_lines or OBJECT_STREAM_WRITE_FUNCTION in cur_lines:
             return WRITE_instrumentation(scd, m, cur_lines, free_reg)
-    else:
+        
+        callee_method_name, callee_class_obj = _get_callee_parts(cur_lines, scd)
+        if(callee_class_obj is not None): #internal
+            return ONE_LINE_INVOKE_instrumentation(scd, m, cur_lines, free_reg)
+            
+    else: # multiple-lines
         return MOVE_RESULT_instrumentation(scd, m, cur_lines, free_reg)
         
         
@@ -957,6 +1037,9 @@ def main():
     Instrumenter.sign_up("const-class", CONST_instrumentation)
     Instrumenter.sign_up("const-string-jumbo", CONST_instrumentation)
     Instrumenter.sign_up("const-string", CONST_instrumentation)
+    
+    #new-instance
+    Instrumenter.sign_up("new-instance", NEW_INSTANCE_instrumentation)
 
     #binaryop int
     Instrumenter.sign_up("add-int", BINARYOP_instrumenter)

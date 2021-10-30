@@ -211,9 +211,13 @@ class TypeSafetyChecker:
                       
                       
             else:
-                line_type_map_new[dest_reg] = self.check_type_list(instruction)
-                # if self.check_type_list(instruction) == 64-bit:
-                #   dest_reg +1 = SmaliTypes.SixtyFourBit_2
+                reg_type = self.check_type_list(instruction)
+                line_type_map_new[dest_reg] = reg_type
+                if(isinstance(reg_type, SmaliTypes.SixtyFourBit)):
+                    adj_reg = StigmaStringParsingLib.register_addition(dest_reg, 1)
+                    line_type_map_new[adj_reg] = SmaliTypes.SixtyFourBit_2()
+                    #print(dest_reg, " is now: ", str(reg_type))
+                    #print(adj_reg, " is now: ", str(SmaliTypes.SixtyFourBit_2()))
             
             self.most_recent_type_map = line_type_map_new.copy()
             self.node_type_list.append(line_type_map_new)
@@ -285,6 +289,11 @@ class TypeSafetyChecker:
         elif(opcode in StigmaStringParsingLib.SIXTY_FOUR_BIT_TYPE_LIST):
             return SmaliTypes.SixtyFourBit()
         elif(opcode in StigmaStringParsingLib.OBJECT_TYPE_LIST):
+            # this could be improved but it's complicated
+            # some instructions encode the object type easily
+            #     new-instance v15, Ljava/util/ArrayList;
+            # others don't
+            #     move-object v12, v13
             return SmaliTypes.ObjectReference("?")
         else:
             raise RuntimeError ("opcode seems to has no type", opcode)

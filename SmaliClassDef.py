@@ -37,6 +37,7 @@ class SmaliClassDef:
         fh.close()
 
         self.class_name = lines[0].split()[-1].strip("\n")
+        #print("self.class_name created: ", self.class_name)
 
 
         cur_dest = self.header
@@ -200,8 +201,9 @@ class SmaliClassDef:
         #     raise ValueError("Other SCDs list not passed to scd")
 
         #this will signup our methods for instrumentation with their related opcodes
-        for m in self.methods:                
-            m.instrument()
+        for m in self.methods:
+            if(m.signature.is_abstract == False):           
+                m.instrument()
 
 
     def write_to_file(self, class_smali_file):
@@ -296,9 +298,14 @@ class SmaliClassDef:
         return self._count_fields(self.instance_fields)
         
     def get_other_class(self, other_class_name):
-        #print("\nget_other_class(" + str(other_class_name) + ")")
+        #print("get_other_class(" + str(other_class_name) + ")")
+        #print("self.class_name:" + str(self.class_name))
+        if(other_class_name == self.class_name):
+            return self
+        
         if other_class_name in self.other_scds:
             return self.other_scds[other_class_name]
+            
         return None
         
     def __str__(self):

@@ -85,7 +85,8 @@ def get_num_registers(line):
     if number_registers is None:
         number_registers = _param_list_len(line)
     return number_registers
-
+    
+    
 
 def get_v_and_p_numbers(line):
 
@@ -136,6 +137,17 @@ def is_high_numbered_register(reg_name):
     #    return (number > 14)
         
     return (number > 15)
+    
+    
+def register_addition(reg_name, num):
+    letter = str(reg_name[0])
+    number = int(reg_name[1:])
+    
+    new_num = number + num
+    if(new_num < 0):
+        raise ValueError("Invalid register addition: " + reg_string + " + " + str(num))
+    
+    return letter + str(new_num)
 
 
 def break_into_tokens(line):
@@ -153,6 +165,9 @@ def extract_opcode(line):
 def is_valid_instruction(line):        
     opcode = extract_opcode(line)
     return opcode in ValidSmaliInstructions.SET
+    
+def is_comment(line):
+    return line.strip().startswith("#")
     
 def is_field_instruction(line):
     search_object = re.search(BEGINS_WITH_SPUT, line)
@@ -179,6 +194,11 @@ def is_method_call_instruction(line):
     if search_object is not None:
         return True
     return False
+    
+
+def could_have_a_subsequent_move_result(line):
+    ans = (re.search(BEGINS_WITH_INVOKE, line) is not None) or (re.search(BEGINS_WITH_FILLED_NEW_ARRAY, line) is not None)
+    return ans
 
 def get_num_register_parameters(instr):
     #print("calling get num register parameters on: " + instr)
@@ -342,6 +362,21 @@ def main():
     assert(is_valid_instruction("    .line 36") == False)
     
     assert(break_into_tokens("    invoke-static/range {v0 .. v7}, Lcom/example/class1;->foo()Z;")[-1] == "Lcom/example/class1;->foo()Z;")
+    
+    
+    assert(could_have_a_subsequent_move_result("    invoke-static/range {v0 .. v7}, Lcom/example/class1;->foo()Z;") == True)
+    assert(could_have_a_subsequent_move_result("    const-string v1, \"hard example: v2\"\n") == False)
+    
+    test_reg = "v2"
+    assert(register_addition(test_reg, 1) == "v3")
+    assert(register_addition(test_reg, -1) == "v1")
+    assert(register_addition("p2", 1) == "p3")
+    try:
+        result = register_addition(test_reg, -3)
+        assert(False)
+    except:
+        assert(test_reg == "v2")
+    assert(test_reg == "v2")
     
     print("ALL StringParsingLib TESTS PASSED")
 

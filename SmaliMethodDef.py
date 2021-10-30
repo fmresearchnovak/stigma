@@ -189,7 +189,7 @@ class SmaliMethodDef:
         
         # state that is modified when "grow_locals()" is called
         self.has_grown = 0 # number passed to grow locals
-        self.top_regs = None # list of the registers established at the top
+        self.top_regs = [] # list of the registers established at the top
         #this is the first free reg after we grow the locals number for the method
         self.first_new_free_reg_num = 0  
         
@@ -303,14 +303,13 @@ class SmaliMethodDef:
         # contain the parameter values
         block = []
 
+        #print("method: ", str(self))
         #print(self.signature.parameter_type_map)
         for param in self.signature.parameter_type_map:
-
             param_type_obj = self.signature.parameter_type_map[param]
-            #print("smali type object: " + str(param_type_obj) + "  :  " + str(type(param_type_obj)))
-            mv_cmd = param_type_obj.get_move_instr()
-            
-            if(param_type_obj.get_generic_type() != "64-bit-2"):
+            #print("smali type object: " + str(param_type_obj) + "  :  " + str(type(param_type_obj)) + "   get_generic_type: " + str(param_type_obj.get_generic_type()))            
+            if (not isinstance(param_type_obj, SmaliTypes.SixtyFourBit_2)):
+                mv_cmd = param_type_obj.get_move_instr()
                 mv_cmd = mv_cmd("v" + str(old_locals_num), param)
                 mv_cmd.targeted_for_instrumentation = False
                 
@@ -495,10 +494,8 @@ class SmaliMethodDef:
         if(len(self.raw_text) < 3):
             return
         
-        
-        # grow the local variables in this method to make
-        # some spare registers (at the top)
-        self.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)        
+        if(self.has_grown == 0):
+            print("Warning!  The locals for this method were not grown / expanded: " + str(self))
 
         #create the control flow graph for the method text and pass it to the type safety checker
         #this will check and track types of each register on each line 
@@ -514,6 +511,10 @@ class SmaliMethodDef:
         # as the signature line never shows up in our walk of the graph, we add it to our new instrumented code here
         counter = 1
         self.instrumented_code.append(self.raw_text[0])
+        
+        
+        #self.cfg.show()
+        #input("continue?")
         
         while(self.cfg.nodes_left_to_visit()):
             node = self.cfg[counter]
@@ -584,14 +585,20 @@ class SmaliMethodDef:
         else:
             instrumentation_method = Instrumenter.instrumentation_map[opcode][0]
             instrumeter_inserts_original_lines = Instrumenter.instrumentation_map[opcode][1]
+            #print("looking at:", line.strip(), "   instrumentation method: ", instrumentation_method, "\n")
             
-            if(re.search(StigmaStringParsingLib.BEGINS_WITH_INVOKE, line) is not None or re.search(StigmaStringParsingLib.BEGINS_WITH_FILLED_NEW_ARRAY, line) is not None):
-                next_line = self.tsc.obtain_next_instruction(node["node_counter"], idx+1)
-                if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, next_line) is not None):
-                    line = [line, str(smali.BLANK_LINE()), next_line]
-            
+            #print("\ninstrumenting line: ", line.strip())
+            potential_move_result_line = self.get_subsequent_move_result(node, idx)
+            if(potential_move_result_line != None):
+                line = [line, str(smali.BLANK_LINE()), potential_move_result_line]
+                #print("\ninstrumenting lines: ", line)
 
-            regs = self.gen_list_of_safe_registers(node, idx)                
+            
+            regs = self.gen_list_of_safe_registers(node, idx) 
+            
+            line_type_map = node["type_list"][idx-1]
+            #print("type_map: ", line_type_map)
+            #print("free regs:", regs)       
             
             
             #if we are unable to get enough free registers, worse case possible if all the types are ?
@@ -610,7 +617,6 @@ class SmaliMethodDef:
             
             self.insert_instrumented_code(line, new_block, instrumeter_inserts_original_lines)
             
-            
 
     def gen_list_of_safe_registers(self, node, idx):
         # "safe" registers are 
@@ -623,8 +629,6 @@ class SmaliMethodDef:
         # for the number of registers returned
         # it will stop early if possible and it will
         # throw an exception if goal_size cannot be reached
-        
-
         
         # generate a list of available registers        
         safe_regs = set()
@@ -641,22 +645,25 @@ class SmaliMethodDef:
                 count = count + 1
                 safe_regs.add(r)
         
-        
+        #print("\nline: ", node["text"][idx].strip(), "\n\tfirst return regs: ", sorted_list(safe_regs))
         if(len(safe_regs) >= Instrumenter.DESIRED_NUM_REGISTERS):
             return sorted_list(safe_regs)
         
         
-        # 2) Try to use the regiters not yet used uptil now in this method according to tsc
+        # 2) Try to use the registers not yet used uptil now in this method according to tsc
         #get the registers being used in the current line
         line = node["text"][idx]
         cur_line_reg = set(StigmaStringParsingLib.get_v_and_p_numbers(line))
         
-        #if the instruction is a move-result, we cannot use the registers from the preceding invoke line
-        #in our safe registers list
-        if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, line) is not None):
-            prev_line = self.tsc.obtain_previous_instruction(node["node_counter"], idx-1)
-            prev_line_reg = set(StigmaStringParsingLib.get_v_and_p_numbers(prev_line))
-            cur_line_reg = cur_line_reg.union(prev_line_reg)
+        # if the instruction is an invoke or new filled array, we also cannot use the registers
+        # from the subsequent move-result-* instruction, in our safe registers list
+        potential_move_result_line = self.get_subsequent_move_result(node, idx)
+        if(potential_move_result_line != None):
+            potential_move_result_line_regs = set(StigmaStringParsingLib.get_v_and_p_numbers(potential_move_result_line))
+            cur_line_reg = cur_line_reg.union(potential_move_result_line_regs)
+        
+        
+    
     
         line_type_map = node["type_list"][idx-1]
         for i in range(16):
@@ -669,6 +676,7 @@ class SmaliMethodDef:
 
         safe_regs.difference_update(cur_line_reg)
 
+        #print("\tsecond return regs: ", sorted_list(safe_regs))
         if(len(safe_regs) >= Instrumenter.DESIRED_NUM_REGISTERS):
             return sorted_list(safe_regs)
         
@@ -679,22 +687,34 @@ class SmaliMethodDef:
         self.moves_before = [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers")]
         self.moves_after = []
         dest_reg = count
-        for reg in line_type_map:
+        
+        # I sort these before iterating through them so that
+        # from run to run the same registers are used
+        # which facilitates proper testing
+        sorted_reg_list = sorted(line_type_map.keys())
+        for reg in sorted_reg_list:
+            #print("attempting to setup moves with", reg)
             # reg not in cur_line_reg 
             # it looks like that we can use the registers from the current line being processed, however there is a BIG UNSURE
-            if reg not in safe_regs and line_type_map[reg] != '?' and line_type_map[reg] != '64-bit-2' and reg[0] != 'p' and int(reg[1:]) < 16 and reg not in cur_line_reg:
+            if reg not in safe_regs and line_type_map[reg] != '?' \
+                and line_type_map[reg] != '64-bit-2' and reg[0] != 'p' \
+                and int(reg[1:]) < 16 and reg not in cur_line_reg:
+                    
                 #print(str(line_type_map[reg]) + "  " + str(type(line_type_map[reg])))
                 move_instr = line_type_map[reg].get_move_instr()
+                #print("\tselected: ", reg)
                 self.moves_before.append(move_instr("v" + str(dest_reg),reg))
                 self.moves_after.append(move_instr(reg, "v" + str(dest_reg)))
                 safe_regs.add(reg)
                 if(line_type_map[reg] == "64-bit"):
                     dest_reg+=2
+                    safe_regs.add(StigmaStringParsingLib.register_addition(reg, 1))
                 else:
                     dest_reg+=1
             
-            if len(safe_regs) == Instrumenter.DESIRED_NUM_REGISTERS:
+            if len(safe_regs) >= Instrumenter.DESIRED_NUM_REGISTERS:
                 self.moves_after.append(smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers"))
+                self.moves_after.append(smali.BLANK_LINE())
                 return sorted_list(safe_regs)
         
         
@@ -714,9 +734,23 @@ class SmaliMethodDef:
             #self.cfg.show()
             #exit(1)
         
+        # blank these, we shouldn't do any moves if
+        # we aren't going to give free registers
+        # since without any registers we won't do any instrumentation
+        self.moves_before = []
+        self.moves_after = []
         
-        return sorted_list(safe_regs)
+        return [] # just return nothing if it can't be done!
 
+
+    def get_subsequent_move_result(self, node, idx):
+        line = node["text"][idx]
+        if(StigmaStringParsingLib.could_have_a_subsequent_move_result(line)):
+            next_line = self.tsc.obtain_next_instruction(node["node_counter"], idx+1)
+            if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, next_line) is not None):
+                return next_line
+        return None
+        
         
         
     def insert_instrumented_code(self, line, new_block, instrumeter_inserts_original_lines):
@@ -912,8 +946,21 @@ def tests():
     assert(sig.num_of_parameter_registers == 1)
 
 
+    print("\tget_subsequent_move_result...")
     text = open("./test/leakPasswd.smali").readlines()
     smd = SmaliMethodDef(text, None)
+    smd.cfg = ControlFlowGraph(smd.raw_text)
+    smd.tsc = TypeSafetyChecker(smd.signature, smd.cfg)  
+    node = smd.cfg[1]
+    assert(node["text"][16] == "    invoke-virtual {v6, v0}, Ledu/fandm/enovak/leaks/Main;->findViewById(I)Landroid/view/View;\n")
+    result = smd.get_subsequent_move_result(node, 16)
+    assert(result == "    move-result-object v0\n")
+    
+    #print("line: ", node["text"][20])
+    assert(node["text"][20] == "    check-cast v0, Landroid/widget/EditText;\n")
+    result = smd.get_subsequent_move_result(node, 20)
+    assert(result == None)
+    
     
     print("\tfind_first_valid_instruction...")
     assert(smd.find_first_valid_instruction() == 8)

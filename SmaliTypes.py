@@ -4,7 +4,6 @@ import SmaliAssemblyInstructions
 
 
 def from_string(raw_type_string):
-	
 	constructor_map = {"32-bit": ThirtyTwoBit, "Z": Boolean, "B": Byte,
 		"S": Short, "C": Char, "I": Int, "F": Float, 
 		"64-bit": SixtyFourBit, "64-bit-2": SixtyFourBit_2, 
@@ -172,11 +171,11 @@ class SixtyFourBit_2(SixtyFourBit):
 	def get_move_instr(self):
 		raise Exception("No valid move instruction for 64-bit-2: " + str(raw_line_string))
 	
-class Long_2(SixtyFourBit):
+class Long_2(SixtyFourBit_2):
 	def __str__(self):
 		return "J2"
 		
-class Double_2(SixtyFourBit):
+class Double_2(SixtyFourBit_2):
 	def __str__(Self):
 		return "D2"
 
@@ -262,6 +261,21 @@ def main():
 	vague1 = from_string("32-bit")
 	assert(vague1 == "32-bit")
 	assert(isinstance(vague1, ThirtyTwoBit))
+	
+	
+	print("\ttesting 64-bit types...")
+	long_part1 = from_string("J")
+	long_part2 = from_string("J2")
+	
+	assert(str(long_part1) == "J")
+	assert(str(long_part2) == "J2")
+	assert(long_part1 == "J")
+	assert(long_part2 == "J2")
+
+	assert(isinstance(long_part1, Long))
+	assert(isinstance(long_part1, SixtyFourBit))
+	assert(isinstance(long_part2, Long_2))
+	assert(isinstance(long_part2, SixtyFourBit_2))
 	
 	
 	print("\ttesting array types...")

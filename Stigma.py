@@ -1,14 +1,15 @@
-import SmaliClassDef
+
 import os
 import time
 import sys
-from os import listdir
+import os
 import subprocess
-#import multiprocessing
-from subprocess import Popen, PIPE
 import shutil
 import glob
 import tempfile
+
+import SmaliClassDef
+import Instrumenter
 import TaintStorageHandler
 import TaintTrackingInstrumentationPlugin
 
@@ -157,8 +158,8 @@ def runStigma():
         #Progress bar
         print(f'...{str(counter)}/{str(total_files)}', end = '\r')
         counter += 1
+        scd.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)
         scd.instrument()
-        #scd.grow_locals(3)
         
     
     print("...Overwriting smali classes")    

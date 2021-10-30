@@ -47,7 +47,7 @@ class SmaliAssemblyInstruction():
         #print("constructing SmaliAssemblyInstruction From: " + str(raw_line_string))
 
         line = raw_line_string.strip("\n")
-        if(line.strip().startswith("#")):
+        if(StigmaStringParsingLib.is_comment(line)):
             return COMMENT(line)
 
         hash_pos = line.find("#")

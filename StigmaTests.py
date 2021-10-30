@@ -5,6 +5,7 @@ import StigmaStringParsingLib
 import ControlFlowGraph
 import TypeSafetyChecker
 import TaintTrackingInstrumentationPlugin
+import Instrumenter
 
 import sys
 import re
@@ -18,118 +19,9 @@ import subprocess
         
 def type_saftey_checker_test3():
     
-    method_text = '''.method public static A00()I
-    .locals 6
-
-    const-string/jumbo v2, "uniform mat4 uMVPMatrix;\nuniform mat4 uTexMatrix;\nattribute vec4 aPosition;\nattribute vec4 aTextureCoord;\nvarying vec2 vTextureCoord;\nvoid main() {\n    gl_Position = uMVPMatrix * aPosition;\n    vTextureCoord = (uTexMatrix * aTextureCoord).xy;\n}\n"
-
-    const-string v1, "#extension GL_OES_EGL_image_external : require\nprecision mediump float;\nvarying vec2 vTextureCoord;\nuniform samplerExternalOES sTexture;\nvoid main() {\n    gl_FragColor = texture2D(sTexture, vTextureCoord);\n}\n"
-
-    const v0, 0x8b31
-
-    .line 244576
-    invoke-static {v0, v2}, LX/0wH;->A01(ILjava/lang/String;)I
-
-    move-result v2
-
-    const/4 v5, 0x0
-
-    if-nez v2, :cond_0
-
-    return v5
-
-    :cond_0
-    const v0, 0x8b30
-
-    .line 244577
-    invoke-static {v0, v1}, LX/0wH;->A01(ILjava/lang/String;)I
-
-    move-result v1
-
-    if-nez v1, :cond_1
-
-    return v5
-
-    .line 244578
-    :cond_1
-    invoke-static {}, Landroid/opengl/GLES20;->glCreateProgram()I
-
-    move-result v4
-
-    const-string v0, "glCreateProgram"
-
-    .line 244579
-    invoke-static {v0}, LX/0wH;->A04(Ljava/lang/String;)V
-
-    const-string v3, "Grafika"
-
-    if-nez v4, :cond_2
-
-    const-string v0, "Could not create program"
-
-    .line 244580
-    invoke-static {v3, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
-
-    .line 244581
-    :cond_2
-    invoke-static {v4, v2}, Landroid/opengl/GLES20;->glAttachShader(II)V
-
-    const-string v0, "glAttachShader"
-
-    .line 244582
-    invoke-static {v0}, LX/0wH;->A04(Ljava/lang/String;)V
-
-    .line 244583
-    invoke-static {v4, v1}, Landroid/opengl/GLES20;->glAttachShader(II)V
-
-    .line 244584
-    invoke-static {v0}, LX/0wH;->A04(Ljava/lang/String;)V
-
-    .line 244585
-    invoke-static {v4}, Landroid/opengl/GLES20;->glLinkProgram(I)V
-
-    const/4 v2, 0x1
-
-    new-array v1, v2, [I
-
-    const v0, 0x8b82
-
-    .line 244586
-    invoke-static {v4, v0, v1, v5}, Landroid/opengl/GLES20;->glGetProgramiv(II[II)V
-
-    .line 244587
-    aget v0, v1, v5
-
-    if-eq v0, v2, :cond_3
-
-    const-string v0, "Could not link program: "
-
-    .line 244588
-    invoke-static {v3, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
-
-    .line 244589
-    invoke-static {v4}, Landroid/opengl/GLES20;->glGetProgramInfoLog(I)Ljava/lang/String;
-
-    move-result-object v0
-
-    invoke-static {v3, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
-
-    .line 244590
-    invoke-static {v4}, Landroid/opengl/GLES20;->glDeleteProgram(I)V
-
-    return v5
-
-    :cond_3
-    return v4
-    .end method'''
-
-    # calling method_text.split("\n") isn't safe due to the strange 
-    # const-string/jumbo at the beginning of the method (which contains a \n)
-    #method_list = method_text.split("\n")
-    #smd =  SmaliMethodDef.SmaliMethodDef(method_list, None)
-    #print(smd.tsc)
+    # there is a couple weird strings declared at the start of the A00 method
+    scd = SmaliClassDef.SmaliClassDef("./test/0wH.smali")
     
-    scd = SmaliClassDef.SmaliClassDef("/home/ed/research/ift/stigma/APK/0wH.smali")
     
     
 def type_safety_checker_control_flow_test():
@@ -191,6 +83,8 @@ def type_safety_checker_small_constructor_test():
 def type_safety_checker_empty_method_test():
     fh  = open("./test/empty_method.smali", "r")
     method_text = fh.readlines()
+    fh.close()
+    
     smd = SmaliMethodDef.SmaliMethodDef(method_text, None)
     #print("regs: " + str(smd.get_num_registers()))
     assert(smd.get_num_registers() == 1) # "this"
@@ -198,107 +92,12 @@ def type_safety_checker_empty_method_test():
 
 
 def type_safety_checker_action_bar_try_catch_leaks():
-    method_test = '''.method public static setActionBarUpIndicator(Landroid/support/v7/app/ActionBarDrawerToggleHoneycomb$SetIndicatorInfo;Landroid/app/Activity;Landroid/graphics/drawable/Drawable;I)Landroid/support/v7/app/ActionBarDrawerToggleHoneycomb$SetIndicatorInfo;
-    .locals 6
-    .param p0, "info"    # Landroid/support/v7/app/ActionBarDrawerToggleHoneycomb$SetIndicatorInfo;
-    .param p1, "activity"    # Landroid/app/Activity;
-    .param p2, "drawable"    # Landroid/graphics/drawable/Drawable;
-    .param p3, "contentDescRes"    # I
-
-    .line 52
-    new-instance v0, Landroid/support/v7/app/ActionBarDrawerToggleHoneycomb$SetIndicatorInfo;
-
-    invoke-direct {v0, p1}, Landroid/support/v7/app/ActionBarDrawerToggleHoneycomb$SetIndicatorInfo;-><init>(Landroid/app/Activity;)V
-
-    move-object p0, v0
-
-    .line 54
-    iget-object v0, p0, Landroid/support/v7/app/ActionBarDrawerToggleHoneycomb$SetIndicatorInfo;->setHomeAsUpIndicator:Ljava/lang/reflect/Method;
-
-    const-string v1, "ActionBarDrawerToggleHC"
-
-    if-eqz v0, :cond_0
-
-    .line 56
-    :try_start_0
-    invoke-virtual {p1}, Landroid/app/Activity;->getActionBar()Landroid/app/ActionBar;
-
-    move-result-object v0
-
-    .line 57
-    .local v0, "actionBar":Landroid/app/ActionBar;
-    iget-object v2, p0, Landroid/support/v7/app/ActionBarDrawerToggleHoneycomb$SetIndicatorInfo;->setHomeAsUpIndicator:Ljava/lang/reflect/Method;
-
-    const/4 v3, 0x1
-
-    new-array v4, v3, [Ljava/lang/Object;
-
-    const/4 v5, 0x0
-
-    aput-object p2, v4, v5
-
-    invoke-virtual {v2, v0, v4}, Ljava/lang/reflect/Method;->invoke(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;
-
-    .line 58
-    iget-object v2, p0, Landroid/support/v7/app/ActionBarDrawerToggleHoneycomb$SetIndicatorInfo;->setHomeActionContentDescription:Ljava/lang/reflect/Method;
-
-    new-array v3, v3, [Ljava/lang/Object;
-
-    invoke-static {p3}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
-
-    move-result-object v4
-
-    aput-object v4, v3, v5
-
-    invoke-virtual {v2, v0, v3}, Ljava/lang/reflect/Method;->invoke(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;
-    :try_end_0
-    .catch Ljava/lang/Exception; {:try_start_0 .. :try_end_0} :catch_0
-
-    .line 61
-    nop
-
-    .end local v0    # "actionBar":Landroid/app/ActionBar;
-    goto :goto_0
-
-    .line 59
-    :catch_0
-    move-exception v0
-
-    .line 60
-    .local v0, "e":Ljava/lang/Exception;
-    const-string v2, "Couldn\'t set home-as-up indicator via JB-MR2 API"
-
-    invoke-static {v1, v2, v0}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
-
-    .line 61
-    .end local v0    # "e":Ljava/lang/Exception;
-    goto :goto_0
-
-    .line 62
-    :cond_0
-    iget-object v0, p0, Landroid/support/v7/app/ActionBarDrawerToggleHoneycomb$SetIndicatorInfo;->upIndicatorView:Landroid/widget/ImageView;
-
-    if-eqz v0, :cond_1
-
-    .line 63
-    iget-object v0, p0, Landroid/support/v7/app/ActionBarDrawerToggleHoneycomb$SetIndicatorInfo;->upIndicatorView:Landroid/widget/ImageView;
-
-    invoke-virtual {v0, p2}, Landroid/widget/ImageView;->setImageDrawable(Landroid/graphics/drawable/Drawable;)V
-
-    goto :goto_0
-
-    .line 65
-    :cond_1
-    const-string v0, "Couldn\'t set home-as-up indicator"
-
-    invoke-static {v1, v0}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;)I
-
-    .line 67
-    :goto_0
-    return-object p0
-    .end method'''
-    method_list = method_test.split("\n")
+    fh = open("./test/setActionBarUp_method.smali", "r")
+    method_list = fh.readlines()
+    fh.close()
+    
     smd = SmaliMethodDef.SmaliMethodDef(method_list, None)
+    # not crashing is enough for this test apparently
 
 #catch label can be :catch_0 format or also :catchall
 def type_safety_checker_leaks_test():
@@ -318,57 +117,6 @@ def type_safety_checker_aget_test():
     scd.instrument()
 
 
-def type_safety_checker_aget_test3():
-    method_text = '''.method private static getOrdering(I)I
-    .locals 3
-    .param p0, "categoryOrder"    # I
-
-    .line 785
-    const/high16 v0, -0x10000
-
-    and-int/2addr v0, p0
-
-    shr-int/lit8 v0, v0, 0x10
-
-    .line 787
-    .local v0, "index":I
-    if-ltz v0, :cond_0
-
-    sget-object v1, Landroid/support/v7/view/menu/MenuBuilder;->sCategoryToOrder:[I
-
-    array-length v2, v1
-
-    if-ge v0, v2, :cond_0
-
-    .line 791
-    aget v1, v1, v0
-
-    shl-int/lit8 v1, v1, 0x10
-
-    const v2, 0xffff
-
-    and-int/2addr v2, p0
-
-    or-int/2addr v1, v2
-
-    return v1
-
-    .line 788
-    :cond_0
-    new-instance v1, Ljava/lang/IllegalArgumentException;
-
-    const-string v2, "order does not contain a valid category."
-
-    invoke-direct {v1, v2}, Ljava/lang/IllegalArgumentException;-><init>(Ljava/lang/String;)V
-
-    throw v1
-    .end method'''
-    
-    method_list = method_text.split("\n")
-    print("Building SMD")
-    smd = SmaliMethodDef.SmaliMethodDef(method_list, None)
-    print("Instrumenting")
-    smd.instrument()
 
 
 def type_safety_checker_aget2_test():
@@ -1450,7 +1198,7 @@ def stigma_leaks_crash_SupportActivity():
     
     
 def double_move_result_bug():
-    print("\nRunning basic wholistic taint tracking instrumentation tests...")
+    print("\nRunning basic wholistic taint tracking instrumentation tests (double move result bug)...")
     
     scd = SmaliClassDef.SmaliClassDef("./test/double_move_result_line.smali")
     putExtraData_method = scd.methods[0]
@@ -1460,7 +1208,7 @@ def double_move_result_bug():
     #print(putExtraData_method.get_register_meta_data())
     assert(putExtraData_method.get_register_meta_data() == "['v0', 'v1', 'v2/p0', 'v3/p1']")
 
-    
+    scd.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)
     scd.instrument()
     scd.write_to_file("./test/double_move_result_line_result.smali")
     
@@ -1477,7 +1225,102 @@ def double_move_result_bug():
     
     print("passed!")
     
-    
+def wide_register_index_out_of_range_bug():
+	print("\nRunning wide register index out of range bug")
+	
+	# I think the bug is related to the move-wide for p3 (the second part of the last (wide) parameter)
+	scd = SmaliClassDef.SmaliClassDef("./test/binarySearch_method.smali")
+	binarySearchMethod = scd.methods[0]
+	#print(binarySearchMethod.get_register_meta_data())
+	scd.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)
+	#print(binarySearchMethod.get_register_meta_data())
+	
+	scd.write_to_file("./test/binarySearch_method_result.smali")
+	
+	result_fh = open("./test/binarySearch_method_result.smali")
+	result = result_fh.readlines()
+	result_fh.close()
+	
+	solution_fh = open("./test/binarySearch_method_soln.smali")
+	solution = solution_fh.readlines()
+	solution_fh.close()
+	
+	assert(result == solution)
+	
+	print("passed!")
+	
+	
+def get_class_from_non_reference_register_bug():
+	
+	print("\nRunning get class from non reference register bug")
+	
+	scd = SmaliClassDef.SmaliClassDef("./test/endAnimatingAwayFragments_method.smali")
+	endAnimatingMethod = scd.methods[0]
+	#print("before growth")
+	#print(endAnimatingMethod)
+	#print(endAnimatingMethod.get_register_meta_data())
+	#print("\n\n")
+	
+	scd.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)
+
+	#print("after growth")
+	#print(endAnimatingMethod)
+	#print(endAnimatingMethod.get_register_meta_data())
+	
+	scd.instrument()
+	scd.write_to_file("./test/endAnimatingAwayFragments_method_result.smali")
+	
+	# there was a bug demonstrated by this method.  The system was using
+	# the registers as "free_regs" even if they were used on a subsequent
+	# move-result-* instruction (re: invoke-* and filled-new-array operations)
+	
+	fh = open("./test/endAnimatingAwayFragments_method_result.smali", "r")
+	result = fh.readlines()
+	fh.close()
+	
+	fh = open("./test/endAnimatingAwayFragments_method_soln.smali", "r")
+	soln = fh.readlines()
+	fh.close()
+	
+	print(soln)
+	
+	assert(result == soln)
+	
+	print("passed!")
+	
+	
+def register_shuffling_test():
+	print("\nRunning register shuffling test")
+	
+	scd = SmaliClassDef.SmaliClassDef("./test/custom_class.smali")
+	made_up_method = scd.methods[0]
+	print(made_up_method.get_register_meta_data())
+	assert(made_up_method.get_register_meta_data() == str(['v0', 'v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9', 'v10', 'v11', 'v12', 'v13', 'v14', 'v15', 'v16/p0', 'v17/p1', 'v18/p2', 'v19/p3']))
+	
+	scd.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)
+	
+	print(made_up_method.get_register_meta_data())
+	assert(made_up_method.get_register_meta_data() == str(['v0', 'v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9', 'v10', 'v11', 'v12', 'v13', 'v14', 'v15', 'v16/p0', 'v17/p1', 'v18/p2', 'v19/p3', 'v20', 'v21', 'v22', 'v23']))
+	
+	scd.instrument()
+	scd.write_to_file("./test/custom_class_result.smali")
+	
+	
+	fh = open("./test/endAnimatingAwayFragments_method_result.smali", "r")
+	result = fh.readlines()
+	fh.close()
+	
+	fh = open("./test/endAnimatingAwayFragments_method_soln.smali", "r")
+	soln = fh.readlines()
+	fh.close()
+	
+	assert(result == soln)
+	
+	print("passed!")
+	
+	
+	
+	
 def internal_tests():
 	
 	print("--Running Internal Tests--")
@@ -1527,7 +1370,6 @@ def main():
     
     type_safety_checker_aget_test()
     #type_safety_checker_aget2_test()
-    #type_safety_checker_aget_test3()
     #type_safety_checker_leaks_test()
     
     #type_safety_weather_app_test()
@@ -1554,6 +1396,9 @@ def main():
     
     stigma_leaks_crash_SupportActivity()
     double_move_result_bug()
+    wide_register_index_out_of_range_bug()
+    get_class_from_non_reference_register_bug()
+    register_shuffling_test()
     
     print("\n\n")
     print("+-------------------+")
