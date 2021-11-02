@@ -12,7 +12,8 @@ __pycache__/
 *.so
 
 # Smali test files
-*.smali
+# include these so tests function
+#*.smali
 
 # Distribution / packaging
 .Python
