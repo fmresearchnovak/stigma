@@ -660,7 +660,8 @@ def MOVE_instrumentation(scd, m, cur_line, free_reg):
 
 def MOVE_special_instrumentation(scd, m, cur_line, free_reg):
     # when calling grow locals some new moves are inserted which
-    # are a special edge-case.  Consider the exmaple below (after grow)
+    # are a special edge-case.  Consider the example below 
+    #   (Example show is after grow() but before instrumentation)
 
     '''
     .method private prependToLog(Ljava/lang/String;)V
@@ -678,7 +679,14 @@ def MOVE_special_instrumentation(scd, m, cur_line, free_reg):
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
     '''
-
+    # 0
+    # Use the free_reg list given as all other instrumentation does
+    # THIS SOLUTION DOES NOT WORK because the system assumes that the
+    # free registers (at the top, created by grow()) are open
+    # but actually they are not yet becuase all of the special-case
+    # moves have not yet been done.  (if the number of parameter 
+    # registers is MORE than the number passed to grow()
+    #
     # 1
     # a proposed solution is that we can use the destination register
     # for the tag propagation real quick before it is used to
@@ -694,10 +702,37 @@ def MOVE_special_instrumentation(scd, m, cur_line, free_reg):
     #   if v0 is not used in the method, then the method has no code?
     #   in such a situation .locals = 0 and there are no parameters 
     #   (if there were parameters, p0 would be v0)
+    # THIS SOLUTION DOES NOT WORK when there are multiple parameters
+    # and the first parameter is moved to p0.  Then, v0 will be used to
+    # store the tag of the first parameter fine, but v0 is then _also_
+    # used for tag propagation of subsequent parameters thereby 
+    # causing it to have the wrong value when it is used later, 
+    # by the original program.
+    #
+    # 3
+    # another solution is to reverse the order of the parameter moves
+    # AND to use v0.  If p0 is moved to v0, it will happen last 
+    # THIS SOLUTION DOES NOT WORK when there are more parameters
+    # than the growth factor
+    # suppose
+    # .locals = 1, there are 5 p registers, and we just grew(4), 
+    # we would have:
+    # v0, v1, v2, v3, v4, v5, v6, v7, v8, v9
+    #                     p0, p1, p2, p3, p4
+    # if we move p4 first it will overwrite the value in v5
+    # then when we move p0 down to v1 it will have the wrong value in it
+    #
+    # 4
+    # another solution is to use v0, and edit grow_locals so that
+    # it adds an extra "move-object v0, pX" (if necessary) at the end.
+    # This seems like a bad solution since it breaks the core <-> plugin 
+    # interface and feels really hacky / messy.  But it does seem like 
+    # it would work
+    
 
     #tokens = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
     #free_reg = tokens[0] # solution 1
-    free_reg = "v0" # solution 2
+    free_reg = "v0" # solution 2 and 3 and 4
     return MOVE_instrumentation(scd, m, cur_line, [free_reg])
 
     

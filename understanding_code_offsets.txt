@@ -205,3 +205,207 @@ In this method:
 .end method
 
 is referring to the line: move-object v0, v1
+
+
+
+
+
+This error: java.lang.VerifyError: Verifier rejected class android.support.v4.app.SupportActivity: void android.support.v4.app.SupportActivity.onCreate(android.os.Bundle) failed to verify: void android.support.v4.app.SupportActivity.onCreate(android.os.Bundle): [0xE] tried to get class from non-reference register v0 (type=Float)
+
+
+in this method:
+
+.method protected onCreate(Landroid/os/Bundle;)V
+    .locals 4
+    .param p1, "savedInstanceState"    # Landroid/os/Bundle;
+
+    .line 75
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    
+    sget v0, Lnet/stigmastorage/StorageClass8;->android_support_v4_app_SupportActivity_onCreate_p0:F
+    
+    sput v0, Lnet/stigmastorage/StorageClass9;->android_support_v4_app_SupportActivity_onCreate_v0:F
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    
+    move-object/16 v0, p0
+    
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    
+    sget v0, Lnet/stigmastorage/StorageClass8;->android_support_v4_app_SupportActivity_onCreate_p1:F
+    
+    sput v0, Lnet/stigmastorage/StorageClass9;->android_support_v4_app_SupportActivity_onCreate_v1:F
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    
+    move-object/16 v1, p1
+    
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    
+    invoke-super {v0, v1}, Landroid/app/Activity;->onCreate(Landroid/os/Bundle;)V
+
+    .line 76
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for INTERNAL METHOD
+    
+    sget v2, Lnet/stigmastorage/StorageClass9;->android_support_v4_app_SupportActivity_onCreate_v0:F
+    
+    sput v2, Lnet/stigmastorage/StorageClass9;->android_arch_lifecycle_ReportFragment_injectIfNeededIn_p0:F
+    
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for INTERNAL METHOD
+    
+    invoke-static {v0}, Landroid/arch/lifecycle/ReportFragment;->injectIfNeededIn(Landroid/app/Activity;)V
+
+    .line 77
+    return-void
+.end method
+
+is referring to line: invoke-super {v0, v1}, Landroid/app/Activity;->onCreate(Landroid/os/Bundle;)V
+
+
+
+
+This error: java.lang.VerifyError: Verifier rejected class android.support.v4.app.FragmentActivity: android.view.View android.support.v4.app.FragmentActivity.dispatchFragmentsOnCreateView(android.view.View, java.lang.String, android.content.Context, android.util.AttributeSet) failed to verify: android.view.View android.support.v4.app.FragmentActivity.dispatchFragmentsOnCreateView(android.view.View, java.lang.String, android.content.Context, android.util.AttributeSet): [0x27] cannot access instance field android.support.v4.app.FragmentController android.support.v4.app.FragmentActivity.mFragments from object of type Reference: android.util.AttributeSet
+
+in this method:
+.method final dispatchFragmentsOnCreateView(Landroid/view/View;Ljava/lang/String;Landroid/content/Context;Landroid/util/AttributeSet;)Landroid/view/View;
+    .locals 5
+    .param p1, "parent"    # Landroid/view/View;
+    .param p2, "name"    # Ljava/lang/String;
+    .param p3, "context"    # Landroid/content/Context;
+    .param p4, "attrs"    # Landroid/util/AttributeSet;
+
+    .line 405
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    
+    sget v0, Lnet/stigmastorage/StorageClass8;->android_support_v4_app_FragmentActivity_dispatchFragmentsOnCreateView_p4:F
+    
+    sput v0, Lnet/stigmastorage/StorageClass8;->android_support_v4_app_FragmentActivity_dispatchFragmentsOnCreateView_v5:F
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    
+    move-object/16 v5, p4
+    
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    
+    sget v0, Lnet/stigmastorage/StorageClass8;->android_support_v4_app_FragmentActivity_dispatchFragmentsOnCreateView_p3:F
+    
+    sput v0, Lnet/stigmastorage/StorageClass8;->android_support_v4_app_FragmentActivity_dispatchFragmentsOnCreateView_v4:F
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    
+    move-object/16 v4, p3
+    
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    
+    sget v0, Lnet/stigmastorage/StorageClass8;->android_support_v4_app_FragmentActivity_dispatchFragmentsOnCreateView_p2:F
+    
+    sput v0, Lnet/stigmastorage/StorageClass8;->android_support_v4_app_FragmentActivity_dispatchFragmentsOnCreateView_v3:F
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    
+    move-object/16 v3, p2
+    
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    
+    sget v0, Lnet/stigmastorage/StorageClass8;->android_support_v4_app_FragmentActivity_dispatchFragmentsOnCreateView_p1:F
+    
+    sput v0, Lnet/stigmastorage/StorageClass8;->android_support_v4_app_FragmentActivity_dispatchFragmentsOnCreateView_v2:F
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    
+    move-object/16 v2, p1
+    
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    
+    sget v0, Lnet/stigmastorage/StorageClass8;->android_support_v4_app_FragmentActivity_dispatchFragmentsOnCreateView_p0:F
+    
+    sput v0, Lnet/stigmastorage/StorageClass8;->android_support_v4_app_FragmentActivity_dispatchFragmentsOnCreateView_v1:F
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    
+    move-object/16 v1, p0
+    
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
+    
+    sget v6, Lnet/stigmastorage/StorageClass8;->android_support_v4_app_FragmentActivity_v1_mFragments:F
+    
+    sput v6, Lnet/stigmastorage/StorageClass8;->android_support_v4_app_FragmentActivity_dispatchFragmentsOnCreateView_v0:F
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
+    
+    iget-object v0, v1, Landroid/support/v4/app/FragmentActivity;->mFragments:Landroid/support/v4/app/FragmentController;
+
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for INTERNAL METHOD
+    
+    sget v6, Lnet/stigmastorage/StorageClass8;->android_support_v4_app_FragmentActivity_dispatchFragmentsOnCreateView_v0:F
+    
+    sput v6, Lnet/stigmastorage/StorageClass8;->android_support_v4_app_FragmentController_onCreateView_p0:F
+    
+    sget v6, Lnet/stigmastorage/StorageClass8;->android_support_v4_app_FragmentActivity_dispatchFragmentsOnCreateView_v2:F
+    
+    sput v6, Lnet/stigmastorage/StorageClass8;->android_support_v4_app_FragmentController_onCreateView_p1:F
+    
+    sget v6, Lnet/stigmastorage/StorageClass8;->android_support_v4_app_FragmentActivity_dispatchFragmentsOnCreateView_v3:F
+    
+    sput v6, Lnet/stigmastorage/StorageClass8;->android_support_v4_app_FragmentController_onCreateView_p2:F
+    
+    sget v6, Lnet/stigmastorage/StorageClass8;->android_support_v4_app_FragmentActivity_dispatchFragmentsOnCreateView_v4:F
+    
+    sput v6, Lnet/stigmastorage/StorageClass8;->android_support_v4_app_FragmentController_onCreateView_p3:F
+    
+    sget v6, Lnet/stigmastorage/StorageClass8;->android_support_v4_app_FragmentActivity_dispatchFragmentsOnCreateView_v5:F
+    
+    sput v6, Lnet/stigmastorage/StorageClass8;->android_support_v4_app_FragmentController_onCreateView_p4:F
+    
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for INTERNAL METHOD
+    
+    invoke-virtual {v0, v2, v3, v4, v5}, Landroid/support/v4/app/FragmentController;->onCreateView(Landroid/view/View;Ljava/lang/String;Landroid/content/Context;Landroid/util/AttributeSet;)Landroid/view/View;
+    
+    move-result-object v0
+    
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE-RESULT
+    
+    sget v6, Lnet/stigmastorage/StorageClass8;->android_support_v4_app_FragmentController_return_field:F
+    
+    sput v6, Lnet/stigmastorage/StorageClass8;->android_support_v4_app_FragmentActivity_dispatchFragmentsOnCreateView_v0:F
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE-RESULT
+    
+
+
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for RETURN
+    
+    sget v6, Lnet/stigmastorage/StorageClass8;->android_support_v4_app_FragmentActivity_dispatchFragmentsOnCreateView_v0:F
+    
+    sput v6, Lnet/stigmastorage/StorageClass5;->android_support_v4_app_FragmentActivity_return_field:F
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for RETURN
+    
+    return-object v0
+.end method
+
+is referring to line: iget-object v0, v1, Landroid/support/v4/app/FragmentActivity;->mFragments:Landroid/support/v4/app/FragmentController;

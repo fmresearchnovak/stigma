@@ -84,8 +84,6 @@ class SmaliClassDef:
             #
             #print("idx: " + str(idx))
             idx = idx + 1
-
-    
         
     @staticmethod
     def is_function(line):
@@ -317,6 +315,13 @@ class SmaliClassDef:
         return self.class_name == other.class_name
 
 
+
+class MockSmaliClassDef(SmaliClassDef):
+    def __init__(self):
+        self.class_name = "LMockClass;"
+        
+    def get_other_class(self, other):
+        return None
 
 
 

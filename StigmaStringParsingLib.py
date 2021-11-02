@@ -87,24 +87,34 @@ def get_num_registers(line):
     return number_registers
     
     
+def get_range_start_and_end(line):
+    range_spec = re.search(r"{(.+)}", line).group(0)
+    #print("range_spec: " + str(range_spec))
+    parts = range_spec.split("..")
+    #print("parts: " + str(parts))
+    start = parts[0].strip(" {")
+    end = parts[1].strip(" }")
+    
+    return [start, end]
+    
+
 
 def get_v_and_p_numbers(line):
 
     tokens = break_into_tokens(line)
     if "range" in tokens[0]:
-        range_spec = re.search(r"{(.+)}", line).group(0)
-        #print("range_spec: " + str(range_spec))
-        parts = range_spec.split("..")
-        #print("parts: " + str(parts))
-        start = parts[0].strip(" {")
-        end = parts[1].strip(" }")
+        start, end = get_range_start_and_end(line)
         
+        # careful!  sometimes there might be a p in there!
         # invoke-static/range {v0 .. v7} => [v0, v7]
         # invoke-static/range {v1 .. p0} => [v1, p0]
-        # This is on purpose.  Everything that calls get_v_and_p_numbers()
-        # should know that it outputs only registers EXPLICITLY listed
-        # in the instruction
-        return [start, end]
+        if("p" in start or "p" in end):
+            raise ValueError("Cannot determine registers in line: " + str(line))
+            
+        start_num = int(start[1:])
+        end_num = int(end[1:])
+        registers = ["v" + str(num) for num in range(start_num, end_num+1)]
+        return registers
 
 
     else:    
@@ -349,8 +359,15 @@ def main():
 
     assert(get_v_and_p_numbers("const-string v1, \"Parcelables cannot be written to an OutputStream\"\n") == ["v1"])
     assert(get_v_and_p_numbers("filled-new-array {v0, v1, v2}, [Ljava/lang/String;\n") == ["v0", "v1", "v2"])
-    assert(get_v_and_p_numbers("invoke-static/range {v0 .. v7}, Lcom/example/class1;->foo()Z;") == ["v0", "v7"])
-    assert(get_v_and_p_numbers("invoke-static/range {v3 .. p1}, Lcom/example/class1;->foo()Z;") == ["v3", "p1"])
+    #print(get_v_and_p_numbers("invoke-static/range {v0 .. v7}, Lcom/example/class1;->foo()Z;"))
+    assert(get_v_and_p_numbers("invoke-static/range {v0 .. v7}, Lcom/example/class1;->foo()Z;") == ["v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7"])
+    
+    try:
+        get_v_and_p_numbers("invoke-static/range {v3 .. p1}, Lcom/example/class1;->foo()Z;") == ["v3", "p1"]
+        assert(False)
+    except:
+        pass
+    
 
     assert(get_p_numbers("const-string p0, \"Parcelables cannot be written to an OutputStream\"\n") == ["p0"])
     assert(get_p_numbers("filled-new-array {v0, p1, v2}, [Ljava/lang/String;\n") == ["p1"])

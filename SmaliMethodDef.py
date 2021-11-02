@@ -220,8 +220,8 @@ class SmaliMethodDef:
     def grow_locals(self, n):
         # grows the .locals from the current value such that there are
         # n new registers in the method
-        # moves the parameters so that they don't incur maximum register value
-        # issues when used in instructions
+        # moves the parameters so that they don't incur maximum register 
+        # value issues when used in instructions
 
         # Only registers v0 - v15 are allowed for general purpose use.
         # This is enforced by apktool.  The documentation indicates that
@@ -305,21 +305,28 @@ class SmaliMethodDef:
 
         #print("method: ", str(self))
         #print(self.signature.parameter_type_map)
+        orig_p_loc = old_locals_num
         for param in self.signature.parameter_type_map:
             param_type_obj = self.signature.parameter_type_map[param]
             #print("smali type object: " + str(param_type_obj) + "  :  " + str(type(param_type_obj)) + "   get_generic_type: " + str(param_type_obj.get_generic_type()))            
             if (not isinstance(param_type_obj, SmaliTypes.SixtyFourBit_2)):
                 mv_cmd = param_type_obj.get_move_instr()
-                mv_cmd = mv_cmd("v" + str(old_locals_num), param)
-                mv_cmd.targeted_for_instrumentation = False
+                mv_cmd = mv_cmd("v" + str(orig_p_loc), param)
                 
                 block.append(mv_cmd)
                 block.append(smali.BLANK_LINE())
                 
-            old_locals_num += 1
+            orig_p_loc += 1
 
 
         if(len(block) != 0):
+            # make a copy of the first move instruction
+            # see the elaborate comments / solution 4 in 
+            # TaintTrackingInstrumentationPlugin.MOVE_special_instrumentation()
+            if(old_locals_num == 0):
+                block.append(block[0]) 
+                
+            # put the comments in place
             block = Instrumenter.make_comment_block("for moving parameters") + block
             block = block + Instrumenter.make_comment_block("for moving parameters")
         
@@ -361,8 +368,12 @@ class SmaliMethodDef:
         # For example...
         # const-string vX, "bad string p0 v2"
         
-        opcode = StigmaStringParsingLib.break_into_tokens(line)[0]            
-        regs = StigmaStringParsingLib.get_v_and_p_numbers(line)
+        opcode = StigmaStringParsingLib.break_into_tokens(line)[0]    
+        
+        try:        
+            regs = StigmaStringParsingLib.get_v_and_p_numbers(line)
+        except:
+            regs = StigmaStringParsingLib.get_range_start_and_end(line)
 
         for r in regs:
             if r[0] == "p":
@@ -489,7 +500,6 @@ class SmaliMethodDef:
 
                 
     def instrument(self):
-                        
         #dont instrument methods without any text
         if(len(self.raw_text) < 3):
             return
@@ -549,7 +559,6 @@ class SmaliMethodDef:
     def _do_instrumentation_plugins(self, node, line, idx):
         self.moves_before = []
         self.moves_after = []
-        
         opcode = StigmaStringParsingLib.extract_opcode(line)        
         #1)        
             # we need to know if we are in a try block so we can avoid
@@ -565,7 +574,7 @@ class SmaliMethodDef:
             self.instrumented_code.append(line)
             return
         
-        #2  
+        #2)  
             # if a line begins with "move-result", it has already been processed 
             # by the instrumenter of its preceding opcode (i.e., an invoke instruction)
             #
@@ -597,8 +606,11 @@ class SmaliMethodDef:
             regs = self.gen_list_of_safe_registers(node, idx) 
             
             line_type_map = node["type_list"][idx-1]
+            #print("\nline: ", line.strip())
             #print("type_map: ", line_type_map)
-            #print("free regs:", regs)       
+            #print("free regs:", regs)
+            #print(self.get_register_meta_data())
+            #input("continue?") 
             
             
             #if we are unable to get enough free registers, worse case possible if all the types are ?
