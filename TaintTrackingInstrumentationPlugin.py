@@ -525,11 +525,10 @@ def EXTERNAL_FUNCTION_instrumentation(scd, m, cur_lines, free_reg):
     block = block + Instrumenter.make_merge_block(scd, m, param_regs, taint_loc_dest, free_reg)
     block = block + Instrumenter.make_comment_block("for EXTERNAL METHOD")
     
-    # .rstrip() is necessary to remove \n characters
+
     block.append(cur_lines[0])
     block.append(smali.BLANK_LINE())
-    block.append(cur_lines[2].rstrip())
-    
+    block.append(cur_lines[2])
     return block
 
 
@@ -658,7 +657,7 @@ def MOVE_instrumentation(scd, m, cur_line, free_reg):
     
     return block
 
-def MOVE_special_instrumentation(scd, m, cur_line, free_reg):
+def MOVE_special_instrumentation(scd, m):
     # when calling grow locals some new moves are inserted which
     # are a special edge-case.  Consider the example below 
     #   (Example show is after grow() but before instrumentation)
@@ -728,12 +727,60 @@ def MOVE_special_instrumentation(scd, m, cur_line, free_reg):
     # This seems like a bad solution since it breaks the core <-> plugin 
     # interface and feels really hacky / messy.  But it does seem like 
     # it would work
+    # THIS SOLUTION DOES NOT WORK when there are more than 5 params
+    # v0, v1, v2, v3, v4, v5, v6, v7, v8, v9
+    #                 p0  p1  p2  p3  p4  p5
+    # p0 gets moved to v0
+    # p1 gets moved to v1
+    # ...
+    # p5 gets moved to v4
+    # then the extra line:
+    # p0 gets moved to v0, but p0 = v4 and so it was overwritten with
+    # different data in the previous move (of p5   
+    #
+    # 5
+    # another solution is to do an extra move-object v0, pX immediately
+    # after the first move instruction if the first instruction does
+    # involve v0 at all.  This can be achieved if this function
+    # signs up with instrumeter_inserts_original_lines = True
+    # THIS SOLUTION DOES NOT WORK because the subsequent instructions
+    # will continue to use / overwrite v0 for purposes of tag propagation
+    #
+    # 6
+    # another solution is to do all the tag propagation first
+    # before even the parameter moving instructions
+    # we'll use v0
+    # this requires a new signup
+    # sign_up_method_start
     
+    print("m: ", m)
+    print("params: ", m.signature.parameter_type_map)
+    print("num params: ", m.signature.num_of_parameters)
+    print("num param registers: ", m.signature.num_of_parameter_registers)
+    print("old locals num: ", m.old_locals_num)
 
     #tokens = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
     #free_reg = tokens[0] # solution 1
-    free_reg = "v0" # solution 2 and 3 and 4
-    return MOVE_instrumentation(scd, m, cur_line, [free_reg])
+    free_reg = "v0"
+    dest_reg_num = m.old_locals_num
+    
+    block = Instrumenter.make_comment_block("for METHOD START")
+    
+    for p_reg in m.signature.parameter_type_map:
+        taint_field_src = storage_handler.add_taint_location(scd.class_name, m.get_name(), p_reg)
+        taint_field_dest = storage_handler.add_taint_location(scd.class_name, m.get_name(), "v" + str(dest_reg_num))
+        dest_reg_num += 1
+        
+        block.append(smali.SGET(free_reg, taint_field_src))
+        block.append(smali.BLANK_LINE())
+        block.append(smali.SPUT(free_reg, taint_field_dest))
+        block.append(smali.BLANK_LINE())
+        
+    
+    block = block + Instrumenter.make_comment_block("for METHOD START")
+    
+    return block
+
 
     
 def NEW_INSTANCE_instrumentation(scd, m, cur_line, free_reg):
@@ -962,14 +1009,18 @@ def INVOKE_instrumentation(scd, m, cur_lines, free_reg):
             
     else: # multiple-lines
         return MOVE_RESULT_instrumentation(scd, m, cur_lines, free_reg)
-        
-        
 
         
     return [cur_lines]
     
     
 def main():
+    
+    # these are special cases because the grow_locals algorithm
+    # writes some move(s) which cannot use the typical "free registers"
+    # see the move_special_instrumentation for more details
+    Instrumenter.sign_up_method_start(MOVE_special_instrumentation)
+    
     
     #sget
     Instrumenter.sign_up("sget", SGET_instrumentation)
@@ -1045,20 +1096,13 @@ def main():
     #move 
     Instrumenter.sign_up("move", MOVE_instrumentation)
     Instrumenter.sign_up("move/from16", MOVE_instrumentation)
-
+    Instrumenter.sign_up("move/16", MOVE_instrumentation)
     Instrumenter.sign_up("move-wide", MOVE_instrumentation)
     Instrumenter.sign_up("move-wide/from16", MOVE_instrumentation)
-
+    Instrumenter.sign_up("move-wide/16", MOVE_instrumentation)
     Instrumenter.sign_up("move-object", MOVE_instrumentation)
     Instrumenter.sign_up("move-object/from16", MOVE_instrumentation)
-
-
-    # these are special cases because the grow_locals algorithm
-    # writes some move(s) which cannot use the typical "free registers"
-    # see the move_special_instrumentation for more details
-    Instrumenter.sign_up("move/16", MOVE_special_instrumentation)
-    Instrumenter.sign_up("move-wide/16", MOVE_special_instrumentation)
-    Instrumenter.sign_up("move-object/16", MOVE_special_instrumentation)
+    Instrumenter.sign_up("move-object/16", MOVE_instrumentation)
     
     #const 
     Instrumenter.sign_up("const", CONST_instrumentation)

@@ -9,27 +9,23 @@
 
     .line 69
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    # IFT INSTRUCTIONS ADDED BY STIGMA for METHOD START
     
     sget v0, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_leaks_DoubleMoveResultTestClass_putExtraData_p0:F
     
     sput v0, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_leaks_DoubleMoveResultTestClass_putExtraData_v2:F
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
-    
-    move-object/16 v2, p0
-    
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
-    
     sget v0, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_leaks_DoubleMoveResultTestClass_putExtraData_p1:F
     
     sput v0, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_leaks_DoubleMoveResultTestClass_putExtraData_v3:F
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for METHOD START
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    
+    move-object/16 v2, p0
     
     move-object/16 v3, p1
     
@@ -63,6 +59,7 @@
     invoke-virtual {v3}, Ljava/lang/Object;->getClass()Ljava/lang/Class;
     
     move-result-object v1
+
 
     invoke-virtual {v0, v1, v3}, Landroid/support/v4/util/SimpleArrayMap;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
 

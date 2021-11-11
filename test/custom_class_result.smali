@@ -24,38 +24,33 @@
     .locals 20
 
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    # IFT INSTRUCTIONS ADDED BY STIGMA for METHOD START
     
     sget v0, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_MockClass_MyMadeUpMethod_p0:F
     
     sput v0, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_MockClass_MyMadeUpMethod_v16:F
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
-    
-    move-object/16 v16, p0
-    
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
-    
     sget v0, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_MockClass_MyMadeUpMethod_p1:F
     
     sput v0, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_MockClass_MyMadeUpMethod_v17:F
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
-    
-    move/16 v17, p1
-    
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
     
     sget v0, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_MockClass_MyMadeUpMethod_p2:F
     
     sput v0, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_MockClass_MyMadeUpMethod_v18:F
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    sget v0, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_MockClass_MyMadeUpMethod_p3:F
+    
+    sput v0, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_MockClass_MyMadeUpMethod_v19:F
+    
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for METHOD START
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    
+    move-object/16 v16, p0
+    
+    move/16 v17, p1
     
     move-wide/16 v18, p2
     
@@ -233,7 +228,7 @@
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     move/16 v20, v0
     move-wide/16 v21, v10
-    move-wide/16 v23, v12
+    move/16 v23, v2
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for INTERNAL METHOD
     
@@ -247,7 +242,7 @@
     invoke-static {v1}, Ledu/fandm/enovak/MockClass;->OtherMethod(I)I
     move/16 v0, v20
     move-wide/16 v10, v21
-    move-wide/16 v12, v23
+    move/16 v2, v23
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
 
@@ -293,29 +288,20 @@
     .locals 4
 
     
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for METHOD START
+    
+    sget v0, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_MockClass_OtherMethod_p0:F
+    
+    sput v0, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_MockClass_OtherMethod_v0:F
+    
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for METHOD START
+    
     # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
-    
-    sget v0, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_MockClass_OtherMethod_p0:F
-    
-    sput v0, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_MockClass_OtherMethod_v0:F
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
-    
     move/16 v0, p0
     
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
-    
-    sget v0, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_MockClass_OtherMethod_p0:F
-    
-    sput v0, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_MockClass_OtherMethod_v0:F
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
-    
-    move/16 v0, p0
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
     

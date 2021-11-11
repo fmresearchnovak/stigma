@@ -77,7 +77,6 @@
     
     move-object/16 v0, p0
     
-    move-object/16 v0, p0
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
@@ -105,7 +104,6 @@
     
     move-object/16 v0, p0
     
-    move-object/16 v0, p0
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
     

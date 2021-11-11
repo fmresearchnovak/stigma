@@ -1,0 +1,9 @@
+Implement a SmaliRegister class that can do things like
+	register addition
+	is_wide
+	is_high_numbered()
+	etc.
+
+All instrumenters should be given a list of lines (maybe one line, but a list).
+
+Change the signup method in the Instrumenter to include how many registered are needed by that instrumenter signing up

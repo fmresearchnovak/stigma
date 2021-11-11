@@ -9,16 +9,17 @@
 
     .line 2671
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    # IFT INSTRUCTIONS ADDED BY STIGMA for METHOD START
     
     sget v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_p0:F
     
     sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v12:F
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for METHOD START
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     move-object/16 v12, p0
     
@@ -94,6 +95,7 @@
     invoke-virtual {v0}, Landroid/util/SparseArray;->size()I
     
     move-result v0
+
 
     .line 2672
     .local v0, "numFragments":I
@@ -173,6 +175,7 @@
     
     move-result-object v2
 
+
     check-cast v2, Landroid/support/v4/app/Fragment;
 
     .line 2674
@@ -224,6 +227,7 @@
     
     move-result-object v3
 
+
     
     # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
@@ -271,6 +275,7 @@
     
     move-result v9
 
+
     .line 2678
     .local v9, "stateAfterAnimating":I
     
@@ -290,6 +295,7 @@
     
     move-result-object v10
 
+
     .line 2679
     .local v10, "animatingAway":Landroid/view/View;
     
@@ -308,6 +314,7 @@
     invoke-virtual {v10}, Landroid/view/View;->getAnimation()Landroid/view/animation/Animation;
     
     move-result-object v11
+
 
     .line 2680
     .local v11, "animation":Landroid/view/animation/Animation;
@@ -492,6 +499,7 @@
     
     move-result-object v3
 
+
     
     # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
@@ -538,6 +546,7 @@
     invoke-virtual {v2}, Landroid/support/v4/app/Fragment;->getAnimator()Landroid/animation/Animator;
     
     move-result-object v3
+
 
     invoke-virtual {v3}, Landroid/animation/Animator;->end()V
 

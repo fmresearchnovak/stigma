@@ -81,7 +81,7 @@ class ControlFlowGraph:
                 tokens = StigmaStringParsingLib.break_into_tokens(line_str)
                 
                 if ControlFlowGraph.is_not_branching(line_str):
-                    self.contingous_region.append(line_str)
+                    self.contingous_region.append(line_obj)
 
                 #e.g line_str: if-eqz vx :cond_8
                 elif re.search(StigmaStringParsingLib.BEGINS_WITH_IF, line_str) is not None or re.search(StigmaStringParsingLib.BEGINS_WITH_CMP, line_str) is not None: 

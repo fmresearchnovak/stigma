@@ -12,16 +12,44 @@ DESIRED_NUM_REGISTERS = 4 #we grow our .locals by this number
 # more instrumentation functions.  I'm not sure it's 100% there and maybe this
 # attempt just makes the code uglier for no benefit.
 
+start_of_method_handler = None
 instrumentation_map = {}
 storage_handler = TaintStorageHandler.get_instance()
 
 
+def sign_up_method_start(new_method):
+    global start_of_method_handler
+    # this method allows the plugin author to submit a handler function
+    # which will be called to insert new code at the start of each and every
+    # method
+    
+    # Needs to also check num args of new method but I don't know how
+    # to do that in python (reflection)
+    # this is _ideally_ to allow a sort of "plugin" system where
+    # other developers could add instrumentation
+    start_of_method_handler = new_method
+    
+
 def sign_up(opcode, new_method, instrumeter_inserts_original_lines = False):
+    # this method allows the plugin author to submit a handler function
+    # which will be called to insert new code before each and every line
+    # of original smali code.
+    # 
+    # opcode is the instruction to match
+    # new_method is the method / handler the plugin author wants to be called
+    # this method should return instrumentation code
+    # instrumenter_inserts_original_lines can be set to True
+    # in order to indicate that new_method will return a block of code
+    # that INCLUDES the original instruction (and so this side of the
+    # system won't insert it)
 
     # Needs to also check num args of new method but I don't know how
     # to do that in python (reflection)
     # this is _ideally_ to allow a sort of "plugin" system where
     # other developers could add instrumentation
+    
+    # not sure why we don't have to do:
+    # global instrumentation_map
     if opcode.startswith("move-result"):
         raise Exception("Move-result cannot have an independent instrumenter, signup for the related preceding instruction.")
     if opcode not in instrumentation_map:

@@ -53,29 +53,12 @@ class TypeSafetyChecker:
         '''
             
         #find all unrelevant instructions and put a -1 for them in the type list
-        if(self.non_relevent_line(line)):
+        if(self.non_relevent_line(str(line))):
             self.node_type_list.append(self.most_recent_type_map)
             return
         
         tokens = StigmaStringParsingLib.break_into_tokens(line)
         
-        if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE, line) is not None and re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, line) is None and re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_EXCEPTION, line) is None):
-            reg = StigmaStringParsingLib.get_v_and_p_numbers(line)       
-            line_type_map_new = self.most_recent_type_map.copy()
-            #in this case the types might not be known to us
-            if(reg[-1] not in self.most_recent_type_map):
-                reg_type = SmaliTypes.UnknownType()
-            else:
-                reg_type = self.most_recent_type_map[reg[-1]]
-                
-            line_type_map_new[reg[0]] = reg_type
-            self.most_recent_type_map = line_type_map_new.copy()
-            self.node_type_list.append(line_type_map_new)
-            
-            #print("\n*****line:", line.strip())
-            #print(self.node_type_list[-1])
-            
-            return
         
         #if the current line is an if statement, store the most recent hashmap as most recent if statement parent map, for later access 
         if(re.search(StigmaStringParsingLib.BEGINS_WITH_IF, line) is not None):
@@ -209,7 +192,10 @@ class TypeSafetyChecker:
             elif(instruction == "check-cast"):
                 line_type_map_new[dest_reg] = SmaliTypes.from_string(tokens[-1])
                       
-                      
+            elif(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_OBJECT, line) is not None):
+                src_reg = registers[1]
+                line_type_map_new[dest_reg] = line_type_map_new[src_reg]
+                          
             else:
                 reg_type = self.check_type_list(instruction)
                 line_type_map_new[dest_reg] = reg_type

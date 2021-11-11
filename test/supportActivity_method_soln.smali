@@ -9,40 +9,26 @@
 
     .line 75
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    # IFT INSTRUCTIONS ADDED BY STIGMA for METHOD START
     
     sget v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_SupportActivity_onCreate_p0:F
     
     sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_SupportActivity_onCreate_v0:F
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
-    
-    move-object/16 v0, p0
-    
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
     
     sget v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_SupportActivity_onCreate_p1:F
     
     sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_SupportActivity_onCreate_v1:F
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for METHOD START
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    
+    move-object/16 v0, p0
     
     move-object/16 v1, p1
     
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
-    
-    sget v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_SupportActivity_onCreate_p0:F
-    
-    sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_SupportActivity_onCreate_v0:F
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
-    
-    move-object/16 v0, p0
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
