@@ -571,7 +571,8 @@ def internal_tests():
 	print("--Running Internal Tests--")
 	
 	src_code_with_internal_tests = ["StigmaStringParsingLib.py", 
-		"SmaliMethodDef.py", "SmaliTypes.py", "SmaliAssemblyInstructions.py",
+		"SmaliMethodDef.py", "SmaliTypes.py", 
+		"SmaliRegister.py", "SmaliAssemblyInstructions.py",
 		"Instrumenter.py", "TaintStorageHandler.py"]
 	
 	

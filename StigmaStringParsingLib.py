@@ -101,6 +101,12 @@ def get_range_start_and_end(line):
 
 
 def get_v_and_p_numbers(line):
+    # this should maybe be changed to 
+    # incorporate SmaliRegister class
+    # maybe that class should have a method that
+    # extracts and builds SmaliRegister objects
+    # from an instruction (like this one but returning
+    # a list of objects instead of a list of strings)
 
     tokens = break_into_tokens(line)
     if "range" in tokens[0]:

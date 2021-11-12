@@ -5,6 +5,7 @@ import SmaliAssemblyInstructions as smali
 import StigmaStringParsingLib
 import Instrumenter
 
+from SmaliRegister import SmaliRegister
 from ControlFlowGraph import ControlFlowGraph
 from TypeSafetyChecker import TypeSafetyChecker
 import inspect
@@ -681,7 +682,7 @@ class SmaliMethodDef:
         #empty old / pre-existing move lists
         self.moves_before = [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers")]
         self.moves_after = []
-        dest_reg_num = count
+        dest_reg = SmaliRegister.from_components("v", count)
         
         # I sort these before iterating through them so that
         # from run to run the same registers are used
@@ -691,19 +692,19 @@ class SmaliMethodDef:
             #print("attempting to setup moves with", reg)
             # reg not in cur_line_reg 
             # it looks like that we can use the registers from the current line being processed, however there is a BIG UNSURE
-            if (self._move_reg_conditions(dest_reg_num, reg, safe_regs, cur_line_reg, line_type_map)):
+            if (self._move_reg_conditions(dest_reg, reg, safe_regs, cur_line_reg, line_type_map)):
                     
                 #print(str(line_type_map[reg]) + "  " + str(type(line_type_map[reg])))
                 move_instr = line_type_map[reg].get_move_instr()
                 #print("\tselected: ", reg)
-                self.moves_before.append(move_instr("v" + str(dest_reg_num),reg))
-                self.moves_after.append(move_instr(reg, "v" + str(dest_reg_num)))
+                self.moves_before.append(move_instr(str(dest_reg),reg))
+                self.moves_after.append(move_instr(reg, str(dest_reg)))
                 safe_regs.add(reg)
                 if(line_type_map[reg] == "64-bit"):
-                    dest_reg_num+=2
+                    dest_reg+=2
                     safe_regs.add(StigmaStringParsingLib.register_addition(reg, 1))
                 else:
-                    dest_reg_num+=1
+                    dest_reg+=1
             
             if len(safe_regs) >= Instrumenter.DESIRED_NUM_REGISTERS:
                 self.moves_after.append(smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers"))
@@ -736,18 +737,18 @@ class SmaliMethodDef:
         return [] # just return nothing if it can't be done!
 
     
-    def _move_reg_conditions(self, dest_reg_num, reg, safe_regs, cur_line_reg, type_map):
+    def _move_reg_conditions(self, dest_reg, reg, safe_regs, cur_line_reg, type_map):
         #print("num regs: " + str(self.get_num_registers()))
         #print("reg: " + str(reg))
-        #print("dest reg: " + str(dest_reg_num))
-        #print("second part of wide dest: " + str(dest_reg_num + 1))
+        #print("dest reg: " + str(dest_reg))
+        #print("second part of wide dest: " + str(dest_reg + 1))
         if reg in safe_regs:
             return False
         if type_map[reg] == "?":
             return False
         if type_map[reg] == "64-bit-2":
             return False
-        if type_map[reg] == "64-bit" and ( (dest_reg_num + 1) >= self.get_num_registers() ):
+        if type_map[reg] == "64-bit" and ( (dest_reg + 1) >= self.get_num_registers() ):
             return False
         if reg[0] == "p":
             return False

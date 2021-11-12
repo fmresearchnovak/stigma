@@ -44,6 +44,14 @@ class SmaliRegister():
 			return str(self) == other
 		else:
 			raise ValueError("Invalid == operation:", self, "==", other)
+			
+	def __ge__(self, other):
+		if(self.letter != "v"):
+			raise ValueError("Comparison cannot be made: ", self, ">=", other)
+		if(isinstance(other, int)):
+			return self.number >= other
+			
+		raise ValueError("Comparison cannot be made: ", self, ">=", other)
 		
 		
 	def is_high_numbered(self):
@@ -97,16 +105,12 @@ def main():
 	
 	assert(sr == sr_dup)
 	
-	
-	
-	
-	
+	assert(sr18 >= 2)
+	assert(sr18 >= 18)
+	assert( (sr18 >= 19) == False)
 	
 	
 	print("ALL SmaliRegister TESTS PASSED!")
-	
-	
-	
 	
 
 if __name__ == "__main__":
