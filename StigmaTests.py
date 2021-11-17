@@ -562,6 +562,38 @@ def on_nested_scrolling_parent_helper():
 	
 	
 	
+	
+def register_listeners():
+	print("\nRunning missing return result bug")
+	
+	scd = SmaliClassDef.SmaliClassDef("./test/register_listeners_method.smali")
+
+	scd.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)
+	scd.instrument()
+	scd.write_to_file("./test/register_listeners_method_result.smali")
+	
+	# the bug here is that v19 was used in the moves_before and moves_after
+	# but it was used to store a wide value and the method does not allow
+	# the user of v20
+	# .locals is 15 and there are 5 parameter registers (counting this)
+	# so the method uses 20 registers total: v0 - v19
+	
+	fh = open("./test/register_listeners_method_result.smali", "r")
+	result = fh.readlines()
+	fh.close()
+	
+	fh = open("./test/register_listeners_method_soln.smali", "r")
+	soln = fh.readlines()
+	fh.close()
+	
+	assert(result == soln)
+	
+	print("passed!")
+	
+	
+	
+	
+	
 def internal_tests():
 	
 	print("--Running Internal Tests--")
@@ -621,6 +653,7 @@ def main():
 	wide_register_index_out_of_range_bug_2()
 	wide_register_has_type_long_string()
 	on_nested_scrolling_parent_helper()
+	register_listeners()
 	
 	
 	
