@@ -159,9 +159,9 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
     
-    const v11, 0x0
+    const v12, 0x0
     
-    sput v11, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_MockClass_MyMadeUpMethod_v10:F
+    sput v12, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_MockClass_MyMadeUpMethod_v10:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
     
@@ -169,6 +169,7 @@
 
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     move/16 v20, v0
+    move/16 v21, v1
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
     
@@ -178,7 +179,9 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
     
+    
     move/16 v0, v20
+    move/16 v1, v21
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     const-wide v12, 0x1
@@ -195,6 +198,7 @@
     sput v0, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_MockClass_MyMadeUpMethod_v14:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for NEW-INSTANCE
+    
     
     move/16 v0, v20
     move/16 v1, v21
@@ -216,6 +220,7 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for NEW-INSTANCE
     
+    
     move/16 v0, v20
     move/16 v1, v21
     move-wide/16 v10, v22
@@ -227,8 +232,8 @@
 
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     move/16 v20, v0
-    move-wide/16 v21, v10
-    move/16 v23, v2
+    move/16 v21, v1
+    move-wide/16 v22, v10
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for INTERNAL METHOD
     
@@ -240,12 +245,13 @@
     # IFT INSTRUCTIONS ADDED BY STIGMA for INTERNAL METHOD
     
     invoke-static {v1}, Ledu/fandm/enovak/MockClass;->OtherMethod(I)I
+
+    
     move/16 v0, v20
-    move-wide/16 v10, v21
-    move/16 v2, v23
+    move/16 v1, v21
+    move-wide/16 v10, v22
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
-
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     move/16 v20, v0
     move/16 v21, v1
@@ -273,12 +279,12 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE-RESULT
     
+    
     move/16 v0, v20
     move/16 v1, v21
     move-wide/16 v10, v22
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
-
 
     return-void
 

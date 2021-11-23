@@ -19,6 +19,7 @@ VALID_REGISTER = r"^[vp][0-9]+$"
 
 BEGINS_WITH_INVOKE = r"^\s*invoke-"
 BEGINS_WITH_MOVE_RESULT = r"^\s*move-result"
+BEGINS_WITH_MOVE_RESULT_OBJECT = r"^\s*move-result-object"
 BEGINS_WITH_MOVE_EXCEPTION = r"^\s*move-exception"
 BEGINS_WITH_MOVE_OBJECT = r"^\s*move-object"
 BEGINS_WITH_MOVE = r"^\s*move"
@@ -217,6 +218,7 @@ def could_have_a_subsequent_move_result(line):
     ans = (re.search(BEGINS_WITH_INVOKE, line) is not None) or (re.search(BEGINS_WITH_FILLED_NEW_ARRAY, line) is not None)
     return ans
 
+
 def get_num_register_parameters(instr):
     #print("calling get num register parameters on: " + instr)
     if (has_zero_register_parameters(instr)):
@@ -350,16 +352,20 @@ OBJECT_TYPE_LIST = ["move-object", "move-object/from16", "move-object/16",
     "throw", "aput-object", "aget-object", "iget-object", "iput-object", "sget-object",
     "sput-object", "iput-object-quick", "iget-object-quick"]
 
-    
-#"if-eq","if-ne" ,"if-lt" ,"if-ge" ,"if-gt" ,"if-le" ,"if-eqz" ,"if-nez" ,"if-ltz" ,"if-gez" ,"if-gtz ","if-lez" , removed these for now
+
+# instructions removed at one point or another
+#"if-eq","if-ne" ,"if-lt" ,"if-ge" ,"if-gt" ,"if-le" ,"if-eqz" ,"if-nez" ,"if-ltz" ,"if-gez" ,"if-gtz ","if-lez" , 
 #"return" ,"return-wide", "return-object", "return-void", "check-cast"
+# "invoke-virtual" ,"invoke-super","invoke-direct" ,
+# "invoke-static","invoke-interface","invoke-interface/range","invoke-static/range","invoke-direct/range","invoke-virtual/range",
+# "invoke-super/range","invoke-direct-empty","invoke-virtual-quick","invoke-virtual-quick/range","invoke-super-quick",
+# "invoke-super-quick/range","invoke-direct-empty"
+# "filled-new-array", "filled-new-array/range",
 NON_RELEVANT_INSTRUCTION_LIST = ["nop","monitor-enter" , "monitor-exit", "throw" ,"goto" , "goto/16", "goto/32" , "packed-switch", 
- "sparse-switch", "neg-int","not-int" ,"neg-long" ,"not-long" ,"neg-float" ,"neg-double" ,"execute-inline" ,"invoke-virtual" ,"invoke-super","invoke-direct" ,
- "invoke-static","invoke-interface","invoke-interface/range","invoke-static/range","invoke-direct/range","invoke-virtual/range",
- "invoke-super/range","invoke-direct-empty","invoke-virtual-quick","invoke-virtual-quick/range","invoke-super-quick",
- "invoke-super-quick/range","invoke-direct-empty", "fill-array-data", "filled-new-array", "filled-new-array/range",
+ "sparse-switch", "neg-int","not-int" ,"neg-long" ,"not-long" ,"neg-float" ,"neg-double" ,"execute-inline", "fill-array-data", 
  ".local", ".param", ".line", "aput", "aput-wide",  "aput-object", "aput-boolean", "aput-byte",
- "aput-char", "aput-short"]
+ "aput-char", "aput-short", "if-eq", "if-ne", "if-lt", "if-ge", "if-gt", "if-le", "if-eqz", "if-nez", "if-ltz" , 
+ "if-gez", "if-gtz ", "if-lez", "return", "return-wide", "return-object", "return-void", "check-cast"]
         
 def main():
     print("Testing String Parsing Library")
@@ -384,12 +390,16 @@ def main():
     assert(get_num_registers("const-string v1, \"hard example: v2\"\n") == 1)
 
     assert(is_valid_instruction("    .line 36") == False)
+    assert(is_valid_instruction("    if-lt v5, v6, :cond_f") == True)
+    assert(is_valid_instruction('\n') == False)
+    assert(is_valid_instruction('    invoke-virtual {p0, v0}, Ledu/fandm/enovak/leaks/Main;->findViewById(I)Landroid/view/View;\n') == True)
     
     assert(break_into_tokens("    invoke-static/range {v0 .. v7}, Lcom/example/class1;->foo()Z;")[-1] == "Lcom/example/class1;->foo()Z;")
     
     
     assert(could_have_a_subsequent_move_result("    invoke-static/range {v0 .. v7}, Lcom/example/class1;->foo()Z;") == True)
     assert(could_have_a_subsequent_move_result("    const-string v1, \"hard example: v2\"\n") == False)
+    assert(could_have_a_subsequent_move_result("    invoke-virtual {p0, v0}, Ledu/fandm/enovak/leaks/Main;->findViewById(I)Landroid/view/View;") == True)
     
     test_reg = "v2"
     assert(register_addition(test_reg, 1) == "v3")
@@ -401,6 +411,10 @@ def main():
     except:
         assert(test_reg == "v2")
     assert(test_reg == "v2")
+    
+    
+    instr = '    invoke-virtual {v8, v1}, Lorg/mozilla/javascript/ScriptableObject;->setPrototype(Lorg/mozilla/javascript/Scriptable;)V\n'
+    assert(is_valid_instruction(instr))
     
     print("ALL StringParsingLib TESTS PASSED")
 

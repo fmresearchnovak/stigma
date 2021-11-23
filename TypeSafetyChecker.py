@@ -45,110 +45,164 @@ class TypeSafetyChecker:
     
                                             
   
-    def type_update(self, line, line_index, node_counter):     
+    def type_update(self, code_unit, is_first_line, node_counter):     
         '''
-        @parms line = specific line inside the method
-               line_index = index of that line in the text list 
-        this method creates a hashmap for a normal line if udpate happens otherwise puts a reference to the existing hashmap
-        '''
+        @parmas code_unit = a list of lines from the method
+        for most instructions, this is one line, but for some
+        e.g., invoke-* there is likely a subsequent move-result
+        and so code_unit will include both / all lines
+        
+        @params is_first_line = a boolean indicating if the given line is the
+        first in this block
+        
+        @params node_counter = index number of node / block in the control flow graph
+        
+        # the goal of this method is to make new map and update:
+            self.most_recent_type_map
+            self.node_type_list.append
             
-        #find all unrelevant instructions and put a -1 for them in the type list
-        if(self.non_relevent_line(str(line))):
-            self.node_type_list.append(self.most_recent_type_map)
-            return
+        # when making new versions of the type_map for this new code_unit
+        # we use .copy()  This is a SHALLOW COPY!
+        # a shallow copy seems adequate for our purposes
+        #https://stackoverflow.com/questions/2465921/how-to-copy-a-dictionary-and-only-edit-the-copy
+        '''
         
-        tokens = StigmaStringParsingLib.break_into_tokens(line)
+        line = str(code_unit[0])
+        #print("\ntype_update(" + str(code_unit) + ")")
         
-        
-        #if the current line is an if statement, store the most recent hashmap as most recent if statement parent map, for later access 
-        if(re.search(StigmaStringParsingLib.BEGINS_WITH_IF, line) is not None):
-            line_type_map_new = self.most_recent_type_map.copy()
-            self.node_type_list.append(line_type_map_new)
-        
-        #if the current line is a packed switch or a sparse switch
-        elif(re.search(StigmaStringParsingLib.BEGINS_WITH_PACKED_SWITCH, line) is not None or re.search(StigmaStringParsingLib.BEGINS_WITH_SPARSE_SWITCH, line) is not None):
-            line_type_map_new = self.most_recent_type_map.copy()
-            self.node_type_list.append(line_type_map_new)
+        if(re.search(StigmaStringParsingLib.BEGINS_WITH_COLON, line) is not None):
+            new_map = self._type_update_colon(line, node_counter)
+            
+            
+        if(StigmaStringParsingLib.is_valid_instruction(line)):
+            new_map = self._type_update_instruction(code_unit, is_first_line, node_counter)
+            
+        else: #.line 15, .locals 5, .end_method, etc.
+            new_map = self.most_recent_type_map.copy()
+               
+        self.most_recent_type_map = new_map
+        self.node_type_list.append(new_map)
+
+
+
+    def _type_update_colon(self, line, node_counter):
 
         #if the current line is a start of a label, check if there is a correlating if or goto statement that we have seen before this condition
-        elif(re.search(StigmaStringParsingLib.BEGINS_WITH_PSWITCH_LABEL, line) is not None or re.search(StigmaStringParsingLib.BEGINS_WITH_SSWITCH_LABEL, line) is not None):
+        if(re.search(StigmaStringParsingLib.BEGINS_WITH_PSWITCH_LABEL, line) is not None \
+        or re.search(StigmaStringParsingLib.BEGINS_WITH_SSWITCH_LABEL, line) is not None):
             map_list = self.get_relevant_maps_to_merge(node_counter)        
-            new_map = self.merge_maps(map_list)
-            self.most_recent_type_map = new_map
-            self.node_type_list.append(new_map)
+            line_type_map_new = self.merge_maps(map_list)
+        
         
         #if the current line is a :catch label, reset everything because we dont know which line has caused the catch 
         elif(re.search(StigmaStringParsingLib.BEGINS_WITH_CATCH_LABEL, line) is not None):
-            for key, value in self.most_recent_type_map.items():
-                self.most_recent_type_map[key] = SmaliTypes.UnknownType() 
+            line_type_map_new = self.most_recent_type_map.copy()
+            for key, value in line_type_map_new.items():
+                line_type_map_new[key] = SmaliTypes.UnknownType() 
             
-            self.node_type_list.append(self.most_recent_type_map)
             
         #if the current line is a start of a label, check if there is a correlating if or goto statement that we have seen before this condition
         elif(re.search(StigmaStringParsingLib.BEGINS_WITH_COLON, line) is not None):
+            tokens = StigmaStringParsingLib.break_into_tokens(line)
             label = tokens[0]
             if(not self.has_matching_visited_label_parent(label, node_counter)):
                 #this is a situation where (:cond_x) statement has no (if-eqz :cond_4) preceding, (probably a loop) so just keep going
                 self.looping_conditions_list.append(label)
                 line_type_map_new = self.most_recent_type_map.copy()
-                self.node_type_list.append(line_type_map_new)
+
             else:
                 map_list = self.get_relevant_maps_to_merge(node_counter)        
-                new_map = self.merge_maps(map_list)
-                self.most_recent_type_map = new_map
-                self.node_type_list.append(new_map)
-
-        #this is case, where we see a return statement, and we store it with the conditon and the map
-        elif(re.search(StigmaStringParsingLib.BEGINS_WITH_RETURN, line) is not None):
-            line_type_map_new = self.most_recent_type_map.copy()
-            self.node_type_list.append(line_type_map_new)
+                line_type_map_new = self.merge_maps(map_list)
             
-        #this is the normal case, all other lines do the process of assigning new map as the most recent map
+
         else:
-            instruction = tokens[0]
-            registers = StigmaStringParsingLib.get_v_and_p_numbers(line)
-            dest_reg = registers[0]
-            #if this is a start of new block, retreive most recent map from the parent node
-            #if this is not a start, keep using the most recent map assigned
-            if(line_index == 0):
-                line_type_map_new = self.get_most_recent_type_map(node_counter).copy()
-            else:
-                line_type_map_new = self.most_recent_type_map.copy()
-            #SHALLOW COPY
-            #the keys and values are strings (immutable), so a shallow copy is adequateable
-            #https://stackoverflow.com/questions/2465921/how-to-copy-a-dictionary-and-only-edit-the-copy
+            raise ValueError("Lost on", str(line))
             
+            
+        return line_type_map_new
+            
+            
+            
+            
+    def _type_update_instruction(self, code_unit, is_first_line, node_counter):
+        
+        first_line = str(code_unit[0])
+        first_line_tokens = StigmaStringParsingLib.break_into_tokens(first_line)
+        first_instr = first_line_tokens[0]
+        
+        # ignore lines that don't affect the type of any 
+        # register and don't matter to the TypeSafetyChecker
+        # copy the existing type_map forward
+        if(first_instr in StigmaStringParsingLib.NON_RELEVANT_INSTRUCTION_LIST):
+            #print("\t\tnon relevant instr!", opcode)
+            line_type_map_new = self.most_recent_type_map.copy()
+            return line_type_map_new
 
-            if(instruction == "move-result-object"):
+
+        #this is the "normal" case, 
+        
+        #if this is a start of new block, retreive most recent map from the parent node
+        #if this is not a start, keep using the most recent map assigned
+        if(is_first_line):
+            line_type_map_new = self.get_most_recent_type_map(node_counter).copy() # SHALLOW COPY
+        else:
+            line_type_map_new = self.most_recent_type_map.copy() # SHALLOW COPY  
+        
+        
+        last_line = str(code_unit[-1])
+        if(len(code_unit) > 1 and \
+        re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, last_line) is not None):
+            # an invoke-* instruction
+            # or a filled-new-array instruction
+            
+            # the corresponding move-result instruction
+            last_instr = StigmaStringParsingLib.extract_opcode(last_line)
+            dest_reg = StigmaStringParsingLib.get_v_and_p_numbers(last_line)[0]
+            
+            if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT_OBJECT, last_instr) is not None):
                 # this is a very special case.   move-result-object vx
                 # may cause vx to be (a) an Object (b) an Array
                 # if it is an array we need to know the type of that array
                 # (array of String vs array of int, etc)
                 # in order to properly handle subsequent instructions
                 # such as aget vy, vx
-
-                prev_line = self.obtain_previous_instruction(node_counter, line_index-1)
-                prev_line_tokens = StigmaStringParsingLib.break_into_tokens(prev_line)
-                prev_line_instruction = prev_line_tokens[0]
                                 
-                if(re.search(StigmaStringParsingLib.BEGINS_WITH_INVOKE, prev_line_instruction) is not None):
-                    type_start_index = prev_line.rfind(")")
-                    tmp = prev_line[type_start_index+1:].strip() 
+                if(re.search(StigmaStringParsingLib.BEGINS_WITH_INVOKE, first_instr) is not None):
+                    type_start_index = first_line.rfind(")")
+                    tmp = first_line[type_start_index+1:].strip() 
                     # note: .strip() removes the \n at the end of the line
                     # e.g., if the return type is: [I\n   we need only [I
                         
-                        
-                elif("new-array" in prev_line_instruction):
-                    tmp = prev_line_tokens[-1]
+                elif(re.search(StigmaStringParsingLib.BEGINS_WITH_FILLED_NEW_ARRAY, first_instr) is not None):
+                    tmp = first_line_tokens[-1]
 
-                return_type = SmaliTypes.from_string(tmp)    
+                return_type = SmaliTypes.from_string(tmp)   
+                #print("move-result-object,  setting type:", str(return_type))
                 line_type_map_new[dest_reg] = return_type
-                          
-            
-            # seems like this should be combined with the preceeding lines
-            #if instruction == new-array , get the whole type, including the ['s
-            elif(instruction == "new-array"):
-                tmp = tokens[-1]
+                
+            else:
+                # must be a move-result or a move-result wide
+                return_type = self.check_type_list(last_instr)
+                registers = StigmaStringParsingLib.get_v_and_p_numbers(last_line)
+                dest_reg = registers[0]
+                line_type_map_new[dest_reg] = return_type
+                
+                if(isinstance(return_type, SmaliTypes.SixtyFourBit)):
+                    adj_reg = StigmaStringParsingLib.register_addition(dest_reg, 1)
+                    line_type_map_new[adj_reg] = SmaliTypes.SixtyFourBit_2()
+                    #print(dest_reg, " is now: ", str(reg_type))
+                    #print(adj_reg, " is now: ", str(SmaliTypes.SixtyFourBit_2()))
+        
+        else:
+
+            registers = StigmaStringParsingLib.get_v_and_p_numbers(first_line)
+            dest_reg = registers[0]
+            opcode = first_instr
+            #print("updating tsc with line: ", line)
+                        
+            if(opcode == "new-array"): 
+                # note: this is NOT filled-new-array
+                tmp = first_line_tokens[-1]
                 return_type = SmaliTypes.from_string(tmp)  
                 line_type_map_new[dest_reg] = return_type
 
@@ -158,15 +212,19 @@ class TypeSafetyChecker:
                 # aget v7, v6, v5
             #not sure if have to consider aget-object
             #iput-object can also contain an array, so we need to consider that case also while checking for array
-            elif(instruction == "iget-object" or instruction == "sget-object" or instruction == "iget-object-quick" or instruction == "iput-object"):
-                tmp = tokens[-1]
+            elif(opcode == "iget-object" or \
+            opcode == "sget-object" or \
+            opcode == "iget-object-quick" or \
+            opcode == "iput-object"):
+                tmp = first_line_tokens[-1]
                 tmp = tmp.split(":")[1]
                     
                 return_type = SmaliTypes.from_string(tmp)  
                 line_type_map_new[dest_reg] = return_type
             
             
-            elif(instruction == "aget-object"):
+            elif(opcode == "aget-object"):
+                #print("opcode match: ", opcode)
                 # while aget and aget-boolean and others are explicit
                 # about their type, 'aget-object' may be operating on an array
                 # that is N-dimenstional.  e.g.,  [[[Landroid/blah/MyClass;
@@ -175,44 +233,44 @@ class TypeSafetyChecker:
                 # vx is the destination register
                 # vy is the array
                 # vz is the index (and int) into that array
-                src_reg = registers[1] 
-                
-                if(src_reg not in line_type_map_new):
-                    print("line: ", line)
-                    print("src reg ", src_reg)
-                    print("line type map: ", line_type_map_new)
-                    input("????????")
-                
+                src_reg = registers[1]
                 src_type = line_type_map_new[src_reg]
-                line_type_map_new[dest_reg] = self.check_aget_object_type(src_type)
+                #print("src_reg", src_reg, "  src_type", src_type, "  line_type_map_new", line_type_map_new)
+                return_type = self.check_aget_object_type(src_type)
+                line_type_map_new[dest_reg] = return_type
                 
                 
             #check-cast vx, type_id
             #Checks whether the object reference in vx can be cast to an instance of a class referenced by type_id. Throws ClassCastException if the cast is not possible, continues execution otherwise.
-            elif(instruction == "check-cast"):
-                line_type_map_new[dest_reg] = SmaliTypes.from_string(tokens[-1])
+            elif(opcode == "check-cast"):
+                return_type = SmaliTypes.from_string(tokens[-1])
+                line_type_map_new[dest_reg] = return_type
+                
+            elif(re.search(StigmaStringParsingLib.BEGINS_WITH_INVOKE, opcode) is not None):
+                # this is a single invoke-* line that doesn't
+                # have a corresponding move-result in the code unit
+                # such a situation with filled-new-array is valid, but
+                # logically pointless and should never happen
+                pass
                       
-            elif(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_OBJECT, line) is not None):
+            elif(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_OBJECT, opcode) is not None):
                 src_reg = registers[1]
-                line_type_map_new[dest_reg] = line_type_map_new[src_reg]
+                return_type = line_type_map_new[src_reg]
+                line_type_map_new[dest_reg] = return_type
                           
             else:
-                reg_type = self.check_type_list(instruction)
-                line_type_map_new[dest_reg] = reg_type
-                if(isinstance(reg_type, SmaliTypes.SixtyFourBit)):
+                return_type = self.check_type_list(opcode)
+                line_type_map_new[dest_reg] = return_type
+                
+                if(isinstance(return_type, SmaliTypes.SixtyFourBit)):
                     adj_reg = StigmaStringParsingLib.register_addition(dest_reg, 1)
                     line_type_map_new[adj_reg] = SmaliTypes.SixtyFourBit_2()
                     #print(dest_reg, " is now: ", str(reg_type))
                     #print(adj_reg, " is now: ", str(SmaliTypes.SixtyFourBit_2()))
-            
-            self.most_recent_type_map = line_type_map_new.copy()
-            self.node_type_list.append(line_type_map_new)
-        
-        #print("\n*****line:", line.strip())
-        #print(self.node_type_list[-1])
-        #input("Continue???")
-        #Debugging the smali line-by-line as program runs
-        #self.debugging(line, line_index)
+                    
+                    
+        return line_type_map_new
+
     
     def get_relevant_maps_to_merge(self,node_counter):
         '''This gets all maps from the predecessor nodes to merge'''
@@ -225,22 +283,31 @@ class TypeSafetyChecker:
             revelant_maps.append(parent_node_map)
         return revelant_maps
     
+    
     def has_matching_visited_label_parent(self, label, node_counter):
         '''This checks if the preceding node has a matching label'''
         predecessors = self.cfg.G.predecessors(node_counter)
         for parent in predecessors:
-            parent_node = self.cfg.G.nodes[parent]["text"][0]
+            parent_node = str(self.cfg.G.nodes[parent]["text"][0])
             parent_node_tokens = StigmaStringParsingLib.break_into_tokens(parent_node)
             if(len(parent_node_tokens) != 0) and label == parent_node_tokens[-1] and self.cfg.G.nodes[parent]["visited"] == True:
                 return True
         return False
     
+    
     def get_most_recent_type_map(self, node_counter):
-        predecessors = self.cfg.G.predecessors(node_counter) #this should always be just one node, call this on a block of code
-        for parent in predecessors:
-            parent_type_list = self.cfg.G.nodes[parent]["type_list"]
-            parent_type_map = parent_type_list[-1]
-            return parent_type_map
+        predecessors_iterator = self.cfg.G.predecessors(node_counter) #this should always be just one node, call this on a block of code
+        predecessors_list = list(predecessors_iterator)
+        if(len(predecessors_list) > 1):
+            raise ValueError("There are multiple predecessors? ", str(list(predecessors_iterator)))
+            
+        pred_num = predecessors_list[0]
+        #print("\ncur: ", node_counter)
+        #print("cur code: ", self.cfg.G.nodes[node_counter]["text"])
+        #print("pred:", pred_num)
+        #print("pred code: ", self.cfg.G.nodes[pred_num]["text"])
+        #print("pred type list: ", self.cfg.G.nodes[pred_num]["type_list"])
+        return self.cfg.G.nodes[pred_num]["type_list"][-1]
 
 
         
@@ -328,40 +395,7 @@ class TypeSafetyChecker:
         
         return cur_line          
               
-    def obtain_next_instruction(self, node_counter, start):
-        # I found a situation in the whatsapp.apk which 
-        # has the instruction preceeding a move-result-* instruction
-        # MORE than 2 lines previous
-        #
-        #
-        #...
-        #invoke-interface {v0, v1, v4}, LX/1Fz;->AY5(Lcom/google/android/gms/dynamic/IObjectWrapper;LX/1oP;)[LX/1p7;
-        #
-        #
-        #
-        #.line 486217
-        #
-        #move-result-object v10
-        #
-        #:try_end_2
-        # ...
-        # such a situation means that line_index-2 is not a safe assumption
-        # old code this method replaces: prev_line = self.text[line_index-2]
-        #this method takes in a node counter which is the current node we are looking at, so we can extract the text of that node and look 
-        #for the last valid instruction to return
-        
-        text = self.cfg.G.nodes[node_counter]["text"]
-
-        if(start>=len(text)):
-            return ""
-
-        cur_line = text[start]
-        
-        while(not StigmaStringParsingLib.is_valid_instruction(cur_line) and start < len(text)):
-            cur_line = text[start]
-            start = start+1
-        
-        return cur_line    
+   
               
     def __str__(self):
         return str(self.node_type_list)
@@ -403,22 +437,3 @@ class TypeSafetyChecker:
         for map in map_list:
             if reg in map:
                 return map[reg]
-
-    @staticmethod
-    def non_relevent_line(line):
-        #non relevant list
-        #blank lines
-        #all the compiler directive (check for a invalid instruction unless condition, if or return put a -1)
-        if(line == ''):
-            return True
-        elif(not StigmaStringParsingLib.is_valid_instruction(line)
-             and re.search(StigmaStringParsingLib.BEGINS_WITH_RETURN, line) is None 
-             and re.search(StigmaStringParsingLib.BEGINS_WITH_IF, line) is None 
-             and re.search(StigmaStringParsingLib.BEGINS_WITH_COLON, line) is None
-             and re.search(StigmaStringParsingLib.BEGINS_WITH_PACKED_SWITCH, line) is None
-             and re.search(StigmaStringParsingLib.BEGINS_WITH_SPARSE_SWITCH, line) is None):
-            return True
-        else:
-            tokens = StigmaStringParsingLib.break_into_tokens(line)
-            opcode = tokens[0]
-            return opcode in StigmaStringParsingLib.NON_RELEVANT_INSTRUCTION_LIST

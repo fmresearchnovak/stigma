@@ -22,27 +22,47 @@ storage_handler = TaintStorageHandler.get_instance()
 
 
 
-def NEW_ARRAY_instrumentation(scd, m, cur_line, free_reg):
+def NEW_ARRAY_instrumentation(scd, m, code_unit, free_reg):
     #new-array vx,vy,type_id ; puts length vy array into vx
-    return Instrumenter.SIMPLE_instrumentation(scd, m, cur_line, 0, 1, "for NEW-ARRAY", free_reg)
+    return _simple_instrumentation(scd, m, code_unit, 0, 1, "for NEW-ARRAY", free_reg)
 
 
-def ARRAY_LENGTH_instrumentation(scd, m, cur_line, free_reg):
+def ARRAY_LENGTH_instrumentation(scd, m, code_unit, free_reg):
     #array-length vx,vy ; puts length of array vy into vx
-    return Instrumenter.SIMPLE_instrumentation(scd, m, cur_line, 0, 1, "for ARRAY-LENGTH", free_reg)
+    return _simple_instrumentation(scd, m, code_unit, 0, 1, "for ARRAY-LENGTH", free_reg)
 
 
-def AGET_instrumentation(scd, m, cur_line, free_reg):
+def AGET_instrumentation(scd, m, code_unit, free_reg):
     #aget vx,vy, vz ; gets data of array vy into register vx
-    return Instrumenter.SIMPLE_instrumentation(scd, m, cur_line, 0, 1, "for AGET", free_reg)
+    return _simple_instrumentation(scd, m, code_unit, 0, 1, "for AGET", free_reg)
 
 
-def APUT_instrumentation(scd, m, cur_line, free_reg):
+def APUT_instrumentation(scd, m, code_unit, free_reg):
     #aput vx,vy, vz ; puts data of register vx into array vy
-    return Instrumenter.SIMPLE_instrumentation(scd, m, cur_line, 1, 0, "for APUT", free_reg)
+    return _simple_instrumentation(scd, m, code_unit, 1, 0, "for APUT", free_reg)
+    
+    
+def _simple_instrumentation(scd, m, code_unit, dest_num, source_num, comment_string, free_reg):
+    
+    cur_line = code_unit[0]
+    
+    regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
+    taint_field_src = storage_handler.add_taint_location(scd.class_name, m.get_name(), regs[source_num])
+    taint_field_dest = storage_handler.add_taint_location(scd.class_name, m.get_name(), regs[dest_num])
 
 
-def SGET_instrumentation(scd, m, cur_line, free_reg):
+    block = Instrumenter.make_comment_block(comment_string)
+    block = block + [smali.SGET(free_reg[0], taint_field_src),
+    smali.BLANK_LINE(),
+    smali.SPUT(free_reg[0], taint_field_dest)]
+    block = block + Instrumenter.make_comment_block(comment_string)
+
+    return block
+
+
+
+def SGET_instrumentation(scd, m, code_unit, free_reg):
+    cur_line = code_unit[0]
     
     # the field being referenced may be in another class
     class_name = re.search(StigmaStringParsingLib.CLASS_NAME, cur_line).group(1)
@@ -67,9 +87,10 @@ def SGET_instrumentation(scd, m, cur_line, free_reg):
     return block
 
 
-def SPUT_instrumentation(scd, m, cur_line, free_reg):
+def SPUT_instrumentation(scd, m, code_unit, free_reg):
     #sput vx, field_id
     #Puts vx into a static field.
+    cur_line = code_unit[0]
         
     class_name = re.search(StigmaStringParsingLib.CLASS_NAME, cur_line).group(1)    
     regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
@@ -92,9 +113,10 @@ def SPUT_instrumentation(scd, m, cur_line, free_reg):
     return block
 
 
-def IPUT_instrumentation(scd, m, cur_line, free_reg):
+def IPUT_instrumentation(scd, m, code_unit, free_reg):
     # iput vx, vy, field_id puts the data in vx into the field
     # specified by field_id (vy is the instance / OBJ_REF)
+    cur_line = code_unit[0]
 
     class_name = re.search(StigmaStringParsingLib.CLASS_NAME, cur_line).group(1)
     
@@ -124,11 +146,11 @@ def IPUT_instrumentation(scd, m, cur_line, free_reg):
     return block
     
 
-def IGET_instrumentation(scd, m, cur_line, free_reg):
+def IGET_instrumentation(scd, m, code_unit, free_reg):
     #iget vx, vy field_id
     #gets data from field in instance vy and places data in vx
     #EXAMPLE: iget v1, p2, Landroid/graphics/Rect;->left:I
-    
+    cur_line = code_unit[0]
 
     # the field being referenced may be in another class
     # for now, instrument only same class fields
@@ -157,43 +179,43 @@ def IGET_instrumentation(scd, m, cur_line, free_reg):
     return block
     
     
-def MOVE_RESULT_instrumentation(scd, m, cur_lines, free_reg):
+def _move_result_instrumentation(scd, m, code_unit, free_reg):
     #line1: invoke-virtual { v4, v0, v1, v2, v3}, Test2.method5:(IIII)V
     #line2: move-result vx
     
     #this instrumenter takes in two lines (the current move-result line and the preceding invoke line)
     #based on the invoke instruction method call, it decides which of the following instrumenter to call
     
-    if STRING_GET_LATITUDE in cur_lines[0]: # short cut
-        block = LATITUDE_instrumentation(scd, m, cur_lines, free_reg)
+    if STRING_GET_LATITUDE in code_unit[0]: # short cut
+        block = LATITUDE_instrumentation(scd, m, code_unit, free_reg)
         
-    elif STRING_GET_LAST_KNOWN_LOCATION_FUNCTION in cur_lines[0]: # short cut
-        block = LOCATION_instrumentation(scd, m, cur_lines, free_reg)
+    elif STRING_GET_LAST_KNOWN_LOCATION_FUNCTION in code_unit[0]: # short cut
+        block = LOCATION_instrumentation(scd, m, code_unit, free_reg)
         
-    elif STRING_GET_LONGITUDE in cur_lines[0]: # short cut
-        block = LONGITUDE_instrumentation(scd, m, cur_lines, free_reg)
+    elif STRING_GET_LONGITUDE in code_unit[0]: # short cut
+        block = LONGITUDE_instrumentation(scd, m, code_unit, free_reg)
         
-    elif STRING_PHONE_NUM_FUNCTION in cur_lines[0]: # short cut
-        block = PHONE_NUM_instrumentation(scd, m, cur_lines, free_reg)
+    elif STRING_PHONE_NUM_FUNCTION in code_unit[0]: # short cut
+        block = PHONE_NUM_instrumentation(scd, m, code_unit, free_reg)
         
-    elif re.search(StigmaStringParsingLib.BEGINS_WITH_FILLED_NEW_ARRAY, cur_lines[0]) is not None: # short cut
-        block = FILLED_NEW_ARRAY_instrumentation(scd, m, cur_lines, free_reg)  
+    elif re.search(StigmaStringParsingLib.BEGINS_WITH_FILLED_NEW_ARRAY, code_unit[0]) is not None: # short cut
+        block = FILLED_NEW_ARRAY_instrumentation(scd, m, code_unit, free_reg)  
           
     else:
         
-        callee_method_name, callee_class_obj = _get_callee_parts(cur_lines[0], scd)
+        callee_method_name, callee_class_obj = _get_callee_parts(code_unit[0], scd)
         
         # At this point it is known that both this class (ClassA)
         # and the callee class (ClassB) are both inside this project.
         # We call this an "internal" method
         if(callee_class_obj is not None):
-            block = INTERNAL_FUNCTION_instrumentation(scd, m, cur_lines, free_reg)
+            block = INTERNAL_FUNCTION_instrumentation(scd, m, code_unit, free_reg)
             
         # At this point it is known that the callee class (ClassB) 
         # is outside this project.
         # We call this an "external" method
         elif(callee_class_obj is None):
-            block = EXTERNAL_FUNCTION_instrumentation(scd, m, cur_lines, free_reg)
+            block = EXTERNAL_FUNCTION_instrumentation(scd, m, code_unit, free_reg)
             
     #print(block)
     # the spacing might be wrong in the final result
@@ -203,11 +225,11 @@ def MOVE_RESULT_instrumentation(scd, m, cur_lines, free_reg):
 
 
 
-def LOCATION_instrumentation(scd, m, cur_lines, free_reg):
+def LOCATION_instrumentation(scd, m, code_unit, free_reg):
     #invoke -> getLastKnownLocation()
     #move-result
         
-    result_line = cur_lines[2]
+    result_line = code_unit[-1]
     dest_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
     taint_loc_dest = storage_handler.add_taint_location(scd.class_name, m.get_name(), dest_reg)
     
@@ -224,7 +246,7 @@ def LOCATION_instrumentation(scd, m, cur_lines, free_reg):
     block = block + Instrumenter.make_comment_block("for getLastKnownLocation()")
     
     block = block + logBlock
-    block.extend(cur_lines)
+    block.extend(code_unit)
     # the spacing might be wrong in the final result
     # see EXTERNAL_FUNCTION
     # .rstrip() is necessary to remove \n characters
@@ -232,11 +254,11 @@ def LOCATION_instrumentation(scd, m, cur_lines, free_reg):
     return block
     
 
-def LONGITUDE_instrumentation(scd, m, cur_lines, free_reg):
+def LONGITUDE_instrumentation(scd, m, code_unit, free_reg):
     #invoke -> Landroid/location/Location;->getLongitude()D
     #move-result
     
-    result_line = cur_lines[2]        
+    result_line = code_unit[-1]        
     dest_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
     taint_loc_dest = storage_handler.add_taint_location(scd.class_name, m.get_name(), dest_reg)
     
@@ -253,7 +275,7 @@ def LONGITUDE_instrumentation(scd, m, cur_lines, free_reg):
     block = block + Instrumenter.make_comment_block("for getLongitude()")
     
     block = block + logBlock
-    block.extend(cur_lines)
+    block.extend(code_unit)
     # the spacing might be wrong in the final result
     # see EXTERNAL_FUNCTION
     # .rstrip() is necessary to remove \n characters
@@ -261,11 +283,11 @@ def LONGITUDE_instrumentation(scd, m, cur_lines, free_reg):
     return block
     
 
-def LATITUDE_instrumentation(scd, m, cur_lines, free_reg):
+def LATITUDE_instrumentation(scd, m, code_unit, free_reg):
     #invoke -> Landroid/location/Location;->getLatitude()D
     #move-result
     
-    result_line = cur_lines[2]        
+    result_line = code_unit[-1]        
     dest_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
     taint_loc_dest = storage_handler.add_taint_location(scd.class_name, m.get_name(), dest_reg)
     
@@ -282,7 +304,7 @@ def LATITUDE_instrumentation(scd, m, cur_lines, free_reg):
     block = block + Instrumenter.make_comment_block("for getLatitude()")
     
     block = block + logBlock
-    block.extend(cur_lines)
+    block.extend(code_unit)
     # the spacing might be wrong in the final result
     # see EXTERNAL_FUNCTION
     # .rstrip() is necessary to remove \n characters
@@ -290,11 +312,11 @@ def LATITUDE_instrumentation(scd, m, cur_lines, free_reg):
     return block
     
     
-def PHONE_NUM_instrumentation(scd, m, cur_lines, free_reg):
+def PHONE_NUM_instrumentation(scd, m, code_unit, free_reg):
     #invoke -> Landroid/telephony/TelephonyManager;->getLine1Number()Ljava/lang/String;
     #move-result
     
-    result_line = cur_lines[0]        
+    result_line = code_unit[-1]        
     dest_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
     taint_loc_dest = storage_handler.add_taint_location(scd.class_name, m.get_name(), dest_reg)
     
@@ -312,7 +334,7 @@ def PHONE_NUM_instrumentation(scd, m, cur_lines, free_reg):
     block = logBlock + block + Instrumenter.make_comment_block("for getLine1Number()")
 
     block = block + logBlock
-    block.extend(cur_lines)
+    block.extend(code_unit)
     # the spacing might be wrong in the final result
     # see EXTERNAL_FUNCTION
     # .rstrip() is necessary to remove \n characters
@@ -320,7 +342,7 @@ def PHONE_NUM_instrumentation(scd, m, cur_lines, free_reg):
     return block
 
 
-def IMEI_instrumentation(scd, m, cur_lines, free_reg):  
+def IMEI_instrumentation(scd, m, code_unit, free_reg):  
     #invoke -> Landroid/telephony/TelephonyManager;->getDeviceId()Ljava/lang/String;
     #move-result
     
@@ -344,16 +366,16 @@ def IMEI_instrumentation(scd, m, cur_lines, free_reg):
                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for getDeviceID()")]
 
     block = logBlock + block
-    block.extend(cur_lines)
+    block.extend(code_unit)
 
     return block
 
 
-def FILLED_NEW_ARRAY_instrumentation(scd, m, cur_lines, free_reg):
+def FILLED_NEW_ARRAY_instrumentation(scd, m, code_unit, free_reg):
     #filled-new-array {parameters},type_id ; new array reference goten by move line
 
-    regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_lines[0])
-    result_line = cur_lines[2]    
+    regs = StigmaStringParsingLib.get_v_and_p_numbers(code_unit[0])
+    result_line = code_unit[-1]    
     result_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
 
     #taint_loc_result = scd.create_taint_field(m.get_name(), result_reg)
@@ -362,7 +384,7 @@ def FILLED_NEW_ARRAY_instrumentation(scd, m, cur_lines, free_reg):
     block = block + Instrumenter.make_merge_block(scd, m, regs, taint_loc_result, free_reg)
     block = block + Instrumenter.make_comment_block("for FILLED-NEW-ARRAY")
     
-    # seems like the re-insertion of the original cur_lines is missing?
+    # seems like the re-insertion of the original code_unit is missing?
     
     # the spacing might be wrong in the final result
     # see EXTERNAL_FUNCTION
@@ -371,13 +393,14 @@ def FILLED_NEW_ARRAY_instrumentation(scd, m, cur_lines, free_reg):
     return block
 
 
-def INTERNAL_FUNCTION_instrumentation(scd, m, cur_lines, free_reg):
+def INTERNAL_FUNCTION_instrumentation(scd, m, code_unit, free_reg):
 
     # Part 1, instrumentation for the invoke-* line
-    block = ONE_LINE_INVOKE_instrumentation(scd, m, cur_lines[0], free_reg)
+    block = _one_line_invoke_instrumentation(scd, m, [code_unit[0]], free_reg)
     
+    # this might be inserting extra \n characters?
     block.append(smali.BLANK_LINE())
-    block.append(cur_lines[2])
+    block.append(code_unit[-1])
     block.append(smali.BLANK_LINE())
 
     
@@ -390,10 +413,10 @@ def INTERNAL_FUNCTION_instrumentation(scd, m, cur_lines, free_reg):
     # 2) We cannot add code between a invoke line and the corresponding
     # move-result line
     
-    callee_method_name, callee_class_obj = _get_callee_parts(cur_lines[0], scd)
+    callee_method_name, callee_class_obj = _get_callee_parts(code_unit[0], scd)
 
 
-    result_line = cur_lines[2]
+    result_line = code_unit[-1]
         
     reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
     
@@ -420,7 +443,7 @@ def INTERNAL_FUNCTION_instrumentation(scd, m, cur_lines, free_reg):
     
 
     
-def ONE_LINE_INVOKE_instrumentation(scd, m, cur_line, free_reg):
+def _one_line_invoke_instrumentation(scd, m, code_unit, free_reg):
     
     # Part 1, instrumentation for the invoke-* line
     
@@ -447,8 +470,10 @@ def ONE_LINE_INVOKE_instrumentation(scd, m, cur_line, free_reg):
     # I'm not sure if this works for a child class calling a function
     # defined in it's own parent.  Maybe that should be
     # considered not "internal"    
-
-    invoke_line = cur_line
+    
+    #print("code unit inside one line invoke: ", code_unit)
+    
+    invoke_line = code_unit[0]
     callee_method_name, callee_class_obj = _get_callee_parts(invoke_line, scd)
 
     # I should replace this with a function like
@@ -472,7 +497,7 @@ def ONE_LINE_INVOKE_instrumentation(scd, m, cur_line, free_reg):
         
     block = block + Instrumenter.make_comment_block("for INTERNAL METHOD")
     
-    block.append(cur_line)
+    block.extend(code_unit)
     
     return block
     
@@ -491,7 +516,7 @@ def _get_callee_parts(invoke_line, scd):
     
 
 
-def EXTERNAL_FUNCTION_instrumentation(scd, m, cur_lines, free_reg):
+def EXTERNAL_FUNCTION_instrumentation(scd, m, code_unit, free_reg):
     
     # Note: This is a pitfall
     # Landroid/telephony/TelephonyManager;->getDeviceId() method (IMEI)
@@ -506,11 +531,11 @@ def EXTERNAL_FUNCTION_instrumentation(scd, m, cur_lines, free_reg):
 
     # Should the following few lines be a static
     # function in the SmaliClassDef somewhere?
-    invoke_line = cur_lines[0]
+    invoke_line = code_unit[0]
     param_regs = StigmaStringParsingLib.get_v_and_p_numbers(invoke_line)
     
     # blank line inbetween 
-    result_line = cur_lines[2]
+    result_line = code_unit[-1]
         
     # if result_line is None then the 
     # only data flow possible is "side-effects"
@@ -526,13 +551,13 @@ def EXTERNAL_FUNCTION_instrumentation(scd, m, cur_lines, free_reg):
     block = block + Instrumenter.make_comment_block("for EXTERNAL METHOD")
     
 
-    block.append(cur_lines[0])
+    block.append(code_unit[0])
     block.append(smali.BLANK_LINE())
-    block.append(cur_lines[2])
+    block.append(code_unit[-1])
     return block
 
 
-def RETURN_instrumentation(scd, m, cur_line, free_reg):
+def RETURN_instrumentation(scd, m, code_unit, free_reg):
     # return-object v2
                     
     # When a function returns
@@ -554,6 +579,7 @@ def RETURN_instrumentation(scd, m, cur_line, free_reg):
     # that the caller class can access.  This is not easy to know
     # when looking only at smali code
     #taint_field_dest = scd.create_taint_field("return", "field")
+    cur_line = code_unit[0]
     
     block = Instrumenter.make_comment_block("for RETURN")
     
@@ -577,10 +603,12 @@ def RETURN_instrumentation(scd, m, cur_line, free_reg):
     return block
         
 
-def BINARYOP_instrumenter(scd, m, cur_line, free_reg):
+def BINARYOP_instrumenter(scd, m, code_unit, free_reg):
     # Currently covers "ADD" "SUB" "MUL" and "DIV"
     # could probably be expanded to cover other / all
-    # binary operations, add-int vx,vy,vz	
+    # binary operations, add-int vx,vy,vz
+    
+    cur_line = code_unit[0]
 
     search_object = re.search(StigmaStringParsingLib.BEGINS_WITH_ADD, cur_line)
     instruction = 'ADD'
@@ -640,9 +668,10 @@ def BINARYOP_instrumenter(scd, m, cur_line, free_reg):
     return block
         
 
-def MOVE_instrumentation(scd, m, cur_line, free_reg):
+def MOVE_instrumentation(scd, m, code_unit, free_reg):
     # move vx vy
     # this instrumenter doesn't handle move-result or move-exception
+    cur_line = code_unit[0]
         
     regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
     
@@ -753,11 +782,11 @@ def MOVE_special_instrumentation(scd, m):
     # this requires a new signup
     # sign_up_method_start
     
-    print("m: ", m)
-    print("params: ", m.signature.parameter_type_map)
-    print("num params: ", m.signature.num_of_parameters)
-    print("num param registers: ", m.signature.num_of_parameter_registers)
-    print("old locals num: ", m.old_locals_num)
+    #print("m: ", m)
+    #print("params: ", m.signature.parameter_type_map)
+    #print("num params: ", m.signature.num_of_parameters)
+    #print("num param registers: ", m.signature.num_of_parameter_registers)
+    #print("old locals num: ", m.old_locals_num)
 
     #tokens = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
     #free_reg = tokens[0] # solution 1
@@ -783,8 +812,9 @@ def MOVE_special_instrumentation(scd, m):
 
 
     
-def NEW_INSTANCE_instrumentation(scd, m, cur_line, free_reg):
+def NEW_INSTANCE_instrumentation(scd, m, code_unit, free_reg):
     # new-instance v14, Landroid/graphics/Rect;
+    cur_line = code_unit[0]
 
     regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)    
     taint_field_loc = storage_handler.add_taint_location(scd.class_name, m.get_name(), regs[0])
@@ -800,9 +830,10 @@ def NEW_INSTANCE_instrumentation(scd, m, cur_line, free_reg):
     return block
 
 
-def CONST_instrumentation(scd, m, cur_line, free_reg):
+def CONST_instrumentation(scd, m, code_unit, free_reg):
     # const v0, 0x2
-
+    cur_line = code_unit[0]
+    
     regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)    
     taint_field_loc = storage_handler.add_taint_location(scd.class_name, m.get_name(), regs[0])
 
@@ -817,8 +848,9 @@ def CONST_instrumentation(scd, m, cur_line, free_reg):
     return block
     
 
-def NEG_instrumentation(scd, m, cur_line, free_reg):
+def NEG_instrumentation(scd, m, code_unit, free_reg):
     #neg-int v1,v0
+    cur_line = code_unit[0]
     
     regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
     
@@ -834,8 +866,9 @@ def NEG_instrumentation(scd, m, cur_line, free_reg):
     return block
     
 
-def CONVERTER_instrumentation(scd, m, cur_line, free_reg):
+def CONVERTER_instrumentation(scd, m, code_unit, free_reg):
     #int-to-long vx, vy
+    cur_line = code_unit[0]
     
     opcode = StigmaStringParsingLib.break_into_tokens(cur_line)[0]
         
@@ -857,7 +890,9 @@ def CONVERTER_instrumentation(scd, m, cur_line, free_reg):
     return block
 
 
-def WRITE_instrumentation(scd, m, cur_line, free_reg):  # "write()" sinks
+def WRITE_instrumentation(scd, m, code_unit, free_reg):  # "write()" sinks
+    
+    cur_line = code_unit[0]
 
     results = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
     target_reg = results[1]
@@ -902,11 +937,13 @@ def WRITE_instrumentation(scd, m, cur_line, free_reg):  # "write()" sinks
                 smali.BLANK_LINE(),
                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for write()")]
 
-    block.extend(cur_line)
+    block.extend(code_unit)
     return block
     
     
-def IF_instrumentation(scd, m, cur_line, free_reg): # if statement implicit flow "sinks"
+def IF_instrumentation(scd, m, code_unit, free_reg): # if statement implicit flow "sinks"
+    
+    cur_line = code_unit[0]
         
     registers = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
     #m.write_to_file("/home/ed/tmp/" + m.get_name() + "_before.smali")
@@ -966,7 +1003,7 @@ def IF_instrumentation(scd, m, cur_line, free_reg): # if statement implicit flow
         
         
 
-def INVOKE_instrumentation(scd, m, cur_lines, free_reg):     
+def INVOKE_instrumentation(scd, m, code_unit, free_reg):     
     
     ##############################
     #           1 line | 2 lines #
@@ -981,8 +1018,8 @@ def INVOKE_instrumentation(scd, m, cur_lines, free_reg):
     # INVOKE_instrumentation (this function)
     #  |
     #  |-WRITE_instrumentation (1 line)
-    #  |-ONE_LINE_INVOKE_instrumentation (1 line)
-    #  +-MOVE_RESULT_instrumentation (2 lines)
+    #  |-_one_line_invoke_instrumentation (1 line)
+    #  +-_move_result_instrumentation (2 lines)
     #     |
     #     |- LOCATION_instrumentation
     #     |- LATITUDE_instrumentation
@@ -992,26 +1029,32 @@ def INVOKE_instrumentation(scd, m, cur_lines, free_reg):
     #     |- EXTERNAL_FUNCTION_instr...
     #     +- INTERNAL_FUNCTION_instr...
     #         |
-    #         |- ONE_LINE_INVOKE_instr...
+    #         |- _one_line_invoke_instr...
     
     #print("INVOKE instrumentation: ", cur_lines)   
     
-    if(not isinstance(cur_lines, list)): # no move-result / 1 line only
+    if(len(code_unit) > 1 and \
+    re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, str(code_unit[-1]))):
+        # multiple lines
+        return _move_result_instrumentation(scd, m, code_unit, free_reg)
+        
+    else:
         # no move result in this case
         # determine that this is a write() call and is therefore
         # necessary for WRITE instrumentation, (short cut)
-        if STRING_STREAM_WRITE_FUNCTION in cur_lines or BYTE_STREAM_WRITE_FUNCTION in cur_lines or BYTE_STREAM_WRITE_FUNCTION_OVER in cur_lines or INT_STREAM_WRITE_FUNCTION in cur_lines or OBJECT_STREAM_WRITE_FUNCTION in cur_lines:
-            return WRITE_instrumentation(scd, m, cur_lines, free_reg)
+        line = code_unit[0]
+        if (STRING_STREAM_WRITE_FUNCTION in line or \
+        BYTE_STREAM_WRITE_FUNCTION in line or \
+        BYTE_STREAM_WRITE_FUNCTION_OVER in line or \
+        INT_STREAM_WRITE_FUNCTION in line or \
+        OBJECT_STREAM_WRITE_FUNCTION in line):
+            return WRITE_instrumentation(scd, m, code_unit, free_reg)
         
-        callee_method_name, callee_class_obj = _get_callee_parts(cur_lines, scd)
+        callee_method_name, callee_class_obj = _get_callee_parts(line, scd)
         if(callee_class_obj is not None): #internal
-            return ONE_LINE_INVOKE_instrumentation(scd, m, cur_lines, free_reg)
-            
-    else: # multiple-lines
-        return MOVE_RESULT_instrumentation(scd, m, cur_lines, free_reg)
-
+            return _one_line_invoke_instrumentation(scd, m, code_unit, free_reg)
         
-    return [cur_lines]
+    return code_unit
     
     
 def main():

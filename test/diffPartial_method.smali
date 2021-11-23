@@ -9,7 +9,7 @@
     .param p6, "backward"    # [I
     .param p7, "kOffset"    # I
 
-    .line 204"
+    .line 204
     move-object/from16 v0, p0
 
     move-object/from16 v1, p5

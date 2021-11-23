@@ -67,6 +67,9 @@ def type_safety_checker_control_flow_test_edge_case_2():
 
 def type_safety_checker_control_flow_test_edge_case_3():
 	print("\nRunning control flow test 3")
+	print("\ttest/registerListener_method.smali")
+	
+	
 	fh = open("./test/registerListener_method.smali", "r")
 	method_list = fh.readlines()
 	fh.close()
@@ -197,7 +200,7 @@ def type_saftey_checker_tests():
 	cfg = ControlFlowGraph.ControlFlowGraph(smd.raw_text)
 
 	tsc = TypeSafetyChecker.TypeSafetyChecker(smd.signature, cfg) 
-	#print(str(tsc.most_recent_type_map))
+	#print("Actual:", str(tsc.most_recent_type_map))
 	assert(str(tsc.most_recent_type_map) == "{'p0': Lunknownclass;, 'p1': Landroid/view/View;}")
 	
 	counter = 0
@@ -207,17 +210,18 @@ def type_saftey_checker_tests():
 		if(not node["visited"]):
 			node["visited"] = True 
 			
-			#call type_update on each line of code inside the node. 
-			for index in range(len(node["text"])):
-				line = node["text"][index]        
-				#print(type(line), ": " + str(line))         
-				tsc.type_update(line, index, counter)
+			smali_code_unit_collection = SmaliMethodDef.SmaliCodeIterator(node["text"])
+			is_first_line = True
+			for unit in smali_code_unit_collection:
+				tsc.type_update(unit, is_first_line, counter) 
+				is_first_line = False
 				node["type_list"] = tsc.node_type_list
-
+					
 		counter+=1  
 		
 	#print(tsc.node_type_list)
 	#print("list of hashmaps length: " + str(len(tsc.node_type_list)))
+	#cfg.show()
 	assert(len(tsc.node_type_list) == 7)
 	assert(tsc.node_type_list[-1] == tsc.most_recent_type_map)
 	assert(str(tsc.most_recent_type_map) == "{'p0': Lunknownclass;, 'p1': Landroid/view/View;, 'v0': 32-bit}")
@@ -324,6 +328,7 @@ def stigma_leaks_crash_SupportActivity():
 	
 def double_move_result_bug():
 	print("\nRunning basic wholistic taint tracking instrumentation tests (double move result bug)...")
+	print("\ttest/double_move_result_line.smali")
 	
 	scd = SmaliClassDef.SmaliClassDef("./test/double_move_result_line.smali")
 	putExtraData_method = scd.methods[0]
@@ -379,6 +384,7 @@ def wide_register_index_out_of_range_bug():
 def get_class_from_non_reference_register_bug():
 	
 	print("\nRunning get class from non reference register bug")
+	print("\ttest/endAnimatingAwayFragments_method.smali")
 	
 	scd = SmaliClassDef.SmaliClassDef("./test/endAnimatingAwayFragments_method.smali")
 	endAnimatingMethod = scd.methods[0]
@@ -417,6 +423,7 @@ def get_class_from_non_reference_register_bug():
 	
 def register_shuffling_test():
 	print("\nRunning register shuffling test")
+	print("\ttest/custom_class.smali")
 	
 	scd = SmaliClassDef.SmaliClassDef("./test/custom_class.smali")
 	made_up_method = scd.methods[0]
@@ -432,11 +439,11 @@ def register_shuffling_test():
 	scd.write_to_file("./test/custom_class_result.smali")
 	
 	
-	fh = open("./test/endAnimatingAwayFragments_method_result.smali", "r")
+	fh = open("./test/custom_class_result.smali", "r")
 	result = fh.readlines()
 	fh.close()
 	
-	fh = open("./test/endAnimatingAwayFragments_method_soln.smali", "r")
+	fh = open("./test/custom_class_solution.smali", "r")
 	soln = fh.readlines()
 	fh.close()
 	
@@ -476,6 +483,7 @@ def reversed_move_parameters_test():
 	
 def wide_register_index_out_of_range_bug_2():
 	print("\nRunning wide register index out of range bug 2")
+	print("\ttest/makeOpenCloseAnimation_method.smali")
 	
 	scd = SmaliClassDef.SmaliClassDef("./test/makeOpenCloseAnimation_method.smali")
 	scd.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)
@@ -504,6 +512,7 @@ def wide_register_index_out_of_range_bug_2():
 	
 def wide_register_has_type_long_string():
 	print("\nRunning wide register has type long/string")
+	print("\ttest/checkArgumentInRange_method.smali")
 	
 	scd = SmaliClassDef.SmaliClassDef("./test/checkArgumentInRange_method.smali")
 	
@@ -514,11 +523,6 @@ def wide_register_has_type_long_string():
 	scd.instrument()
 	scd.write_to_file("./test/checkArgumentInRange_method_result.smali")
 	
-	# the bug here is that v19 was used in the moves_before and moves_after
-	# but it was used to store a wide value and the method does not allow
-	# the user of v20
-	# .locals is 15 and there are 5 parameter registers (counting this)
-	# so the method uses 20 registers total: v0 - v19
 	
 	fh = open("./test/checkArgumentInRange_method_result.smali", "r")
 	result = fh.readlines()
@@ -545,11 +549,6 @@ def on_nested_scrolling_parent_helper():
 	scd.instrument()
 	scd.write_to_file("./test/onNestedScrollAccepted_method_result.smali")
 	
-	# the bug here is that v19 was used in the moves_before and moves_after
-	# but it was used to store a wide value and the method does not allow
-	# the user of v20
-	# .locals is 15 and there are 5 parameter registers (counting this)
-	# so the method uses 20 registers total: v0 - v19
 	
 	fh = open("./test/onNestedScrollAccepted_method_result.smali", "r")
 	result = fh.readlines()
@@ -568,7 +567,8 @@ def on_nested_scrolling_parent_helper():
 	
 	
 def register_listeners():
-	print("\nRunning missing return result bug")
+	print("\nRunning missing move-result bug")
+	print("\ttest/register_listeners_method.smali")
 	
 	scd = SmaliClassDef.SmaliClassDef("./test/register_listeners_method.smali")
 
@@ -576,11 +576,6 @@ def register_listeners():
 	scd.instrument()
 	scd.write_to_file("./test/register_listeners_method_result.smali")
 	
-	# the bug here is that v19 was used in the moves_before and moves_after
-	# but it was used to store a wide value and the method does not allow
-	# the user of v20
-	# .locals is 15 and there are 5 parameter registers (counting this)
-	# so the method uses 20 registers total: v0 - v19
 	
 	fh = open("./test/register_listeners_method_result.smali", "r")
 	result = fh.readlines()
@@ -603,7 +598,7 @@ def internal_tests():
 	print("--Running Internal Tests--")
 	
 	src_code_with_internal_tests = ["StigmaStringParsingLib.py", 
-		"SmaliMethodDef.py", "SmaliTypes.py", 
+		"SmaliMethodDef.py", "SmaliTypes.py",
 		"SmaliRegister.py", "SmaliAssemblyInstructions.py",
 		"Instrumenter.py", "TaintStorageHandler.py"]
 	

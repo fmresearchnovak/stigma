@@ -96,7 +96,6 @@
     
     move-result v0
 
-
     .line 2672
     .local v0, "numFragments":I
     :goto_0
@@ -175,7 +174,6 @@
     
     move-result-object v2
 
-
     check-cast v2, Landroid/support/v4/app/Fragment;
 
     .line 2674
@@ -227,7 +225,6 @@
     
     move-result-object v3
 
-
     
     # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
@@ -275,7 +272,6 @@
     
     move-result v9
 
-
     .line 2678
     .local v9, "stateAfterAnimating":I
     
@@ -295,7 +291,6 @@
     
     move-result-object v10
 
-
     .line 2679
     .local v10, "animatingAway":Landroid/view/View;
     
@@ -314,7 +309,6 @@
     invoke-virtual {v10}, Landroid/view/View;->getAnimation()Landroid/view/animation/Animation;
     
     move-result-object v11
-
 
     .line 2680
     .local v11, "animation":Landroid/view/animation/Animation;
@@ -435,6 +429,7 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
     
+    
     move/16 v0, v16
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
@@ -473,87 +468,110 @@
     # IFT INSTRUCTIONS ADDED BY STIGMA for INTERNAL METHOD
     
     invoke-virtual/range {v3 .. v8}, Landroid/support/v4/app/FragmentManagerImpl;->moveToState(Landroid/support/v4/app/Fragment;IIIZ)V
-    move/16 v0, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
 
     .end local v9    # "stateAfterAnimating":I
     .end local v10    # "animatingAway":Landroid/view/View;
     .end local v11    # "animation":Landroid/view/animation/Animation;
+    
+    move/16 v0, v16
+    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
+    
     goto :goto_2
     :cond_2
+    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
+    move/16 v16, v0
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
-    const/16 v10, 0x0
+    const/16 v0, 0x0
     
-    sget v11, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v2:F
+    sget v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v2:F
     
-    add-float v10, v10, v11
+    add-float v0, v0, v13
     
-    sput v10, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v3:F
+    sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v3:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
     invoke-virtual {v2}, Landroid/support/v4/app/Fragment;->getAnimator()Landroid/animation/Animator;
     
     move-result-object v3
+    
+    move/16 v0, v16
+    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
+    
 
-
+    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
+    move/16 v16, v0
     
     # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
-    sget v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v3:F
+    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v3:F
     
-    const/16 v14, 0x0
+    const/16 v15, 0x0
     
-    cmpl-float v14, v13, v14
+    cmpl-float v15, v14, v15
     
-    if-eqz v14, :stigma_jump_label_6
+    if-eqz v15, :stigma_jump_label_6
     
-    const-string v10, "STIGMA"
+    const-string v0, "STIGMA"
     
-    const-string v11, "Implicit flow involving sensitive data!"
+    const-string v13, "Implicit flow involving sensitive data!"
     
-    invoke-static {v10, v11},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v0, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
-    invoke-static {v13}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
+    invoke-static {v14}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
     
-    move-result-object v11
+    move-result-object v13
     
-    invoke-static {v10, v11},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v0, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
     :stigma_jump_label_6
     
     # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
     
+    
+    move/16 v0, v16
+    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
+    
     if-eqz v3, :cond_3
 
     .line 2689
+    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
+    move/16 v16, v0
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
-    const/16 v10, 0x0
+    const/16 v0, 0x0
     
-    sget v11, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v2:F
+    sget v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v2:F
     
-    add-float v10, v10, v11
+    add-float v0, v0, v13
     
-    sput v10, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v3:F
+    sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v3:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
     invoke-virtual {v2}, Landroid/support/v4/app/Fragment;->getAnimator()Landroid/animation/Animator;
     
     move-result-object v3
+    
+    move/16 v0, v16
+    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
+    
 
-
+    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
+    move/16 v16, v0
     invoke-virtual {v3}, Landroid/animation/Animator;->end()V
 
     nop
 
     .line 2672
     .end local v2    # "fragment":Landroid/support/v4/app/Fragment;
+    
+    move/16 v0, v16
+    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
+    
     :cond_3
     :goto_2
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
@@ -569,6 +587,7 @@
     sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v1:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for ADD instruction
+    
     
     move/16 v0, v16
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers

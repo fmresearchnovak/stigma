@@ -27,6 +27,7 @@ def sign_up_method_start(new_method):
     # to do that in python (reflection)
     # this is _ideally_ to allow a sort of "plugin" system where
     # other developers could add instrumentation
+    # I think the answer is "python protocols"
     start_of_method_handler = new_method
     
 
@@ -47,6 +48,7 @@ def sign_up(opcode, new_method, instrumeter_inserts_original_lines = False):
     # to do that in python (reflection)
     # this is _ideally_ to allow a sort of "plugin" system where
     # other developers could add instrumentation
+    # I think the answer is "python protocols"
     
     # not sure why we don't have to do:
     # global instrumentation_map
@@ -110,19 +112,4 @@ def get_next_move_result(m, line_num):
             return None
             
     return None
-
-
-def SIMPLE_instrumentation(scd, m, cur_line, dest_num, source_num, comment_string, free_reg):
-    
-    regs = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
-    taint_field_src = storage_handler.add_taint_location(scd.class_name, m.get_name(), regs[source_num])
-    taint_field_dest = storage_handler.add_taint_location(scd.class_name, m.get_name(), regs[dest_num])
-
-
-    block = make_comment_block(comment_string)
-    block = block + [smali.SGET(free_reg[0], taint_field_src),
-    smali.BLANK_LINE(),
-    smali.SPUT(free_reg[0], taint_field_dest)]
-    block = block + make_comment_block(comment_string)
-
-    return block
+ 
