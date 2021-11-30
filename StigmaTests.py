@@ -569,6 +569,7 @@ def on_nested_scrolling_parent_helper():
 def register_listeners():
 	print("\nRunning missing move-result bug")
 	print("\ttest/register_listeners_method.smali")
+	# a move-result was dropped
 	
 	scd = SmaliClassDef.SmaliClassDef("./test/register_listeners_method.smali")
 

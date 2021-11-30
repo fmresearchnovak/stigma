@@ -137,6 +137,8 @@ class TypeSafetyChecker:
             #print("\t\tnon relevant instr!", opcode)
             line_type_map_new = self.most_recent_type_map.copy()
             return line_type_map_new
+            
+        
 
 
         #this is the "normal" case, 
@@ -192,7 +194,14 @@ class TypeSafetyChecker:
                     line_type_map_new[adj_reg] = SmaliTypes.SixtyFourBit_2()
                     #print(dest_reg, " is now: ", str(reg_type))
                     #print(adj_reg, " is now: ", str(SmaliTypes.SixtyFourBit_2()))
-        
+                    
+        elif(re.search(StigmaStringParsingLib.BEGINS_WITH_INVOKE, first_instr) is not None):
+            # this is a single invoke-* line that doesn't
+            # have a corresponding move-result in the code unit
+            # such a situation with filled-new-array is valid, but
+            # logically pointless and should never happen
+            return line_type_map_new
+                  
         else:
 
             registers = StigmaStringParsingLib.get_v_and_p_numbers(first_line)
@@ -245,13 +254,7 @@ class TypeSafetyChecker:
             elif(opcode == "check-cast"):
                 return_type = SmaliTypes.from_string(tokens[-1])
                 line_type_map_new[dest_reg] = return_type
-                
-            elif(re.search(StigmaStringParsingLib.BEGINS_WITH_INVOKE, opcode) is not None):
-                # this is a single invoke-* line that doesn't
-                # have a corresponding move-result in the code unit
-                # such a situation with filled-new-array is valid, but
-                # logically pointless and should never happen
-                pass
+
                       
             elif(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_OBJECT, opcode) is not None):
                 src_reg = registers[1]
