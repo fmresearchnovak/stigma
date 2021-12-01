@@ -482,90 +482,90 @@
     .line 339
     :cond_1
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move-object/16 v16, v0
+    move-object/16 v16, v12
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for NEW-INSTANCE
     
-    const v0, 0x0
+    const v12, 0x0
     
-    sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v4:F
+    sput v12, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v4:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for NEW-INSTANCE
     
     
-    move-object/16 v0, v16
+    move-object/16 v12, v16
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     new-instance v4, Ljava/lang/IllegalArgumentException;
 
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move-object/16 v16, v0
+    move-object/16 v16, v12
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for SGET
     
-    sget v0, Lnet/stigmastorage/StorageClass1;->java_util_Locale__US:F
+    sget v12, Lnet/stigmastorage/StorageClass1;->java_util_Locale__US:F
     
-    sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v5:F
+    sput v12, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v5:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for SGET
     
     
-    move-object/16 v0, v16
+    move-object/16 v12, v16
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     sget-object v5, Ljava/util/Locale;->US:Ljava/util/Locale;
 
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move-object/16 v16, v0
+    move-object/16 v16, v12
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for NEW-ARRAY
     
-    sget v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v3:F
+    sget v12, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v3:F
     
-    sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v3:F
+    sput v12, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v3:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for NEW-ARRAY
     
     
-    move-object/16 v0, v16
+    move-object/16 v12, v16
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     new-array v3, v3, [Ljava/lang/Object;
 
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move-object/16 v16, v0
+    move-object/16 v16, v12
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for APUT
     
-    sget v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v12:F
+    sget v12, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v12:F
     
-    sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v3:F
+    sput v12, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v3:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for APUT
     
     
-    move-object/16 v0, v16
+    move-object/16 v12, v16
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     aput-object v12, v3, v2
 
     .line 341
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move-object/16 v16, v0
+    move-object/16 v16, v12
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
-    const/16 v0, 0x0
+    const/16 v12, 0x0
     
     sget v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v8:F
     
-    add-float v0, v0, v13
+    add-float v12, v12, v13
     
     sget v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v9:F
     
-    add-float v0, v0, v13
+    add-float v12, v12, v13
     
-    sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v2:F
+    sput v12, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v2:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
@@ -573,43 +573,43 @@
     
     move-result-object v2
     
-    move-object/16 v0, v16
+    move-object/16 v12, v16
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
 
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move-object/16 v16, v0
+    move-object/16 v16, v12
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for APUT
     
-    sget v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v2:F
+    sget v12, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v2:F
     
-    sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v3:F
+    sput v12, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v3:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for APUT
     
     
-    move-object/16 v0, v16
+    move-object/16 v12, v16
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     aput-object v2, v3, v1
 
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move-object/16 v16, v0
+    move-object/16 v16, v1
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
-    const/16 v0, 0x0
+    const/16 v1, 0x0
     
     sget v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v10:F
     
-    add-float v0, v0, v13
+    add-float v1, v1, v13
     
     sget v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v11:F
     
-    add-float v0, v0, v13
+    add-float v1, v1, v13
     
-    sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v1:F
+    sput v1, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v1:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
@@ -617,23 +617,23 @@
     
     move-result-object v1
     
-    move-object/16 v0, v16
+    move-object/16 v1, v16
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
 
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move-object/16 v16, v0
+    move-object/16 v16, v1
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for APUT
     
-    sget v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v1:F
+    sget v1, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v1:F
     
-    sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v3:F
+    sput v1, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v3:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for APUT
     
     
-    move-object/16 v0, v16
+    move-object/16 v1, v16
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     aput-object v1, v3, v0

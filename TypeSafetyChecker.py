@@ -74,12 +74,14 @@ class TypeSafetyChecker:
             new_map = self._type_update_colon(line, node_counter)
             
             
-        if(StigmaStringParsingLib.is_valid_instruction(line)):
+        elif(StigmaStringParsingLib.is_valid_instruction(line)):
             new_map = self._type_update_instruction(code_unit, is_first_line, node_counter)
+            
             
         else: #.line 15, .locals 5, .end_method, etc.
             new_map = self.most_recent_type_map.copy()
                
+        #print("updating most recent type map:", new_map)
         self.most_recent_type_map = new_map
         self.node_type_list.append(new_map)
 
@@ -111,6 +113,7 @@ class TypeSafetyChecker:
                 line_type_map_new = self.most_recent_type_map.copy()
 
             else:
+                #print("found preceeding if statement matching!")
                 map_list = self.get_relevant_maps_to_merge(node_counter)        
                 line_type_map_new = self.merge_maps(map_list)
             
@@ -118,7 +121,7 @@ class TypeSafetyChecker:
         else:
             raise ValueError("Lost on", str(line))
             
-            
+        
         return line_type_map_new
             
             
@@ -278,11 +281,13 @@ class TypeSafetyChecker:
     def get_relevant_maps_to_merge(self,node_counter):
         '''This gets all maps from the predecessor nodes to merge'''
         revelant_maps = []
-        predecessors = self.cfg.G.predecessors(node_counter)
+        predecessors = list(self.cfg.G.predecessors(node_counter))
+        #print("predecessors:", predecessors)
         for parent in predecessors:
             if "type_list" not in self.cfg.G.nodes[parent]:
                 raise Exception("The parent node has not been visited yet.", self.cfg.G.nodes[parent]["text"])
             parent_node_map = self.cfg.G.nodes[parent]["type_list"][-1]
+            #print("map of", parent, ": ", parent_node_map)
             revelant_maps.append(parent_node_map)
         return revelant_maps
     
@@ -410,6 +415,7 @@ class TypeSafetyChecker:
         @return: a new hashmap with key: register value: updated register types after merging
         '''
         
+        
         new_map = {}
         register_set = set([])
         for m in map_list:
@@ -432,11 +438,15 @@ class TypeSafetyChecker:
             if reg not in new_map:
                 new_map[reg] = presumed_type
 
+        #print("\nmerged map", new_map)
         return new_map
     
     @staticmethod
     def get_register_presumed_type(reg, map_list):
-        ''' The given register(reg) might not exist in any of the maps of the map_list, so we loop through all the maps and find the first map with that reg as a key and return the value which is its given type '''
+        ''' The given register(reg) might not exist in any of the maps 
+            of the map_list, so we loop through all the maps and find 
+            the first map with that reg as a key and return the value 
+            which is its given type '''
         for map in map_list:
             if reg in map:
                 return map[reg]

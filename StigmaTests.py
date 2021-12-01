@@ -591,7 +591,31 @@ def register_listeners():
 	print("passed!")
 	
 	
+
+def on_start_intent_sender_from_fragment():
+	print("\nRunning copy v19<-v0 Imprecise Constant: -128")
 	
+	scd = SmaliClassDef.SmaliClassDef("./test/onStartIntentSenderFromFragment_method.smali")
+	
+	check_arg_method = scd.methods[0]
+	#print("before growing: ", check_arg_method.get_register_meta_data())
+	scd.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)
+	#print("after growing: ", check_arg_method.get_register_meta_data())
+	scd.instrument()
+	scd.write_to_file("./test/onStartIntentSenderFromFragment_method_result.smali")
+	
+	
+	fh = open("./test/onStartIntentSenderFromFragment_method_result.smali", "r")
+	result = fh.readlines()
+	fh.close()
+	
+	fh = open("./test/onStartIntentSenderFromFragment_method_soln.smali", "r")
+	soln = fh.readlines()
+	fh.close()
+	
+	assert(result == soln)
+	
+	print("passed!")
 	
 	
 def internal_tests():
@@ -655,6 +679,7 @@ def main():
 	wide_register_has_type_long_string()
 	on_nested_scrolling_parent_helper()
 	register_listeners()
+	on_start_intent_sender_from_fragment()
 	
 	
 	
