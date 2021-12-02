@@ -588,10 +588,10 @@ class SmaliMethodDef:
 		instrumeter_inserts_original_lines = Instrumenter.instrumentation_map[opcode][1]
 		#print("looking at:", line.strip(), "   instrumentation method: ", instrumentation_method, "\n")
 		
+		#print("\n\code_unit: ", code_unit)
+		#print("type_map: ", type_map_before_code_unit)
 		regs = self.gen_list_of_safe_registers(code_unit, type_map_before_code_unit) 
-		#print("\n\nline: ", line)
-		#print("type_map: ", line_type_map)
-		#print("free regs:", regs)
+		#print("regs to be used for taint prop:", regs)
 		#print(self.get_register_meta_data())
 		#input("continue?") 
 		
@@ -631,6 +631,7 @@ class SmaliMethodDef:
 		#  (b) not containing original program data
 		#      (or such original program data has been moved to another register)
 		#  (c) not the second 1/2 of a wide value
+		#  (d) not used in the code_unit
 		
 		# The algorithm aims to get to goal_size
 		# for the number of registers returned
@@ -645,7 +646,7 @@ class SmaliMethodDef:
 		# for the moves implemented later in this algorithm      
 		count = self.first_new_free_reg_num
 		
-		# 1) Try to use the top registers available after growing
+		# 1) Try to use the top registers that were made available by growing
 		for r in self.top_regs:
 			n = int(r[1:])
 			if(n < 16):
@@ -667,13 +668,15 @@ class SmaliMethodDef:
 		# exclude registers used in this code unit
 		# if the instruction is an invoke or new filled array, we also cannot use the registers
 		# from the subsequent move-result-* instruction, in our safe registers list
-		cur_line_reg = set([])
+		code_unit_regs = set([])
 		for line in code_unit:
 			line = str(line)
 			if(StigmaStringParsingLib.is_valid_instruction(line)):
-				cur_line_reg.union(set(StigmaStringParsingLib.get_v_and_p_numbers(line)))
-		safe_regs.difference_update(cur_line_reg)
-
+				#print("unioning in " + str(set(StigmaStringParsingLib.get_v_and_p_numbers(line))) + "...")
+				code_unit_regs = code_unit_regs.union(set(StigmaStringParsingLib.get_v_and_p_numbers(line)))
+		safe_regs.difference_update(code_unit_regs)
+		#print("code_unit_regs computed: ", code_unit_regs)
+		
 		#print("\tsecond return regs: ", sorted_list(safe_regs))
 		if(len(safe_regs) >= Instrumenter.DESIRED_NUM_REGISTERS):
 			return sorted_list(safe_regs)
@@ -692,9 +695,7 @@ class SmaliMethodDef:
 		sorted_reg_list = sorted(cur_type_map.keys())
 		for reg in sorted_reg_list:
 			#print("attempting to setup moves with", reg)
-			# reg not in cur_line_reg 
-			# it looks like that we can use the registers from the current line being processed, however there is a BIG UNSURE
-			if (self._move_reg_conditions(dest_reg, reg, safe_regs, cur_line_reg, cur_type_map)):
+			if (self._move_reg_conditions(dest_reg, reg, safe_regs, code_unit_regs, cur_type_map)):
 					
 				#print(str(line_type_map[reg]) + "  " + str(type(line_type_map[reg])))
 				move_instr = cur_type_map[reg].get_move_instr()
@@ -740,9 +741,10 @@ class SmaliMethodDef:
 		return [] # just return nothing if it can't be done!
 
 	
-	def _move_reg_conditions(self, dest_reg, reg, safe_regs, cur_line_reg, type_map):
+	def _move_reg_conditions(self, dest_reg, reg, safe_regs, code_unit_regs, type_map):
 		#print("num regs: " + str(self.get_num_registers()))
-		#print("reg: " + str(reg))
+		#print("_move_reg_conditions(" + str(reg) + ")")
+		#print("code unit regs: " + str(code_unit_regs))
 		#print("dest reg: " + str(dest_reg))
 		#print("second part of wide dest: " + str(dest_reg + 1))
 		if reg in safe_regs:
@@ -757,7 +759,16 @@ class SmaliMethodDef:
 			return False
 		if int(reg[1:]) >= 16:
 			return False
-		if reg in cur_line_reg:
+		if reg in code_unit_regs:
+			# We definitely cannot use registers from the current line 
+			# because there are instrumenters that re-write their own 
+			# instructions.  In such a situation, the move_back
+			# operations won't happen until AFTER the original instruction
+			# which means any registers used in that instruction
+			# that are also used for register shuffling and / or 
+			# propagation will have the wrong values at the time of 
+			# the original instruction
+			#print("reg", reg, "is in code unit regs", code_unit_regs)
 			return False
 		
 		return True
@@ -1054,6 +1065,10 @@ def tests():
 	assert(smd.dereference_p_to_v_numbers("    filled-new-array {p0, p1, p2}, [Ljava/lang/String;\n") == "    filled-new-array {v9, v10, v11}, [Ljava/lang/String;\n")
 	assert(smd.dereference_p_to_v_numbers("    if-eqz p3, :cond_6\n") == "    if-eqz v12, :cond_6\n")
 	assert(smd.dereference_p_to_v_numbers("    const-string p1, \"nasty p1 example\"\n") == "    const-string v10, \"nasty p1 example\"\n")
+	
+	
+	print("\t_move_reg_conditions...")
+	assert(smd._move_reg_conditions("v3", "v0", [], ["v0", "v3", "v13"], {"v0": "32-bit"}) == False)
 	
 	
 	print("\tSmaliCodeIterator...")

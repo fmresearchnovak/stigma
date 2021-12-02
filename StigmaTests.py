@@ -443,7 +443,7 @@ def register_shuffling_test():
 	result = fh.readlines()
 	fh.close()
 	
-	fh = open("./test/custom_class_solution.smali", "r")
+	fh = open("./test/custom_class_soln.smali", "r")
 	soln = fh.readlines()
 	fh.close()
 	
@@ -594,6 +594,7 @@ def register_listeners():
 
 def on_start_intent_sender_from_fragment():
 	print("\nRunning copy v19<-v0 Imprecise Constant: -128")
+	print("\ttest/onStartIntentSenderFromFragment_method.smali")
 	
 	scd = SmaliClassDef.SmaliClassDef("./test/onStartIntentSenderFromFragment_method.smali")
 	
@@ -610,6 +611,36 @@ def on_start_intent_sender_from_fragment():
 	fh.close()
 	
 	fh = open("./test/onStartIntentSenderFromFragment_method_soln.smali", "r")
+	soln = fh.readlines()
+	fh.close()
+	
+	assert(result == soln)
+	
+	print("passed!")
+	
+
+def tried_to_get_class_from_non_reference_register_v0():
+	# tried to get class from non-reference register v0 (type=Float)
+	print("\nRunning tried to get class from non-reference register v0 (type=Float)")
+	print("\ttest/executeOpsTogether_method.smali")
+	
+	# this method was truncated just after the instructions relevant
+	# to the bug being fixed
+	scd = SmaliClassDef.SmaliClassDef("./test/executeOpsTogether_method_truncated.smali")
+	
+	check_arg_method = scd.methods[0]
+	#print("before growing: ", check_arg_method.get_register_meta_data())
+	scd.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)
+	#print("after growing: ", check_arg_method.get_register_meta_data())
+	scd.instrument()
+	scd.write_to_file("./test/executeOpsTogether_method_result.smali")
+	
+	
+	fh = open("./test/executeOpsTogether_method_result.smali", "r")
+	result = fh.readlines()
+	fh.close()
+	
+	fh = open("./test/executeOpsTogether_method_soln.smali", "r")
 	soln = fh.readlines()
 	fh.close()
 	
@@ -680,6 +711,7 @@ def main():
 	on_nested_scrolling_parent_helper()
 	register_listeners()
 	on_start_intent_sender_from_fragment()
+	tried_to_get_class_from_non_reference_register_v0()
 	
 	
 	

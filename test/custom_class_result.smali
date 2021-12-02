@@ -232,8 +232,8 @@
 
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     move/16 v20, v0
-    move/16 v21, v1
-    move-wide/16 v22, v10
+    move-wide/16 v21, v10
+    move/16 v23, v2
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for INTERNAL METHOD
     
@@ -248,8 +248,8 @@
 
     
     move/16 v0, v20
-    move/16 v1, v21
-    move-wide/16 v10, v22
+    move-wide/16 v10, v21
+    move/16 v2, v23
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers

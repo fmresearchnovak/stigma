@@ -278,17 +278,17 @@
 
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     move-object/16 v19, v0
-    move-object/16 v20, v1
-    move-object/16 v21, v10
-    move-object/16 v22, v11
+    move-object/16 v20, v10
+    move-object/16 v21, v11
+    move-object/16 v22, v12
     invoke-static/range {v1 .. v8}, Landroid/support/v4/app/ActivityCompat;->startIntentSenderForResult(Landroid/app/Activity;Landroid/content/IntentSender;ILandroid/content/Intent;IIILandroid/os/Bundle;)V
 
     .line 145
     
     move-object/16 v0, v19
-    move-object/16 v1, v20
-    move-object/16 v10, v21
-    move-object/16 v11, v22
+    move-object/16 v10, v20
+    move-object/16 v11, v21
+    move-object/16 v12, v22
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     return-void

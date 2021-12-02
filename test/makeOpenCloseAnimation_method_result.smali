@@ -191,8 +191,8 @@
 
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     move-object/16 v16, v11
-    move/16 v17, v12
-    move/16 v18, v13
+    move/16 v17, v13
+    move/16 v18, v14
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
     
@@ -204,8 +204,8 @@
     
     
     move-object/16 v11, v16
-    move/16 v12, v17
-    move/16 v13, v18
+    move/16 v13, v17
+    move/16 v14, v18
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     move v4, v12
@@ -213,8 +213,8 @@
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     move-object/16 v16, v11
     move/16 v17, v12
-    move/16 v18, v13
-    move/16 v19, v14
+    move/16 v18, v14
+    move/16 v19, v15
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
     
@@ -227,8 +227,8 @@
     
     move-object/16 v11, v16
     move/16 v12, v17
-    move/16 v13, v18
-    move/16 v14, v19
+    move/16 v14, v18
+    move/16 v15, v19
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     move v5, v13
@@ -367,7 +367,7 @@
     move-object/16 v16, v11
     move/16 v17, v12
     move/16 v18, v13
-    move/16 v19, v14
+    move/16 v19, v5
     invoke-direct {v4, v14, v15}, Landroid/view/animation/AlphaAnimation;-><init>(FF)V
 
     # custom lines written to exhibit the case "external method WITH subsequent move-result"
@@ -376,32 +376,32 @@
     move-object/16 v11, v16
     move/16 v12, v17
     move/16 v13, v18
-    move/16 v14, v19
+    move/16 v5, v19
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v0
-    move-object/16 v17, v11
-    move/16 v18, v12
-    move/16 v19, v13
+    move-object/16 v16, v11
+    move/16 v17, v12
+    move/16 v18, v13
+    move/16 v19, v5
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
-    const/16 v0, 0x0
+    const/16 v11, 0x0
     
-    sget v11, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_makeOpenCloseAnimation_v4:F
+    sget v12, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_makeOpenCloseAnimation_v4:F
     
-    add-float v0, v0, v11
+    add-float v11, v11, v12
     
-    sget v11, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_makeOpenCloseAnimation_v14:F
+    sget v12, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_makeOpenCloseAnimation_v14:F
     
-    add-float v0, v0, v11
+    add-float v11, v11, v12
     
-    sget v11, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_makeOpenCloseAnimation_v15:F
+    sget v12, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_makeOpenCloseAnimation_v15:F
     
-    add-float v0, v0, v11
+    add-float v11, v11, v12
     
-    sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_makeOpenCloseAnimation_v0:F
+    sput v11, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_makeOpenCloseAnimation_v0:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
@@ -409,10 +409,10 @@
     
     move-result v0
     
-    move/16 v0, v16
-    move-object/16 v11, v17
-    move/16 v12, v18
-    move/16 v13, v19
+    move-object/16 v11, v16
+    move/16 v12, v17
+    move/16 v13, v18
+    move/16 v5, v19
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
 
@@ -474,18 +474,18 @@
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v0
-    move-object/16 v17, v11
-    move/16 v18, v12
-    move/16 v19, v13
+    move-object/16 v16, v11
+    move/16 v17, v12
+    move/16 v18, v13
+    move/16 v19, v14
     invoke-virtual {v0, v4}, Landroid/view/animation/AnimationSet;->addAnimation(Landroid/view/animation/Animation;)V
 
     .line 1148
     
-    move/16 v0, v16
-    move-object/16 v11, v17
-    move/16 v12, v18
-    move/16 v13, v19
+    move-object/16 v11, v16
+    move/16 v12, v17
+    move/16 v13, v18
+    move/16 v14, v19
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
@@ -512,17 +512,17 @@
     new-instance v2, Landroid/support/v4/app/FragmentManagerImpl$AnimationOrAnimator;
 
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v0
-    move-object/16 v17, v11
-    move/16 v18, v12
-    move/16 v19, v13
+    move-object/16 v16, v11
+    move/16 v17, v12
+    move/16 v18, v13
+    move/16 v19, v14
     invoke-direct {v2, v0}, Landroid/support/v4/app/FragmentManagerImpl$AnimationOrAnimator;-><init>(Landroid/view/animation/Animation;)V
 
     
-    move/16 v0, v16
-    move-object/16 v11, v17
-    move/16 v12, v18
-    move/16 v13, v19
+    move-object/16 v11, v16
+    move/16 v12, v17
+    move/16 v13, v18
+    move/16 v14, v19
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
