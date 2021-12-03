@@ -107,7 +107,7 @@
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     move/16 v16, v0
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
+    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
     sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v8:F
     
@@ -131,7 +131,7 @@
     
     :stigma_jump_label_1
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
+    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
     
     
     move/16 v0, v16
@@ -142,7 +142,7 @@
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     move/16 v16, v0
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
+    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
     sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v4:F
     
@@ -166,7 +166,7 @@
     
     :stigma_jump_label_2
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
+    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
     
     
     move/16 v0, v16
@@ -178,7 +178,7 @@
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     move/16 v16, v0
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
+    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
     sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v10:F
     
@@ -202,7 +202,7 @@
     
     :stigma_jump_label_4
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
+    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
     
     
     move/16 v0, v16
@@ -213,7 +213,7 @@
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     move/16 v16, v0
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
+    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
     sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_util_Preconditions_checkArgumentInRange_v4:F
     
@@ -237,7 +237,7 @@
     
     :stigma_jump_label_5
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
+    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
     
     
     move/16 v0, v16

@@ -181,7 +181,7 @@
     iget-object v1, v6, Landroid/support/v4/app/FragmentManagerImpl;->mTmpAddedFragments:Ljava/util/ArrayList;
 
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
+    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
     sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v1:F
     
@@ -205,7 +205,7 @@
     
     :stigma_jump_label_0
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
+    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
     
     if-nez v1, :cond_0
 
@@ -342,7 +342,7 @@
     const/4 v14, 0x1
 
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
+    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
     sget v4, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v10:F
     
@@ -366,7 +366,7 @@
     
     :stigma_jump_label_2
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
+    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
     
     if-ge v2, v10, :cond_4
 
@@ -439,7 +439,7 @@
     .line 2398
     .local v1, "isPop":Z
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
+    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
     sget v4, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v1:F
     
@@ -463,7 +463,7 @@
     
     :stigma_jump_label_3
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
+    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
     
     if-nez v1, :cond_1
 
@@ -601,6 +601,8 @@
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     move-object v13, v3
+
+    # this method was truncated at this point
 
 .end method
 

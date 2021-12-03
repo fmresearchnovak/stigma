@@ -578,14 +578,14 @@ class SmaliMethodDef:
 		self.moves_after = []
 		
 		first_line = code_unit[0]
-		
+		#print("\t_do_instrumentation_plugins(" + str(first_line).lstrip().rstrip() + ")")
 		if not self.is_relevant(first_line, node):
 			self.instrumented_code.extend(code_unit)
 			return
 		
 		opcode = StigmaStringParsingLib.extract_opcode(first_line)     
 		instrumentation_method = Instrumenter.instrumentation_map[opcode][0]
-		instrumeter_inserts_original_lines = Instrumenter.instrumentation_map[opcode][1]
+		instrumenter_inserts_original_lines = Instrumenter.instrumentation_map[opcode][1]
 		#print("looking at:", line.strip(), "   instrumentation method: ", instrumentation_method, "\n")
 		
 		#print("\n\code_unit: ", code_unit)
@@ -597,6 +597,10 @@ class SmaliMethodDef:
 		
 		if len(regs) < Instrumenter.DESIRED_NUM_REGISTERS:
 			new_block = []
+			
+			if(instrumenter_inserts_original_lines):
+				new_block = code_unit
+			
 		else:
 			new_block = instrumentation_method(self.scd, self, code_unit, regs)
 		
@@ -613,16 +617,12 @@ class SmaliMethodDef:
 			#2)Internal Functions, -> new code comes before and after the original lines (invoke,move-result)
 			#3)External Functions, -> new code comes before/after the original line
 		#Note: No valid code can come in between an invoke and a move result!!
-		if(not instrumeter_inserts_original_lines):
-			self.instrumented_code.extend(self.moves_before)
-			self.instrumented_code.extend(new_block)
-			self.instrumented_code.extend(self.moves_after)
+		self.instrumented_code.extend(self.moves_before)
+		self.instrumented_code.extend(new_block)
+		self.instrumented_code.extend(self.moves_after)
+		
+		if(not instrumenter_inserts_original_lines):
 			self.instrumented_code.extend(code_unit)
-
-		else:
-			self.instrumented_code.extend(self.moves_before)
-			self.instrumented_code.extend(new_block)
-			self.instrumented_code.extend(self.moves_after)
 			
 
 	def gen_list_of_safe_registers(self, code_unit, cur_type_map):

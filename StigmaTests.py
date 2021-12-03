@@ -649,6 +649,38 @@ def tried_to_get_class_from_non_reference_register_v0():
 	print("passed!")
 	
 	
+def returning_uninitialized_object():
+	# returning uninitialized object
+	# Uninitialized Reference: android.support.v4.app.FragmentManagerImpl$AnimationOrAnimator Allocation PC: 462
+	# for some reason there was an invoke-direct method dropped during instrumentation
+	print("\nRunning returning uninitialized object")
+	print("\ttest/loadAnimation.smali")
+	
+	# this method was truncated just after the instructions relevant
+	# to the bug being fixed
+	scd = SmaliClassDef.SmaliClassDef("./test/loadAnimation_method.smali")
+	
+	check_arg_method = scd.methods[0]
+	#print("before growing: ", check_arg_method.get_register_meta_data())
+	scd.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)
+	#print("after growing: ", check_arg_method.get_register_meta_data())
+	scd.instrument()
+	scd.write_to_file("./test/loadAnimation_method_result.smali")
+	
+	
+	fh = open("./test/loadAnimation_method_result.smali", "r")
+	result = fh.readlines()
+	fh.close()
+	
+	fh = open("./test/loadAnimation_method_soln.smali", "r")
+	soln = fh.readlines()
+	fh.close()
+	
+	assert(result == soln)
+	
+	print("passed!")
+	
+	
 def internal_tests():
 	
 	print("--Running Internal Tests--")
@@ -712,6 +744,7 @@ def main():
 	register_listeners()
 	on_start_intent_sender_from_fragment()
 	tried_to_get_class_from_non_reference_register_v0()
+	returning_uninitialized_object()
 	
 	
 	

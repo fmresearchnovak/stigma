@@ -112,7 +112,7 @@
     move v9, v13
 
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
+    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
     sget v3, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentHostCallback_onStartIntentSenderFromFragment_v0:F
     
@@ -136,7 +136,7 @@
     
     :stigma_jump_label_1
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
+    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
     
     if-ne v9, v0, :cond_0
 

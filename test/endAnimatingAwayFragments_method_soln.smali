@@ -38,7 +38,7 @@
     iget-object v0, v12, Landroid/support/v4/app/FragmentManagerImpl;->mActive:Landroid/util/SparseArray;
 
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
+    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
     sget v11, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v0:F
     
@@ -62,7 +62,7 @@
     
     :stigma_jump_label_0
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
+    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
     
     if-nez v0, :cond_0
 
@@ -113,7 +113,7 @@
     .local v1, "i":I
     :goto_1
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
+    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
     sget v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v0:F
     
@@ -137,7 +137,7 @@
     
     :stigma_jump_label_2
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
+    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
     
     if-ge v1, v0, :cond_4
 
@@ -179,7 +179,7 @@
     .line 2674
     .local v2, "fragment":Landroid/support/v4/app/Fragment;
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
+    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
     sget v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v2:F
     
@@ -203,7 +203,7 @@
     
     :stigma_jump_label_3
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
+    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
     
     if-eqz v2, :cond_3
 
@@ -226,7 +226,7 @@
     move-result-object v3
 
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
+    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
     sget v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v3:F
     
@@ -250,7 +250,7 @@
     
     :stigma_jump_label_4
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
+    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
     
     if-eqz v3, :cond_2
 
@@ -313,7 +313,7 @@
     .line 2680
     .local v11, "animation":Landroid/view/animation/Animation;
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
+    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
     sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v11:F
     
@@ -337,7 +337,7 @@
     
     :stigma_jump_label_5
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
+    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
     
     if-eqz v11, :cond_1
 
@@ -496,7 +496,7 @@
     move-result-object v3
 
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
+    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
     sget v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v3:F
     
@@ -520,7 +520,7 @@
     
     :stigma_jump_label_6
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
+    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
     
     if-eqz v3, :cond_3
 

@@ -970,7 +970,7 @@ def IF_instrumentation(scd, m, code_unit, free_reg): # if statement implicit flo
         # This is a smali.LABEL
         jmp_label = m.make_new_jump_label()
         
-        block = Instrumenter.make_comment_block("IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)")
+        block = Instrumenter.make_comment_block("for if (implicit flow)")
 
         block = block + [smali.SGET(taint_tag_reg, taint_tag_field),
                     smali.BLANK_LINE(),
@@ -994,7 +994,7 @@ def IF_instrumentation(scd, m, code_unit, free_reg): # if statement implicit flo
                     smali.BLANK_LINE(),
                     jmp_label]
                     
-        block = block + Instrumenter.make_comment_block("IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end")
+        block = block + Instrumenter.make_comment_block("for if (implicit flow) @ end")
 
 
     return block
@@ -1031,7 +1031,7 @@ def INVOKE_instrumentation(scd, m, code_unit, free_reg):
     #         |
     #         |- _one_line_invoke_instr...
     
-    #print("INVOKE instrumentation: ", cur_lines)   
+    #print("\tINVOKE instrumentation: ", code_unit)   
     
     if(len(code_unit) > 1 and \
     re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, str(code_unit[-1]))):
