@@ -595,14 +595,23 @@ class SmaliMethodDef:
 		#print(self.get_register_meta_data())
 		#input("continue?") 
 		
-		if len(regs) < Instrumenter.DESIRED_NUM_REGISTERS:
+		
+		# four cases total
+		#                  re-writes lines
+		#                   yes   |   no
+		#                 +---------------+ 
+		# has enough regs |  1    |    2  |
+		#                 +---------------+
+		# not enough regs |  3    |    4  |
+		#                 +---------------+
+		if len(regs) < Instrumenter.DESIRED_NUM_REGISTERS: # case 4
 			new_block = []
 			
-			if(instrumenter_inserts_original_lines):
+			if(instrumenter_inserts_original_lines): # case 3
 				new_block = code_unit
 			
 		else:
-			new_block = instrumentation_method(self.scd, self, code_unit, regs)
+			new_block = instrumentation_method(self.scd, self, code_unit, regs) # case 1 and 2
 		
 		#invoke foo()
 		#move-result vx
@@ -621,7 +630,7 @@ class SmaliMethodDef:
 		self.instrumented_code.extend(new_block)
 		self.instrumented_code.extend(self.moves_after)
 		
-		if(not instrumenter_inserts_original_lines):
+		if(not instrumenter_inserts_original_lines): # case 2
 			self.instrumented_code.extend(code_unit)
 			
 
