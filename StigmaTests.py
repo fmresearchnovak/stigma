@@ -120,7 +120,7 @@ def type_safety_checker_leaks_test():
 	smd = SmaliMethodDef.SmaliMethodDef(method_text, mock_class)
 	#print(smd.get_num_registers())
 	assert(smd.get_num_registers() == 20)
-	print(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
+	#print(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
 	assert(Instrumenter.MAX_DESIRED_NUM_REGISTERS == 4)
 	smd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
 	smd.instrument()
@@ -178,6 +178,8 @@ def comparison_count_test1():
 	
 	
 def types_from_parameters_test():
+	print("\nTesting types_from_parameters...")
+	print("\ttest/random_method1.smali")
 	fh = open ("./test/random_method1.smali", "r")
 	method_text = fh.readlines()
 	smd = SmaliMethodDef.SmaliMethodDef(method_text, None)
@@ -193,6 +195,11 @@ def types_from_parameters_test():
 	smd.signature.parameter_type_map["p1"] = "something else!"
 	#print(tsc.most_recent_type_map)
 	assert(str(tsc.most_recent_type_map) == "{'p0': Lunknownclass;, 'p1': Landroid/view/View;}")
+	
+	code_unit = ["    cmp-long v10, v4, v27\n"]
+	new_map = tsc._type_update_instruction(code_unit, False, 0)
+	#print(new_map)
+	assert(new_map["v10"] == "32-bit")
 	
 	
 def type_saftey_checker_tests():
@@ -684,36 +691,7 @@ def returning_uninitialized_object():
 	print("passed!")
 	
 	
-	
-def large_locals_num():
-	''' I never figured out the cause or solution to this
-	bug, instead I modified sign-up so that instrumenter methods
-	have to request a certain number of registers.  Since most 
-	opcodes signup for 1 or 2 registers, there are fewer 
-	move operations done to free up registers.  I am hoping
-	that this reduces the scope of the "bug space" just enough to
-	avoid whatever this bug was.'''
-	
-	# returning uninitialized object
-	# copy2 v45<-v10 type=Integer/Integer
-	print("\nRunning large locals num...")
-	print("\ttest/onMeasureExactFormat_method.smali")
-	
-	# this method was truncated just after the instructions relevant
-	# to the bug being fixed
-	scd = SmaliClassDef.SmaliClassDef("./test/onMeasureExactFormat_method.smali")
-	
-	first_method = scd.methods[0]
-	#print("before growing: ", first_method.get_register_meta_data())
-	#print("locals line: ", first_method.get_locals_directive_line())
-	scd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
-	#print("after growing: ", first_method.get_register_meta_data())
-	#print("locals line: ", first_method.get_locals_directive_line())
 
-	
-	print("passed!")
-	
-	
 def internal_tests():
 	
 	print("--Running Internal Tests--")
