@@ -158,7 +158,7 @@ def runStigma():
         #Progress bar
         print(f'...{str(counter)}/{str(total_files)}', end = '\r')
         counter += 1
-        scd.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)
+        scd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
         scd.instrument()
         
     

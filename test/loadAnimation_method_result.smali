@@ -57,13 +57,13 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
-    const/16 v1, 0x0
+    const/16 v13, 0x0
     
-    sget v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v9:F
+    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v9:F
     
-    add-float v1, v1, v13
+    add-float v13, v13, v14
     
-    sput v1, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v0:F
+    sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v0:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
@@ -581,14 +581,53 @@
     if-nez v4, :cond_5
 
     .line 1203
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
+    
+    sget v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_v8_mHost:F
+    
+    sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v7:F
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
+    
     iget-object v7, v8, Landroid/support/v4/app/FragmentManagerImpl;->mHost:Landroid/support/v4/app/FragmentHostCallback;
 
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
+    
+    const/16 v13, 0x0
+    
+    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v7:F
+    
+    add-float v13, v13, v14
+    
+    sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v7:F
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
+    
     invoke-virtual {v7}, Landroid/support/v4/app/FragmentHostCallback;->getContext()Landroid/content/Context;
-
+    
     move-result-object v7
 
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
+    
+    const/16 v13, 0x0
+    
+    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v7:F
+    
+    add-float v13, v13, v14
+    
+    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v0:F
+    
+    add-float v13, v13, v14
+    
+    sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v1:F
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
+    
     invoke-static {v7, v0}, Landroid/view/animation/AnimationUtils;->loadAnimation(Landroid/content/Context;I)Landroid/view/animation/Animation;
-
+    
     move-result-object v1
 
     .line 1204
@@ -628,39 +667,27 @@
     if-eqz v1, :cond_6
 
     .line 1205
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move-object/16 v16, v1
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for NEW-INSTANCE
     
-    const v1, 0x0
+    const v13, 0x0
     
-    sput v1, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v7:F
+    sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v7:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for NEW-INSTANCE
-    
-    
-    move-object/16 v1, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     new-instance v7, Landroid/support/v4/app/FragmentManagerImpl$AnimationOrAnimator;
 
     invoke-direct {v7, v1}, Landroid/support/v4/app/FragmentManagerImpl$AnimationOrAnimator;-><init>(Landroid/view/animation/Animation;)V
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move-object/16 v16, v1
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for RETURN
     
-    sget v1, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v7:F
+    sget v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v7:F
     
-    sput v1, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_return_field:F
+    sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_return_field:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for RETURN
-    
-    
-    move-object/16 v1, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     return-object v7
     :cond_5
@@ -673,6 +700,15 @@
     .end local v6    # "e":Ljava/lang/RuntimeException;
     :cond_6
     :goto_1
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
+    
+    const v13, 0x0
+    
+    sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v3:F
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
+    
     const/4 v3, 0x0
 
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
@@ -711,10 +747,17 @@
     if-nez v10, :cond_7
 
     .line 1212
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for RETURN
+    
+    sget v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v3:F
+    
+    sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_return_field:F
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA for RETURN
+    
     return-object v3
     :cond_7
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v3
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for INTERNAL METHOD
     
@@ -741,10 +784,6 @@
     sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v4:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE-RESULT
-    
-    
-    move/16 v3, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
 
     .line 1216
@@ -785,8 +824,6 @@
     if-gez v4, :cond_8
 
     .line 1217
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v4
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for RETURN
     
@@ -796,14 +833,8 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for RETURN
     
-    
-    move/16 v4, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
     return-object v3
     :cond_8
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v3
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
     
@@ -813,14 +844,8 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
     
-    
-    move/16 v3, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
     const v5, 0x3f79999a    # 0.975f
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v3
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
     
@@ -830,14 +855,8 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
     
-    
-    move/16 v3, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
     const/4 v6, 0x0
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v3
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
     
@@ -846,10 +865,6 @@
     sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v7:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
-    
-    
-    move/16 v3, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     const/high16 v7, 0x3f800000    # 1.0f
 
@@ -891,8 +906,6 @@
     
     if-nez v12, :cond_9
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v3
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
     
@@ -902,14 +915,8 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
     
-    
-    move/16 v3, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
     iget-object v5, v8, Landroid/support/v4/app/FragmentManagerImpl;->mHost:Landroid/support/v4/app/FragmentHostCallback;
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v3
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
@@ -926,10 +933,6 @@
     invoke-virtual {v5}, Landroid/support/v4/app/FragmentHostCallback;->onHasWindowAnimations()Z
     
     move-result v5
-    
-    move/16 v3, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
 
     # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     move/16 v16, v3
@@ -967,8 +970,6 @@
     if-eqz v5, :cond_9
 
     .line 1237
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v3
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
     
@@ -978,14 +979,8 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
     
-    
-    move/16 v3, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
     iget-object v5, v8, Landroid/support/v4/app/FragmentManagerImpl;->mHost:Landroid/support/v4/app/FragmentHostCallback;
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v3
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
@@ -1002,15 +997,9 @@
     invoke-virtual {v5}, Landroid/support/v4/app/FragmentHostCallback;->onGetWindowAnimations()I
     
     move-result v12
-    
-    move/16 v3, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
 
     goto :goto_2
     :pswitch_0
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v4
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
     
@@ -1020,14 +1009,8 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
     
-    
-    move/16 v4, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
     iget-object v3, v8, Landroid/support/v4/app/FragmentManagerImpl;->mHost:Landroid/support/v4/app/FragmentHostCallback;
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v4
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
@@ -1044,13 +1027,7 @@
     invoke-virtual {v3}, Landroid/support/v4/app/FragmentHostCallback;->getContext()Landroid/content/Context;
     
     move-result-object v3
-    
-    move/16 v4, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v4
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for INTERNAL METHOD
     
@@ -1082,13 +1059,7 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE-RESULT
     
-    
-    move/16 v4, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v4
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for RETURN
     
@@ -1098,14 +1069,8 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for RETURN
     
-    
-    move/16 v4, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
     return-object v3
     :pswitch_1
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v4
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
     
@@ -1115,14 +1080,8 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
     
-    
-    move/16 v4, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
     iget-object v3, v8, Landroid/support/v4/app/FragmentManagerImpl;->mHost:Landroid/support/v4/app/FragmentHostCallback;
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v4
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
@@ -1139,13 +1098,7 @@
     invoke-virtual {v3}, Landroid/support/v4/app/FragmentHostCallback;->getContext()Landroid/content/Context;
     
     move-result-object v3
-    
-    move/16 v4, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v4
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for INTERNAL METHOD
     
@@ -1177,13 +1130,7 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE-RESULT
     
-    
-    move/16 v4, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v4
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for RETURN
     
@@ -1192,15 +1139,9 @@
     sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_return_field:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for RETURN
-    
-    
-    move/16 v4, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     return-object v3
     :pswitch_2
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v4
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
     
@@ -1210,14 +1151,8 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
     
-    
-    move/16 v4, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
     iget-object v3, v8, Landroid/support/v4/app/FragmentManagerImpl;->mHost:Landroid/support/v4/app/FragmentHostCallback;
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v4
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
@@ -1234,13 +1169,7 @@
     invoke-virtual {v3}, Landroid/support/v4/app/FragmentHostCallback;->getContext()Landroid/content/Context;
     
     move-result-object v3
-    
-    move/16 v4, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move-object/16 v16, v3
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
     
@@ -1249,15 +1178,9 @@
     sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v5:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
-    
-    
-    move-object/16 v3, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     const v5, 0x3f89999a    # 1.075f
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v4
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for INTERNAL METHOD
     
@@ -1297,13 +1220,7 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE-RESULT
     
-    
-    move/16 v4, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v4
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for RETURN
     
@@ -1313,14 +1230,8 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for RETURN
     
-    
-    move/16 v4, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
     return-object v3
     :pswitch_3
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v4
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
     
@@ -1330,14 +1241,8 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
     
-    
-    move/16 v4, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
     iget-object v3, v8, Landroid/support/v4/app/FragmentManagerImpl;->mHost:Landroid/support/v4/app/FragmentHostCallback;
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v4
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
@@ -1354,13 +1259,7 @@
     invoke-virtual {v3}, Landroid/support/v4/app/FragmentHostCallback;->getContext()Landroid/content/Context;
     
     move-result-object v3
-    
-    move/16 v4, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v4
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for INTERNAL METHOD
     
@@ -1400,13 +1299,7 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE-RESULT
     
-    
-    move/16 v4, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v4
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for RETURN
     
@@ -1416,14 +1309,8 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for RETURN
     
-    
-    move/16 v4, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
     return-object v3
     :pswitch_4
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v4
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
     
@@ -1433,14 +1320,8 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
     
-    
-    move/16 v4, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
     iget-object v3, v8, Landroid/support/v4/app/FragmentManagerImpl;->mHost:Landroid/support/v4/app/FragmentHostCallback;
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v4
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
@@ -1457,13 +1338,7 @@
     invoke-virtual {v3}, Landroid/support/v4/app/FragmentHostCallback;->getContext()Landroid/content/Context;
     
     move-result-object v3
-    
-    move/16 v4, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v4
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for INTERNAL METHOD
     
@@ -1503,13 +1378,7 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE-RESULT
     
-    
-    move/16 v4, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v4
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for RETURN
     
@@ -1519,14 +1388,8 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for RETURN
     
-    
-    move/16 v4, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
     return-object v3
     :pswitch_5
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v4
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
     
@@ -1536,14 +1399,8 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
     
-    
-    move/16 v4, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
     iget-object v3, v8, Landroid/support/v4/app/FragmentManagerImpl;->mHost:Landroid/support/v4/app/FragmentHostCallback;
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v4
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
@@ -1560,13 +1417,7 @@
     invoke-virtual {v3}, Landroid/support/v4/app/FragmentHostCallback;->getContext()Landroid/content/Context;
     
     move-result-object v3
-    
-    move/16 v4, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move-object/16 v16, v3
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
     
@@ -1576,14 +1427,8 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
     
-    
-    move-object/16 v3, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
     const/high16 v5, 0x3f900000    # 1.125f
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v4
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for INTERNAL METHOD
     
@@ -1623,13 +1468,7 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE-RESULT
     
-    
-    move/16 v4, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v4
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for RETURN
     
@@ -1638,10 +1477,6 @@
     sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_return_field:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for RETURN
-    
-    
-    move/16 v4, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     return-object v3
     :cond_9
@@ -1682,8 +1517,6 @@
     if-nez v12, :cond_a
 
     .line 1240
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v4
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for RETURN
     
@@ -1692,15 +1525,9 @@
     sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_return_field:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for RETURN
-    
-    
-    move/16 v4, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     return-object v3
     :cond_a
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v4
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for RETURN
     
@@ -1709,10 +1536,6 @@
     sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_return_field:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for RETURN
-    
-    
-    move/16 v4, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     return-object v3
     :pswitch_data_0

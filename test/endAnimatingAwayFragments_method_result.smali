@@ -29,9 +29,9 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
     
-    sget v1, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_v12_mActive:F
+    sget v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_v12_mActive:F
     
-    sput v1, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v0:F
+    sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v0:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
     
@@ -69,9 +69,9 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
     
-    const v1, 0x0
+    const v13, 0x0
     
-    sput v1, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v0:F
+    sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v0:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
     
@@ -82,13 +82,13 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
-    const/16 v1, 0x0
+    const/16 v13, 0x0
     
-    sget v10, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v0:F
+    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v0:F
     
-    add-float v1, v1, v10
+    add-float v13, v13, v14
     
-    sput v1, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v0:F
+    sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v0:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
@@ -102,9 +102,9 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
     
-    const v10, 0x0
+    const v13, 0x0
     
-    sput v10, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v1:F
+    sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v1:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
     
@@ -145,9 +145,9 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
     
-    sget v10, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_v12_mActive:F
+    sget v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_v12_mActive:F
     
-    sput v10, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v2:F
+    sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v2:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
     
@@ -156,17 +156,17 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
-    const/16 v10, 0x0
+    const/16 v13, 0x0
     
-    sget v11, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v2:F
+    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v2:F
     
-    add-float v10, v10, v11
+    add-float v13, v13, v14
     
-    sget v11, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v1:F
+    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v1:F
     
-    add-float v10, v10, v11
+    add-float v13, v13, v14
     
-    sput v10, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v2:F
+    sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v2:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
@@ -211,13 +211,13 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
-    const/16 v10, 0x0
+    const/16 v13, 0x0
     
-    sget v11, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v2:F
+    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v2:F
     
-    add-float v10, v10, v11
+    add-float v13, v13, v14
     
-    sput v10, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v3:F
+    sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v3:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
@@ -258,13 +258,13 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
-    const/16 v10, 0x0
+    const/16 v13, 0x0
     
-    sget v11, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v2:F
+    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v2:F
     
-    add-float v10, v10, v11
+    add-float v13, v13, v14
     
-    sput v10, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v9:F
+    sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v9:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
@@ -277,13 +277,13 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
-    const/16 v11, 0x0
+    const/16 v13, 0x0
     
-    sget v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v2:F
+    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v2:F
     
-    add-float v11, v11, v13
+    add-float v13, v13, v14
     
-    sput v11, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v10:F
+    sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v10:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
@@ -418,51 +418,43 @@
     
     move-object v4, v2
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v0
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
     
-    sget v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v9:F
+    sget v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v9:F
     
-    sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v5:F
+    sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v5:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
-    
-    
-    move/16 v0, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     move v5, v9
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v0
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for INTERNAL METHOD
     
-    sget v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v3:F
+    sget v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v3:F
     
-    sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_moveToState_p0:F
+    sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_moveToState_p0:F
     
-    sget v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v4:F
+    sget v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v4:F
     
-    sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_moveToState_p1:F
+    sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_moveToState_p1:F
     
-    sget v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v5:F
+    sget v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v5:F
     
-    sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_moveToState_p2:F
+    sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_moveToState_p2:F
     
-    sget v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v6:F
+    sget v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v6:F
     
-    sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_moveToState_p3:F
+    sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_moveToState_p3:F
     
-    sget v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v7:F
+    sget v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v7:F
     
-    sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_moveToState_p4:F
+    sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_moveToState_p4:F
     
-    sget v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v8:F
+    sget v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v8:F
     
-    sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_moveToState_p5:F
+    sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_moveToState_p5:F
     
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for INTERNAL METHOD
@@ -472,22 +464,18 @@
     .end local v9    # "stateAfterAnimating":I
     .end local v10    # "animatingAway":Landroid/view/View;
     .end local v11    # "animation":Landroid/view/animation/Animation;
-    
-    move/16 v0, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
     goto :goto_2
     :cond_2
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
-    const/16 v10, 0x0
+    const/16 v13, 0x0
     
-    sget v11, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v2:F
+    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v2:F
     
-    add-float v10, v10, v11
+    add-float v13, v13, v14
     
-    sput v10, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v3:F
+    sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v3:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
@@ -528,13 +516,13 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
-    const/16 v10, 0x0
+    const/16 v13, 0x0
     
-    sget v11, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v2:F
+    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v2:F
     
-    add-float v10, v10, v11
+    add-float v13, v13, v14
     
-    sput v10, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v3:F
+    sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v3:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
@@ -550,23 +538,17 @@
     .end local v2    # "fragment":Landroid/support/v4/app/Fragment;
     :cond_3
     :goto_2
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v0
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for ADD instruction
-    const/16 v0, 0x0
+    const/16 v13, 0x0
     
-    sget v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v1:F
+    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v1:F
     
-    add-float v0, v0, v13
+    add-float v13, v13, v14
     
-    sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v1:F
+    sput v13, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_endAnimatingAwayFragments_v1:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for ADD instruction
-    
-    
-    move/16 v0, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     add-int/lit8 v1, v1, 0x1
 

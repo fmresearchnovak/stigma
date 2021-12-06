@@ -120,7 +120,9 @@ def type_safety_checker_leaks_test():
 	smd = SmaliMethodDef.SmaliMethodDef(method_text, mock_class)
 	#print(smd.get_num_registers())
 	assert(smd.get_num_registers() == 20)
-	smd.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)
+	print(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
+	assert(Instrumenter.MAX_DESIRED_NUM_REGISTERS == 4)
+	smd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
 	smd.instrument()
 	
 	print("passed!")
@@ -138,7 +140,8 @@ def type_safety_checker_aget2_test():
 	mock_class = SmaliClassDef.MockSmaliClassDef();
 	smd = SmaliMethodDef.SmaliMethodDef(method_list, mock_class)
 	#print("Instrumenting")
-	smd.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)
+	assert(Instrumenter.MAX_DESIRED_NUM_REGISTERS == 4)
+	smd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
 	smd.instrument()
 	
 	print("passed!")
@@ -338,7 +341,7 @@ def double_move_result_bug():
 	#print(putExtraData_method.get_register_meta_data())
 	assert(putExtraData_method.get_register_meta_data() == "['v0', 'v1', 'v2/p0', 'v3/p1']")
 
-	scd.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)
+	scd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
 	scd.instrument()
 	scd.write_to_file("./test/double_move_result_line_result.smali")
 	
@@ -363,7 +366,7 @@ def wide_register_index_out_of_range_bug():
 	scd = SmaliClassDef.SmaliClassDef("./test/binarySearch_method.smali")
 	binarySearchMethod = scd.methods[0]
 	#print(binarySearchMethod.get_register_meta_data())
-	scd.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)
+	scd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
 	#print(binarySearchMethod.get_register_meta_data())
 	
 	scd.write_to_file("./test/binarySearch_method_result.smali")
@@ -393,7 +396,7 @@ def get_class_from_non_reference_register_bug():
 	#print(endAnimatingMethod.get_register_meta_data())
 	#print("\n\n")
 	
-	scd.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)
+	scd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
 
 	#print("after growth")
 	#print(endAnimatingMethod)
@@ -430,7 +433,7 @@ def register_shuffling_test():
 	#print(made_up_method.get_register_meta_data())
 	assert(made_up_method.get_register_meta_data() == str(['v0', 'v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9', 'v10', 'v11', 'v12', 'v13', 'v14', 'v15', 'v16/p0', 'v17/p1', 'v18/p2', 'v19/p3']))
 	
-	scd.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)
+	scd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
 	
 	#print(made_up_method.get_register_meta_data())
 	assert(made_up_method.get_register_meta_data() == str(['v0', 'v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9', 'v10', 'v11', 'v12', 'v13', 'v14', 'v15', 'v16/p0', 'v17/p1', 'v18/p2', 'v19/p3', 'v20', 'v21', 'v22', 'v23']))
@@ -457,7 +460,7 @@ def reversed_move_parameters_test():
 	print("\nRunning reversed move parameters test")
 	
 	scd = SmaliClassDef.SmaliClassDef("./test/supportActivity_method.smali")
-	scd.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)
+	scd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
 	scd.instrument()
 	scd.write_to_file("./test/supportActivity_method_result.smali")
 
@@ -486,7 +489,7 @@ def wide_register_index_out_of_range_bug_2():
 	print("\ttest/makeOpenCloseAnimation_method.smali")
 	
 	scd = SmaliClassDef.SmaliClassDef("./test/makeOpenCloseAnimation_method.smali")
-	scd.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)
+	scd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
 	scd.instrument()
 	scd.write_to_file("./test/makeOpenCloseAnimation_method_result.smali")
 	
@@ -518,7 +521,7 @@ def wide_register_has_type_long_string():
 	
 	check_arg_method = scd.methods[0]
 	#print("before growing: ", check_arg_method.get_register_meta_data())
-	scd.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)
+	scd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
 	#print("after growing: ", check_arg_method.get_register_meta_data())
 	scd.instrument()
 	scd.write_to_file("./test/checkArgumentInRange_method_result.smali")
@@ -544,7 +547,7 @@ def on_nested_scrolling_parent_helper():
 	
 	check_arg_method = scd.methods[0]
 	#print("before growing: ", check_arg_method.get_register_meta_data())
-	scd.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)
+	scd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
 	#print("after growing: ", check_arg_method.get_register_meta_data())
 	scd.instrument()
 	scd.write_to_file("./test/onNestedScrollAccepted_method_result.smali")
@@ -573,7 +576,7 @@ def register_listeners():
 	
 	scd = SmaliClassDef.SmaliClassDef("./test/register_listeners_method.smali")
 
-	scd.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)
+	scd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
 	scd.instrument()
 	scd.write_to_file("./test/register_listeners_method_result.smali")
 	
@@ -600,7 +603,7 @@ def on_start_intent_sender_from_fragment():
 	
 	check_arg_method = scd.methods[0]
 	#print("before growing: ", check_arg_method.get_register_meta_data())
-	scd.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)
+	scd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
 	#print("after growing: ", check_arg_method.get_register_meta_data())
 	scd.instrument()
 	scd.write_to_file("./test/onStartIntentSenderFromFragment_method_result.smali")
@@ -630,7 +633,7 @@ def tried_to_get_class_from_non_reference_register_v0():
 	
 	check_arg_method = scd.methods[0]
 	#print("before growing: ", check_arg_method.get_register_meta_data())
-	scd.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)
+	scd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
 	#print("after growing: ", check_arg_method.get_register_meta_data())
 	scd.instrument()
 	scd.write_to_file("./test/executeOpsTogether_method_result.smali")
@@ -652,7 +655,7 @@ def tried_to_get_class_from_non_reference_register_v0():
 def returning_uninitialized_object():
 	# returning uninitialized object
 	# Uninitialized Reference: android.support.v4.app.FragmentManagerImpl$AnimationOrAnimator Allocation PC: 462
-	# for some reason there was an invoke-direct method dropped during instrumentation
+	# there was an invoke-direct method dropped during instrumentation
 	print("\nRunning returning uninitialized object")
 	print("\ttest/loadAnimation.smali")
 	
@@ -662,7 +665,7 @@ def returning_uninitialized_object():
 	
 	check_arg_method = scd.methods[0]
 	#print("before growing: ", check_arg_method.get_register_meta_data())
-	scd.grow_locals(Instrumenter.DESIRED_NUM_REGISTERS)
+	scd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
 	#print("after growing: ", check_arg_method.get_register_meta_data())
 	scd.instrument()
 	scd.write_to_file("./test/loadAnimation_method_result.smali")
@@ -677,6 +680,36 @@ def returning_uninitialized_object():
 	fh.close()
 	
 	assert(result == soln)
+	
+	print("passed!")
+	
+	
+	
+def large_locals_num():
+	''' I never figured out the cause or solution to this
+	bug, instead I modified sign-up so that instrumenter methods
+	have to request a certain number of registers.  Since most 
+	opcodes signup for 1 or 2 registers, there are fewer 
+	move operations done to free up registers.  I am hoping
+	that this reduces the scope of the "bug space" just enough to
+	avoid whatever this bug was.'''
+	
+	# returning uninitialized object
+	# copy2 v45<-v10 type=Integer/Integer
+	print("\nRunning large locals num...")
+	print("\ttest/onMeasureExactFormat_method.smali")
+	
+	# this method was truncated just after the instructions relevant
+	# to the bug being fixed
+	scd = SmaliClassDef.SmaliClassDef("./test/onMeasureExactFormat_method.smali")
+	
+	first_method = scd.methods[0]
+	#print("before growing: ", first_method.get_register_meta_data())
+	#print("locals line: ", first_method.get_locals_directive_line())
+	scd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
+	#print("after growing: ", first_method.get_register_meta_data())
+	#print("locals line: ", first_method.get_locals_directive_line())
+
 	
 	print("passed!")
 	
@@ -745,6 +778,7 @@ def main():
 	on_start_intent_sender_from_fragment()
 	tried_to_get_class_from_non_reference_register_v0()
 	returning_uninitialized_object()
+	#large_locals_num()
 	
 	
 	

@@ -5,7 +5,7 @@ from TaintStorageHandler import TaintStorageHandler
 import re
 
 
-DESIRED_NUM_REGISTERS = 4 #we grow our .locals by this number
+MAX_DESIRED_NUM_REGISTERS = 0 #we grow our .locals by this number
 
 # The structure of the constructor and the register_instrumentation_method functions
 # are an attempt to make this a "plugin" style application where others can write
@@ -15,6 +15,17 @@ DESIRED_NUM_REGISTERS = 4 #we grow our .locals by this number
 start_of_method_handler = None
 instrumentation_map = {}
 storage_handler = TaintStorageHandler.get_instance()
+
+
+
+
+class InstrumentationSignupBundle():
+    def __init__(self, new_opcode, new_method, new_num_regs, new_instrumenter_inserts):
+        self.opcode = new_opcode
+        self.handler = new_method
+        self.num_regs_necessary = new_num_regs
+        self.handler_reinserts_original_lines = new_instrumenter_inserts
+        
 
 
 def sign_up_method_start(new_method):
@@ -31,14 +42,20 @@ def sign_up_method_start(new_method):
     start_of_method_handler = new_method
     
 
-def sign_up(opcode, new_method, instrumeter_inserts_original_lines = False):
+def sign_up(opcode, new_method, num_regs, instrumeter_inserts_original_lines = False):
+    global MAX_DESIRED_NUM_REGISTERS
     # this method allows the plugin author to submit a handler function
     # which will be called to insert new code before each and every line
     # of original smali code.
     # 
     # opcode is the instruction to match
+    #
     # new_method is the method / handler the plugin author wants to be called
     # this method should return instrumentation code
+    #
+    # num_registers_necessary is the number of registers this method / 
+    # plugin requires to function (e.g., to do tag propagation) 
+    #
     # instrumenter_inserts_original_lines can be set to True
     # in order to indicate that new_method will return a block of code
     # that INCLUDES the original instruction (and so this side of the
@@ -49,13 +66,24 @@ def sign_up(opcode, new_method, instrumeter_inserts_original_lines = False):
     # this is _ideally_ to allow a sort of "plugin" system where
     # other developers could add instrumentation
     # I think the answer is "python protocols"
+    # try to find: typing.Protocol which "is stdlib"
+    # typing.runtime_checkable()
     
     # not sure why we don't have to do:
     # global instrumentation_map
     if opcode.startswith("move-result"):
         raise Exception("Move-result cannot have an independent instrumenter, signup for the related preceding instruction.")
+        
     if opcode not in instrumentation_map:
-        instrumentation_map[opcode] = (new_method, instrumeter_inserts_original_lines)
+        bundle = InstrumentationSignupBundle(opcode, new_method, num_regs, instrumeter_inserts_original_lines)
+        instrumentation_map[opcode] = bundle
+        
+        # keep track of the "all time max" so there are 
+        # at least that many registers (possibly high numbered)
+        # the method will be grow()-ed to ensure this
+        if(num_regs > MAX_DESIRED_NUM_REGISTERS):
+            MAX_DESIRED_NUM_REGISTERS = num_regs
+        
     else:
         raise Exception(str(opcode) + " is already registered for:" + str(instrumentation_map[opcode]))
 

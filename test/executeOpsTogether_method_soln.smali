@@ -468,68 +468,50 @@
     if-nez v1, :cond_1
 
     .line 2399
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move-object/16 v22, v0
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
     
-    sget v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_v6_mTmpAddedFragments:F
+    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_v6_mTmpAddedFragments:F
     
-    sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v3:F
+    sput v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v3:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
-    
-    
-    move-object/16 v0, v22
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     iget-object v3, v6, Landroid/support/v4/app/FragmentManagerImpl;->mTmpAddedFragments:Ljava/util/ArrayList;
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v22, v1
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
-    const/16 v1, 0x0
+    const/16 v15, 0x0
     
-    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v0:F
+    sget v4, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v0:F
     
-    add-float v1, v1, v15
+    add-float v15, v15, v4
     
-    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v3:F
+    sget v4, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v3:F
     
-    add-float v1, v1, v15
+    add-float v15, v15, v4
     
-    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v13:F
+    sget v4, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v13:F
     
-    add-float v1, v1, v15
+    add-float v15, v15, v4
     
-    sput v1, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v3:F
+    sput v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v3:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
     invoke-virtual {v0, v3, v13}, Landroid/support/v4/app/BackStackRecord;->expandOps(Ljava/util/ArrayList;Landroid/support/v4/app/Fragment;)Landroid/support/v4/app/Fragment;
     
     move-result-object v3
-    
-    move/16 v1, v22
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move-object/16 v22, v0
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
     
-    sget v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v3:F
+    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v3:F
     
-    sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v13:F
+    sput v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v13:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
-    
-    
-    move-object/16 v0, v22
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     move-object v13, v3
 
@@ -537,68 +519,50 @@
     .local v3, "oldPrimaryNav":Landroid/support/v4/app/Fragment;
     goto :goto_2
     :cond_1
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move-object/16 v22, v0
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
     
-    sget v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_v6_mTmpAddedFragments:F
+    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_v6_mTmpAddedFragments:F
     
-    sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v3:F
+    sput v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v3:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
-    
-    
-    move-object/16 v0, v22
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     iget-object v3, v6, Landroid/support/v4/app/FragmentManagerImpl;->mTmpAddedFragments:Ljava/util/ArrayList;
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v22, v1
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
-    const/16 v1, 0x0
+    const/16 v15, 0x0
     
-    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v0:F
+    sget v4, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v0:F
     
-    add-float v1, v1, v15
+    add-float v15, v15, v4
     
-    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v3:F
+    sget v4, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v3:F
     
-    add-float v1, v1, v15
+    add-float v15, v15, v4
     
-    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v13:F
+    sget v4, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v13:F
     
-    add-float v1, v1, v15
+    add-float v15, v15, v4
     
-    sput v1, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v3:F
+    sput v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v3:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
     invoke-virtual {v0, v3, v13}, Landroid/support/v4/app/BackStackRecord;->trackAddedFragmentsInPop(Ljava/util/ArrayList;Landroid/support/v4/app/Fragment;)Landroid/support/v4/app/Fragment;
     
     move-result-object v3
-    
-    move/16 v1, v22
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move-object/16 v22, v0
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
     
-    sget v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v3:F
+    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v3:F
     
-    sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v13:F
+    sput v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v13:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
-    
-    
-    move-object/16 v0, v22
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
     
     move-object v13, v3
 

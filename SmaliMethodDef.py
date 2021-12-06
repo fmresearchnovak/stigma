@@ -185,7 +185,7 @@ class SmaliMethodDef:
 		self.moves_after = []
 		
 		# Used to count the number of times the instrumentation process cannot
-		# free up Instrumenter.DESIRED_NUM_REGISTERS
+		# free up Instrumenter.MAX_DESIRED_NUM_REGISTERS
 		self.not_enough_free_registers_count = 0
 		
 		# state that is modified when "grow_locals()" is called
@@ -216,7 +216,7 @@ class SmaliMethodDef:
 		
 		return str(l)
 		
-			
+		
 
 	def grow_locals(self, n):
 		# grows the .locals from the current value such that there are
@@ -584,13 +584,14 @@ class SmaliMethodDef:
 			return
 		
 		opcode = StigmaStringParsingLib.extract_opcode(first_line)     
-		instrumentation_method = Instrumenter.instrumentation_map[opcode][0]
-		instrumenter_inserts_original_lines = Instrumenter.instrumentation_map[opcode][1]
-		#print("looking at:", line.strip(), "   instrumentation method: ", instrumentation_method, "\n")
+		bundle = Instrumenter.instrumentation_map[opcode]
+		assert(opcode == bundle.opcode)
+		
+		#print("looking at:", line.strip(), "   instrumentation method: ", bundle.handler, "\n")
 		
 		#print("\n\code_unit: ", code_unit)
 		#print("type_map: ", type_map_before_code_unit)
-		regs = self.gen_list_of_safe_registers(code_unit, type_map_before_code_unit) 
+		regs = self.gen_list_of_safe_registers(code_unit, type_map_before_code_unit, bundle.num_regs_necessary) 
 		#print("regs to be used for taint prop:", regs)
 		#print(self.get_register_meta_data())
 		#input("continue?") 
@@ -604,14 +605,14 @@ class SmaliMethodDef:
 		#                 +---------------+
 		# not enough regs |  3    |    4  |
 		#                 +---------------+
-		if len(regs) < Instrumenter.DESIRED_NUM_REGISTERS: # case 4
+		if len(regs) < bundle.num_regs_necessary: # case 4
 			new_block = []
 			
-			if(instrumenter_inserts_original_lines): # case 3
+			if(bundle.handler_reinserts_original_lines): # case 3
 				new_block = code_unit
 			
 		else:
-			new_block = instrumentation_method(self.scd, self, code_unit, regs) # case 1 and 2
+			new_block = bundle.handler(self.scd, self, code_unit, regs) # case 1 and 2
 		
 		#invoke foo()
 		#move-result vx
@@ -630,11 +631,11 @@ class SmaliMethodDef:
 		self.instrumented_code.extend(new_block)
 		self.instrumented_code.extend(self.moves_after)
 		
-		if(not instrumenter_inserts_original_lines): # case 2
+		if(not bundle.handler_reinserts_original_lines): # case 2
 			self.instrumented_code.extend(code_unit)
 			
 
-	def gen_list_of_safe_registers(self, code_unit, cur_type_map):
+	def gen_list_of_safe_registers(self, code_unit, cur_type_map, num_regs_needed):
 		# "safe" registers are 
 		#  (a) low numbered (less than v16)
 		#  (b) not containing original program data
@@ -663,7 +664,7 @@ class SmaliMethodDef:
 				safe_regs.add(r)
 		
 		#print("\nline: ", node["text"][idx].strip(), "\n\tfirst return regs: ", sorted_list(safe_regs))
-		if(len(safe_regs) >= Instrumenter.DESIRED_NUM_REGISTERS):
+		if(len(safe_regs) >= num_regs_needed):
 			return sorted_list(safe_regs)
 		
 		
@@ -687,7 +688,7 @@ class SmaliMethodDef:
 		#print("code_unit_regs computed: ", code_unit_regs)
 		
 		#print("\tsecond return regs: ", sorted_list(safe_regs))
-		if(len(safe_regs) >= Instrumenter.DESIRED_NUM_REGISTERS):
+		if(len(safe_regs) >= num_regs_needed):
 			return sorted_list(safe_regs)
 		
 		
@@ -718,17 +719,17 @@ class SmaliMethodDef:
 				else:
 					dest_reg+=1
 			
-			if len(safe_regs) >= Instrumenter.DESIRED_NUM_REGISTERS:
+			if len(safe_regs) >= num_regs_needed:
 				self.moves_after.insert(0, smali.BLANK_LINE())
 				self.moves_after.append(smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers"))
 				self.moves_after.append(smali.BLANK_LINE())
 				return sorted_list(safe_regs)
 		
 		
-		if len(safe_regs) < Instrumenter.DESIRED_NUM_REGISTERS:
+		if len(safe_regs) < num_regs_needed:
 			self.not_enough_free_registers_count += 1
 			#print("not enough registers! This has occurred: " + str(self.not_enough_free_registers_count) + " times in this method.")
-			#raise ValueError("Unable to find enough safe registers.  Trying for " + str(Instrumenter.DESIRED_NUM_REGISTERS) + "  got: " + str(safe_regs))
+			#raise ValueError("Unable to find enough safe registers.  Trying for " + str(Instrumenter.MAX_DESIRED_NUM_REGISTERS) + "  got: " + str(safe_regs))
 			#print(ve)
 			#print(self.scd.file_name)
 			#print(self.signature)
