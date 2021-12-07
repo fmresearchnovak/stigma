@@ -513,7 +513,7 @@ class SmaliMethodDef:
 
 		#create the control flow graph for the method text and pass it to the type safety checker
 		#this will check and track types of each register on each line 
-		self.cfg = ControlFlowGraph(self.raw_text)
+		self.cfg = ControlFlowGraph(self.raw_text) # maybe needs to be NOT self?
 		self.tsc = TypeSafetyChecker(self.signature, self.cfg) 
 		
 		#incase the graph is empty, we dont instrument

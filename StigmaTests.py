@@ -198,8 +198,15 @@ def types_from_parameters_test():
 	
 	code_unit = ["    cmp-long v10, v4, v27\n"]
 	new_map = tsc._type_update_instruction(code_unit, False, 0)
-	#print(new_map)
 	assert(new_map["v10"] == "32-bit")
+	
+	
+	code_unit = ["    move-object v0, p0\n"]
+	new_map = tsc._type_update_instruction(code_unit, False, 0)
+	#print(new_map)
+	assert(new_map["v0"] == "Lunknownclass;")
+	
+	
 	
 	
 def type_saftey_checker_tests():
@@ -691,6 +698,35 @@ def returning_uninitialized_object():
 	print("passed!")
 	
 	
+	
+def goto_tracking_bug():
+	# [0xC3] copy1 v16<-v0 type=Reference: android.view.View cat=1 
+	# something wrong with tracking the type of v0 through some
+	# complex goto instructions
+	
+	print("\nRunning goto_tracking_bug")
+	print("\ttest/findReferenceChild_method_truncated.smali")
+	
+	scd = SmaliClassDef.SmaliClassDef("./test/findReferenceChild_method_minimal.smali")
+	scd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
+	scd.instrument()
+	#scd.methods[0].cfg.show()
+	scd.write_to_file("./test/findReferenceChild_method_minimal_result.smali")
+	
+	
+	fh = open("./test/findReferenceChild_method_minimal_result.smali", "r")
+	result = fh.readlines()
+	fh.close()
+	
+	fh = open("./test/findReferenceChild_method_minimal_soln.smali", "r")
+	soln = fh.readlines()
+	fh.close()
+	
+	assert(result == soln)
+	
+	print("passed!")
+	
+	
 
 def internal_tests():
 	
@@ -715,15 +751,12 @@ def main():
 	
 	internal_tests()
 	
-	
 	TaintTrackingInstrumentationPlugin.main()
-	
 	
 	comparison_count_test1()
 	
 	types_from_parameters_test()
 	type_saftey_checker_tests()
-	
 	
 	type_saftey_checker_test3()
 	type_safety_checker_control_flow_test()                   
@@ -737,11 +770,9 @@ def main():
 	grow_locals_test_1()
 	grow_locals_test_2()
 	
-
 	type_safety_checker_aget2_test()
 	type_safety_checker_leaks_test()
 	type_safety_weather_app_test()
-	
 	
 	stigma_leaks_crash_SupportActivity()
 	double_move_result_bug()
@@ -756,8 +787,7 @@ def main():
 	on_start_intent_sender_from_fragment()
 	tried_to_get_class_from_non_reference_register_v0()
 	returning_uninitialized_object()
-	#large_locals_num()
-	
+	goto_tracking_bug()
 	
 	
 	print("\n\n")
