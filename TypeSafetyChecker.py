@@ -218,6 +218,7 @@ class TypeSafetyChecker:
             registers = StigmaStringParsingLib.get_v_and_p_numbers(first_line)
             dest_reg = registers[0]
             opcode = first_instr
+            #print("opcode:", opcode)
             #print("updating tsc with line: ", line)
                         
             if(opcode == "new-array"): 
@@ -255,6 +256,7 @@ class TypeSafetyChecker:
                 # vz is the index (and int) into that array
                 src_reg = registers[1]
                 src_type = line_type_map_new[src_reg]
+                #print("unit:", code_unit)
                 #print("src_reg", src_reg, "  src_type", src_type, "  line_type_map_new", line_type_map_new)
                 return_type = self.check_aget_object_type(src_type)
                 line_type_map_new[dest_reg] = return_type
@@ -263,7 +265,9 @@ class TypeSafetyChecker:
             #check-cast vx, type_id
             #Checks whether the object reference in vx can be cast to an instance of a class referenced by type_id. Throws ClassCastException if the cast is not possible, continues execution otherwise.
             elif(opcode == "check-cast"):
-                return_type = SmaliTypes.from_string(tokens[-1])
+                #print("unit:", code_unit)
+                return_type = SmaliTypes.from_string(first_line_tokens[-1])
+                #print("dest_reg: ", dest_reg, " type:", return_type)
                 line_type_map_new[dest_reg] = return_type
 
                       

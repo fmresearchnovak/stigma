@@ -197,6 +197,8 @@ class SmaliClassDef:
     def instrument(self):
         # if self.other_scds == {}:
         #     raise ValueError("Other SCDs list not passed to scd")
+        
+        #print("\ninstrumenting: ", self)
 
         #this will signup our methods for instrumentation with their related opcodes
         for m in self.methods:

@@ -365,7 +365,7 @@ NON_RELEVANT_INSTRUCTION_LIST = ["nop","monitor-enter" , "monitor-exit", "throw"
  "sparse-switch", "neg-int","not-int" ,"neg-long" ,"not-long" ,"neg-float" ,"neg-double" ,"execute-inline", "fill-array-data", 
  ".local", ".param", ".line", "aput", "aput-wide",  "aput-object", "aput-boolean", "aput-byte",
  "aput-char", "aput-short", "if-eq", "if-ne", "if-lt", "if-ge", "if-gt", "if-le", "if-eqz", "if-nez", "if-ltz" , 
- "if-gez", "if-gtz ", "if-lez", "return", "return-wide", "return-object", "return-void", "check-cast"]
+ "if-gez", "if-gtz ", "if-lez", "return", "return-wide", "return-object", "return-void"]
         
 def main():
     print("Testing String Parsing Library")

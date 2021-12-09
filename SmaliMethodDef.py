@@ -502,6 +502,9 @@ class SmaliMethodDef:
 			print("Warning!  The locals for this method were not grown / expanded: " + str(self))
 			
 		
+		#print("\tinstrumenting: ", self)
+		#print("\t", self.get_register_meta_data())
+		
 		# insert the lines at the beginning
 		method_beginning_instrumentation_method = Instrumenter.start_of_method_handler
 		if(method_beginning_instrumentation_method is not None):
