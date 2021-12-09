@@ -260,7 +260,7 @@ class SmaliMethodDef:
 			raise ValueError("Cannot grow locals by a negative amount: " + str(n))
 			
 		if(self.signature.is_abstract or self.signature.is_native):
-			# We shouldn't grow abstract methods since they don't have 
+			# We shouldn't grow abstract or native methods since they don't have 
 			# code / locals
 			return []
 			
@@ -493,9 +493,9 @@ class SmaliMethodDef:
 
 				
 	def instrument(self):
-		#dont instrument methods without any text
-		if(len(self.raw_text) < 3):
-			return
+		if(self.signature.is_abstract or self.signature.is_native):
+			# We shouldn't instrument methods that don't have code / locals
+			return []
 		
 		if(self.has_grown == 0):
 			print("Warning!  The locals for this method were not grown / expanded: " + str(self))
