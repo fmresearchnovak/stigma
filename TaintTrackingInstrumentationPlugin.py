@@ -902,10 +902,8 @@ def WRITE_instrumentation(scd, m, code_unit, free_reg):  # "write()" sinks
     # TODO: re-write the below using only 3 registers (or fewer
     # if possible
 
-    logd_tag_reg = free_reg[0] # 1
-    logd_msg_reg = free_reg[1] # 2
-    taint_tag_reg = free_reg[2] # 3
-    zero_reg = free_reg[3] # 4
+    reg_a = free_reg[0] # 1
+    reg_b = free_reg[1] # 2
 
     # This is a smali.LABEL
     jmp_label = m.make_new_jump_label()
@@ -913,25 +911,27 @@ def WRITE_instrumentation(scd, m, code_unit, free_reg):  # "write()" sinks
     block = [smali.BLANK_LINE(),
                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for write()"),
                 smali.BLANK_LINE(),
-                smali.SGET(taint_tag_reg, taint_loc),
+                smali.SGET(reg_b, taint_loc),
                 smali.BLANK_LINE(),
-                smali.CONST_16(zero_reg, "0x0"),
+                smali.CONST_16(reg_a, "0x0"),
                 smali.BLANK_LINE(),
-                smali.CMPL_FLOAT(zero_reg, taint_tag_reg, zero_reg),
+                smali.CMPL_FLOAT(reg_a, reg_b, reg_a),
                 smali.BLANK_LINE(),
-                smali.IF_EQZ(zero_reg, repr(jmp_label)),
+                smali.IF_EQZ(reg_a, repr(jmp_label)),
                 smali.BLANK_LINE(),
-                smali.CONST_STRING(logd_tag_reg, "\"STIGMAZZ\""),
+                smali.CONST_STRING(reg_a, "\"STIGMAZZ\""),
                 smali.BLANK_LINE(),
-                smali.CONST_STRING(logd_msg_reg, "\"LEAK via WRITE() OCCURING!\""),
+                smali.CONST_STRING(reg_b, "\"LEAK via WRITE() OCCURING!\""),
                 smali.BLANK_LINE(),
-                smali.LOG_D(logd_tag_reg, logd_msg_reg),
+                smali.LOG_D(reg_a, reg_b),
                 smali.BLANK_LINE(),
-                smali.INVOKE_STATIC([taint_tag_reg], "Ljava/lang/String;->valueOf(F)Ljava/lang/String;"),
+                smali.SGET(reg_b, taint_loc),
                 smali.BLANK_LINE(),
-                smali.MOVE_RESULT_OBJECT(logd_msg_reg),
+                smali.INVOKE_STATIC([reg_b], "Ljava/lang/String;->valueOf(F)Ljava/lang/String;"),
                 smali.BLANK_LINE(),
-                smali.LOG_D(logd_tag_reg, logd_msg_reg),
+                smali.MOVE_RESULT_OBJECT(reg_b),
+                smali.BLANK_LINE(),
+                smali.LOG_D(reg_a, reg_b),
                 smali.BLANK_LINE(),
                 jmp_label,
                 smali.BLANK_LINE(),
