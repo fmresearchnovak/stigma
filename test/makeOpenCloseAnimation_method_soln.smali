@@ -20,6 +20,8 @@
 
     .line 1138
     
+    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for METHOD START
     
@@ -45,8 +47,6 @@
     
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for METHOD START
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     move-object/16 v11, p0
     

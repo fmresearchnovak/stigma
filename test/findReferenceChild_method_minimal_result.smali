@@ -8,6 +8,8 @@
     .locals 13
 
     
+    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for METHOD START
     
@@ -37,8 +39,6 @@
     
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for METHOD START
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     move-object/16 v9, p0
     

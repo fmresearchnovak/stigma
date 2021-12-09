@@ -165,11 +165,7 @@ class SmaliMethodDef:
 		self.raw_text = text
 		
 		self.num_jumps = 0 # not used except for a sanity check
-
 		
-		self.ORIGINAL_LOCAL_NUMBER_REGS = self.get_locals_directive_num()
-		self.reg_number_float = self.ORIGINAL_LOCAL_NUMBER_REGS
-
 		class_name = "Lunknownclass;"
 		if(scd != None):
 			self.scd = scd # smali class definition
@@ -177,7 +173,9 @@ class SmaliMethodDef:
 		
 			
 		self.signature = SmaliMethodSignature(self.raw_text[0], class_name)
-
+		
+		self.ORIGINAL_LOCAL_NUMBER_REGS = self.get_locals_directive_num()
+		self.reg_number_float = self.ORIGINAL_LOCAL_NUMBER_REGS
 		
 		self.instrumented_code = [] #this is a list containing new instrumented code
 		
@@ -332,6 +330,7 @@ class SmaliMethodDef:
 			block = block + Instrumenter.make_comment_block("for moving parameters")
 		
 		insert_idx = self.find_first_valid_instruction()
+		#print("'moving params'  insert idx:", insert_idx, "  line:", self.raw_text[insert_idx])
 		self.embed_block(insert_idx, block)
 		
 		self.top_regs = new_regs
@@ -510,8 +509,8 @@ class SmaliMethodDef:
 		if(method_beginning_instrumentation_method is not None):
 			result_block = method_beginning_instrumentation_method(self.scd, self)
 			insert_idx = self.find_first_valid_instruction()
-			#print("insert idx: " + str(insert_idx))
-			self.embed_block(insert_idx - 2, result_block)
+			#print("'METHOD START'  insert idx:", insert_idx, "  line:", self.raw_text[insert_idx])
+			self.embed_block(insert_idx, result_block)
 			
 
 		#create the control flow graph for the method text and pass it to the type safety checker

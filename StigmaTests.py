@@ -472,6 +472,7 @@ def register_shuffling_test():
 	
 def reversed_move_parameters_test():
 	print("\nRunning reversed move parameters test")
+	print("\ttest/supportActivity_method.smali")
 	
 	scd = SmaliClassDef.SmaliClassDef("./test/supportActivity_method.smali")
 	scd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
@@ -556,6 +557,7 @@ def wide_register_has_type_long_string():
 	
 def on_nested_scrolling_parent_helper():
 	print("\nRunning copy1 v0<-v4")
+	print("\ttest/onNestedScrollAccepted_method.smali")
 	
 	scd = SmaliClassDef.SmaliClassDef("./test/onNestedScrollAccepted_method.smali")
 	
@@ -705,7 +707,7 @@ def goto_tracking_bug():
 	# complex goto instructions
 	
 	print("\nRunning goto_tracking_bug")
-	print("\ttest/findReferenceChild_method_truncated.smali")
+	print("\ttest/findReferenceChild_method_minimal.smali")
 	
 	scd = SmaliClassDef.SmaliClassDef("./test/findReferenceChild_method_minimal.smali")
 	scd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
@@ -723,6 +725,23 @@ def goto_tracking_bug():
 	fh.close()
 	
 	assert(result == soln)
+	
+	print("passed!")
+	
+	
+def strange_insert_lines_at_beginning_placement():
+	print("\nRunning strange insert line placement test")
+	print("\ttest/constructor_truncated.smali")
+	
+	# for some reason the IFT instructions added by stigma for method start
+	# were displacing the .locals line?  very strange
+	
+	scd = SmaliClassDef.SmaliClassDef("./test/constructor_truncated.smali")
+	scd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
+	scd.instrument()
+	
+	assert(scd.methods[0].get_locals_directive_num() == 20)
+	
 	
 	print("passed!")
 	
@@ -774,6 +793,7 @@ def main():
 	type_safety_checker_leaks_test()
 	type_safety_weather_app_test()
 	
+	# leaks smali tests
 	stigma_leaks_crash_SupportActivity()
 	double_move_result_bug()
 	wide_register_index_out_of_range_bug()
@@ -788,6 +808,9 @@ def main():
 	tried_to_get_class_from_non_reference_register_v0()
 	returning_uninitialized_object()
 	goto_tracking_bug()
+	
+	# star trek tests
+	strange_insert_lines_at_beginning_placement()
 	
 	
 	print("\n\n")

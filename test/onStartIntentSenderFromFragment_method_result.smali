@@ -24,6 +24,8 @@
     .line 139
     .local p0, "this":Landroid/support/v4/app/FragmentHostCallback;, "Landroid/support/v4/app/FragmentHostCallback<TE;>;"
     
+    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for METHOD START
     
@@ -65,8 +67,6 @@
     
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for METHOD START
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     move-object/16 v10, p0
     

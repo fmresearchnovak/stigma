@@ -24,6 +24,8 @@
     .local p1, "records":Ljava/util/ArrayList;, "Ljava/util/ArrayList<Landroid/support/v4/app/BackStackRecord;>;"
     .local p2, "isRecordPop":Ljava/util/ArrayList;, "Ljava/util/ArrayList<Ljava/lang/Boolean;>;"
     
+    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for METHOD START
     
@@ -49,8 +51,6 @@
     
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for METHOD START
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     move-object/16 v17, p0
     
