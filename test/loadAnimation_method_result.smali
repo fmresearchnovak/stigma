@@ -107,25 +107,25 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
-    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v1:F
+    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v1:F
     
-    const/16 v2, 0x0
+    const/16 v15, 0x0
     
-    cmpl-float v2, v15, v2
+    cmpl-float v15, v14, v15
     
-    if-eqz v2, :stigma_jump_label_0
+    if-eqz v15, :stigma_jump_label_0
     
-    const-string v13, "STIGMA"
+    const-string v2, "STIGMA"
     
-    const-string v14, "Implicit flow involving sensitive data!"
+    const-string v13, "Implicit flow involving sensitive data!"
     
-    invoke-static {v13, v14},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v2, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
-    invoke-static {v15}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
+    invoke-static {v14}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
     
-    move-result-object v14
+    move-result-object v13
     
-    invoke-static {v13, v14},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v2, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
     :stigma_jump_label_0
     
@@ -192,25 +192,25 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
-    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v2:F
+    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v2:F
     
-    const/16 v3, 0x0
+    const/16 v15, 0x0
     
-    cmpl-float v3, v15, v3
+    cmpl-float v15, v14, v15
     
-    if-eqz v3, :stigma_jump_label_1
+    if-eqz v15, :stigma_jump_label_1
     
-    const-string v13, "STIGMA"
+    const-string v3, "STIGMA"
     
-    const-string v14, "Implicit flow involving sensitive data!"
+    const-string v13, "Implicit flow involving sensitive data!"
     
-    invoke-static {v13, v14},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v3, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
-    invoke-static {v15}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
+    invoke-static {v14}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
     
-    move-result-object v14
+    move-result-object v13
     
-    invoke-static {v13, v14},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v3, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
     :stigma_jump_label_1
     
@@ -246,25 +246,25 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
-    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v0:F
+    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v0:F
     
-    const/16 v3, 0x0
+    const/16 v15, 0x0
     
-    cmpl-float v3, v15, v3
+    cmpl-float v15, v14, v15
     
-    if-eqz v3, :stigma_jump_label_2
+    if-eqz v15, :stigma_jump_label_2
     
-    const-string v13, "STIGMA"
+    const-string v3, "STIGMA"
     
-    const-string v14, "Implicit flow involving sensitive data!"
+    const-string v13, "Implicit flow involving sensitive data!"
     
-    invoke-static {v13, v14},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v3, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
-    invoke-static {v15}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
+    invoke-static {v14}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
     
-    move-result-object v14
+    move-result-object v13
     
-    invoke-static {v13, v14},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v3, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
     :stigma_jump_label_2
     
@@ -391,25 +391,25 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
-    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v4:F
+    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v4:F
     
-    const/16 v6, 0x0
+    const/16 v15, 0x0
     
-    cmpl-float v6, v15, v6
+    cmpl-float v15, v14, v15
     
-    if-eqz v6, :stigma_jump_label_3
+    if-eqz v15, :stigma_jump_label_3
     
-    const-string v13, "STIGMA"
+    const-string v6, "STIGMA"
     
-    const-string v14, "Implicit flow involving sensitive data!"
+    const-string v13, "Implicit flow involving sensitive data!"
     
-    invoke-static {v13, v14},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v6, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
-    invoke-static {v15}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
+    invoke-static {v14}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
     
-    move-result-object v14
+    move-result-object v13
     
-    invoke-static {v13, v14},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v6, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
     :stigma_jump_label_3
     
@@ -484,25 +484,25 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
-    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v5:F
+    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v5:F
     
-    const/16 v7, 0x0
+    const/16 v15, 0x0
     
-    cmpl-float v7, v15, v7
+    cmpl-float v15, v14, v15
     
-    if-eqz v7, :stigma_jump_label_4
+    if-eqz v15, :stigma_jump_label_4
     
-    const-string v13, "STIGMA"
+    const-string v7, "STIGMA"
     
-    const-string v14, "Implicit flow involving sensitive data!"
+    const-string v13, "Implicit flow involving sensitive data!"
     
-    invoke-static {v13, v14},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v7, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
-    invoke-static {v15}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
+    invoke-static {v14}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
     
-    move-result-object v14
+    move-result-object v13
     
-    invoke-static {v13, v14},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v7, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
     :stigma_jump_label_4
     
@@ -554,25 +554,25 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
-    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v4:F
+    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v4:F
     
-    const/16 v7, 0x0
+    const/16 v15, 0x0
     
-    cmpl-float v7, v15, v7
+    cmpl-float v15, v14, v15
     
-    if-eqz v7, :stigma_jump_label_5
+    if-eqz v15, :stigma_jump_label_5
     
-    const-string v13, "STIGMA"
+    const-string v7, "STIGMA"
     
-    const-string v14, "Implicit flow involving sensitive data!"
+    const-string v13, "Implicit flow involving sensitive data!"
     
-    invoke-static {v13, v14},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v7, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
-    invoke-static {v15}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
+    invoke-static {v14}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
     
-    move-result-object v14
+    move-result-object v13
     
-    invoke-static {v13, v14},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v7, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
     :stigma_jump_label_5
     
@@ -636,25 +636,25 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
-    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v1:F
+    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v1:F
     
-    const/16 v7, 0x0
+    const/16 v15, 0x0
     
-    cmpl-float v7, v15, v7
+    cmpl-float v15, v14, v15
     
-    if-eqz v7, :stigma_jump_label_6
+    if-eqz v15, :stigma_jump_label_6
     
-    const-string v13, "STIGMA"
+    const-string v7, "STIGMA"
     
-    const-string v14, "Implicit flow involving sensitive data!"
+    const-string v13, "Implicit flow involving sensitive data!"
     
-    invoke-static {v13, v14},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v7, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
-    invoke-static {v15}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
+    invoke-static {v14}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
     
-    move-result-object v14
+    move-result-object v13
     
-    invoke-static {v13, v14},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v7, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
     :stigma_jump_label_6
     
@@ -716,25 +716,25 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
-    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v10:F
+    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v10:F
     
-    const/16 v3, 0x0
+    const/16 v15, 0x0
     
-    cmpl-float v3, v15, v3
+    cmpl-float v15, v14, v15
     
-    if-eqz v3, :stigma_jump_label_7
+    if-eqz v15, :stigma_jump_label_7
     
-    const-string v13, "STIGMA"
+    const-string v3, "STIGMA"
     
-    const-string v14, "Implicit flow involving sensitive data!"
+    const-string v13, "Implicit flow involving sensitive data!"
     
-    invoke-static {v13, v14},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v3, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
-    invoke-static {v15}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
+    invoke-static {v14}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
     
-    move-result-object v14
+    move-result-object v13
     
-    invoke-static {v13, v14},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v3, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
     :stigma_jump_label_7
     
@@ -793,25 +793,25 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
-    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v4:F
+    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v4:F
     
-    const/16 v3, 0x0
+    const/16 v15, 0x0
     
-    cmpl-float v3, v15, v3
+    cmpl-float v15, v14, v15
     
-    if-eqz v3, :stigma_jump_label_8
+    if-eqz v15, :stigma_jump_label_8
     
-    const-string v13, "STIGMA"
+    const-string v3, "STIGMA"
     
-    const-string v14, "Implicit flow involving sensitive data!"
+    const-string v13, "Implicit flow involving sensitive data!"
     
-    invoke-static {v13, v14},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v3, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
-    invoke-static {v15}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
+    invoke-static {v14}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
     
-    move-result-object v14
+    move-result-object v13
     
-    invoke-static {v13, v14},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v3, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
     :stigma_jump_label_8
     
@@ -876,25 +876,25 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
-    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v12:F
+    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v12:F
     
-    const/16 v3, 0x0
+    const/16 v15, 0x0
     
-    cmpl-float v3, v15, v3
+    cmpl-float v15, v14, v15
     
-    if-eqz v3, :stigma_jump_label_9
+    if-eqz v15, :stigma_jump_label_9
     
-    const-string v13, "STIGMA"
+    const-string v3, "STIGMA"
     
-    const-string v14, "Implicit flow involving sensitive data!"
+    const-string v13, "Implicit flow involving sensitive data!"
     
-    invoke-static {v13, v14},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v3, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
-    invoke-static {v15}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
+    invoke-static {v14}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
     
-    move-result-object v14
+    move-result-object v13
     
-    invoke-static {v13, v14},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v3, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
     :stigma_jump_label_9
     
@@ -939,25 +939,25 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
-    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v5:F
+    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v5:F
     
-    const/16 v3, 0x0
+    const/16 v15, 0x0
     
-    cmpl-float v3, v15, v3
+    cmpl-float v15, v14, v15
     
-    if-eqz v3, :stigma_jump_label_10
+    if-eqz v15, :stigma_jump_label_10
     
-    const-string v13, "STIGMA"
+    const-string v3, "STIGMA"
     
-    const-string v14, "Implicit flow involving sensitive data!"
+    const-string v13, "Implicit flow involving sensitive data!"
     
-    invoke-static {v13, v14},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v3, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
-    invoke-static {v15}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
+    invoke-static {v14}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
     
-    move-result-object v14
+    move-result-object v13
     
-    invoke-static {v13, v14},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v3, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
     :stigma_jump_label_10
     
@@ -1486,25 +1486,25 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
-    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v12:F
+    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v12:F
     
-    const/16 v3, 0x0
+    const/16 v15, 0x0
     
-    cmpl-float v3, v15, v3
+    cmpl-float v15, v14, v15
     
-    if-eqz v3, :stigma_jump_label_11
+    if-eqz v15, :stigma_jump_label_11
     
-    const-string v13, "STIGMA"
+    const-string v3, "STIGMA"
     
-    const-string v14, "Implicit flow involving sensitive data!"
+    const-string v13, "Implicit flow involving sensitive data!"
     
-    invoke-static {v13, v14},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v3, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
-    invoke-static {v15}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
+    invoke-static {v14}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
     
-    move-result-object v14
+    move-result-object v13
     
-    invoke-static {v13, v14},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v3, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
     :stigma_jump_label_11
     

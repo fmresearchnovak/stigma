@@ -752,9 +752,9 @@ def internal_tests():
 	print("--Running Internal Tests--")
 	
 	src_code_with_internal_tests = ["StigmaStringParsingLib.py", 
-		"SmaliMethodDef.py", "SmaliTypes.py",
+		"SmaliMethodDef.py", "SmaliTypes.py", "SafeRegisterCollection.py",
 		"SmaliRegister.py", "SmaliAssemblyInstructions.py",
-		"Instrumenter.py", "TaintStorageHandler.py"]
+		"Instrumenter.py", "TaintStorageHandler.py", "SmaliCodeIterator.py"]
 	
 	
 	for src in src_code_with_internal_tests:
@@ -793,12 +793,15 @@ def main():
 	type_safety_checker_leaks_test()
 	type_safety_weather_app_test()
 	
+	
+	# custom tests
+	register_shuffling_test()
+	
 	# leaks smali tests
 	stigma_leaks_crash_SupportActivity()
 	double_move_result_bug()
 	wide_register_index_out_of_range_bug()
 	get_class_from_non_reference_register_bug()
-	register_shuffling_test()
 	reversed_move_parameters_test()
 	wide_register_index_out_of_range_bug_2()
 	wide_register_has_type_long_string()

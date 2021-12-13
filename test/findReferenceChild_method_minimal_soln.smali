@@ -93,13 +93,13 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for INTERNAL METHOD
     
-    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v7_widget_LinearLayoutManager_findReferenceChild_v9:F
+    sget v2, Lnet/stigmastorage/StorageClass1;->android_support_v7_widget_LinearLayoutManager_findReferenceChild_v9:F
     
-    sput v15, Lnet/stigmastorage/StorageClass1;->android_support_v7_widget_LinearLayoutManager_getChildAt_p0:F
+    sput v2, Lnet/stigmastorage/StorageClass1;->android_support_v7_widget_LinearLayoutManager_getChildAt_p0:F
     
-    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v7_widget_LinearLayoutManager_findReferenceChild_v5:F
+    sget v2, Lnet/stigmastorage/StorageClass1;->android_support_v7_widget_LinearLayoutManager_findReferenceChild_v5:F
     
-    sput v15, Lnet/stigmastorage/StorageClass1;->android_support_v7_widget_LinearLayoutManager_getChildAt_p1:F
+    sput v2, Lnet/stigmastorage/StorageClass1;->android_support_v7_widget_LinearLayoutManager_getChildAt_p1:F
     
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for INTERNAL METHOD
@@ -111,9 +111,9 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE-RESULT
     
-    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v7_widget_LinearLayoutManager_return_field:F
+    sget v2, Lnet/stigmastorage/StorageClass1;->android_support_v7_widget_LinearLayoutManager_return_field:F
     
-    sput v15, Lnet/stigmastorage/StorageClass1;->android_support_v7_widget_LinearLayoutManager_findReferenceChild_v6:F
+    sput v2, Lnet/stigmastorage/StorageClass1;->android_support_v7_widget_LinearLayoutManager_findReferenceChild_v6:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE-RESULT
     
@@ -132,25 +132,25 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
-    sget v3, Lnet/stigmastorage/StorageClass1;->android_support_v7_widget_LinearLayoutManager_findReferenceChild_v6:F
+    sget v4, Lnet/stigmastorage/StorageClass1;->android_support_v7_widget_LinearLayoutManager_findReferenceChild_v6:F
     
-    const/16 v4, 0x0
+    const/16 v15, 0x0
     
-    cmpl-float v4, v3, v4
+    cmpl-float v15, v4, v15
     
-    if-eqz v4, :stigma_jump_label_0
+    if-eqz v15, :stigma_jump_label_0
     
-    const-string v15, "STIGMA"
+    const-string v2, "STIGMA"
     
-    const-string v2, "Implicit flow involving sensitive data!"
+    const-string v3, "Implicit flow involving sensitive data!"
     
-    invoke-static {v15, v2},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v2, v3},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
-    invoke-static {v3}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
+    invoke-static {v4}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
     
-    move-result-object v2
+    move-result-object v3
     
-    invoke-static {v15, v2},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v2, v3},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
     :stigma_jump_label_0
     

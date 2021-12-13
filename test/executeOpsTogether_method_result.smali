@@ -344,25 +344,25 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
-    sget v4, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v10:F
+    sget v5, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v10:F
     
-    const/16 v5, 0x0
+    const/16 v15, 0x0
     
-    cmpl-float v5, v4, v5
+    cmpl-float v15, v5, v15
     
-    if-eqz v5, :stigma_jump_label_2
+    if-eqz v15, :stigma_jump_label_2
     
-    const-string v15, "STIGMA"
+    const-string v3, "STIGMA"
     
-    const-string v3, "Implicit flow involving sensitive data!"
+    const-string v4, "Implicit flow involving sensitive data!"
     
-    invoke-static {v15, v3},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v3, v4},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
-    invoke-static {v4}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
+    invoke-static {v5}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
     
-    move-result-object v3
+    move-result-object v4
     
-    invoke-static {v15, v3},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v3, v4},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
     :stigma_jump_label_2
     
@@ -374,17 +374,17 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
-    const/16 v15, 0x0
+    const/16 v3, 0x0
     
-    sget v3, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v7:F
+    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v7:F
     
-    add-float v15, v15, v3
+    add-float v3, v3, v15
     
-    sget v3, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v2:F
+    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v2:F
     
-    add-float v15, v15, v3
+    add-float v3, v3, v15
     
-    sput v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v0:F
+    sput v3, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v0:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
@@ -399,17 +399,17 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
-    const/16 v15, 0x0
+    const/16 v3, 0x0
     
-    sget v3, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v8:F
+    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v8:F
     
-    add-float v15, v15, v3
+    add-float v3, v3, v15
     
-    sget v3, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v2:F
+    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v2:F
     
-    add-float v15, v15, v3
+    add-float v3, v3, v15
     
-    sput v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v1:F
+    sput v3, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v1:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
@@ -422,13 +422,13 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
-    const/16 v15, 0x0
+    const/16 v3, 0x0
     
-    sget v3, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v1:F
+    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v1:F
     
-    add-float v15, v15, v3
+    add-float v3, v3, v15
     
-    sput v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v1:F
+    sput v3, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v1:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
@@ -441,25 +441,25 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
     
-    sget v4, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v1:F
+    sget v5, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v1:F
     
-    const/16 v5, 0x0
+    const/16 v15, 0x0
     
-    cmpl-float v5, v4, v5
+    cmpl-float v15, v5, v15
     
-    if-eqz v5, :stigma_jump_label_3
+    if-eqz v15, :stigma_jump_label_3
     
-    const-string v15, "STIGMA"
+    const-string v3, "STIGMA"
     
-    const-string v3, "Implicit flow involving sensitive data!"
+    const-string v4, "Implicit flow involving sensitive data!"
     
-    invoke-static {v15, v3},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v3, v4},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
-    invoke-static {v4}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
+    invoke-static {v5}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
     
-    move-result-object v3
+    move-result-object v4
     
-    invoke-static {v15, v3},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v3, v4},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
     :stigma_jump_label_3
     
@@ -482,21 +482,21 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
-    const/16 v15, 0x0
+    const/16 v4, 0x0
     
-    sget v4, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v0:F
+    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v0:F
     
-    add-float v15, v15, v4
+    add-float v4, v4, v15
     
-    sget v4, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v3:F
+    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v3:F
     
-    add-float v15, v15, v4
+    add-float v4, v4, v15
     
-    sget v4, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v13:F
+    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v13:F
     
-    add-float v15, v15, v4
+    add-float v4, v4, v15
     
-    sput v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v3:F
+    sput v4, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v3:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
@@ -533,21 +533,21 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
-    const/16 v15, 0x0
+    const/16 v4, 0x0
     
-    sget v4, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v0:F
+    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v0:F
     
-    add-float v15, v15, v4
+    add-float v4, v4, v15
     
-    sget v4, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v3:F
+    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v3:F
     
-    add-float v15, v15, v4
+    add-float v4, v4, v15
     
-    sget v4, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v13:F
+    sget v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v13:F
     
-    add-float v15, v15, v4
+    add-float v4, v4, v15
     
-    sput v15, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v3:F
+    sput v4, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_executeOpsTogether_v3:F
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     

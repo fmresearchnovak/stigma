@@ -471,7 +471,8 @@ class _PARAMETER_LIST_INSTRUCTION(SmaliAssemblyInstruction):
         return self.register_list
 
     def __repr__(self):
-        reg_string = ", ".join(self.register_list)
+        string_register_list = [str(x) for x in self.register_list]
+        reg_string = ", ".join(string_register_list)
         return self.opcode() + " {" + reg_string + "}, " + str(self.type_id)
 
 
@@ -539,7 +540,7 @@ class _TRIPLE_REGISTER_INSTRUCTION(SmaliAssemblyInstruction):
         return [self.rd, self.ra1, self.ra2]
         
     def __repr__(self):
-        return self.opcode() + " " + self.rd + ", " + self.ra1 + ", " + self.ra2
+        return self.opcode() + " " + str(self.rd) + ", " + str(self.ra1) + ", " + str(self.ra2)
         
         
 class CMPL_FLOAT(_TRIPLE_REGISTER_INSTRUCTION):
@@ -834,7 +835,7 @@ class _S_INSTRUCTION(SmaliAssemblyInstruction):
 
     def __repr__(self):
         if self.field_fqn == "":
-            return self.opcode() + " " + self.rd + ", " + self.field_id
+            return self.opcode() + " " + str(self.rd) + ", " + self.field_id
 
 class SGET(_S_INSTRUCTION):
     def opcode(self):
@@ -1534,7 +1535,7 @@ class LOG_D(INVOKE_STATIC):
         self.rm = reg_msg
 
     def __repr__(self):
-        return "invoke-static {" + self.rt + ", " + self.rm + "},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I"
+        return "invoke-static {" + str(self.rt) + ", " + str(self.rm) + "},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I"
 
 
 
