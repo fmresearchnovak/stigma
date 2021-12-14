@@ -280,7 +280,7 @@ def has_two_register_parameters(instr):
         "int-to-double", "long-to-int", "long-to-float", "long-to-double", "float-to-int",
         "float-to-long", "float-to-double", "double-to-int", "double-to-long", "double-to-float",
         "int-to-byte", "int-to-short", "int-to-char", "iget-quick", "iget-wide-quick",
-        "iget-object-quick", "iput-quick", "iput-wide-quick", "iput-object-quick" ]
+        "iget-object-quick", "iput-quick", "iput-wide-quick", "iput-object-quick", "rsub-int" ]
 
     return (ends_with_2addr or ends_with_lit8 or ends_with_lit16 or in_list)
 
@@ -319,9 +319,9 @@ THIRTY_TWO_BIT_TYPE_LIST = ["move", "move/from16", "move/16", "return",
     "rem-float", "iput-quick", "iget-quick", "ushr-int/lit8", 
     "shr-int/lit8", "shl-int/lit8", "xor-int/lit8", "or-int/lit8", 
     "and-int/lit8", "rem-int/lit8", "div-int/lit8", "mul-int/lit8", 
-    "sub-int/lit8", "add-int/lit8","xor-int/lit16", "or-int/lit16", 
+    "sub-int/lit8", "rsub-int/lit8", "add-int/lit8","xor-int/lit16", "or-int/lit16", 
     "and-int/lit16", "rem-int/lit16", "div-int/lit16", "mul-int/lit16", 
-    "sub-int/lit16", "add-int/lit16", "rem-float/2addr", 
+    "sub-int/lit16", "rsub-int", "add-int/lit16", "rem-float/2addr", 
     "div-float/2addr", "mul-float/2addr", "sub-float/2addr", 
     "add-float/2addr", "or-int/2addr", "and-int/2addr", "xor-int/2addr",
     "shl-int/2addr", "shr-int/2addr", "ushr-int/2addr", "rem-int/2addr",
@@ -386,6 +386,8 @@ def main():
     assert(get_p_numbers("filled-new-array {v0, p1, v2}, [Ljava/lang/String;\n") == ["p1"])
 
     assert(has_one_register_parameters("if-eqz") == True)
+    assert(has_two_register_parameters("rsub-int/lit8"))
+    assert(has_two_register_parameters("rsub-int"))
     assert(_param_list_len("filled-new-array {v0, v1, v2}, [Ljava/lang/String;\n") == 3)
     assert(get_num_registers("const-string v1, \"hard example: v2\"\n") == 1)
 
@@ -393,6 +395,7 @@ def main():
     assert(is_valid_instruction("    if-lt v5, v6, :cond_f") == True)
     assert(is_valid_instruction('\n') == False)
     assert(is_valid_instruction('    invoke-virtual {p0, v0}, Ledu/fandm/enovak/leaks/Main;->findViewById(I)Landroid/view/View;\n') == True)
+    assert(is_valid_instruction('    rsub-int p1, p1, 0xfb'))
     
     assert(break_into_tokens("    invoke-static/range {v0 .. v7}, Lcom/example/class1;->foo()Z;")[-1] == "Lcom/example/class1;->foo()Z;")
     

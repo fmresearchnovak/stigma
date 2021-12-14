@@ -199,6 +199,7 @@ div-double/2addr
 rem-double/2addr
 add-int/lit16
 sub-int/lit16
+rsub-int
 mul-int/lit16
 div-int/lit16
 rem-int/lit16
@@ -207,6 +208,7 @@ or-int/lit16
 xor-int/lit16
 add-int/lit8
 sub-int/lit8
+rsub-int/lit8
 mul-int/lit8
 div-int/lit8
 rem-int/lit8
