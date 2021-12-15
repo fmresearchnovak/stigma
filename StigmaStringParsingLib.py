@@ -163,7 +163,7 @@ def register_addition(reg_name, num):
     
     new_num = number + num
     if(new_num < 0):
-        raise ValueError("Invalid register addition: " + reg_string + " + " + str(num))
+        raise ValueError("Invalid register addition: " + reg_name + " + " + str(num))
     
     return letter + str(new_num)
 

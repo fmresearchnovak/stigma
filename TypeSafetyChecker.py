@@ -283,13 +283,26 @@ class TypeSafetyChecker:
                 if(isinstance(return_type, SmaliTypes.SixtyFourBit)):
                     adj_reg = StigmaStringParsingLib.register_addition(dest_reg, 1)
                     line_type_map_new[adj_reg] = SmaliTypes.SixtyFourBit_2()
-                    #print(dest_reg, " is now: ", str(reg_type))
-                    #print(adj_reg, " is now: ", str(SmaliTypes.SixtyFourBit_2()))
+                    
+            
+            # this could probably be de-indented even further
+            # or placed in other areas of this (too large) function
+            TypeSafetyChecker._erase_adj_reg_if_long(line_type_map_new, dest_reg)
                     
                     
         return line_type_map_new
         
 
+    @staticmethod
+    def _erase_adj_reg_if_long(type_map, dest_reg):
+        try:
+            prev_adj_reg = StigmaStringParsingLib.register_addition(dest_reg, -1)
+            if(prev_adj_reg in type_map):
+                if(isinstance(type_map[prev_adj_reg], SmaliTypes.SixtyFourBit)):
+                    type_map[prev_adj_reg] = SmaliTypes.UnknownType() 
+        except ValueError:
+            pass
+            
     
     def get_relevant_maps_to_merge(self,node_counter):
         '''This gets all maps from the predecessor nodes to merge'''

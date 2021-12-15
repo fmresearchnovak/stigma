@@ -23,6 +23,10 @@ def type_saftey_checker_test3():
 	
 	
 	
+	
+	
+	
+	
 def type_safety_checker_control_flow_test():
 	print("\nRunning control flow test")
 	fh = open("./test/control_flow_test.smali", "r")
@@ -212,6 +216,7 @@ def types_from_parameters_test():
 def type_saftey_checker_tests():
 	fh = open("test/random_method1_cropped.smali", "r")
 	method_text = fh.readlines()
+	n = len(method_text)
 
 	smd =  SmaliMethodDef.SmaliMethodDef(method_text, None)
 	cfg = ControlFlowGraph.ControlFlowGraph(smd.raw_text)
@@ -238,14 +243,16 @@ def type_saftey_checker_tests():
 		
 	#print(tsc.node_type_list)
 	#print("list of hashmaps length: " + str(len(tsc.node_type_list)))
+	#print("most recent: " + str(tsc.most_recent_type_map))
 	#cfg.show()
-	assert(len(tsc.node_type_list) == 7)
+	assert(len(tsc.node_type_list) == n) # one for each line
 	assert(tsc.node_type_list[-1] == tsc.most_recent_type_map)
-	assert(str(tsc.most_recent_type_map) == "{'p0': Lunknownclass;, 'p1': Landroid/view/View;, 'v0': 32-bit}")
+	assert(str(tsc.most_recent_type_map) == "{'p0': Lunknownclass;, 'p1': Landroid/view/View;, 'v0': 32-bit, 'v5': ?, 'v6': 64-bit, 'v7': 64-bit-2}")
 	#print("method code length: " + str(len(smd.tsc.text)))
-	assert(len(smd.raw_text) == 7)
-	assert(len(tsc.node_type_list) == 7)
-	assert(cfg.node_counter == 2)
+	assert(len(smd.raw_text) == n)
+	assert(len(tsc.node_type_list) == n)
+	#print(cfg.node_counter)
+	assert(cfg.node_counter == 4)
 
 
 def grow_locals_test_1():
