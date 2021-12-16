@@ -17,3 +17,7 @@ The algorithm for tag propagation on a function call to an internal method is to
 	This works because OtherMethod is static, so p0 is NOT this
 	but what about when it is not static?  Is p0 still appropriate or
 	should it be p1?
+
+add rsub-int and rsub-int/lit8 to SmaliAssemblyInstructions
+
+remove TYPE_CODE and TYPE_LIST stuff from SmaliAssemblyInstructions
