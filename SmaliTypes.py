@@ -292,6 +292,12 @@ def main():
 	assert(isinstance(int3, ThirtyTwoBit))
 	assert(arr2 == arr)
 	
+	arr = from_string("[Ljava/lang/String;")
+	obj = ObjectReference("Ljava/lang/String;")
+	assert(isinstance(arr, Array))
+	assert(arr.unwrap_layer() == obj)
+	#print(arr)
+	
 	print("\ttesting object types...")
 	obj = ObjectReference("Ljava/lang/String;")
 	obj2 = from_string("Ljava/lang/String;")

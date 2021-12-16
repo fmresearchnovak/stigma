@@ -190,7 +190,7 @@ class TypeSafetyChecker:
                     tmp = first_line_tokens[-1]
 
                 return_type = SmaliTypes.from_string(tmp)   
-                #print("move-result-object,  setting type:", str(return_type))
+                #print("move-result-object,  setting type of " + str(dest_reg) + " to be:", str(return_type))
                 line_type_map_new[dest_reg] = return_type
                 
             else:
