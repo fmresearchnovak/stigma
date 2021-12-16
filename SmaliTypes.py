@@ -39,6 +39,7 @@ class SmaliType:
 class UnknownType(SmaliType):
 	def __init__(self):
 		self.raw_type_string = "?"
+		self.specification_level = 0
 	
 	def __str__(self):
 		return self.raw_type_string
@@ -63,6 +64,7 @@ class UnknownType(SmaliType):
 class ThirtyTwoBit(SmaliType):
 	def __init__(self):
 		self.move_instr = SmaliAssemblyInstructions.MOVE_16
+		self.specification_level = 2
 	
 	def __str__(self):
 		return "32-bit"
@@ -118,6 +120,7 @@ class SixtyFourBit(SmaliType):
 	# A.K.A. "wide"
 	def __init__(self):
 		self.move_instr = SmaliAssemblyInstructions.MOVE_WIDE_16
+		self.specification_level = 2
 		
 	def __str__(self):
 		return "64-bit"
@@ -184,6 +187,7 @@ class Double_2(SixtyFourBit_2):
 
 class ObjectReference(SmaliType):
 	def __init__(self, new_raw_type_string):
+		self.specification_level = 2
 		self.move_instr = SmaliAssemblyInstructions.MOVE_OBJECT_16
 		
 		if(new_raw_type_string[0] != "[" and new_raw_type_string[0] != "L" and new_raw_type_string != "?"):
@@ -210,6 +214,13 @@ class ObjectReference(SmaliType):
 		# it can be called on ANY "SmaliType" object
 		# which is convenient to figure out the generic type
 		return "object"
+		
+
+class NonSpecificObjectReference(ObjectReference):
+	def __init__(self):
+		self.move_instr = SmaliAssemblyInstructions.MOVE_OBJECT_16
+		self.raw_type_string = "Non Specific Object"
+		self.specification_level = 1
 		
 		
 class Array(ObjectReference):
@@ -242,6 +253,13 @@ class Array(ObjectReference):
 		# assert(unwrapped != 64-bit-2)
 		obj = from_string(unwrapped)
 		return obj
+		
+		
+class NonSpecificArray(ObjectReference):
+	def __init__(self):
+		self.move_instr = SmaliAssemblyInstructions.MOVE_OBJECT_16
+		self.raw_type_string = "Non Specific Array"
+		self.specification_level = 1
 
 
 def main():
