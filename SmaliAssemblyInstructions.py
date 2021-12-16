@@ -39,6 +39,8 @@
 import StigmaStringParsingLib
 import SmaliTypes
 
+from SmaliRegister import SmaliRegister
+
 
 class SmaliAssemblyInstruction():
 
@@ -508,7 +510,7 @@ class ARRAY_LENGTH(SmaliAssemblyInstruction):
         return self.opcode() + " " + str(self.rd) + ", " + str(self.rar)
     
     def get_register_type_implications(self):
-        return {self.rd: SmaliTypes.ThirtyTwoBit, self.rar: SmaliTypes.NonSpecificArray}    
+        return {self.rar: SmaliTypes.NonSpecificArray(), self.rd: SmaliTypes.ThirtyTwoBit()}    
     
         
 class NEW_ARRAY(SmaliAssemblyInstruction):
@@ -554,6 +556,21 @@ class _PARAMETER_RANGE_INSTRUCTION(SmaliAssemblyInstruction):
         self.end_reg = element_list[-1]
         self.sig = signature
         
+    def get_registers(self):
+        begin = SmaliRegister(self.begin_reg)
+        end = SmaliRegister(self.end_reg)
+        
+        if(begin.letter() != "v" or end.letter() != "v"):
+            raise ValueError("Cannot expand register range [" + str(self))
+        
+        ans = []
+        for x in range(begin.number(), end.number()+1):
+            sr = SmaliRegister.from_components("v", x)
+            ans.append(sr)
+            
+        return ans
+        
+        
     def __repr__(self):
         return self.opcode() + " {" + str(self.begin_reg) + " .. " + str(self.end_reg) + "}, " + str(self.sig)
 
@@ -572,8 +589,16 @@ class FILLED_NEW_ARRAY(_PARAMETER_LIST_INSTRUCTION):
 class FILLED_NEW_ARRAY_RANGE(_PARAMETER_RANGE_INSTRUCTION):
     def opcode(self):
         return "filled-new-array/range"
+        
+    def get_register_type_implications(self):
+        array_content_type = SmaliTypes.from_string(self.sig).unwrap_layer()
+        ans = {}
+        for reg in self.get_registers():
+            ans[reg] = array_content_type
+        return ans
+        
 
-class FILL_ARRAY_DATA(_SINGLE_DEST_REGISTER_INSTRUCTION):
+class FILL_ARRAY_DATA(_SINGLE_DEST_REGISTER_INSTRUCTION, _NoType_OR_NoParameters):
     def opcode(self):
         return "fill-array-data"
     
@@ -791,7 +816,7 @@ class IF_LEZ(_ONE_REG_EQ_ZERO):
         return "if-lez"     
 
         
-class _ArrayGet_Parameters_Type_Pattern():
+class _Array_Parameters_Type_Pattern():
     def get_register_type_implications(self):
         # aget vX, vY, vZ
         # vX dest (or src for aput-* instructions)
@@ -810,14 +835,14 @@ class _ArrayGet_Parameters_Type_Pattern():
         return self.ans
         
         
-class AGET(_TRIPLE_REGISTER_INSTRUCTION, _ArrayGet_Parameters_Type_Pattern):
+class AGET(_TRIPLE_REGISTER_INSTRUCTION, _Array_Parameters_Type_Pattern):
     def opcode(self):
         return "aget"
         
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.ThirtyTwoBit()
 
-class AGET_WIDE(_ImplicitFirstRegisterInstruction, _TRIPLE_REGISTER_INSTRUCTION, _ArrayGet_Parameters_Type_Pattern):
+class AGET_WIDE(_ImplicitFirstRegisterInstruction, _TRIPLE_REGISTER_INSTRUCTION, _Array_Parameters_Type_Pattern):
     def opcode(self):
         return "aget-wide"
         
@@ -825,35 +850,41 @@ class AGET_WIDE(_ImplicitFirstRegisterInstruction, _TRIPLE_REGISTER_INSTRUCTION,
         self.ans[self.rd] = SmaliTypes.SixtyFourBit()
         self.ans[StigmaStringParsingLib.register_addition(self.rd, 1)] = SmaliTypes.SixtyFourBit_2()
 
-class AGET_OBJECT(_TRIPLE_REGISTER_INSTRUCTION, _ArrayGet_Parameters_Type_Pattern):
+class AGET_OBJECT(_TRIPLE_REGISTER_INSTRUCTION, _Array_Parameters_Type_Pattern):
     def opcode(self):
         return "aget-object"
         
     def _set_first_param_type(self):
+        # this is a special case and should be treated as such!
+        # it really should check the type of vY and do an unwrap_layer()
+        # but that's not possible in this class / context
+        # because we don't have a register_type_map
+        #
+        # NonSpecificObjectReference as a very low specificity level
         self.ans[self.rd] = SmaliTypes.NonSpecificObjectReference()
 
-class AGET_BOOLEAN(_TRIPLE_REGISTER_INSTRUCTION, _ArrayGet_Parameters_Type_Pattern):
+class AGET_BOOLEAN(_TRIPLE_REGISTER_INSTRUCTION, _Array_Parameters_Type_Pattern):
     def opcode(self):
         return "aget-boolean"
         
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.Boolean()
 
-class AGET_BYTE(_TRIPLE_REGISTER_INSTRUCTION, _ArrayGet_Parameters_Type_Pattern):
+class AGET_BYTE(_TRIPLE_REGISTER_INSTRUCTION, _Array_Parameters_Type_Pattern):
     def opcode(self):
         return "aget-byte"
         
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.Byte()
 
-class AGET_CHAR(_TRIPLE_REGISTER_INSTRUCTION, _ArrayGet_Parameters_Type_Pattern):
+class AGET_CHAR(_TRIPLE_REGISTER_INSTRUCTION, _Array_Parameters_Type_Pattern):
     def opcode(self):
         return "aget-char"
         
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.Char()
 
-class AGET_SHORT(_TRIPLE_REGISTER_INSTRUCTION, _ArrayGet_Parameters_Type_Pattern):
+class AGET_SHORT(_TRIPLE_REGISTER_INSTRUCTION, _Array_Parameters_Type_Pattern):
     def opcode(self):
         return "aget-short"
         
@@ -861,34 +892,59 @@ class AGET_SHORT(_TRIPLE_REGISTER_INSTRUCTION, _ArrayGet_Parameters_Type_Pattern
         self.ans[self.rd] = SmaliTypes.Short()
 
 
-class APUT(_TRIPLE_REGISTER_INSTRUCTION, _ArrayGet_Parameters_Type_Pattern):
+class APUT(_TRIPLE_REGISTER_INSTRUCTION, _Array_Parameters_Type_Pattern):
     # aput vX, vY, vZ
+    # vX is a value to be put into the array
+    # vY is an array reference
+    # vZ is an index into that array
     def opcode(self):
         return "aput"
+        
+    def _set_first_param_type(self):
+        self.ans[self.rd] = SmaliTypes.Int()
 
-class APUT_WIDE(_ImplicitFirstRegisterInstruction, _TRIPLE_REGISTER_INSTRUCTION, _ArrayGet_Parameters_Type_Pattern):
+class APUT_WIDE(_ImplicitFirstRegisterInstruction, _TRIPLE_REGISTER_INSTRUCTION, _Array_Parameters_Type_Pattern):
     def opcode(self):
         return "aput-wide"
+        
+    def _set_first_param_type(self):
+        self.ans[self.rd] = SmaliTypes.SixtyFourBit()
+        self.ans[StigmaStringParsingLib.register_addition(self.rd, 1)] = SmaliTypes.SixtyFourBit_2()
 
-class APUT_OBJECT(_TRIPLE_REGISTER_INSTRUCTION, _ArrayGet_Parameters_Type_Pattern):
+class APUT_OBJECT(_TRIPLE_REGISTER_INSTRUCTION, _Array_Parameters_Type_Pattern):
     def opcode(self):
         return "aput-object"
 
-class APUT_BOOLEAN(_TRIPLE_REGISTER_INSTRUCTION, _ArrayGet_Parameters_Type_Pattern):
+    def _set_first_param_type(self):
+        self.ans[self.rd] = SmaliTypes.NonSpecificObjectReference()
+
+class APUT_BOOLEAN(_TRIPLE_REGISTER_INSTRUCTION, _Array_Parameters_Type_Pattern):
     def opcode(self):
         return "aput-boolean"
+        
+    def _set_first_param_type(self):
+        self.ans[self.rd] = SmaliTypes.Boolean()
 
-class APUT_BYTE(_TRIPLE_REGISTER_INSTRUCTION, _ArrayGet_Parameters_Type_Pattern):
+class APUT_BYTE(_TRIPLE_REGISTER_INSTRUCTION, _Array_Parameters_Type_Pattern):
     def opcode(self):
         return "aput-byte"
 
-class APUT_CHAR(_TRIPLE_REGISTER_INSTRUCTION, _ArrayGet_Parameters_Type_Pattern):
+    def _set_first_param_type(self):
+        self.ans[self.rd] = SmaliTypes.Byte()
+
+class APUT_CHAR(_TRIPLE_REGISTER_INSTRUCTION, _Array_Parameters_Type_Pattern):
     def opcode(self):
         return "aput-char"
 
-class APUT_SHORT(_TRIPLE_REGISTER_INSTRUCTION, _ArrayGet_Parameters_Type_Pattern):
+    def _set_first_param_type(self):
+        self.ans[self.rd] = SmaliTypes.Char()
+
+class APUT_SHORT(_TRIPLE_REGISTER_INSTRUCTION, _Array_Parameters_Type_Pattern):
     def opcode(self):
         return "aput-short"
+        
+    def _set_first_param_type(self):
+        self.ans[self.rd] = SmaliTypes.Short()
 
 
 
@@ -897,11 +953,13 @@ class APUT_SHORT(_TRIPLE_REGISTER_INSTRUCTION, _ArrayGet_Parameters_Type_Pattern
 class _I_INSTRUCTION(SmaliAssemblyInstruction):
     # A parent class that should never be instantiated directly
     #   Backward compatibility with how we call IGET() in Instrument
+    # instance_field_name
     def __init__(self, reg_dest, reg_calling_instance, class_name , instance_field_name = ""): 
+        print("reg dest: ", reg_dest, "  reg_calling_instance", reg_calling_instance, "  class name", class_name, "  instance_field_name", instance_field_name)
         self.rd = reg_dest
         self.rci = reg_calling_instance
         if instance_field_name != "":
-            cn = class_name
+            self.cn = class_name
             ifn = instance_field_name
             self.field_id =  cn + "->" + ifn
         else:
@@ -910,6 +968,20 @@ class _I_INSTRUCTION(SmaliAssemblyInstruction):
         
     def get_registers(self):
         return [self.rd, self.rci]
+        
+    def get_register_type_implications(self):
+        # iget vX, vY, type_id
+        # vX dest (or src for iput-* instructions)
+        # vY a reference to an object
+        # vZ index / offset into array (I think this must be a 32-bit int)
+    
+        self.ans = {}
+        
+        tmp = self.rci.split(":")[1]
+        first_reg_type = SmaliTypes.from_string(tmp)  
+        self.ans[self.rd] = first_reg_type
+        self.ans[self.rci] = self.cn
+        return self.ans
 
     def __repr__(self):
         return self.opcode() + " " + self.rd + ", " + self.rci + ", " + self.field_id
@@ -922,6 +994,11 @@ class IGET(_I_INSTRUCTION):
 class IGET_WIDE(_ImplicitFirstRegisterInstruction, _I_INSTRUCTION):
     def opcode(self):
         return "iget-wide"
+        
+    def get_register_type_implications(self):
+        ans = super().get_register_type_implications()
+        adj_reg = StigmaStringParsingLib.register_addition(self.rd, 1)
+        ans[adj_reg] = SmaliTypes.SixtyFourBit_2()
         
 class IGET_OBJECT(_I_INSTRUCTION):
     def opcode(self):
@@ -1923,6 +2000,21 @@ def main():
     
     asm_obj = SmaliAssemblyInstruction.from_line("aget v4, v4, v6")
     assert(str(asm_obj.get_register_type_implications()) == "{'v4': 32-bit, 'v6': I}")
+    
+    asm_obj = SmaliAssemblyInstruction.from_line("array-length v7, v7")
+    #print(asm_obj.get_register_type_implications())
+    assert(str(asm_obj.get_register_type_implications()) == "{'v7': 32-bit}")
+    
+    asm_obj = SmaliAssemblyInstruction.from_line("filled-new-array/range {v10 .. v16}, [Ljava/lang/String;\n")
+    assert(str(asm_obj) == "    filled-new-array/range {v10 .. v16}, [Ljava/lang/String;\n")
+    assert(str(asm_obj.get_register_type_implications()) == "{v10: Ljava/lang/String;, v11: Ljava/lang/String;, v12: Ljava/lang/String;, v13: Ljava/lang/String;, v14: Ljava/lang/String;, v15: Ljava/lang/String;, v16: Ljava/lang/String;}")
+    assert(str(asm_obj.get_registers()) == "[v10, v11, v12, v13, v14, v15, v16]")
+    
+    asm_obj = SmaliAssemblyInstruction.from_line("aput-wide v2, v4, v6")
+    assert(str(asm_obj.get_register_type_implications()) == "{'v4': Non Specific Array, 'v6': I, 'v2': 64-bit, 'v3': 64-bit-2}")
+    
+    asm_obj = SmaliAssemblyInstruction.from_line("iget-wide v3, v0, Landroid/HypotheticalClass;->MyDouble:D")
+    print(asm_obj.get_register_type_implications())
     
     print("ALL SmaliAssemblyInstructions TESTS PASSED!")
 
