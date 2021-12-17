@@ -135,7 +135,7 @@ class TypeSafetyChecker:
             
             
             
-    def _type_update_instruction(self, code_unit, is_first_line, node_counter):
+    def _type_update_instruction(self, code_unit, is_first_line_of_method, node_counter):
         
         first_line = str(code_unit[0])
         first_line_tokens = StigmaStringParsingLib.break_into_tokens(first_line)
@@ -144,19 +144,15 @@ class TypeSafetyChecker:
         # ignore lines that don't affect the type of any 
         # register and don't matter to the TypeSafetyChecker
         # copy the existing type_map forward
-        if(first_instr in StigmaStringParsingLib.NON_RELEVANT_INSTRUCTION_LIST):
-            #print("\t\tnon relevant instr!", opcode)
-            line_type_map_new = self.most_recent_type_map.copy()
-            return line_type_map_new
-            
-        
+        #if(first_instr in StigmaStringParsingLib.NON_RELEVANT_INSTRUCTION_LIST):
+        #    #print("\t\tnon relevant instr!", opcode)
+        #    line_type_map_new = self.most_recent_type_map.copy()
+        #    return line_type_map_new
 
-
-        #this is the "normal" case, 
         
         #if this is a start of new block, retreive most recent map from the parent node
         #if this is not a start, keep using the most recent map assigned
-        if(is_first_line):
+        if(is_first_line_of_method):
             line_type_map_new = self.get_most_recent_type_map(node_counter).copy() # SHALLOW COPY
         else:
             line_type_map_new = self.most_recent_type_map.copy() # SHALLOW COPY  
@@ -167,93 +163,23 @@ class TypeSafetyChecker:
         re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, last_line) is not None):
             # an invoke-* instruction
             # or a filled-new-array instruction
-            
-            # the corresponding move-result instruction
-            last_instr = StigmaStringParsingLib.extract_opcode(last_line)
-            dest_reg = StigmaStringParsingLib.get_v_and_p_numbers(last_line)[0]
-            
-            if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT_OBJECT, last_instr) is not None):
-                # this is a very special case.   move-result-object vx
-                # may cause vx to be (a) an Object (b) an Array
-                # if it is an array we need to know the type of that array
-                # (array of String vs array of int, etc)
-                # in order to properly handle subsequent instructions
-                # such as aget vy, vx
-                                
-                if(re.search(StigmaStringParsingLib.BEGINS_WITH_INVOKE, first_instr) is not None):
-                    type_start_index = first_line.rfind(")")
-                    tmp = first_line[type_start_index+1:].strip() 
-                    # note: .strip() removes the \n at the end of the line
-                    # e.g., if the return type is: [I\n   we need only [I
-                        
-                elif(re.search(StigmaStringParsingLib.BEGINS_WITH_FILLED_NEW_ARRAY, first_instr) is not None):
-                    tmp = first_line_tokens[-1]
-
-                return_type = SmaliTypes.from_string(tmp)   
-                #print("move-result-object,  setting type of " + str(dest_reg) + " to be:", str(return_type))
-                line_type_map_new[dest_reg] = return_type
-                
-            else:
-                # must be a move-result or a move-result wide
-                return_type = self.check_type_list(last_instr)
-                registers = StigmaStringParsingLib.get_v_and_p_numbers(last_line)
-                dest_reg = registers[0]
-                line_type_map_new[dest_reg] = return_type
-                
-                if(isinstance(return_type, SmaliTypes.SixtyFourBit)):
-                    adj_reg = StigmaStringParsingLib.register_addition(dest_reg, 1)
-                    line_type_map_new[adj_reg] = SmaliTypes.SixtyFourBit_2()
-                    #print(dest_reg, " is now: ", str(reg_type))
-                    #print(adj_reg, " is now: ", str(SmaliTypes.SixtyFourBit_2()))
-                    
-        elif(re.search(StigmaStringParsingLib.BEGINS_WITH_INVOKE, first_instr) is not None):
-            # this is a single invoke-* line that doesn't
-            # have a corresponding move-result in the code unit
-            # such a situation with filled-new-array is valid, but
-            # logically pointless and should never happen
-            return line_type_map_new
+            self._type_update_two_line_instruction(code_unit, line_type_map_new)
                   
-        else:
-
-            registers = StigmaStringParsingLib.get_v_and_p_numbers(first_line)
-            dest_reg = registers[0]
-            opcode = first_instr
-            #print("opcode:", opcode)
-            #print("updating tsc with line: ", line)
-                        
-            if(opcode == "new-array"): 
-                # note: this is NOT filled-new-array
-                tmp = first_line_tokens[-1]
-                return_type = SmaliTypes.from_string(tmp)  
-                line_type_map_new[dest_reg] = return_type
-
-            #if iget-object is an array, we have to store the exact type of array, otherwise just store object
-            #error:     
-                # iget-object v6, p0, Landroid/support/design/widget/CoordinatorLayout;->mKeylines:[I
-                # aget v7, v6, v5
-            #not sure if have to consider aget-object
-            #iput-object can also contain an array, so we need to consider that case also while checking for array
-            elif(opcode == "iget-object" or \
-            opcode == "sget-object" or \
-            opcode == "iget-object-quick" or \
-            opcode == "iput-object"):
-                tmp = first_line_tokens[-1]
-                tmp = tmp.split(":")[1]
-                    
-                return_type = SmaliTypes.from_string(tmp)  
-                line_type_map_new[dest_reg] = return_type
+        else: 
             
-            
-            elif(opcode == "aget-object"):
+            if(first_instr == "aget-object"):
                 #print("opcode match: ", opcode)
                 # while aget and aget-boolean and others are explicit
                 # about their type, 'aget-object' may be operating on an array
                 # that is N-dimenstional.  e.g.,  [[[Landroid/blah/MyClass;
+                # and the type in the dest register is not explicit in the instruction
 
                 # aget-object vx, vy, vz
                 # vx is the destination register
                 # vy is the array
                 # vz is the index (and int) into that array
+                registers = StigmaStringParsingLib.get_v_and_p_numbers(first_line)
+                dest_reg = registers[0]
                 src_reg = registers[1]
                 src_type = line_type_map_new[src_reg]
                 #print("unit:", code_unit)
@@ -261,36 +187,95 @@ class TypeSafetyChecker:
                 return_type = self.check_aget_object_type(src_type)
                 line_type_map_new[dest_reg] = return_type
                 
-                
-            #check-cast vx, type_id
-            #Checks whether the object reference in vx can be cast to an instance of a class referenced by type_id. Throws ClassCastException if the cast is not possible, continues execution otherwise.
-            elif(opcode == "check-cast"):
-                #print("unit:", code_unit)
-                return_type = SmaliTypes.from_string(first_line_tokens[-1])
-                #print("dest_reg: ", dest_reg, " type:", return_type)
-                line_type_map_new[dest_reg] = return_type
+                # this could probably be de-indented even further
+                # or placed in other areas of this (too large) function
+                TypeSafetyChecker._erase_adj_reg_if_long(line_type_map_new, dest_reg)
 
                       
-            elif(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_OBJECT, opcode) is not None):
+            elif(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_OBJECT, first_instr) is not None):
+                dest_reg = registers[0]
                 src_reg = registers[1]
                 return_type = line_type_map_new[src_reg]
                 line_type_map_new[dest_reg] = return_type
+                
+                # this could probably be de-indented even further
+                # or placed in other areas of this (too large) function
+                TypeSafetyChecker._erase_adj_reg_if_long(line_type_map_new, dest_reg)
                           
             else:
-                return_type = self.check_type_list(opcode)
-                line_type_map_new[dest_reg] = return_type
-                
-                if(isinstance(return_type, SmaliTypes.SixtyFourBit)):
-                    adj_reg = StigmaStringParsingLib.register_addition(dest_reg, 1)
-                    line_type_map_new[adj_reg] = SmaliTypes.SixtyFourBit_2()
+                self. _type_update_one_line_instruction(first_line, line_type_map_new)
                     
             
-            # this could probably be de-indented even further
-            # or placed in other areas of this (too large) function
-            TypeSafetyChecker._erase_adj_reg_if_long(line_type_map_new, dest_reg)
                     
                     
         return line_type_map_new
+        
+    
+    def _type_update_two_line_instruction(self, code_unit, line_type_map_new):
+        first_line = code_unit[0]
+        last_line = code_unit[-1]
+        dest_reg = SmaliRegister(StigmaStringParsingLib.get_v_and_p_numbers(last_line)[0])
+        
+        if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT_OBJECT, last_line) is not None):
+            # this is a very special case.   move-result-object vx
+            # may cause vx to be (a) an Object (b) an Array
+            # if it is an array we need to know the type of that array
+            # (array of String vs array of int, etc)
+            # in order to properly handle subsequent instructions
+            # such as aget vy, vx
+                            
+            if(re.search(StigmaStringParsingLib.BEGINS_WITH_INVOKE, first_line) is not None):
+                type_start_index = first_line.rfind(")")
+                tmp = first_line[type_start_index+1:].strip() 
+                # note: .strip() removes the \n at the end of the line
+                # e.g., if the return type is: [I\n   we need only [I
+                    
+            elif(re.search(StigmaStringParsingLib.BEGINS_WITH_FILLED_NEW_ARRAY, first_line) is not None):
+                first_line_tokens = StigmaStringParsingLib.break_into_tokens(first_line)
+                tmp = first_line_tokens[-1]
+
+            # missing a check on the specificity level?
+            new_type = SmaliTypes.from_string(tmp)
+            #print("move-result-object,  setting type of " + str(dest_reg) + " to be:", str(new_type))
+            line_type_map_new[dest_reg] = new_type
+        
+        else: # move-result or move-result wide
+            self._type_update_one_line_instruction(last_line, line_type_map_new)
+            
+    @staticmethod
+    def _type_update_one_line_instruction(code_line, line_type_map_new):
+        
+        smali_asm_obj = smali.SmaliAssemblyInstruction.from_line(code_line)
+        new_types = smali_asm_obj.get_register_type_implications()
+        # returns something like {v2: 32-bit, v3: NonSpecificObject}
+        
+        for reg in new_types:
+            new_reg_type = new_types[reg]
+            
+            if reg in line_type_map_new:
+                existing_reg_type = line_type_map_new[reg]
+                if existing_reg_type.get_generic_type() == new_reg_type.get_generic_type():
+                    if new_reg_type.specificity_level > existing_reg_type.specificity_level :
+                        line_type_map_new[reg] = new_reg_type
+                        # this could probably be de-indented even further
+                        # or placed in other areas of this (too large) function
+                        TypeSafetyChecker._erase_adj_reg_if_long(line_type_map_new, reg)
+                else:
+                   line_type_map_new[reg] = new_reg_type 
+                   # this could probably be de-indented even further
+                   # or placed in other areas of this (too large) function
+                   TypeSafetyChecker._erase_adj_reg_if_long(line_type_map_new, reg)
+                   
+            else:
+                line_type_map_new[reg] = new_reg_type
+                # this could probably be de-indented even further
+                # or placed in other areas of this (too large) function
+                TypeSafetyChecker._erase_adj_reg_if_long(line_type_map_new, reg)
+
+
+
+
+        
         
 
     @staticmethod
