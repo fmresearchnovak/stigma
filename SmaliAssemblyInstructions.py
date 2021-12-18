@@ -193,16 +193,28 @@ class _Object_Parameters():
             ans[reg] = SmaliTypes.NonSpecificObjectReference()
         return ans
         
-class _SixtyFourBit_Parameters():
+class _SixtyFourBit_Dest():
     # instruction classes that extend this type
     # are those in which ALL the registers/parameters
     # are wide / "64-bit" types
     def get_register_type_implications(self):
+        
+        # consider the follow example
+        # e.g., add-long v6, v0, v5
+        # this instruction (found in the wild) re-writes
+        # v6 from it's incoming value (64-bit-2) to
+        # it's new value (64-bit) outgoing
+        # thereby invalidating the value stored in v5
+        # because of this annoying edge-case I chose to implement
+        # type implications only for the dest reg
+        
+        explicit_regs = self.get_registers()
+        implicit_regs = self.get_implicit_registers()
+                
         ans = {}
-        for reg in self.get_registers():
-            ans[reg] = SmaliTypes.SixtyFourBit()
-        for reg in self.get_implicit_registers():
-            ans[reg] = SmaliTypes.SixtyFourBit_2()
+        ans[explicit_regs[0]] = SmaliTypes.SixtyFourBit()
+        ans[implicit_regs[0]] = SmaliTypes.SixtyFourBit_2() 
+    
         return ans
         
 #class _NoType_OR_NoParameters():
@@ -289,7 +301,7 @@ class MOVE_FROM16(MOVE):
 # This is a minor inconvenience
 # I need the class name to be MOVE-WIDE
 # but "-" is not a valid character in a class name
-class MOVE_WIDE(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, MOVE):
+class MOVE_WIDE(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, MOVE):
     def opcode(self):
         return "move-wide"
     
@@ -343,7 +355,7 @@ class MOVE_RESULT(_ThirtyTwoBit_Parameters, _SINGLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "move-result"
 
-class MOVE_RESULT_WIDE(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _SINGLE_REGISTER_INSTRUCTION):
+class MOVE_RESULT_WIDE(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _SINGLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "move-result-wide"
 
@@ -366,7 +378,7 @@ class RETURN(_ThirtyTwoBit_Parameters, _SINGLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "return"
 
-class RETURN_WIDE(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _SINGLE_REGISTER_INSTRUCTION):
+class RETURN_WIDE(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _SINGLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "return-wide"
 
@@ -394,7 +406,7 @@ class CONST_HIGH16(CONST):
     def opcode(self):
         return "const/high16"
 
-class CONST_WIDE(_ImplicitRegistersInstruction, _SixtyFourBit_Parameters, CONST):
+class CONST_WIDE(_ImplicitRegistersInstruction, _SixtyFourBit_Dest, CONST):
     def opcode(self):
         return "const-wide"
 
@@ -472,7 +484,7 @@ class INSTANCE_OF(SmaliAssemblyInstruction):
         return self.opcode() + " " + str(self.rr) + ", " + str(self.ra) + ", " + str(self.type_id)
         
     def get_register_type_implications(self):
-        return {self.rr: SmaliTypes.ThirtyTwoBit, self.ra: SmaliTypes.NonSpecificObjectReference}
+        return {self.rr: SmaliTypes.ThirtyTwoBit(), self.ra: SmaliTypes.NonSpecificObjectReference()}
         
 
 class NEW_INSTANCE(SmaliAssemblyInstruction):
@@ -680,11 +692,14 @@ class CMPL_DOUBLE(_TRIPLE_REGISTER_INSTRUCTION):
         return ans
         
     def get_register_type_implications(self):
-        ans = {self.rd: SmaliTypes.ThirtyTwoBit()}
+        ans = {}
+        
         for reg in self.get_registers():
             ans[reg] = SmaliTypes.SixtyFourBit()
         for reg in self.get_implicit_registers():
             ans[reg] = SmaliTypes.SixtyFourBit_2()
+            
+        ans[self.rd] = SmaliTypes.ThirtyTwoBit()
         return ans
         
 class CMPG_DOUBLE(_TRIPLE_REGISTER_INSTRUCTION):
@@ -700,11 +715,14 @@ class CMPG_DOUBLE(_TRIPLE_REGISTER_INSTRUCTION):
         return ans
         
     def get_register_type_implications(self):
-        ans = {self.rd: SmaliTypes.ThirtyTwoBit()}
+        ans = {}
+        
         for reg in self.get_registers():
             ans[reg] = SmaliTypes.SixtyFourBit()
         for reg in self.get_implicit_registers():
             ans[reg] = SmaliTypes.SixtyFourBit_2()
+            
+        ans[self.rd] = SmaliTypes.ThirtyTwoBit()
         return ans
         
 class CMP_LONG(_TRIPLE_REGISTER_INSTRUCTION):
@@ -720,11 +738,14 @@ class CMP_LONG(_TRIPLE_REGISTER_INSTRUCTION):
         return ans
 
     def get_register_type_implications(self):
-        ans = {self.rd: SmaliTypes.ThirtyTwoBit()}
+        ans = {}
+        
         for reg in self.get_registers():
             ans[reg] = SmaliTypes.SixtyFourBit()
         for reg in self.get_implicit_registers():
             ans[reg] = SmaliTypes.SixtyFourBit_2()
+            
+        ans[self.rd] = SmaliTypes.ThirtyTwoBit()
         return ans
         
 class _TWO_REG_EQ(SmaliAssemblyInstruction):
@@ -1229,7 +1250,7 @@ class NOT_INT(_ThirtyTwoBit_Parameters, _TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "not-int"
 
-class NEG_LONG(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TWO_REGISTER_UNARY_INSTRUCTION):
+class NEG_LONG(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "neg-long"
 
@@ -1237,7 +1258,7 @@ class NEG_FLOAT(_ThirtyTwoBit_Parameters, _TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "neg-float"
 
-class NEG_DOUBLE(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TWO_REGISTER_UNARY_INSTRUCTION):
+class NEG_DOUBLE(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "neg-double"
 
@@ -1246,7 +1267,8 @@ class INT_TO_LONG(_ImplicitFirstRegisterInstruction, _TWO_REGISTER_UNARY_INSTRUC
         return "int-to-long"
         
     def get_register_type_implications(self):
-        ans = {self.rd: SmaliTypes.Long(), self.ra: SmaliTypes.Int()}
+        # annoying edge-case: int-to-long v5, v5
+        ans = {self.rd: SmaliTypes.Long()}
         adj_reg = StigmaStringParsingLib.register_addition(self.rd, 1)
         ans[adj_reg] = SmaliTypes.Long_2()
         return ans
@@ -1294,7 +1316,7 @@ class LONG_TO_FLOAT(_TWO_REGISTER_UNARY_INSTRUCTION):
         ans[adj_reg] = SmaliTypes.Long_2()
         return ans
 
-class LONG_TO_DOUBLE(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TWO_REGISTER_UNARY_INSTRUCTION):
+class LONG_TO_DOUBLE(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "long-to-double"
 
@@ -1337,7 +1359,7 @@ class DOUBLE_TO_INT(_TWO_REGISTER_UNARY_INSTRUCTION):
         ans[adj_reg] = SmaliTypes.Double_2()
         return ans
 
-class DOUBLE_TO_LONG(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TWO_REGISTER_UNARY_INSTRUCTION):
+class DOUBLE_TO_LONG(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "double-to-long"
 
@@ -1415,47 +1437,47 @@ class USHR_INT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "ushr-int"
 
-class ADD_LONG(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
+class ADD_LONG(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "add-long"
 
-class SUB_LONG(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
+class SUB_LONG(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "sub-long"
 
-class MUL_LONG(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
+class MUL_LONG(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "mul-long"
 
-class DIV_LONG(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
+class DIV_LONG(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "div-long"
 
-class REM_LONG(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
+class REM_LONG(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "rem-long"
 
-class AND_LONG(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
+class AND_LONG(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "and-long"
 
-class OR_LONG(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
+class OR_LONG(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "or-long"
 
-class XOR_LONG(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
+class XOR_LONG(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "xor-long"
 
-class SHL_LONG(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
+class SHL_LONG(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "shl-long"
 
-class SHR_LONG(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction,_TRIPLE_REGISTER_INSTRUCTION):
+class SHR_LONG(_SixtyFourBit_Dest, _ImplicitRegistersInstruction,_TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "shr-long"
 
-class USHR_LONG(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
+class USHR_LONG(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "ushr-long"
 
@@ -1479,23 +1501,23 @@ class REM_FLOAT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "rem-float"
 
-class ADD_DOUBLE(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
+class ADD_DOUBLE(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "add-double"
 
-class SUB_DOUBLE(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
+class SUB_DOUBLE(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "sub-double"
 
-class MUL_DOUBLE(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
+class MUL_DOUBLE(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "mul-double"
 
-class DIV_DOUBLE(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
+class DIV_DOUBLE(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "div-double"
 
-class REM_DOUBLE(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
+class REM_DOUBLE(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "rem-double"
 
@@ -1560,47 +1582,47 @@ class USHR_INT_2ADDR(_ThirtyTwoBit_Parameters, _TWO_REGISTER_BINARY_INSTRUCTION)
     def opcode(self):
         return "ushr-int/2addr"
             
-class ADD_LONG_2ADDR(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
+class ADD_LONG_2ADDR(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "add-long/2addr"
 
-class SUB_LONG_2ADDR(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
+class SUB_LONG_2ADDR(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "sub-long/2addr"
 
-class MUL_LONG_2ADDR(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
+class MUL_LONG_2ADDR(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "mul-long/2addr"
 
-class DIV_LONG_2ADDR(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
+class DIV_LONG_2ADDR(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "div-long/2addr"
         
-class REM_LONG_2ADDR(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
+class REM_LONG_2ADDR(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "rem-long/2addr"
 
-class AND_LONG_2ADDR(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
+class AND_LONG_2ADDR(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "and-long/2addr"
         
-class OR_LONG_2ADDR(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
+class OR_LONG_2ADDR(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "or-long/2addr"
 
-class XOR_LONG_2ADDR(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
+class XOR_LONG_2ADDR(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "xor-long/2addr"
 
-class SHL_LONG_2ADDR(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
+class SHL_LONG_2ADDR(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "shl-long/2addr"
 
-class SHR_LONG_2ADDR(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
+class SHR_LONG_2ADDR(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "shr-long/2addr"
 
-class USHR_LONG_2ADDR(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
+class USHR_LONG_2ADDR(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "ushr-long/2addr"
 
@@ -1624,23 +1646,23 @@ class REM_FLOAT_2ADDR(_ThirtyTwoBit_Parameters, _TWO_REGISTER_BINARY_INSTRUCTION
     def opcode(self):
         return "rem-float/2addr"
         
-class ADD_DOUBLE_2ADDR(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
+class ADD_DOUBLE_2ADDR(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "add-double/2addr"
         
-class SUB_DOUBLE_2ADDR(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
+class SUB_DOUBLE_2ADDR(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "sub-double/2addr"
         
-class MUL_DOUBLE_2ADDR(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
+class MUL_DOUBLE_2ADDR(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "mul-double/2addr"
         
-class DIV_DOUBLE_2ADDR(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
+class DIV_DOUBLE_2ADDR(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "div-double/2addr"
         
-class REM_DOUBLE_2ADDR(_SixtyFourBit_Parameters, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
+class REM_DOUBLE_2ADDR(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TWO_REGISTER_BINARY_INSTRUCTION):
     def opcode(self):
         return "rem-double/2addr"
         
@@ -1769,16 +1791,9 @@ class IGET_QUICK(_I_INSTRUCTION_QUICK):
     def opcode(self):
         return "iget-quick"
 
-class IGET_WIDE_QUICK(_ImplicitFirstRegisterInstruction, _I_INSTRUCTION_QUICK):
+class IGET_WIDE_QUICK(_SixtyFourBit_Dest, _ImplicitFirstRegisterInstruction, _I_INSTRUCTION_QUICK):
     def opcode(self):
         return "iget-wide-quick"
-        
-    def get_register_type_implications(self):
-        ans = super().get_register_type_implications()
-        adj_reg = StigmaStringParsingLib.register_addition(self.rd, 1)
-        ans[adj_reg] = SmaliTypes.SixtyFourBit_2()
-        return ans
-        
         
 class IGET_OBJECT_QUICK(_Object_Parameters, _I_INSTRUCTION_QUICK):
     def opcode(self):
@@ -1788,15 +1803,9 @@ class IPUT_QUICK(_I_INSTRUCTION_QUICK):
     def opcode(self):
         return "iput-quick"
         
-class IPUT_WIDE_QUICK(_ImplicitFirstRegisterInstruction, _I_INSTRUCTION_QUICK):
+class IPUT_WIDE_QUICK(_SixtyFourBit_Dest, _ImplicitFirstRegisterInstruction, _I_INSTRUCTION_QUICK):
     def opcode(self):
         return "iput-wide-quick"
-        
-    def get_register_type_implications(self):
-        ans = super().get_register_type_implications()
-        adj_reg = StigmaStringParsingLib.register_addition(self.rd, 1)
-        ans[adj_reg] = SmaliTypes.SixtyFourBit_2()
-        return ans
         
 class IPUT_OBJECT_QUICK(_Object_Parameters, _I_INSTRUCTION_QUICK):
     def opcode(self):
@@ -2086,14 +2095,13 @@ def main():
     assert(str(asm_obj.get_register_type_implications()) == '{}')
     
     asm_obj = SmaliAssemblyInstruction.from_line("    move v2, v3\n")
-    #print(asm_obj.get_register_type_implications())
     assert(str(asm_obj.get_register_type_implications()) == "{'v2': 32-bit, 'v3': 32-bit}")
     
     asm_obj = SmaliAssemblyInstruction.from_line("    move-wide v4, v14\n")
-    assert(str(asm_obj.get_register_type_implications()) == "{'v4': 64-bit, 'v14': 64-bit, 'v5': 64-bit-2, 'v15': 64-bit-2}")
+    assert(str(asm_obj.get_register_type_implications()) == "{'v4': 64-bit, 'v5': 64-bit-2}")
     
     asm_obj = SmaliAssemblyInstruction.from_line("    move-wide/16 v10, v21")
-    assert(str(asm_obj.get_register_type_implications()) == "{'v10': 64-bit, 'v21': 64-bit, 'v11': 64-bit-2, 'v22': 64-bit-2}")
+    assert(str(asm_obj.get_register_type_implications()) == "{'v10': 64-bit, 'v11': 64-bit-2}")
     
     asm_obj = SmaliAssemblyInstruction.from_line("move-result-wide v22")
     assert(str(asm_obj.get_register_type_implications()) == "{'v22': 64-bit, 'v23': 64-bit-2}")
@@ -2138,6 +2146,9 @@ def main():
     
     asm_obj = SmaliAssemblyInstruction.from_line("sput-object v0, Ledu/fandm/enovak/leaks/Main;->TAG:Ljava/lang/String;")
     assert(str(asm_obj.get_register_type_implications()) == "{'v0': Ljava/lang/String;}")
+    
+    asm_obj = SmaliAssemblyInstruction.from_line("add-long v6, v0, v5")
+    assert(str(asm_obj.get_register_type_implications()) == "{'v6': 64-bit, 'v7': 64-bit-2}")
     
     print("ALL SmaliAssemblyInstructions TESTS PASSED!")
 

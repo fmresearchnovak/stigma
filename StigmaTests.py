@@ -169,6 +169,8 @@ def type_safety_weather_app_test():
 
 
 def comparison_count_test1():
+	print("\nRunning comparison count test")
+	print("\ttest/random_method1.smali")
 	fh = open ("./test/random_method1.smali", "r")
 	method_text = fh.readlines()
 
@@ -178,6 +180,7 @@ def comparison_count_test1():
 	assert(smd.get_num_comparison_instructions() == 1)
 		
 		
+	print("passed!")
 
 	
 	
@@ -202,7 +205,10 @@ def types_from_parameters_test():
 	
 	code_unit = ["    cmp-long v10, v4, v27\n"]
 	new_map = tsc._type_update_instruction(code_unit, False, 0)
+	#print(new_map)
 	assert(new_map["v10"] == "32-bit")
+	assert(new_map["v4"] == "64-bit")
+	assert(new_map["v5"] == "64-bit-2")
 	
 	
 	code_unit = ["    move-object v0, p0\n"]
@@ -210,10 +216,14 @@ def types_from_parameters_test():
 	#print(new_map)
 	assert(new_map["v0"] == "Lunknownclass;")
 	
+	print("passed!")
 	
 	
 	
 def type_saftey_checker_tests():
+	print("\nRunning type safety checker tests")
+	print("\ttest/random_method1_cropped.smali")
+	
 	fh = open("test/random_method1_cropped.smali", "r")
 	method_text = fh.readlines()
 	n = len(method_text)
@@ -247,15 +257,18 @@ def type_saftey_checker_tests():
 	#cfg.show()
 	assert(len(tsc.node_type_list) == n) # one for each line
 	assert(tsc.node_type_list[-1] == tsc.most_recent_type_map)
+	#print(tsc.most_recent_type_map)
 	assert(str(tsc.most_recent_type_map) == "{'p0': Lunknownclass;, 'p1': Landroid/view/View;, 'v0': 32-bit, 'v5': ?, 'v6': 64-bit, 'v7': 64-bit-2}")
 	#print("method code length: " + str(len(smd.tsc.text)))
 	assert(len(smd.raw_text) == n)
 	assert(len(tsc.node_type_list) == n)
 	#print(cfg.node_counter)
 	assert(cfg.node_counter == 4)
-
+	print("passed!")
 
 def grow_locals_test_1():
+	print("\nRunning grow locals test")
+	print("\ttest/random_method1.smali")
 	fh = open("./test/random_method1.smali", "r")
 	method_list = fh.readlines()
 	fh.close()
@@ -311,12 +324,18 @@ def grow_locals_test_1():
 	
 	ans = smd.dereference_p_to_v_numbers("invoke-virtual/range {v2 .. p2}, Landroid/support/v4/app/FragmentManagerNonConfig;->getFragments()Ljava/util/List;")
 	assert(ans == "invoke-virtual/range {v2 .. v5}, Landroid/support/v4/app/FragmentManagerNonConfig;->getFragments()Ljava/util/List;")
+	print("passed!")
 	
 	
 def grow_locals_test_2():
+	print("\nRunning grow locals 2 test")
+	print("\ttest/Main.smali")
+	
 	scd = SmaliClassDef.SmaliClassDef("./test/Main.smali")
 	scd.grow_locals(3)
 	scd.write_to_file("./test/Main_After.smali")
+	
+	print("passed!")
 	
 	
 def stigma_leaks_crash_SupportActivity():

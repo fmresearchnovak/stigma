@@ -152,7 +152,11 @@ class Double(SixtyFourBit):
 		
 		
 		
-class SixtyFourBit_2(SixtyFourBit):
+class SixtyFourBit_2(SmaliType):
+	def __init__(self):
+		self.move_instr = None
+		self.specificity_level = 2
+		
 	def __str__(self):
 		return "64-bit-2"
 		
@@ -293,6 +297,9 @@ def main():
 	assert(isinstance(long_part1, Long))
 	assert(isinstance(long_part1, SixtyFourBit))
 	assert(isinstance(long_part2, Long_2))
+	assert(isinstance(long_part2, SixtyFourBit_2))
+	
+	assert(isinstance(long_part2, SixtyFourBit) == False)
 	assert(isinstance(long_part2, SixtyFourBit_2))
 	
 	

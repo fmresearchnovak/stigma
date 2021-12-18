@@ -1,13 +1,3 @@
-Implement a SmaliRegister class that can do things like
-	register addition
-	is_wide
-	is_high_numbered()
-	etc.
-
-All instrumenters should be given a list of lines (maybe one line, but a list).
-
-Change the signup method in the Instrumenter to include how many registered are needed by that instrumenter signing up
-
 Potential bug:
 The algorithm for tag propagation on a function call to an internal method is to map the first argument to the first param
 
@@ -17,7 +7,5 @@ The algorithm for tag propagation on a function call to an internal method is to
 	This works because OtherMethod is static, so p0 is NOT this
 	but what about when it is not static?  Is p0 still appropriate or
 	should it be p1?
-
-add rsub-int and rsub-int/lit8 to SmaliAssemblyInstructions
 
 remove TYPE_CODE and TYPE_LIST stuff from SmaliAssemblyInstructions

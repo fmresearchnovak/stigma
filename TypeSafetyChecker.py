@@ -10,6 +10,8 @@ import StigmaStringParsingLib
 import SmaliAssemblyInstructions as smali
 import SmaliTypes
 
+from SmaliRegister import SmaliRegister
+
 import re
 
 
@@ -136,10 +138,11 @@ class TypeSafetyChecker:
             
             
     def _type_update_instruction(self, code_unit, is_first_line_of_method, node_counter):
-        
+        #print("type_update_instruction", code_unit)
         first_line = str(code_unit[0])
         first_line_tokens = StigmaStringParsingLib.break_into_tokens(first_line)
         first_instr = first_line_tokens[0]
+        registers = StigmaStringParsingLib.get_v_and_p_numbers(first_line)
         
         # ignore lines that don't affect the type of any 
         # register and don't matter to the TypeSafetyChecker
@@ -152,6 +155,11 @@ class TypeSafetyChecker:
         
         #if this is a start of new block, retreive most recent map from the parent node
         #if this is not a start, keep using the most recent map assigned
+        # shallow copy works for some reason?
+        # seems like it should create scope issues where all the 
+        # dictionaries in self.node_type_list and self.most_recent_type_map 
+        # are actually references to the same one?
+        # I guess copy doesn't cause that problem.
         if(is_first_line_of_method):
             line_type_map_new = self.get_most_recent_type_map(node_counter).copy() # SHALLOW COPY
         else:
@@ -178,40 +186,29 @@ class TypeSafetyChecker:
                 # vx is the destination register
                 # vy is the array
                 # vz is the index (and int) into that array
-                registers = StigmaStringParsingLib.get_v_and_p_numbers(first_line)
                 dest_reg = registers[0]
                 src_reg = registers[1]
                 src_type = line_type_map_new[src_reg]
                 #print("unit:", code_unit)
                 #print("src_reg", src_reg, "  src_type", src_type, "  line_type_map_new", line_type_map_new)
                 return_type = self.check_aget_object_type(src_type)
-                line_type_map_new[dest_reg] = return_type
-                
-                # this could probably be de-indented even further
-                # or placed in other areas of this (too large) function
-                TypeSafetyChecker._erase_adj_reg_if_long(line_type_map_new, dest_reg)
-
+                TypeSafetyChecker._set_new_type_for_reg(line_type_map_new, dest_reg, return_type)
                       
             elif(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_OBJECT, first_instr) is not None):
                 dest_reg = registers[0]
                 src_reg = registers[1]
                 return_type = line_type_map_new[src_reg]
-                line_type_map_new[dest_reg] = return_type
-                
-                # this could probably be de-indented even further
-                # or placed in other areas of this (too large) function
-                TypeSafetyChecker._erase_adj_reg_if_long(line_type_map_new, dest_reg)
+                TypeSafetyChecker._set_new_type_for_reg(line_type_map_new, dest_reg, return_type)
                           
             else:
-                self. _type_update_one_line_instruction(first_line, line_type_map_new)
-                    
-            
+                TypeSafetyChecker. _type_update_one_line_instruction(first_line, line_type_map_new)
                     
                     
         return line_type_map_new
         
     
-    def _type_update_two_line_instruction(self, code_unit, line_type_map_new):
+    @staticmethod
+    def _type_update_two_line_instruction(code_unit, line_type_map_new):
         first_line = code_unit[0]
         last_line = code_unit[-1]
         dest_reg = SmaliRegister(StigmaStringParsingLib.get_v_and_p_numbers(last_line)[0])
@@ -240,7 +237,7 @@ class TypeSafetyChecker:
             line_type_map_new[dest_reg] = new_type
         
         else: # move-result or move-result wide
-            self._type_update_one_line_instruction(last_line, line_type_map_new)
+            TypeSafetyChecker._type_update_one_line_instruction(last_line, line_type_map_new)
             
     @staticmethod
     def _type_update_one_line_instruction(code_line, line_type_map_new):
@@ -251,42 +248,35 @@ class TypeSafetyChecker:
         
         for reg in new_types:
             new_reg_type = new_types[reg]
-            
-            if reg in line_type_map_new:
-                existing_reg_type = line_type_map_new[reg]
-                if existing_reg_type.get_generic_type() == new_reg_type.get_generic_type():
-                    if new_reg_type.specificity_level > existing_reg_type.specificity_level :
-                        line_type_map_new[reg] = new_reg_type
-                        # this could probably be de-indented even further
-                        # or placed in other areas of this (too large) function
-                        TypeSafetyChecker._erase_adj_reg_if_long(line_type_map_new, reg)
-                else:
-                   line_type_map_new[reg] = new_reg_type 
-                   # this could probably be de-indented even further
-                   # or placed in other areas of this (too large) function
-                   TypeSafetyChecker._erase_adj_reg_if_long(line_type_map_new, reg)
-                   
-            else:
-                line_type_map_new[reg] = new_reg_type
-                # this could probably be de-indented even further
-                # or placed in other areas of this (too large) function
-                TypeSafetyChecker._erase_adj_reg_if_long(line_type_map_new, reg)
-
-
-
-
+            #print("\tattempting update of reg:", reg, "  with type:", new_reg_type)
+            TypeSafetyChecker._set_new_type_for_reg(line_type_map_new, reg, new_reg_type)
         
         
 
     @staticmethod
-    def _erase_adj_reg_if_long(type_map, dest_reg):
-        try:
-            prev_adj_reg = StigmaStringParsingLib.register_addition(dest_reg, -1)
-            if(prev_adj_reg in type_map):
-                if(isinstance(type_map[prev_adj_reg], SmaliTypes.SixtyFourBit)):
-                    type_map[prev_adj_reg] = SmaliTypes.UnknownType() 
-        except ValueError:
-            pass
+    def _set_new_type_for_reg(type_map, dest_reg, new_type):
+        if dest_reg in type_map:
+            existing_reg_type = type_map[dest_reg]
+            #print("existing", existing_reg_type, type(existing_reg_type))
+            #print("new", new_type, type(new_type))
+            if existing_reg_type.get_generic_type() == new_type.get_generic_type():
+                if new_type.specificity_level < existing_reg_type.specificity_level:
+                    return
+                    
+        
+        type_map[dest_reg] = new_type
+        
+        #_erase_adj_reg_if_long
+        if(not isinstance(new_type, SmaliTypes.SixtyFourBit_2)):
+            try:
+                prev_adj_reg = StigmaStringParsingLib.register_addition(dest_reg, -1)
+                if(prev_adj_reg in type_map):
+                    if(isinstance(type_map[prev_adj_reg], SmaliTypes.SixtyFourBit)):
+                        type_map[prev_adj_reg] = SmaliTypes.UnknownType() 
+                        
+            except ValueError:
+                # exception means the prev_adj_reg is "v-1" (dest reg is v0)
+                pass
             
     
     def get_relevant_maps_to_merge(self,node_counter):

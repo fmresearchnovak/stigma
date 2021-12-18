@@ -70,7 +70,7 @@ class SmaliMethodSignature:
 			# p0 holds the object reference and p1 the second 
 			# parameter register.
 
-			self.parameter_type_map["p0"] = SmaliTypes.from_string(class_name)
+			self.parameter_type_map[SmaliRegister("p0")] = SmaliTypes.from_string(class_name)
 			self.num_of_parameters = 1
 			self.num_of_parameter_registers = 1
 			p_idx = 1
@@ -677,6 +677,7 @@ class SmaliMethodDef:
 		# which facilitates proper testing
 		sorted_reg_list = sorted(cur_type_map.keys())
 		for r in sorted_reg_list:
+			r = SmaliRegister(r)
 			#print("attempting to setup moves with", reg)
 			if (self._move_reg_conditions(dest_reg, r, safe_regs, code_unit_regs, cur_type_map)):
 					
