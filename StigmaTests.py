@@ -196,12 +196,12 @@ def types_from_parameters_test():
 	
 	#print(tsc.most_recent_type_map)
 	# test that type map is valid (from parameters)
-	assert(str(tsc.most_recent_type_map) == "{'p0': Lunknownclass;, 'p1': Landroid/view/View;}")
+	assert(str(tsc.most_recent_type_map) == "{p0: Lunknownclass;, p1: Landroid/view/View;}")
 	
 	# test that parameter_type_map is signature and tsc.most_recent_type_map are separate instances
 	smd.signature.parameter_type_map["p1"] = "something else!"
 	#print(tsc.most_recent_type_map)
-	assert(str(tsc.most_recent_type_map) == "{'p0': Lunknownclass;, 'p1': Landroid/view/View;}")
+	assert(str(tsc.most_recent_type_map) == "{p0: Lunknownclass;, p1: Landroid/view/View;}")
 	
 	code_unit = ["    cmp-long v10, v4, v27\n"]
 	new_map = tsc._type_update_instruction(code_unit, False, 0)
@@ -233,7 +233,7 @@ def type_saftey_checker_tests():
 
 	tsc = TypeSafetyChecker.TypeSafetyChecker(smd.signature, cfg) 
 	#print("Actual:", str(tsc.most_recent_type_map))
-	assert(str(tsc.most_recent_type_map) == "{'p0': Lunknownclass;, 'p1': Landroid/view/View;}")
+	assert(str(tsc.most_recent_type_map) == "{p0: Lunknownclass;, p1: Landroid/view/View;}")
 	
 	counter = 0
 	while(cfg.nodes_left_to_visit()):
@@ -246,6 +246,7 @@ def type_saftey_checker_tests():
 			is_first_line = True
 			for unit in smali_code_unit_collection:
 				tsc.type_update(unit, is_first_line, counter) 
+				print("map after update:", tsc.node_type_list[-1])
 				is_first_line = False
 				node["type_list"] = tsc.node_type_list
 					
@@ -257,8 +258,8 @@ def type_saftey_checker_tests():
 	#cfg.show()
 	assert(len(tsc.node_type_list) == n) # one for each line
 	assert(tsc.node_type_list[-1] == tsc.most_recent_type_map)
-	#print(tsc.most_recent_type_map)
-	assert(str(tsc.most_recent_type_map) == "{'p0': Lunknownclass;, 'p1': Landroid/view/View;, 'v0': 32-bit, 'v5': ?, 'v6': 64-bit, 'v7': 64-bit-2}")
+	print(tsc.most_recent_type_map)
+	assert(str(tsc.most_recent_type_map) == "{p0: Lunknownclass;, p1: Landroid/view/View;, v0: 32-bit, v5: ?, v6: 64-bit, v7: 64-bit-2}")
 	#print("method code length: " + str(len(smd.tsc.text)))
 	assert(len(smd.raw_text) == n)
 	assert(len(tsc.node_type_list) == n)

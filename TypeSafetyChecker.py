@@ -68,7 +68,7 @@ class TypeSafetyChecker:
         '''
         
         line = str(code_unit[0])
-        #print("\ntype_update(" + str(code_unit) + ")")
+        print("\ttype_update(" + str(code_unit) + ")")
         
         if(re.search(StigmaStringParsingLib.BEGINS_WITH_COLON, line) is not None):
             new_map = self._type_update_colon(line, node_counter)
@@ -201,7 +201,7 @@ class TypeSafetyChecker:
                 TypeSafetyChecker._set_new_type_for_reg(line_type_map_new, dest_reg, return_type)
                           
             else:
-                TypeSafetyChecker. _type_update_one_line_instruction(first_line, line_type_map_new)
+                TypeSafetyChecker._type_update_one_line_instruction(first_line, line_type_map_new)
                     
                     
         return line_type_map_new

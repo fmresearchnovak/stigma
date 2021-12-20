@@ -85,29 +85,29 @@ class SmaliMethodSignature:
 			
 			if parameter_raw[i] in smali.TYPE_LIST_WORD: 
 				self.num_of_parameter_registers += 1
-				p_name = "p" + str(p_idx)
-				self.parameter_type_map[p_name] = SmaliTypes.from_string(parameter_raw[i])
+				p_reg = SmaliRegister.from_components("p", p_idx)
+				self.parameter_type_map[p_reg] = SmaliTypes.from_string(parameter_raw[i])
 				
 				
 			elif parameter_raw[i] in smali.TYPE_LIST_WIDE: # long or double
 				self.num_of_parameter_registers += 2
-				p_name = "p" + str(p_idx)
-				self.parameter_type_map[p_name] = SmaliTypes.from_string(parameter_raw[i])
+				p_reg = SmaliRegister.from_components("p", p_idx)
+				self.parameter_type_map[p_reg] = SmaliTypes.from_string(parameter_raw[i])
 				p_idx+=1
-				p_name = "p" + str(p_idx)
-				self.parameter_type_map[p_name] = SmaliTypes.from_string(parameter_raw[i]+"2")
+				p_reg = SmaliRegister.from_components("p", p_idx)
+				self.parameter_type_map[p_reg] = SmaliTypes.from_string(parameter_raw[i]+"2")
 				
 				
 			elif parameter_raw[i] == "L": # some object
 				self.num_of_parameter_registers += 1
-				p_name = "p" + str(p_idx)
+				p_reg = SmaliRegister.from_components("p", p_idx)
 				
 				# skip past all the characters in the type
 				# e.g., MyMethod(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;
 				# we should skip from "L" all the way to ";" for each parameter
 				end = parameter_raw.find(";", i)
 				obj_str = parameter_raw[i:end+1]
-				self.parameter_type_map[p_name] = SmaliTypes.from_string(obj_str)
+				self.parameter_type_map[p_reg] = SmaliTypes.from_string(obj_str)
 				i = end
 				
 					
@@ -128,8 +128,8 @@ class SmaliMethodSignature:
 				end_index = i+1
 
 				self.num_of_parameter_registers += 1
-				p_name = "p" + str(p_idx)
-				self.parameter_type_map[p_name] = SmaliTypes.from_string(parameter_raw[start_index:end_index])
+				p_reg = SmaliRegister.from_components("p", p_idx)
+				self.parameter_type_map[p_reg] = SmaliTypes.from_string(parameter_raw[start_index:end_index])
 
 			p_idx += 1        
 			i += 1
@@ -547,9 +547,9 @@ class SmaliMethodDef:
 				smali_code_iterator = SmaliCodeIterator(node["text"])
 				is_first_line = True
 				for unit in smali_code_iterator:
-					#print("\nunit:", unit)
+					print("\nunit:", unit)
 					self.tsc.type_update(unit, is_first_line, counter)
-					#print("map after update:", self.tsc.node_type_list[-1])
+					print("map after update:", self.tsc.node_type_list[-1])
 					self._do_instrumentation_plugins(node, unit, self.tsc.most_recent_type_map)
 					is_first_line = False
 					
@@ -924,7 +924,7 @@ def tests():
 	assert(sig.name == "<init>")
 	assert(sig.is_static == False)
 	#print("map: " + str(sig.parameter_type_map))
-	assert(str(sig.parameter_type_map) == "{'p0': Lmy/package/MyClass;, 'p1': Ljava/lang/String;, 'p2': I}")
+	assert(str(sig.parameter_type_map) == "{p0: Lmy/package/MyClass;, p1: Ljava/lang/String;, p2: I}")
 	assert(sig.num_of_parameters == 3)
 	assert(sig.num_of_parameter_registers == 3)
 	
@@ -932,7 +932,7 @@ def tests():
 	assert(sig.name == "prefetchInnerRecyclerViewWithDeadline")
 	assert(sig.is_static == False)
 	#print("map: " + str(sig.parameter_type_map))
-	assert(str(sig.parameter_type_map) == "{'p0': Lmy/package/MyOtherClass;, 'p1': Landroid/support/v7/widget/RecyclerView;, 'p2': J, 'p3': J2}")
+	assert(str(sig.parameter_type_map) == "{p0: Lmy/package/MyOtherClass;, p1: Landroid/support/v7/widget/RecyclerView;, p2: J, p3: J2}")
 	assert(sig.num_of_parameters == 3)
 	assert(sig.num_of_parameter_registers == 4)
 	
