@@ -189,76 +189,15 @@
     
     new-instance v14, Landroid/graphics/Rect;
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v20, v0
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for NEW-INSTANCE
-    
-    const v0, 0x0
-    
-    sput v0, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_MockClass_MyMadeUpMethod_v15:F
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for NEW-INSTANCE
-    
-    
-    move/16 v0, v20
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
     new-instance v15, Ljava/util/ArrayList;
 
     # interesting part coming up next!
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v20, v0
-    move-wide/16 v21, v10
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for INTERNAL METHOD
-    
-    sget v0, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_MockClass_MyMadeUpMethod_v1:F
-    
-    sput v0, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_MockClass_OtherMethod_p0:F
-    
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for INTERNAL METHOD
-    
     invoke-static {v1}, Ledu/fandm/enovak/MockClass;->OtherMethod(I)I
 
-    
-    move/16 v0, v20
-    move-wide/16 v10, v21
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v20, v0
-    move/16 v21, v1
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for INTERNAL METHOD
-    
-    sget v0, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_MockClass_MyMadeUpMethod_v2:F
-    
-    sput v0, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_MockClass_OtherMethod_p0:F
-    
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for INTERNAL METHOD
-    
     invoke-static {v2}, Ledu/fandm/enovak/MockClass;->OtherMethod(I)I
-    
+
     move-result v3
-    
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE-RESULT
-    
-    sget v0, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_MockClass_return_field:F
-    
-    sput v0, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_MockClass_MyMadeUpMethod_v3:F
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE-RESULT
-    
-    
-    move/16 v0, v20
-    move/16 v1, v21
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
 
     return-void
 

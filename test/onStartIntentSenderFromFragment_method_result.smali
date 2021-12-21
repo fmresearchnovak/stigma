@@ -229,34 +229,11 @@
     
     move/from16 v7, v17
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move-object/16 v19, v0
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
-    
-    sget v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentHostCallback_onStartIntentSenderFromFragment_v18:F
-    
-    sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentHostCallback_onStartIntentSenderFromFragment_v8:F
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
-    
-    
-    move-object/16 v0, v19
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
     move-object/from16 v8, v18
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move-object/16 v19, v0
-    move-object/16 v20, v10
     invoke-static/range {v1 .. v8}, Landroid/support/v4/app/ActivityCompat;->startIntentSenderForResult(Landroid/app/Activity;Landroid/content/IntentSender;ILandroid/content/Intent;IIILandroid/os/Bundle;)V
 
     .line 145
-    
-    move-object/16 v0, v19
-    move-object/16 v10, v20
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
     return-void
     :cond_0
     

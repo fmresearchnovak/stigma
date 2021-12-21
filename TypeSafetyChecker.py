@@ -189,8 +189,7 @@ class TypeSafetyChecker:
                 dest_reg = registers[0]
                 src_reg = registers[1]
                 src_type = line_type_map_new[src_reg]
-                #print("unit:", code_unit)
-                #print("src_reg", src_reg, "  src_type", src_type, "  line_type_map_new", line_type_map_new)
+                #print("\tsrc_reg", src_reg, "  src_type", src_type, "  line_type_map_new", line_type_map_new)
                 return_type = self.check_aget_object_type(src_type)
                 TypeSafetyChecker._set_new_type_for_reg(line_type_map_new, dest_reg, return_type)
                       

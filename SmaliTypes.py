@@ -264,6 +264,9 @@ class NonSpecificArray(ObjectReference):
 		self.move_instr = SmaliAssemblyInstructions.MOVE_OBJECT_16
 		self.raw_type_string = "Non Specific Array"
 		self.specificity_level = 1
+		
+	def unwrap_layer(self):
+		return UnknownType()
 
 
 def main():

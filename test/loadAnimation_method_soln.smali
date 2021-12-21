@@ -631,39 +631,6 @@
     move-result-object v1
 
     .line 1204
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move-object/16 v16, v7
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
-    
-    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v1:F
-    
-    const/16 v15, 0x0
-    
-    cmpl-float v15, v14, v15
-    
-    if-eqz v15, :stigma_jump_label_6
-    
-    const-string v7, "STIGMA"
-    
-    const-string v13, "Implicit flow involving sensitive data!"
-    
-    invoke-static {v7, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
-    
-    invoke-static {v14}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
-    
-    move-result-object v13
-    
-    invoke-static {v7, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
-    
-    :stigma_jump_label_6
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
-    
-    
-    move-object/16 v7, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
     if-eqz v1, :cond_6
 
     .line 1205
@@ -711,39 +678,6 @@
     
     const/4 v3, 0x0
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v3
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
-    
-    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v10:F
-    
-    const/16 v15, 0x0
-    
-    cmpl-float v15, v14, v15
-    
-    if-eqz v15, :stigma_jump_label_7
-    
-    const-string v3, "STIGMA"
-    
-    const-string v13, "Implicit flow involving sensitive data!"
-    
-    invoke-static {v3, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
-    
-    invoke-static {v14}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
-    
-    move-result-object v13
-    
-    invoke-static {v3, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
-    
-    :stigma_jump_label_7
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
-    
-    
-    move/16 v3, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
     if-nez v10, :cond_7
 
     .line 1212
@@ -788,39 +722,6 @@
 
     .line 1216
     .local v4, "styleIndex":I
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v3
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
-    
-    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v4:F
-    
-    const/16 v15, 0x0
-    
-    cmpl-float v15, v14, v15
-    
-    if-eqz v15, :stigma_jump_label_8
-    
-    const-string v3, "STIGMA"
-    
-    const-string v13, "Implicit flow involving sensitive data!"
-    
-    invoke-static {v3, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
-    
-    invoke-static {v14}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
-    
-    move-result-object v13
-    
-    invoke-static {v3, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
-    
-    :stigma_jump_label_8
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
-    
-    
-    move/16 v3, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
     if-gez v4, :cond_8
 
     .line 1217
@@ -871,39 +772,6 @@
     packed-switch v4, :pswitch_data_0
 
     .line 1236
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v3
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
-    
-    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v12:F
-    
-    const/16 v15, 0x0
-    
-    cmpl-float v15, v14, v15
-    
-    if-eqz v15, :stigma_jump_label_9
-    
-    const-string v3, "STIGMA"
-    
-    const-string v13, "Implicit flow involving sensitive data!"
-    
-    invoke-static {v3, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
-    
-    invoke-static {v14}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
-    
-    move-result-object v13
-    
-    invoke-static {v3, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
-    
-    :stigma_jump_label_9
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
-    
-    
-    move/16 v3, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
     if-nez v12, :cond_9
 
     
@@ -934,39 +802,6 @@
     
     move-result v5
 
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v3
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
-    
-    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v5:F
-    
-    const/16 v15, 0x0
-    
-    cmpl-float v15, v14, v15
-    
-    if-eqz v15, :stigma_jump_label_10
-    
-    const-string v3, "STIGMA"
-    
-    const-string v13, "Implicit flow involving sensitive data!"
-    
-    invoke-static {v3, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
-    
-    invoke-static {v14}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
-    
-    move-result-object v13
-    
-    invoke-static {v3, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
-    
-    :stigma_jump_label_10
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
-    
-    
-    move/16 v3, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
     if-eqz v5, :cond_9
 
     .line 1237
@@ -1481,39 +1316,6 @@
     return-object v3
     :cond_9
     :goto_2
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    move/16 v16, v3
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow)
-    
-    sget v14, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_loadAnimation_v12:F
-    
-    const/16 v15, 0x0
-    
-    cmpl-float v15, v14, v15
-    
-    if-eqz v15, :stigma_jump_label_11
-    
-    const-string v3, "STIGMA"
-    
-    const-string v13, "Implicit flow involving sensitive data!"
-    
-    invoke-static {v3, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
-    
-    invoke-static {v14}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
-    
-    move-result-object v13
-    
-    invoke-static {v3, v13},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
-    
-    :stigma_jump_label_11
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for if (implicit flow) @ end
-    
-    
-    move/16 v3, v16
-    # IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers
-    
     if-nez v12, :cond_a
 
     .line 1240

@@ -504,7 +504,7 @@ class SmaliMethodDef:
 			print("Warning!  The locals for this method were not grown / expanded: " + str(self))
 			
 		
-		#print("\tinstrumenting: ", self)
+		#print("class:", self.scd, " method:", self)
 		#print("\t", self.get_register_meta_data())
 		
 		# insert the lines at the beginning
@@ -573,7 +573,7 @@ class SmaliMethodDef:
 		# # such as the .end method and the pswitch data and the sswitch data. 
 		self.raw_text = self.instrumented_code    
 		self.raw_text.extend(self.cfg.tail)
-		self.fix_larger_if_offsets()
+		self._fix_larger_if_offsets()
 		
 		
 
@@ -675,8 +675,9 @@ class SmaliMethodDef:
 		# I sort these before iterating through them so that
 		# from run to run the same registers are used
 		# which facilitates proper testing
-		sorted_reg_list = sorted(cur_type_map.keys())
-		for r in sorted_reg_list:
+		
+		sorted_v_regs = sorted(SmaliMethodDef._get_v_regs_from_map(cur_type_map))
+		for r in sorted_v_regs:
 			r = SmaliRegister(r)
 			#print("attempting to setup moves with", reg)
 			if (self._move_reg_conditions(dest_reg, r, safe_regs, code_unit_regs, cur_type_map)):
@@ -730,6 +731,13 @@ class SmaliMethodDef:
 		return SafeRegisterCollection(0) # return empty collection
 		
 		
+	@staticmethod
+	def _get_v_regs_from_map(cur_type_map):
+		regs_list = []
+		for reg in cur_type_map.keys():
+			if(reg.letter == "v"):
+				regs_list.append(reg)
+		return regs_list
 	
 	def _move_reg_conditions(self, dest_reg, reg, safe_regs, code_unit_regs, type_map):
 		#print("num regs: " + str(self.get_num_registers()))
@@ -801,7 +809,7 @@ class SmaliMethodDef:
 			return True
 	
 	
-	def fix_larger_if_offsets(self):
+	def _fix_larger_if_offsets(self):
 		table = []
 		label_map = {} #this stores the label and the line number corresponding
 		
