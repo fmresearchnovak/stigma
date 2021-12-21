@@ -547,9 +547,9 @@ class SmaliMethodDef:
 				smali_code_iterator = SmaliCodeIterator(node["text"])
 				is_first_line = True
 				for unit in smali_code_iterator:
-					print("\nunit:", unit)
+					#print("\nunit:", unit)
 					self.tsc.type_update(unit, is_first_line, counter)
-					print("map after update:", self.tsc.node_type_list[-1])
+					#print("map after update:", self.tsc.node_type_list[-1])
 					self._do_instrumentation_plugins(node, unit, self.tsc.most_recent_type_map)
 					is_first_line = False
 					

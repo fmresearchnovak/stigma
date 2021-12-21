@@ -157,7 +157,7 @@ def is_high_numbered_register(reg_name):
     return (number > 15)
     
     
-def register_addition(reg_name, num):
+def register_addition_deprecated(reg_name, num):
     letter = str(reg_name[0])
     number = int(reg_name[1:])
     
@@ -405,11 +405,11 @@ def main():
     assert(could_have_a_subsequent_move_result("    invoke-virtual {p0, v0}, Ledu/fandm/enovak/leaks/Main;->findViewById(I)Landroid/view/View;") == True)
     
     test_reg = "v2"
-    assert(register_addition(test_reg, 1) == "v3")
-    assert(register_addition(test_reg, -1) == "v1")
-    assert(register_addition("p2", 1) == "p3")
+    assert(register_addition_deprecated(test_reg, 1) == "v3")
+    assert(register_addition_deprecated(test_reg, -1) == "v1")
+    assert(register_addition_deprecated("p2", 1) == "p3")
     try:
-        result = register_addition(test_reg, -3)
+        result = register_addition_deprecated(test_reg, -3)
         assert(False)
     except:
         assert(test_reg == "v2")

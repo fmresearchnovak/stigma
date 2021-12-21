@@ -68,7 +68,7 @@ class TypeSafetyChecker:
         '''
         
         line = str(code_unit[0])
-        print("\ttype_update(" + str(code_unit) + ")")
+        #print("\ttype_update(" + str(code_unit) + ")")
         
         if(re.search(StigmaStringParsingLib.BEGINS_WITH_COLON, line) is not None):
             new_map = self._type_update_colon(line, node_counter)
@@ -142,7 +142,7 @@ class TypeSafetyChecker:
         first_line = str(code_unit[0])
         first_line_tokens = StigmaStringParsingLib.break_into_tokens(first_line)
         first_instr = first_line_tokens[0]
-        registers = StigmaStringParsingLib.get_v_and_p_numbers(first_line)
+        registers = [SmaliRegister(r) for r in StigmaStringParsingLib.get_v_and_p_numbers(first_line)]
         
         # ignore lines that don't affect the type of any 
         # register and don't matter to the TypeSafetyChecker
@@ -269,7 +269,7 @@ class TypeSafetyChecker:
         #_erase_adj_reg_if_long
         if(not isinstance(new_type, SmaliTypes.SixtyFourBit_2)):
             try:
-                prev_adj_reg = StigmaStringParsingLib.register_addition(dest_reg, -1)
+                prev_adj_reg = dest_reg + -1
                 if(prev_adj_reg in type_map):
                     if(isinstance(type_map[prev_adj_reg], SmaliTypes.SixtyFourBit)):
                         type_map[prev_adj_reg] = SmaliTypes.UnknownType() 

@@ -143,9 +143,12 @@ def type_safety_checker_aget2_test():
 	#print("Building SMD")
 	mock_class = SmaliClassDef.MockSmaliClassDef();
 	smd = SmaliMethodDef.SmaliMethodDef(method_list, mock_class)
+	mock_class.methods.append(smd)
+	#print(smd)
 	#print("Instrumenting")
 	assert(Instrumenter.MAX_DESIRED_NUM_REGISTERS == 4)
 	smd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
+	mock_class.write_to_file("test/diffPartial_method_grown.smali")
 	smd.instrument()
 	
 	print("passed!")
@@ -246,7 +249,7 @@ def type_saftey_checker_tests():
 			is_first_line = True
 			for unit in smali_code_unit_collection:
 				tsc.type_update(unit, is_first_line, counter) 
-				print("map after update:", tsc.node_type_list[-1])
+				#print("map after update:", tsc.node_type_list[-1])
 				is_first_line = False
 				node["type_list"] = tsc.node_type_list
 					

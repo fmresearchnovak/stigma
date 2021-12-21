@@ -322,6 +322,14 @@ class MockSmaliClassDef(SmaliClassDef):
     def __init__(self):
         self.class_name = "LMockClass;"
         
+        self.other_scds = {}
+        
+        self.header = []
+        self.static_fields = []
+        self.instance_fields = []
+        
+        self.methods = []
+        
     def get_other_class(self, other):
         return None
 
