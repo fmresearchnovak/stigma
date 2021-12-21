@@ -59,6 +59,9 @@ class UnknownType(SmaliType):
 		# which is convenient to figure out the generic type
 		return "?"
 		
+	def unwrap_layer(self):
+		return UnknownType()
+		
 		
 		
 class ThirtyTwoBit(SmaliType):

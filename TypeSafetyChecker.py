@@ -190,7 +190,7 @@ class TypeSafetyChecker:
                 src_reg = registers[1]
                 src_type = line_type_map_new[src_reg]
                 #print("\tsrc_reg", src_reg, "  src_type", src_type, "  line_type_map_new", line_type_map_new)
-                return_type = self.check_aget_object_type(src_type)
+                return_type = src_type.unwrap_layer()
                 TypeSafetyChecker._set_new_type_for_reg(line_type_map_new, dest_reg, return_type)
                       
             elif(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_OBJECT, first_instr) is not None):
@@ -358,19 +358,6 @@ class TypeSafetyChecker:
             return SmaliTypes.ObjectReference("?")
         else:
             raise RuntimeError ("opcode seems to has no type", opcode)
-
-    def check_aget_object_type(self, src_type):
-        # src_type = [[I
-        #   return [I
-        
-        #print("src type: " + str(src_type) + "    type: " + str(type(src_type)))
-        smali_array_type_obj = src_type
-        if(isinstance(smali_array_type_obj, SmaliTypes.UnknownType)):
-            return smali_array_type_obj
-            
-        result = smali_array_type_obj.unwrap_layer()
-        
-        return result
 
     
     def obtain_previous_instruction(self, node_counter, start):

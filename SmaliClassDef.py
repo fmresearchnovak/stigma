@@ -320,6 +320,7 @@ class SmaliClassDef:
 
 class MockSmaliClassDef(SmaliClassDef):
     def __init__(self):
+        self.file_name = ""
         self.class_name = "LMockClass;"
         
         self.other_scds = {}

@@ -69,10 +69,6 @@ class SmaliAssemblyInstruction():
 
         opcode = tokens[0]
 
-        if(opcode == "const-string"):
-            return CONST_STRING(tokens[1].strip(","), "\"" + line.split("\"")[1] + "\"")
-        
-
         if(opcode_has_parameter_list(opcode) or opcode_has_parameter_range(opcode)):
             start = line.index("{")
             end = line.index("}")
@@ -101,26 +97,59 @@ class SmaliAssemblyInstruction():
         opcode = opcode.upper()
         opcode = opcode.replace("/", "_")
         opcode = opcode.replace("-", "_")
-
+        
+        
+        if(opcode == "CONST_STRING" or opcode == "CONST_STRING_JUMBO"):
+            smali_assembly_instruction = SmaliAssemblyInstruction._build_const_string(opcode, line)
+            return smali_assembly_instruction
+        else:
+            eval_string = opcode + "(" + ", ".join(args) + ")"
+        # example input line: "    move/from16 v1, v25"
+        # output eval_string: "MOVE_FROM16("v1", "v25")"    
+        #print("eval_string: " + eval_string)
+            
+            
         # this next part is very very technical and feels
         # pretty hacky
         # https://www.programiz.com/python-programming/methods/built-in/eval
         # https://stackoverflow.com/questions/3941517/converting-list-to-args-when-calling-function#3941529
-        # example input line: "    move/from16 v1, v25"
-        # output eval_string: "MOVE_FROM16("v1", "v25")"
-        eval_string = opcode + "(" + ", ".join(args) + ")"
-        #print("eval_string: " + eval_string)
-
-        try:
-            #print("eval string: " + str(eval_string))
-            smali_assembly_instruction_obj = eval(eval_string)
-            return smali_assembly_instruction_obj
-        except Exception as e:
-            print("Exception in eval, parse_line(): " + str(e))
+        smali_assembly_instruction_obj = eval(eval_string)
+        return smali_assembly_instruction_obj
 
     
     def __str__(self):
         return "    " + repr(self) + "\n"
+    
+    @staticmethod
+    def _build_const_string(opcode, whole_line):
+        # examples of const-string and const-string/jumbo
+        # const-string v3, "android.permission.READ_PHONE_STATE"
+        # const-string v4, "    hostName: "
+        # const-string v3, "this ain\'t it!"
+        # const-string v5, "AudioTrack failed to initialize (status "
+        # 
+        # const-string/jumbo v1, "unrated"\n'
+        # const-string/jumbo v2, "yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'"
+        
+        s = whole_line.split(", ")[-1]
+        #print("s:", s)
+    
+        tokens = StigmaStringParsingLib.break_into_tokens(whole_line)
+        reg = tokens[1].strip(", ")
+        #print("reg:", reg)
+        
+        if(opcode == "CONST_STRING"):
+            asm_obj = CONST_STRING()
+        elif(opcode == "CONST_STRING_JUMBO"):
+            asm_obj = CONST_STRING_JUMBO()
+        else:
+            raise ValueError("Instruction mis-identified as const-string:", whole_line)
+            
+        asm_obj.set_dest_reg(reg)
+        asm_obj.set_string(s)
+
+        return asm_obj
+        
 
     def get_registers(self):
         return []
@@ -145,6 +174,11 @@ class SmaliAssemblyInstruction():
         return ans
         
     def get_register_type_implications(self):
+        # NOTE, for all implementations of this method
+        # the result should be the types AFTER the instruction
+        # has executed.  This has important / tricky complications
+        # with instructions that re-use the src and dest reg
+        # e.g., int-to-long v3, v3
         return {}
     
 
@@ -417,7 +451,44 @@ class CONST_WIDE_HIGH16(CONST_WIDE):
         return "const-wide/high16"
 
 
-class CONST_STRING(_SINGLE_DEST_REGISTER_INSTRUCTION):
+class CONST_STRING(SmaliAssemblyInstruction):
+    # const-string v3, "this ain\'t it!"
+    # const-string v5, "AudioTrack failed to initialize (status "
+    # 
+    # const-string/jumbo v1, "unrated"\n'
+    # const-string/jumbo v2, "yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'"
+    
+    def __init__(self, reg = "", new_string = ""):
+        # this constructor is invoked in the instrumenters
+        # that write explicit const-string instructions
+        # (for example to write the stigma logcat messages
+        # inovking Log.d())
+        self.rd = reg
+        self.str = new_string
+        
+    def set_dest_reg(self, new_reg):
+        # used in the from_line so that
+        # const-string is not instantiated with eval()
+        # which is (a) better security (marginally)
+        # and (b) easier to code up
+        # since it means we don't have to worry about escaping
+        # escape characters _in the string_
+        self.rd = SmaliRegister(new_reg)
+        
+    def set_string(self, new_string):
+        # used in the from_line so that
+        # const-string is not instantiated with eval()
+        # which is (a) better security (marginally)
+        # and (b) easier to code up
+        # since it means we don't have to worry about escaping
+        # escape characters _in the string_
+        self.str = new_string
+        
+    def get_registers(self):
+        return [self.rd]
+        
+    def __repr__(self):
+        return self.opcode() + " " + str(self.rd) + ", " + self.str
     
     def opcode(self):
         return "const-string"
@@ -426,14 +497,14 @@ class CONST_STRING(_SINGLE_DEST_REGISTER_INSTRUCTION):
         return {self.rd: SmaliTypes.ObjectReference("Ljava/lang/String;")}
         
 
-class CONST_STRING_JUMBO(SmaliAssemblyInstruction):
+class CONST_STRING_JUMBO(CONST_STRING):
     # https://stackoverflow.com/questions/19991833/in-dalvik-what-expression-will-generate-instructions-not-int-and-const-strin
     # found one in com.amazon.avod.thirdpartyclient.apk 
     #       const-string/jumbo v5, "stackTrace"
-    def __init__(self, ):
-        print("not yet implemented: const-string/jumbo")
-        raise Execption("Not Yet Implemented!")
-        pass
+    #       const-string/jumbo v1, "unrated"
+
+    def opcode(self):
+        return "const-string/jumbo"
         
     def get_register_type_implications(self):
         return {self.rd: SmaliTypes.ObjectReference("Ljava/lang/String;")}
@@ -460,6 +531,9 @@ class MONITOR_EXIT(_SINGLE_REGISTER_INSTRUCTION):
 class CHECK_CAST( _Object_Parameters, _SINGLE_DEST_REGISTER_INSTRUCTION): 
     def opcode(self):
         return "check-cast"
+        
+    def get_register_type_implications(self):
+        return {self.rd: SmaliTypes.from_string(self.value_arg)}
          
         
 class INSTANCE_OF(SmaliAssemblyInstruction):
@@ -478,7 +552,9 @@ class INSTANCE_OF(SmaliAssemblyInstruction):
         return self.opcode() + " " + str(self.rr) + ", " + str(self.ra) + ", " + str(self.type_id)
         
     def get_register_type_implications(self):
-        return {self.rr: SmaliTypes.ThirtyTwoBit(), self.ra: SmaliTypes.NonSpecificObjectReference()}
+        res = {self.ra: SmaliTypes.NonSpecificObjectReference()}
+        res[self.rr] = SmaliTypes.ThirtyTwoBit()
+        return res
         
 
 class NEW_INSTANCE(SmaliAssemblyInstruction):
@@ -515,7 +591,9 @@ class ARRAY_LENGTH(SmaliAssemblyInstruction):
         return self.opcode() + " " + str(self.rd) + ", " + str(self.rar)
     
     def get_register_type_implications(self):
-        return {self.rar: SmaliTypes.NonSpecificArray(), self.rd: SmaliTypes.ThirtyTwoBit()}    
+        ans = {self.rar: SmaliTypes.NonSpecificArray()}
+        ans[self.rd] = SmaliTypes.ThirtyTwoBit()
+        return ans
     
         
 class NEW_ARRAY(SmaliAssemblyInstruction):
@@ -534,7 +612,9 @@ class NEW_ARRAY(SmaliAssemblyInstruction):
         return self.opcode() + " " + str(self.rd) + ", " + str(self.rs) + ", " + str(self.type_id)   
         
     def get_register_type_implications(self):
-        return {self.rd: SmaliTypes.Array(self.type_id), self.rs: SmaliTypes.ThirtyTwoBit()}
+        ans = {self.rs: SmaliTypes.ThirtyTwoBit()}
+        ans[self.rd] = SmaliTypes.Array(self.type_id)
+        return ans
         
 
 class _PARAMETER_LIST_INSTRUCTION(SmaliAssemblyInstruction):
@@ -702,7 +782,7 @@ class CMPG_DOUBLE(_TRIPLE_REGISTER_INSTRUCTION):
         regs = self.get_registers()
         ans = []
         for reg in regs[1:]:
-            implicit_reg = "v" + str(int(reg[1:])+1)
+            implicit_reg = reg + 1
             ans.append(implicit_reg)
         return ans
         
@@ -860,7 +940,7 @@ class AGET_WIDE(_Array_Parameters_Type_Pattern, _ImplicitFirstRegisterInstructio
         
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.SixtyFourBit()
-        self.ans[StigmaStringParsingLib.register_addition(self.rd, 1)] = SmaliTypes.SixtyFourBit_2()
+        self.ans[self.rd + 1] = SmaliTypes.SixtyFourBit_2()
 
 class AGET_OBJECT(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
@@ -973,7 +1053,7 @@ class _I_INSTRUCTION(SmaliAssemblyInstruction):
         
         if instance_field_name != "":
             self.class_name = class_name
-            ifn = instance_field_name
+            self.ifn = instance_field_name
             self.class_and_field_name =  cn + "->" + ifn
         else:
             self.class_name = class_name.split("->")[0]
@@ -990,11 +1070,11 @@ class _I_INSTRUCTION(SmaliAssemblyInstruction):
         # vZ index / offset into array (I think this must be a 32-bit int)
     
         self.ans = {}
+        self.ans[self.rci] = SmaliTypes.from_string(self.class_name)
         
         tmp = self.class_and_field_name.split(":")[1]
         first_reg_type = SmaliTypes.from_string(tmp)  
         self.ans[self.rd] = first_reg_type
-        self.ans[self.rci] = SmaliTypes.from_string(self.class_name)
         return self.ans
 
     def __repr__(self):
@@ -1038,7 +1118,7 @@ class IGET_SHORT(_I_INSTRUCTION):
 class IPUT(_I_INSTRUCTION):
     def opcode(self):
         return "iput"
-        
+
 class IPUT_WIDE(_ImplicitFirstRegisterInstruction, _I_INSTRUCTION):
     def opcode(self):
         return "iput-wide"
@@ -1113,7 +1193,7 @@ class SGET_WIDE(_ImplicitRegistersInstruction, _S_INSTRUCTION):
 
     def get_register_type_implications(self):
         ans = super().get_register_type_implications()
-        adj_reg = StigmaStringParsingLib.register_addition(self.rd, 1)
+        adj_reg = self.rd + 1
         ans[adj_reg] = SmaliTypes.SixtyFourBit_2()
         return ans
         
@@ -1147,7 +1227,7 @@ class SPUT_WIDE(_ImplicitRegistersInstruction, _S_INSTRUCTION):
         
     def get_register_type_implications(self):
         ans = super().get_register_type_implications()
-        adj_reg = StigmaStringParsingLib.register_addition(self.rd, 1)
+        adj_reg = self.rd + 1
         ans[adj_reg] = SmaliTypes.SixtyFourBit_2()
         return ans
         
@@ -1241,6 +1321,10 @@ class NEG_INT(_ThirtyTwoBit_Parameters, _TWO_REGISTER_UNARY_INSTRUCTION):
 class NOT_INT(_ThirtyTwoBit_Parameters, _TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "not-int"
+        
+class NOT_LONG(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TWO_REGISTER_UNARY_INSTRUCTION):
+    def opcode(self):
+        return "neg-long"
 
 class NEG_LONG(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, _TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
@@ -1276,7 +1360,7 @@ class INT_TO_DOUBLE(_ImplicitFirstRegisterInstruction, _TWO_REGISTER_UNARY_INSTR
         
     def get_register_type_implications(self):
         ans = {self.rd: SmaliTypes.Double(), self.ra: SmaliTypes.Int()}
-        adj_reg = StigmaStringParsingLib.register_addition(self.rd, 1)
+        adj_reg = self.rd + 1
         ans[adj_reg] = SmaliTypes.Double_2()
         return ans
 
@@ -1290,7 +1374,7 @@ class LONG_TO_INT(_TWO_REGISTER_UNARY_INSTRUCTION):
         
     def get_register_type_implications(self):
         ans = {self.rd: SmaliTypes.Int(), self.ra: SmaliTypes.Long()}
-        adj_reg = StigmaStringParsingLib.register_addition(self.ra, 1)
+        adj_reg = self.ra + 1
         ans[adj_reg] = SmaliTypes.Long_2()
         return ans
 
@@ -1304,7 +1388,7 @@ class LONG_TO_FLOAT(_TWO_REGISTER_UNARY_INSTRUCTION):
         
     def get_register_type_implications(self):
         ans = {self.rd: SmaliTypes.Float(), self.ra: SmaliTypes.Long()}
-        adj_reg = StigmaStringParsingLib.register_addition(self.ra, 1)
+        adj_reg = self.ra + 1
         ans[adj_reg] = SmaliTypes.Long_2()
         return ans
 
@@ -1323,7 +1407,7 @@ class FLOAT_TO_LONG(_ImplicitFirstRegisterInstruction, _TWO_REGISTER_UNARY_INSTR
         
     def get_register_type_implications(self):
         ans = {self.rd: SmaliTypes.Long(), self.ra: SmaliTypes.Float()}
-        adj_reg = StigmaStringParsingLib.register_addition(self.rd, 1)
+        adj_reg = self.rd + 1
         ans[adj_reg] = SmaliTypes.Long_2()
         return ans
 
@@ -1333,7 +1417,7 @@ class FLOAT_TO_DOUBLE(_ImplicitFirstRegisterInstruction, _TWO_REGISTER_UNARY_INS
         
     def get_register_type_implications(self):
         ans = {self.rd: SmaliTypes.Double(), self.ra: SmaliTypes.Float()}
-        adj_reg = StigmaStringParsingLib.register_addition(self.rd, 1)
+        adj_reg = self.rd + 1
         ans[adj_reg] = SmaliTypes.Double_2()
         return ans
 
@@ -1347,7 +1431,7 @@ class DOUBLE_TO_INT(_TWO_REGISTER_UNARY_INSTRUCTION):
         
     def get_register_type_implications(self):
         ans = {self.rd: SmaliTypes.Int(), self.ra: SmaliTypes.Double()}
-        adj_reg = StigmaStringParsingLib.register_addition(self.ra, 1)
+        adj_reg = self.ra + 1
         ans[adj_reg] = SmaliTypes.Double_2()
         return ans
 
@@ -1365,7 +1449,7 @@ class DOUBLE_TO_FLOAT(_TWO_REGISTER_UNARY_INSTRUCTION):
         
     def get_register_type_implications(self):
         ans = {self.rd: SmaliTypes.Float(), self.ra: SmaliTypes.Double()}
-        adj_reg = StigmaStringParsingLib.register_addition(self.ra, 1)
+        adj_reg = self.ra + 1
         ans[adj_reg] = SmaliTypes.Double_2()
         return ans
 
@@ -1388,10 +1472,6 @@ class ADD_INT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION):
 class SUB_INT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "sub-int"
-        
-class RSUB_INT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION):
-    def opcode(self):
-        return "rsub-int"
 
 class MUL_INT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
@@ -1707,6 +1787,13 @@ class XOR_INT_LIT16(_ThirtyTwoBit_Parameters, _TWO_REGISTER_AND_LITERAL_BINARY_I
     def opcode(self):
         return "xor-int/lit16"
         
+class RSUB_INT(_ThirtyTwoBit_Parameters, _TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION):
+    # this is a weird instruction, apparently there is rsub-int and rsub-int/lit8
+    # rsub-int should actually be named rsub-int/lit16, but it's not and there
+    # are not other variants such as rsub-long or radd-float, etc.
+    def opcode(self):
+        return "rsub-int"
+        
 class ADD_INT_LIT8(_ThirtyTwoBit_Parameters, _TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION):
     def opcode(self):
         return "add-int/lit8"
@@ -1715,8 +1802,8 @@ class SUB_INT_LIT8(_ThirtyTwoBit_Parameters, _TWO_REGISTER_AND_LITERAL_BINARY_IN
     def opcode(self):
         return "sub-int/lit8"
         
-class RSUB_INT_LIT(_ThirtyTwoBit_Parameters, _TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION):
-    def opcodE(self):
+class RSUB_INT_LIT8(_ThirtyTwoBit_Parameters, _TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION):
+    def opcode(self):
         return "rsub-int/lit8"
         
 class MUL_INT_LIT8(_ThirtyTwoBit_Parameters, _TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION):
@@ -1773,8 +1860,9 @@ class _I_INSTRUCTION_QUICK(SmaliAssemblyInstruction):
         # iget vX, vY, [offset value]
         # vX dest (or src for iput-* instructions)
         # vY a reference to an object
-        self.ans = {self.rd: SmaliTypes.ThirtyTwoBit(), self.rci: SmaliTypes.NonSpecificObjectReference()}
-        return self.ans
+        ans = {self.rci: SmaliTypes.NonSpecificObjectReference()}
+        ans[self.rd] = SmaliTypes.ThirtyTwoBit()
+        return ans
 
     def __repr__(self):
         return self.opcode() + " " + str(self.rd) + ", " + str(self.rci) + ", " + str(self.offset)
@@ -1944,6 +2032,7 @@ def main():
              "    const-wide/high16 v2, -0x8000000000000000L\n",
              "    const-string v1, \"Parcelables cannot be written to an OutputStream\"\n",
              "    const-class v4, Landroidx/versionedparcelable/VersionedParcel;\n",
+             "    const-string v3, \"this ain\'t it!\"\n",
              "    monitor-enter p0\n",
              "    monitor-exit p0\n",
              "    check-cast v3, Ljava/lang/String;\n",
@@ -2005,6 +2094,7 @@ def main():
              "    sub-double/2addr v11, v9\n",
              "    mul-int/lit16 v0, v0, 0x3e8\n",
              "    ushr-int/lit8 v2, v2, 0x1\n",
+             "    const-string/jumbo v1, \"unrated\"\n",
              "    iget-quick v1, v2, [obj+0010]\n", # not sure about this
              "    invoke-virtual-quick {v15, v12}, vtable\n", # not sure about this
     # New test cases can be added by (a) selecting an instruction
@@ -2031,6 +2121,8 @@ def main():
     #print(str(obj))
     #print(rando_test)
     assert(str(obj) == "    " + rando_test + "\n")
+    
+    
 
 
     print("\timplicit registers tests...")
@@ -2125,18 +2217,20 @@ def main():
     
     asm_obj = SmaliAssemblyInstruction.from_line("iget-wide v3, v0, Landroid/HypotheticalClass;->MyDouble:D")
     assert(str(asm_obj) == "    iget-wide v3, v0, Landroid/HypotheticalClass;->MyDouble:D\n")
-    #print(asm_obj.get_register_type_implications())
-    assert(str(asm_obj.get_register_type_implications()) == "{v3: D, v0: Landroid/HypotheticalClass;, v4: 64-bit-2}")
+    assert(str(asm_obj.get_register_type_implications()) == "{v0: Landroid/HypotheticalClass;, v3: D, v4: 64-bit-2}")
     
     asm_obj = SmaliAssemblyInstruction.from_line("iget-object v4, v2, Landroid/HypotheticalClass;->MyLoc:Landroid/location/LocationManager;")
     assert(str(asm_obj) == "    iget-object v4, v2, Landroid/HypotheticalClass;->MyLoc:Landroid/location/LocationManager;\n")
-    assert(str(asm_obj.get_register_type_implications()) == "{v4: Landroid/location/LocationManager;, v2: Landroid/HypotheticalClass;}")
+    assert(str(asm_obj.get_register_type_implications()) == "{v2: Landroid/HypotheticalClass;, v4: Landroid/location/LocationManager;}")
+    
+    asm_obj = SmaliAssemblyInstruction.from_line("iget-object v13, v13, Landroid/support/constraint/solver/Cache;->mIndexedVariables:[Landroid/support/constraint/solver/SolverVariable;")
+    assert(str(asm_obj.get_register_type_implications()) == "{v13: [Landroid/support/constraint/solver/SolverVariable;}")
     
     asm_obj = SmaliAssemblyInstruction.from_line("iput-object v2, v0, Ledu/fandm/enovak/leaks/Main;->MyString:Ljava/lang/String;")
-    assert(str(asm_obj.get_register_type_implications()) == "{v2: Ljava/lang/String;, v0: Ledu/fandm/enovak/leaks/Main;}")
+    assert(str(asm_obj.get_register_type_implications()) == "{v0: Ledu/fandm/enovak/leaks/Main;, v2: Ljava/lang/String;}")
     
     asm_obj = SmaliAssemblyInstruction.from_line("iput-wide v2, v0, Ledu/fandm/enovak/leaks/Main;->MyVal:J")
-    assert(str(asm_obj.get_register_type_implications()) == "{v2: J, v0: Ledu/fandm/enovak/leaks/Main;, v3: 64-bit-2}")
+    assert(str(asm_obj.get_register_type_implications()) == "{v0: Ledu/fandm/enovak/leaks/Main;, v2: J, v3: 64-bit-2}")
     
     asm_obj = SmaliAssemblyInstruction.from_line("sput-object v0, Ledu/fandm/enovak/leaks/Main;->TAG:Ljava/lang/String;")
     assert(str(asm_obj.get_register_type_implications()) == "{v0: Ljava/lang/String;}")
@@ -2146,6 +2240,9 @@ def main():
     
     asm_obj = SmaliAssemblyInstruction.from_line("int-to-long v0, v0")
     assert(str(asm_obj.get_register_type_implications()) == "{v0: J, v1: J2}")
+    
+    asm_obj = SmaliAssemblyInstruction.from_line("check-cast v1, [Ljava/lang/String;")
+    assert(str(asm_obj.get_register_type_implications()) == "{v1: [Ljava/lang/String;}")
     
     
     print("ALL SmaliAssemblyInstructions TESTS PASSED!")

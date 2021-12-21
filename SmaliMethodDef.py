@@ -504,9 +504,6 @@ class SmaliMethodDef:
 			print("Warning!  The locals for this method were not grown / expanded: " + str(self))
 			
 		
-		#print("class:", self.scd, " method:", self)
-		#print("\t", self.get_register_meta_data())
-		
 		# insert the lines at the beginning
 		method_beginning_instrumentation_method = Instrumenter.start_of_method_handler
 		if(method_beginning_instrumentation_method is not None):
@@ -532,7 +529,8 @@ class SmaliMethodDef:
 		counter = 1
 		self.instrumented_code.append(self.raw_text[0])
 		
-		#print("instrumenting", str(self))
+		#print("class:", self.scd, " method:", self)
+		#print("\t", self.get_register_meta_data())
 		#self.cfg.show()
 		#input("continue?")
 		
@@ -690,7 +688,7 @@ class SmaliMethodDef:
 				if(safe_regs.add_reg_if_safe(r)):
 					if(cur_type_map[r] == "64-bit"):
 						dest_reg+=2
-						safe_regs.add_reg_if_safe(StigmaStringParsingLib.register_addition(r, 1))
+						safe_regs.add_reg_if_safe(r + 1)
 					else:
 						dest_reg+=1
 			
