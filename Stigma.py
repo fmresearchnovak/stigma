@@ -120,56 +120,48 @@ def wrapString(string, wrapper):
 
 def runStigma():
     print("Running Stigma")
+    start_time = time.time()
     relevantFilePaths = getFiles()
-    analytics_path = os.path.join(temp_file.name, getNewAPKName() + "_analytics.dat")
     
-    scd_hashmap = {}
-    start_time2 = time.time()
-    #run stigma on all file paths
-    print("...Parsing class files")
+    # getting list of all classes in this project
+    class_names = []
+    for path in relevantFilePaths:
+        class_names.append(SmaliClassDef.SmaliClassDef.extract_class_name(path))
+    
+    print("...Instrumenting class files")
+    counter = 1
     comparison_instruction_count = 0
     not_enough_registers_count = 0
+    total_files = len(class_names)
     for path in relevantFilePaths:
-        #print("Parsing: " + str(path))
+        #print("cur file path: " + str(name))
+        # parse file
         scd = SmaliClassDef.SmaliClassDef(path)
-        scd_hashmap[scd.class_name] = scd
-        comparison_instruction_count = comparison_instruction_count + scd.get_num_comparison_instructions()    
+        scd.internal_class_names.extend(class_names)
         
+        # analytics stuff
+        comparison_instruction_count = comparison_instruction_count + scd.get_num_comparison_instructions()    
         for every_method in scd.methods:
             not_enough_registers_count += every_method.not_enough_free_registers_count
-    
-    print("Parsing finished in %.1f seconds" % (time.time() - start_time2))
-    
+        
+        #Progress bar
+        print(f'...{str(counter)}/{str(total_files)}', end = '\r')
+        counter += 1
+        
+        # actual instrumentation
+        scd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
+        scd.instrument()
+        scd.overwrite_to_file()
+        
+    analytics_path = os.path.join(temp_file.name, getNewAPKName() + "_analytics.dat")
     fh = open(analytics_path, "w")
     fh.write("Number of Comparisons: " + str(comparison_instruction_count) + "\n")
     fh.write("Number of instructions in which there were not enough registers to properly instrument: " + str(comparison_instruction_count))
     fh.close()
-    
-    
-    
-    print("...Instrumenting class files")
-    counter = 1
-    total_files = len(scd_hashmap)
-    for name in scd_hashmap.keys():
-        # Do the actual instrumentation
-        #print("Instrumenting: " + str(class_smali_file))
-        scd = scd_hashmap[name]
-        scd.other_scds = scd_hashmap
-        #Progress bar
-        print(f'...{str(counter)}/{str(total_files)}', end = '\r')
-        counter += 1
-        scd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
-        scd.instrument()
-        
-    
-    print("...Overwriting smali classes")    
-    for name in scd_hashmap.keys():
-        #print("Overwriting: " + str(scd.file_name))
-        scd = scd_hashmap[name]
-        scd.overwrite_to_file()
 
-
-    print("Stigma ran in %.1f seconds" % (time.time() - start_time2))
+    print("Stigma ran in %.1f seconds" % (time.time() - start_time))
+    
+    
 
 def writeStorageClasses():
     storage_handler = TaintStorageHandler.TaintStorageHandler.get_instance()

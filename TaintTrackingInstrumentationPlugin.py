@@ -203,18 +203,19 @@ def _move_result_instrumentation(scd, m, code_unit, free_reg):
           
     else:
         
-        callee_method_name, callee_class_obj = _get_callee_parts(code_unit[0], scd)
+        callee_method_name, callee_class_name = _get_callee_parts(code_unit[0], scd)
+        
         
         # At this point it is known that both this class (ClassA)
         # and the callee class (ClassB) are both inside this project.
         # We call this an "internal" method
-        if(callee_class_obj is not None):
+        if(scd.is_internal_class(callee_class_name)):
             block = INTERNAL_FUNCTION_instrumentation(scd, m, code_unit, free_reg)
             
         # At this point it is known that the callee class (ClassB) 
         # is outside this project.
         # We call this an "external" method
-        elif(callee_class_obj is None):
+        else:
             block = EXTERNAL_FUNCTION_instrumentation(scd, m, code_unit, free_reg)
             
     #print(block)
@@ -413,7 +414,7 @@ def INTERNAL_FUNCTION_instrumentation(scd, m, code_unit, free_reg):
     # 2) We cannot add code between a invoke line and the corresponding
     # move-result line
     
-    callee_method_name, callee_class_obj = _get_callee_parts(code_unit[0], scd)
+    callee_method_name, callee_class_name = _get_callee_parts(code_unit[0], scd)
 
 
     result_line = code_unit[-1]
@@ -424,7 +425,7 @@ def INTERNAL_FUNCTION_instrumentation(scd, m, code_unit, free_reg):
     # this is necessary because the tag must be in a package
     # that the caller class can access.  This is not easy to know
     # when looking only at smali code
-    taint_field_src = storage_handler.add_taint_location(callee_class_obj.class_name, "return", "field")
+    taint_field_src = storage_handler.add_taint_location(callee_class_name, "return", "field")
     taint_field_dest = storage_handler.add_taint_location(scd.class_name, m.get_name(), reg)
     
     block = block + Instrumenter.make_comment_block("for MOVE-RESULT")
@@ -474,7 +475,7 @@ def _one_line_invoke_instrumentation(scd, m, code_unit, free_reg):
     #print("code unit inside one line invoke: ", code_unit)
     
     invoke_line = code_unit[0]
-    callee_method_name, callee_class_obj = _get_callee_parts(invoke_line, scd)
+    callee_method_name, callee_class_name = _get_callee_parts(invoke_line, scd)
 
     # I should replace this with a function like
     # get implicit v and p
@@ -485,7 +486,7 @@ def _one_line_invoke_instrumentation(scd, m, code_unit, free_reg):
     block = Instrumenter.make_comment_block("for INTERNAL METHOD")
     idx = 0
     for reg in param_regs:
-        taint_field_dest = storage_handler.add_taint_location(callee_class_obj.class_name, callee_method_name, "p" + str(idx))
+        taint_field_dest = storage_handler.add_taint_location(callee_class_name, callee_method_name, "p" + str(idx))
         taint_field_src = storage_handler.add_taint_location(scd.class_name, m.get_name(), reg)
         
         block = block + [smali.SGET(free_reg[0], taint_field_src),
@@ -510,9 +511,8 @@ def _get_callee_parts(invoke_line, scd):
     parts = method_sig.split("->")
     callee_class_name = parts[0]
     callee_method_name = parts[1].split("(")[0]
-    callee_class_obj = scd.get_other_class(callee_class_name)
     
-    return callee_method_name,callee_class_obj
+    return callee_method_name,callee_class_name
     
 
 
@@ -1050,8 +1050,8 @@ def INVOKE_instrumentation(scd, m, code_unit, free_reg):
         OBJECT_STREAM_WRITE_FUNCTION in line):
             return WRITE_instrumentation(scd, m, code_unit, free_reg)
         
-        callee_method_name, callee_class_obj = _get_callee_parts(line, scd)
-        if(callee_class_obj is not None): #internal
+        callee_method_name, callee_class_name = _get_callee_parts(line, scd)
+        if(scd.is_internal_class(callee_class_name)): #internal
             return _one_line_invoke_instrumentation(scd, m, code_unit, free_reg)
         
     return code_unit

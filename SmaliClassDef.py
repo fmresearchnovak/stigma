@@ -18,26 +18,26 @@ class SmaliClassDef:
     def __init__(self, file_name):
         # These are just lists of strings
         # Should be filled in before instrument
-        
-        # key: name of class (a string)
-        # value: SmaliClassDef object
-        self.other_scds = {}
-        
         self.header = []
         self.static_fields = []
         self.instance_fields = []
+        
+        # list of the class names (strings) of all internal classes
+        # should probably be a set
+        self.internal_class_names = []
         
 
         # This is a list of SmaliMethodDef (as seen above) which aids instrumentation later
         self.methods = []
         self.file_name = file_name
         
+        self.class_name = SmaliClassDef.extract_class_name(file_name)
+        self.internal_class_names.append(self.class_name)
+        #print("self.class_name created: ", self.class_name)
+        
         fh = open(file_name, "r")
         lines = fh.readlines()
         fh.close()
-
-        self.class_name = lines[0].split()[-1].strip("\n")
-        #print("self.class_name created: ", self.class_name)
 
 
         cur_dest = self.header
@@ -84,7 +84,14 @@ class SmaliClassDef:
             #
             #print("idx: " + str(idx))
             idx = idx + 1
+            
         
+    @staticmethod
+    def extract_class_name(filename):
+        fh = open(filename, 'r')
+        line = fh.readline()
+        return line.split()[-1].strip("\n")
+    
     @staticmethod
     def is_function(line):
         # check this line is a method (begins with "invoke-*")
@@ -297,16 +304,16 @@ class SmaliClassDef:
     def get_num_instance_fields(self):
         return self._count_fields(self.instance_fields)
         
-    def get_other_class(self, other_class_name):
-        #print("get_other_class(" + str(other_class_name) + ")")
+    def is_internal_class(self, other_class_name):
+        #print("\nis_internal_class(" + str(other_class_name) + ")")
         #print("self.class_name:" + str(self.class_name))
-        if(other_class_name == self.class_name):
-            return self
+        # print("self.internal_class_names:", self.internal_class_names)
+        if other_class_name in self.internal_class_names:
+            #print("\tTRUE!")
+            return True
         
-        if other_class_name in self.other_scds:
-            return self.other_scds[other_class_name]
-            
-        return None
+        #print("\tFALSE!")
+        return False
         
     def __str__(self):
         return str(self.file_name)
@@ -323,7 +330,7 @@ class MockSmaliClassDef(SmaliClassDef):
         self.file_name = ""
         self.class_name = "LMockClass;"
         
-        self.other_scds = {}
+        self.internal_class_names = [self.class_name]
         
         self.header = []
         self.static_fields = []
@@ -331,8 +338,8 @@ class MockSmaliClassDef(SmaliClassDef):
         
         self.methods = []
         
-    def get_other_class(self, other):
-        return None
+    def is_internal_class(self, other):
+        return False
 
 
 
