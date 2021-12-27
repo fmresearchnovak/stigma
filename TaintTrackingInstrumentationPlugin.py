@@ -335,7 +335,7 @@ def PHONE_NUM_instrumentation(scd, m, code_unit, free_reg):
     block.append(smali.CONST(free_reg[0], "0x3f800000"))
     block.append(smali.BLANK_LINE())
     block.append(smali.SPUT(free_reg[0], taint_loc_dest))
-    block = logBlock + block + Instrumenter.make_comment_block("for getLine1Number()")
+    block = block + logBlock + Instrumenter.make_comment_block("for getLine1Number()")
 
     block.extend(code_unit)
 
@@ -360,7 +360,7 @@ def IMEI_instrumentation(scd, m, code_unit, free_reg):
     block.append(smali.CONST(free_reg[0], "0x3dcccccd"))
     block.append(smali.BLANK_LINE())
     block.append(smali.SPUT(free_reg[0], taint_loc_dest))
-    block = logBlock + block + Instrumenter.make_comment_block("for IMEI/getDeviceId()")
+    block = block + logBlock + Instrumenter.make_comment_block("for IMEI/getDeviceId()")
 
     block.extend(code_unit)
 

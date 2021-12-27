@@ -320,10 +320,15 @@ def splitSmali():
 
 #rebuild apk
 def rebuildApk():
-    # dumps the apk file in current working directory
+    # rebuilds the apk 
     start_time = time.time()
     newName = getNewAPKName()
-    rebuildCMD = ["apktool", "b", temp_file.name, "-o", getNewAPKName()]
+    # --use-aapt2
+    # was found to be necessary in order to re-build myfitnesspal
+    # to avoid error: invalid resource directory name: ...\res navigation
+    # https://github.com/iBotPeaches/Apktool/issues/2219
+    rebuildCMD = ["apktool", "b", temp_file.name, "--use-aapt2", "-o", getNewAPKName()]
+    print("Rebuilding:", rebuildCMD)
     completedProcess = subprocess.run(rebuildCMD)
     try:
         completedProcess.check_returncode()
