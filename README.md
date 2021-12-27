@@ -1,5 +1,6 @@
 # Stigma
-Stigma instruments the Smali assembly code of commodity Android applications in order to implement dynamic information flow tracking. It is intended to be used as a sandbox for modifying android apps to test, amongst other things, a novel approach to implicit information flow tracking.
+Stigma  is a framework for modifying / instrumenting commodity Android applications.  It instruments the Smali assembly code of a given .APK file in and runs any provided `plugins` which specify the exact changes (if any) that will be made.  Currently, there is only one (first party) plugin which implements dynamic information flow tracking to track the use of sensitive information such as IMEI number, GPS location information, and the device phone number.  Stigma is intended to be used as a toolkit to modify android apps for future research projects.
+
 
 # Usage
 `python3 Stigma.py /path/to/application.apk`
@@ -10,41 +11,39 @@ A new APK file should be generated (and signed): `Tracked_application.apk` which
 `adb install -r Tracked_application.apk`
 
 
-The "tracked" version of the application will monitor the use of sensitive information (e.g., GPS coordinates).  In the tracked version, if that sensitive information is transmitted over a network connection such as WiFi (i.e., "leaked") by the app, there will be an entry made in the logcat.  That entry will have the tag `STIGMAXY` and a short message indicating that a leak is occurring.
+The "tracked" version of the application will monitor the use of sensitive information (e.g., GPS coordinates) using the aforementioned first party plugin.  In the tracked version, if that sensitive information is transmitted over a network connection such as WiFi (i.e., "leaked") by the app, there will be an entry made in the Android logging system: logcat.  That entry will have the tag `STIGMA` and a short message indicating the nature of the event, e.g., 
 
-`STIGMAXY, LEAK via WRITE() OCCURING!`
+`STIGMA, LEAK via WRITE() OCCURING!`
 
-Note, the `X` and `Y` above are variables that encode the type of leak.  The user can then check the logcat for `STIGMA` messages using Android Studio or `adb` on a second computer, or using a logcat reader application directly on the phone / device.
+The user can then check the logcat for such `STIGMA` messages using Android Studio or `adb logcat` on computer connected to the device running the app.
 
 ### Limitations
-Stigma has many limitations.  It can only track very limited sources of sensitive information (GPS, IMEI, Device Phone Number) and it can lose track of that sensitive information as the target application operates.  Additionally, the detection of network connections / transmission is very primitive and may not catch many instances.  Extensive future research work and improvments are planned / ongoing.
+Stigma has many limitations.  It can only track very limited sources of sensitive information (GPS, IMEI, Device Phone Number) and it can lose track of that sensitive information as the target application operates.  Additionally, the detection of network connections / transmission is very primitive and may not catch many instances.  Extensive future research and improvments are ongoing.
+
+Stigma is currently ``beta'' software.  Numerous bugs and limitations exist, which limit broad compatibility with many Android apps.  It is intended to be a tool for computer science researchers working in (a) smali byte-code instrumentation or (b) dynamic information flow tracking.
 
 
 ### Necessary Dependencies
-* Linux or MacOS environment.  Code might be compatible on Windows as well, but is untested.
+* Linux or MacOS environment.  Stigma might be compatible with Windows as well, but is untested.
 * python3
 * apktool (available in Ubuntu repository and here: https://ibotpeaches.github.io/Apktool/)
-* networkx version 2.5.1 (we recommend installing via pip3; see below).  networkx source code is available here: https://github.com/networkx/networkx)
-* matplotlib version 3.1.2 (available in Ubuntu repository under python3-matplotlib).  https://matplotlib.org/
 * openjdk-11-jdk
   * keytool (provided by above Ubuntu package)
   * jarsigner (provided by above Ubuntu package)
 * adb (available in Ubuntu repository and here: https://www.lifewire.com/android-debug-bridge-adb-4149410)
   * official adb documentation: https://developer.android.com/studio/command-line/adb
   * Tested with Android Debug Bridge version 1.0.41 (Version 30.0.4-6686687)
-
 * aapt (available in Ubuntu repository)
+* networkx version 2.5.1 (we recommend installing via pip3; see below).  networkx source code is available here: https://github.com/networkx/networkx)
+* matplotlib version 3.1.2 (available in Ubuntu repository under python3-matplotlib).  https://matplotlib.org/
 
-
-### Unnecessary Dependencies
+### Optional Dependencies
 * pydot version 1.2.3 python3 module - to see control flow graphs ( `ControlFlowGraph.show()` ) (available in Ubuntu repository under python3-pydot)
 
 
 
 
 # Troubleshooting
-
-Stigma is currently ``beta'' software.  Numerous bugs and limitations exist, which limit broad compatibility with many Android apps.  It is intended to be a tool intended for computer science researchers in (a) smali byte-code instrumentation or (b) dynamic information flow channel.
 
 ### APKTOOL issues
 Suppose when re-building (apktool b) there is an error of this nature:

@@ -197,6 +197,9 @@ def _move_result_instrumentation(scd, m, code_unit, free_reg):
         
     elif STRING_PHONE_NUM_FUNCTION in code_unit[0]: # short cut
         block = PHONE_NUM_instrumentation(scd, m, code_unit, free_reg)
+    
+    elif STRING_IMEI_FUNCTION in code_unit[0]: # short cut
+        block = IMEI_instrumentation(scd, m, code_unit, free_reg)
         
     elif re.search(StigmaStringParsingLib.BEGINS_WITH_FILLED_NEW_ARRAY, code_unit[0]) is not None: # short cut
         block = FILLED_NEW_ARRAY_instrumentation(scd, m, code_unit, free_reg)  
@@ -334,11 +337,7 @@ def PHONE_NUM_instrumentation(scd, m, code_unit, free_reg):
     block.append(smali.SPUT(free_reg[0], taint_loc_dest))
     block = logBlock + block + Instrumenter.make_comment_block("for getLine1Number()")
 
-    block = block + logBlock
     block.extend(code_unit)
-    # the spacing might be wrong in the final result
-    # see EXTERNAL_FUNCTION
-    # .rstrip() is necessary to remove \n characters
 
     return block
 
@@ -347,7 +346,7 @@ def IMEI_instrumentation(scd, m, code_unit, free_reg):
     #invoke -> Landroid/telephony/TelephonyManager;->getDeviceId()Ljava/lang/String;
     #move-result
     
-    result_line = Instrumenter.get_next_move_result(m, line_num)
+    result_line = code_unit[-1] 
     dest_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
     taint_loc_dest = storage_handler.add_taint_location(scd.class_name, m.get_name(), dest_reg)
 
@@ -357,16 +356,12 @@ def IMEI_instrumentation(scd, m, code_unit, free_reg):
     # https://www.h-schmidt.net/FloatConverter/IEEE754.html
     # 0.1 = 0x3dcccccd
     # CONST does NOT sign extends, it takes a 32 bit constant
-    block = [smali.BLANK_LINE(),
-                smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for getDeviceID()"),
-                smali.BLANK_LINE(),
-                smali.CONST(free_reg[0], "0x3dcccccd"), 
-                smali.BLANK_LINE(),
-                smali.SPUT(free_reg[0], taint_loc_dest),
-                smali.BLANK_LINE(),
-                smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for getDeviceID()")]
+    block = Instrumenter.make_comment_block("for IMEI/getDeviceId()")
+    block.append(smali.CONST(free_reg[0], "0x3dcccccd"))
+    block.append(smali.BLANK_LINE())
+    block.append(smali.SPUT(free_reg[0], taint_loc_dest))
+    block = logBlock + block + Instrumenter.make_comment_block("for IMEI/getDeviceId()")
 
-    block = logBlock + block
     block.extend(code_unit)
 
     return block
