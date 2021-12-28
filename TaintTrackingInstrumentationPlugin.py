@@ -247,9 +247,9 @@ def LOCATION_instrumentation(scd, m, code_unit, free_reg):
     block.append(smali.CONST(free_reg[0], "0x40000000"))
     block.append(smali.BLANK_LINE())
     block.append(smali.SPUT(free_reg[0], taint_loc_dest))
-    block = block + Instrumenter.make_comment_block("for getLastKnownLocation()")
+    block.append(smali.BLANK_LINE())
+    block = block + logBlock + Instrumenter.make_comment_block("for getLastKnownLocation()")
     
-    block = block + logBlock
     block.extend(code_unit)
     # the spacing might be wrong in the final result
     # see EXTERNAL_FUNCTION
@@ -276,9 +276,9 @@ def LONGITUDE_instrumentation(scd, m, code_unit, free_reg):
     block.append(smali.CONST(free_reg[0], "0x3f800000"))
     block.append(smali.BLANK_LINE())
     block.append(smali.SPUT(free_reg[0], taint_loc_dest))
-    block = block + Instrumenter.make_comment_block("for getLongitude()")
+    block.append(smali.BLANK_LINE())
+    block = block + logBlock + Instrumenter.make_comment_block("for getLongitude()")
     
-    block = block + logBlock
     block.extend(code_unit)
     # the spacing might be wrong in the final result
     # see EXTERNAL_FUNCTION
@@ -300,14 +300,14 @@ def LATITUDE_instrumentation(scd, m, code_unit, free_reg):
     
     # https://www.h-schmidt.net/FloatConverter/IEEE754.html
     # 1.0 = 0x3f800000 
-    # CONST takes a 32 bits literal
+    # CONST takes a 32 bit literal
     block = Instrumenter.make_comment_block("for getLatitude()")
     block.append(smali.CONST(free_reg[0], "0x3f800000"))
     block.append(smali.BLANK_LINE())
     block.append(smali.SPUT(free_reg[0], taint_loc_dest))
-    block = block + Instrumenter.make_comment_block("for getLatitude()")
+    block.append(smali.BLANK_LINE())
+    block = block + logBlock + Instrumenter.make_comment_block("for getLatitude()")
     
-    block = block + logBlock
     block.extend(code_unit)
     # the spacing might be wrong in the final result
     # see EXTERNAL_FUNCTION
@@ -335,6 +335,7 @@ def PHONE_NUM_instrumentation(scd, m, code_unit, free_reg):
     block.append(smali.CONST(free_reg[0], "0x3f800000"))
     block.append(smali.BLANK_LINE())
     block.append(smali.SPUT(free_reg[0], taint_loc_dest))
+    block.append(smali.BLANK_LINE())
     block = block + logBlock + Instrumenter.make_comment_block("for getLine1Number()")
 
     block.extend(code_unit)
@@ -360,6 +361,7 @@ def IMEI_instrumentation(scd, m, code_unit, free_reg):
     block.append(smali.CONST(free_reg[0], "0x3dcccccd"))
     block.append(smali.BLANK_LINE())
     block.append(smali.SPUT(free_reg[0], taint_loc_dest))
+    block.append(smali.BLANK_LINE())
     block = block + logBlock + Instrumenter.make_comment_block("for IMEI/getDeviceId()")
 
     block.extend(code_unit)
