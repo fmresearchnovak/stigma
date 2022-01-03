@@ -327,7 +327,8 @@ def rebuildApk():
     # was found to be necessary in order to re-build myfitnesspal
     # to avoid error: invalid resource directory name: ...\res navigation
     # https://github.com/iBotPeaches/Apktool/issues/2219
-    rebuildCMD = ["apktool", "b", temp_file.name, "--use-aapt2", "-o", getNewAPKName()]
+    #rebuildCMD = ["apktool", "b", temp_file.name, "--use-aapt2", "-o", getNewAPKName()]
+    rebuildCMD = ["apktool", "b", temp_file.name, "-o", getNewAPKName()]
     print("Rebuilding:", rebuildCMD)
     completedProcess = subprocess.run(rebuildCMD)
     try:
@@ -377,14 +378,22 @@ def deleteFiles():
 if __name__ == '__main__':
     # we need a better interface haha!
     # Also ./apk should be a sys.argv param to the location of an APK file
+    
+    if(len(sys.argv) >= 3):
+        dry_run = sys.argv[2] == "--dry-run"
+    else:
+        dry_run = False
 
     start = time.time()
     print("Working In: " + str(temp_file.name))
     dumpApk()
-    importPlugins()
-    runStigma()
-    writeStorageClasses()
-    splitSmali()
+    
+    if(not dry_run):
+        importPlugins()
+        runStigma()
+        writeStorageClasses()
+        splitSmali()
+        
     rebuildApk()
     signApk()
     end = time.time()

@@ -189,14 +189,24 @@ class TypeSafetyChecker:
                 dest_reg = registers[0]
                 src_reg = registers[1]
                 src_type = line_type_map_new[src_reg]
-                #print("\tsrc_reg", src_reg, "  src_type", src_type, "  line_type_map_new", line_type_map_new)
-                return_type = src_type.unwrap_layer()
+        
+                try:
+                    return_type = src_type.unwrap_layer()
+                except:
+                    print("Failed to unwrap layer!")
+                    print("\tunit:", code_unit)
+                    print("\tsrc_reg", src_reg, "  src_type", src_type, "  line_type_map_new", line_type_map_new)
+                    input("Continue?")
                 TypeSafetyChecker._set_new_type_for_reg(line_type_map_new, dest_reg, return_type)
                       
             elif(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_OBJECT, first_instr) is not None):
                 dest_reg = registers[0]
                 src_reg = registers[1]
-                return_type = line_type_map_new[src_reg]
+                if src_reg in line_type_map_new:
+                    return_type = line_type_map_new[src_reg]
+                else:
+                    return_type = SmaliTypes.NonSpecificObjectReference()
+                    
                 TypeSafetyChecker._set_new_type_for_reg(line_type_map_new, dest_reg, return_type)
                           
             else:
