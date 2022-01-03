@@ -26,15 +26,20 @@ Stigma is currently ``beta'' software.  Numerous bugs and limitations exist, whi
 ### Necessary Dependencies
 * Linux or MacOS environment.  Stigma might be compatible with Windows as well, but is untested.
 * python3
-* apktool (available in Ubuntu repository and here: [https://ibotpeaches.github.io/Apktool/](https://ibotpeaches.github.io/Apktool/)
+* apktool (available in Ubuntu repository ```apt install apktool``` and here: [https://ibotpeaches.github.io/Apktool/](https://ibotpeaches.github.io/Apktool/))
 * openjdk-11-jdk
   * keytool (provided by above Ubuntu package)
   * jarsigner (provided by above Ubuntu package)
 * adb (available in Ubuntu repository ```apt install adb``` and in the homebrew repository ```brew install android-platform-tools``` As well as [https://www.lifewire.com/android-debug-bridge-adb-4149410](https://www.lifewire.com/android-debug-bridge-adb-4149410)
   * official adb documentation: [https://developer.android.com/studio/command-line/adb](https://developer.android.com/studio/command-line/adb)
-* aapt (available in Ubuntu repository)
-* networkx version 2.5.1 (we recommend installing via pip3; see below).  networkx source code is available here: [https://github.com/networkx/networkx](https://github.com/networkx/networkx)
-* matplotlib version 3.1.2 (we recommend installing via pip3; see below).  Also available in Ubuntu repository under python3-matplotlib.  matplotlib source code is available here: [https://matplotlib.org/](https://matplotlib.org/)
+* aapt (available in Ubuntu repository ```apt install aapt```)
+* networkx version 2.5.1 (we recommend installing via pip3; see below).  Available in Ubuntu repository ```apt install python3-networkx``` networkx source code is available here: [https://github.com/networkx/networkx](https://github.com/networkx/networkx)
+* matplotlib version 3.1.2 (we recommend installing via pip3; see below).  Available in Ubuntu repository ```apt install python3-matplotlib```  matplotlib source code is available here: [https://matplotlib.org/](https://matplotlib.org/)
+
+Recommended installation method for networkx and matplotlib is to use `pip3`
+
+```pip3 install networkx```
+```pip3 install matplotlib```
 
 ### Optional Dependencies
 * pydot version 1.2.3 python3 module - to see control flow graphs ( `ControlFlowGraph.show()` ) (available in Ubuntu repository under python3-pydot)
@@ -62,13 +67,6 @@ Then you should do:
 `rm -r ~/.local/share/apktool/`
 
 Also, it may be necessary to NOT use the Ubuntu provided version of apktool.  Use the publicly available one instead: https://ibotpeaches.github.io/Apktool/
-
-
-### NetworkX installation
-Recommened installation method for NetworkX and matplotlib is to use `pip3`
-
-```pip3 install networkx```
-```pip3 install matplotlib```
 
 
 # Utilities and Auxiliary Programs
