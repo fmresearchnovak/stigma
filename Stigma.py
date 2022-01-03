@@ -348,7 +348,7 @@ def signApk():
     if(not os.path.exists(keystore_name)):
         # keytool -genkey -v -keystore my-release-key.keystore -alias alias_name -keyalg RSA -validity 10000
         cmd = ["keytool", "-genkey", "-keystore", keystore_name, "-alias", stigma_alias, "-keyalg", "RSA", "-validity", "10000"]
-        proc = Popen(" ".join(cmd), stdin=PIPE, shell=True)
+        proc = subprocess.Popen(" ".join(cmd), stdin=subprocess.PIPE, shell=True)
         
         proc.stdin.write(password_bytes)
         proc.stdin.write(password_bytes)
