@@ -323,12 +323,17 @@ def rebuildApk():
     # rebuilds the apk 
     start_time = time.time()
     newName = getNewAPKName()
+    
     # --use-aapt2
     # was found to be necessary in order to re-build myfitnesspal
     # to avoid error: invalid resource directory name: ...\res navigation
     # https://github.com/iBotPeaches/Apktool/issues/2219
-    #rebuildCMD = ["apktool", "b", temp_file.name, "--use-aapt2", "-o", getNewAPKName()]
-    rebuildCMD = ["apktool", "b", temp_file.name, "-o", getNewAPKName()]
+    use_aapt2 = "--use-aapt2" in sys.argv[2:]
+    if(use_aapt2):
+        rebuildCMD = ["apktool", "b", temp_file.name, "--use-aapt2", "-o", getNewAPKName()]
+    else:
+        rebuildCMD = ["apktool", "b", temp_file.name, "-o", getNewAPKName()]
+        
     print("Rebuilding:", rebuildCMD)
     completedProcess = subprocess.run(rebuildCMD)
     try:
@@ -380,7 +385,7 @@ if __name__ == '__main__':
     # Also ./apk should be a sys.argv param to the location of an APK file
     
     if(len(sys.argv) >= 3):
-        dry_run = sys.argv[2] == "--dry-run"
+        dry_run = "--dry-run" in sys.argv[2:]
     else:
         dry_run = False
 
