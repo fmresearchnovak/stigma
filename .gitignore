@@ -161,3 +161,6 @@ APK/
 
 # macOS directory meta-information
 .DS_Store
+
+# ignore my eval eps files
+.eps

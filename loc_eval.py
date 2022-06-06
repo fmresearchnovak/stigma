@@ -21,8 +21,8 @@ def main():
     loc_befores = []
     loc_afters = []
     
-    loc_befores = [2809610, 1997160, 2505376, 951543, 561947]
-    loc_afters = [5298431, 4952697, 5978146, 2840468, 2050310]
+    #loc_befores = [2809610, 1997160, 2505376, 951543, 561947]
+    #loc_afters = [5298431, 4952697, 5978146, 2840468, 2050310]
     
     
     if(loc_befores == [] and loc_afters == []):
@@ -35,6 +35,7 @@ def main():
                 Stigma.dumpApk()
                 loc_befores.append(Stigma.count_non_blank_lines_of_code())
                 
+                Stigma.importPlugins()
                 Stigma.runStigma()
                 Stigma.writeStorageClasses()
                 Stigma.splitSmali()
