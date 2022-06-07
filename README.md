@@ -43,7 +43,7 @@ Recommended installation method for networkx and matplotlib is to use `pip3`
 
 ### Optional Dependencies
 * pydot version 1.2.3 python3 module - to see control flow graphs ( `ControlFlowGraph.show()` ) (available in Ubuntu repository under python3-pydot)
-
+* pip3 - to install other dependencies easily (available in Ubuntu reposiroty under python-pip3)
 
 
 
@@ -66,7 +66,7 @@ Then you should do:
 
 `rm -r ~/.local/share/apktool/`
 
-Also, it may be necessary to NOT use the Ubuntu provided version of apktool.  Use the publicly available one instead: https://ibotpeaches.github.io/Apktool/
+Also, it may be necessary to NOT use the Ubuntu provided version of apktool.  Use the publicly available one instead: [https://ibotpeaches.github.io/Apktool/](https://ibotpeaches.github.io/Apktool/)
 
 
 # Utilities and Auxiliary Programs

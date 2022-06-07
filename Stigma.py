@@ -32,7 +32,7 @@ def dumpApk():
     start_time = time.time()
     # -f is necessary since temp_file already exists (apktool doesn't like that) 
     # -f means "force"
-    cmd = ["apktool", "d", getOriginalAPKPath(), "-o", temp_file.name, "-f"]
+    cmd = ["java", "-jar", "include/apktool.jar", "d", getOriginalAPKPath(), "-o", temp_file.name, "-f"]
     completed_process = subprocess.run(cmd)
     completed_process.check_returncode()
     print("Apk unpacked in %.1f seconds" % (time.time() - start_time))
@@ -330,9 +330,9 @@ def rebuildApk():
     # https://github.com/iBotPeaches/Apktool/issues/2219
     use_aapt2 = "--use-aapt2" in sys.argv[2:]
     if(use_aapt2):
-        rebuildCMD = ["apktool", "b", temp_file.name, "--use-aapt2", "-o", getNewAPKName()]
+        rebuildCMD = ["java", "-jar", "include/apktool.jar", "b", temp_file.name, "--use-aapt2", "-o", getNewAPKName()]
     else:
-        rebuildCMD = ["apktool", "b", temp_file.name, "-o", getNewAPKName()]
+        rebuildCMD = ["java", "-jar", "include/apktool.jar", "b", temp_file.name, "-o", getNewAPKName()]
         
     print("Rebuilding:", rebuildCMD)
     completedProcess = subprocess.run(rebuildCMD)
