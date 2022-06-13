@@ -5,6 +5,8 @@ from TaintStorageHandler import TaintStorageHandler
 import re
 
 
+# this is a global that is incremented by
+# the sign_up method
 MAX_DESIRED_NUM_REGISTERS = 0 #we grow our .locals by this number
 
 # The structure of the constructor and the register_instrumentation_method functions

@@ -11,7 +11,9 @@ import tempfile
 import SmaliClassDef
 import Instrumenter
 import TaintStorageHandler
+
 import TaintTrackingInstrumentationPlugin
+import SimpleTaintTrackingPlugin
 
 # https://docs.python.org/3/library/tempfile.html
 temp_file = tempfile.TemporaryDirectory(prefix="apkOutput_")
@@ -40,7 +42,7 @@ def dumpApk():
 
 def importPlugins():
     TaintTrackingInstrumentationPlugin.main()
-    
+    #SimpleTaintTrackingPlugin.main()
     
     # p = os.path.dirname(os.path.realpath(__file__))
     # plugins_path = os.path.join(p,"plugins.txt")
@@ -162,6 +164,16 @@ def runStigma():
     print("Stigma ran in %.1f seconds" % (time.time() - start_time))
     
     
+def writeMarkedLocationClass():
+    print("Writing MarkedLocation Class")
+    new_path = os.path.join(temp_file.name, "smali", "net", "stigma")
+    os.makedirs(new_path, exist_ok=True)
+    new_path = os.path.join(new_path, "MarkedLocation.smali")
+    cmd = ["cp", "MarkedLocation.smali", new_path]
+    completed_process = subprocess.run(cmd)
+    completed_process.check_returncode()
+    
+        
 
 def writeStorageClasses():
     storage_handler = TaintStorageHandler.TaintStorageHandler.get_instance()
@@ -390,13 +402,14 @@ if __name__ == '__main__':
         dry_run = False
 
     start = time.time()
-    print("Working In: " + str(temp_file.name))
+    print("Temp files at: " + str(temp_file.name))
     dumpApk()
     
     if(not dry_run):
         importPlugins()
         runStigma()
         writeStorageClasses()
+        writeMarkedLocationClass()
         splitSmali()
         
     rebuildApk()
@@ -409,6 +422,7 @@ if __name__ == '__main__':
     
     # this input is here because it is helpful to keep the temporary files
     # around for debugging purposes.  In final release maybe remove it.
+    print("Temp files at: " + str(temp_file.name))
     input("Press Enter to Delete Temporary Files: ")
     deleteFiles()
 

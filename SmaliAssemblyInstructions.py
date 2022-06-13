@@ -620,9 +620,9 @@ class NEW_ARRAY(SmaliAssemblyInstruction):
 class _PARAMETER_LIST_INSTRUCTION(SmaliAssemblyInstruction):
     # Not an ImplicitRegistersInstruction because both registers
     # for a wide-type will be explicitly listed in the parameter list
-    def __init__(self, element_list, type_id):
+    def __init__(self, element_list, types_spec):
         self.register_list = [SmaliRegister(r) for r in element_list]
-        self.type_id = type_id
+        self.types_spec = types_spec
 
     def get_registers(self):
         return self.register_list
@@ -630,16 +630,16 @@ class _PARAMETER_LIST_INSTRUCTION(SmaliAssemblyInstruction):
     def __repr__(self):
         string_register_list = [str(x) for x in self.register_list]
         reg_string = ", ".join(string_register_list)
-        return self.opcode() + " {" + reg_string + "}, " + str(self.type_id)
+        return self.opcode() + " {" + reg_string + "}, " + str(self.types_spec)
         
         
 class _PARAMETER_RANGE_INSTRUCTION(SmaliAssemblyInstruction):
     # Not an ImplicitRegistersInstruction because both registers
     # for a wide-type will be explicitly listed in the parameter list
-    def __init__(self, element_list, signature):
+    def __init__(self, element_list, types_spec):
         self.begin_reg = SmaliRegister(element_list[0])
         self.end_reg = SmaliRegister(element_list[-1])
-        self.sig = signature
+        self.types_spec = types_spec
         
     def get_registers(self):
         
@@ -655,7 +655,7 @@ class _PARAMETER_RANGE_INSTRUCTION(SmaliAssemblyInstruction):
         
         
     def __repr__(self):
-        return self.opcode() + " {" + str(self.begin_reg) + " .. " + str(self.end_reg) + "}, " + str(self.sig)
+        return self.opcode() + " {" + str(self.begin_reg) + " .. " + str(self.end_reg) + "}, " + str(self.types_spec)
 
 
 class FILLED_NEW_ARRAY(_PARAMETER_LIST_INSTRUCTION):
@@ -674,7 +674,7 @@ class FILLED_NEW_ARRAY_RANGE(_PARAMETER_RANGE_INSTRUCTION):
         return "filled-new-array/range"
         
     def get_register_type_implications(self):
-        array_content_type = SmaliTypes.from_string(self.sig).unwrap_layer()
+        array_content_type = SmaliTypes.from_string(self.types_spec).unwrap_layer()
         ans = {}
         for reg in self.get_registers():
             ans[reg] = array_content_type
@@ -1250,7 +1250,6 @@ class SPUT_CHAR(_S_INSTRUCTION):
 class SPUT_SHORT(_S_INSTRUCTION):
     def opcode(self):
         return "sput-short"
-
 
 class INVOKE_VIRTUAL(_PARAMETER_LIST_INSTRUCTION):
     # I was too lazy to implement the get_register_type_implications
