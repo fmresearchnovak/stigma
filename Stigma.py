@@ -258,6 +258,8 @@ def splitSmali():
     e = 0
     for idx, smaliFile in enumerate(smaliFiles):
         #print("file: " + str(smaliFile))
+        print(f'...{str(idx)}/{str(len(smaliFiles))}', end = '\r')
+        
         scd = SmaliClassDef.SmaliClassDef(smaliFile)
         field_num = scd.get_num_field_declarations() + scd.get_num_field_references()
         method_num = scd.get_num_method_declarations() + scd.get_num_method_references()
@@ -272,17 +274,11 @@ def splitSmali():
             raise RuntimeError("methods in " + str(smaliFile) + " is greater than threshold. " + str(method_num) + ">" + str(THRESH))
 
         if( (totalFieldCount + field_num >= THRESH) or ((totalMethodCount + method_num) >= THRESH)):
-            
-            if((totalMethodCount + method_num >= THRESH)):
-                print("  ...adjusting to avoid method threshold...") #at:" + str(scd) + ":   " + str(totalMethodCount) + "->" + str(totalMethodCount + method_num))
-                
-            if((totalFieldCount + field_num >= THRESH)):
-                print("  ...adjusting to avoid field threshold...") #at:" + str(scd) + ":   " + str(totalFieldCount) + "->" + str(totalFieldCount + field_num))
-                
             # do a break
             e = idx
             resultLists.append(smaliFiles[s:e])
             s = e
+            
             
             # technical detail that's easy to miss / confuse
             # the file that broke the threshold
@@ -297,20 +293,17 @@ def splitSmali():
 
     print("...Re-arranging files")
     #print(str(len(resultLists)) + " groups")
+    path = os.path.join(temp_file.name, "smali")
     for idx, group in enumerate(resultLists):
-        path = os.path.join(temp_file.name, "smali/")
         if(idx > 0):
-            path = os.path.join(temp_file.name, "smali_classes" + str(idx+1) + "/")
+            path = os.path.join(temp_file.name, "smali_classes" + str(idx+1))
             os.makedirs(path, exist_ok=True)
 
+        #print("dir path: ", path)
         for smaliFile in group:
-            newFolderPath = path + extractPathParts(smaliFile, 4, -1)
-            #print("newFolderPath: " + str(newFolderPath))
-            #print("newFolderPath: " + newFolderPath)
+            newFolderPath = os.path.join(path, extractPathParts(smaliFile, 4, -1))
             os.makedirs(newFolderPath, exist_ok=True)
-
             newFileAbsPath = os.path.join(newFolderPath, os.path.basename(smaliFile))
-
 
             
             # Some characters need to be 
