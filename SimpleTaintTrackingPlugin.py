@@ -8,24 +8,61 @@ import SmaliAssemblyInstructions as smali
 from TaintStorageHandler import TaintStorageHandler
 
 
-LOCATION_TYPE_STRING = "Landroid/location/Location;"
+LOCATION_TYPE = "Landroid/location/Location;"
 MARKED_LOC = "Lnet/stigma/MarkedLocation;"
 MARKED_LOC_CONSTRUCTOR = MARKED_LOC + "-><init>(Landroid/location/Location;)V"
-MARKED_LOC_PRINTLOGMESSAGE = MARKED_LOC + "->printLogMessage()V"
+MARKED_LOC_PRINTLOGMESSAGES = MARKED_LOC + "->printLogMessages()V"
+MARKED_LOC_PRINTLOGMESSAGES_EXTRA = MARKED_LOC + "->printLogMessages(Ljava/lang/String;)V"
 
+
+
+def _make_markedlocaiton_instance_chunk(reg1, reg2, reg_containing_loc, smd, extra_message):    
+    # instantiate a MarkedLocation and leave it in reg1
+    # reg1 and reg2 must be lower-numbered registers for this function to work!
+    
+    jmp_label = smd.make_new_jump_label()
+    block = []
+    
+    block.append(smali.BLANK_LINE())
+    block.append(smali.IF_EQZ(reg_containing_loc, repr(jmp_label)))
+    block.append(smali.BLANK_LINE())
+    block.append(smali.NEW_INSTANCE(reg1, MARKED_LOC));
+    block.append(smali.BLANK_LINE())
+    # need to move it into reg2 since reg_containing_loc might be higher-numbered
+    block.append(smali.MOVE_OBJECT_16(reg2, reg_containing_loc))
+    block.append(smali.BLANK_LINE())
+    # invoke-direct should be used for constructor
+    block.append(smali.INVOKE_DIRECT([reg1, reg2], MARKED_LOC_CONSTRUCTOR))
+    block.append(smali.BLANK_LINE())
+    block.append(smali.CONST_STRING(reg2, extra_message))
+    block.append(smali.BLANK_LINE())
+    # invoke-virtual should be used for "normal" 
+    # see https://source.android.com/devices/tech/dalvik/dalvik-bytecode
+    block.append(smali.INVOKE_VIRTUAL([reg1, reg2], MARKED_LOC_PRINTLOGMESSAGES_EXTRA))
+    block.append(smali.BLANK_LINE())
+    
+    # finally, replace the reg containing Landroid/location/Location; 
+    # with a Lnet/stigma/MarkedLocation; 
+    block.append(smali.MOVE_OBJECT_16(reg_containing_loc, reg1))
+    block.append(smali.BLANK_LINE())
+    block.append(jmp_label)
+    
+    return block
 
 
 def NEW_METHOD_handler(scd, smd):
     
-    # I can use v0 and v1 since this instrumentation
+    # I can use v0 and v1 since this instrumentation plugin
     # signs up for at least 2 free regs.
     # assuming the method was grown() by n or more where n > 0
     # then there are n vX registers open (v0, v1, ..., v(n-1))
     # these registers are (a) used by the method, which case they
     # will be given a value later in the method or (b) was used to store p0
     # which is technically not possible since we have used grow()
+    
+    s = "\"location from parameter in " + scd.extract_class_name(scd.file_name) + "\""
 
-    block = Instrumenter.make_comment_block("for METHOD START")
+    block = Instrumenter.make_comment_block("for method with location parameter")
     target = SmaliTypes.from_string("Landroid/location/Location;")
     for p_reg in smd.signature.parameter_type_map:
         p_reg_type = smd.signature.parameter_type_map[p_reg]
@@ -35,20 +72,13 @@ def NEW_METHOD_handler(scd, smd):
             #print("class:" + str(scd))
             #print("method:" + str(smd))
             #print("p_reg:" + str(p_reg) + "  p_reg_type: " + str(p_reg_type))
-            block.append(smali.BLANK_LINE())
-            block.append(smali.NEW_INSTANCE("v0", MARKED_LOC));
-            block.append(smali.BLANK_LINE())
-            block.append(smali.MOVE_OBJECT_16("v1", p_reg))
-            register_args = ["v0", "v1"]
-            block.append(smali.INVOKE_DIRECT(register_args,  MARKED_LOC_CONSTRUCTOR))
-            block.append(smali.BLANK_LINE())
             
-            # finally, replace the p_reg Landroid/location/Location; data with...
-            # Ledu/fandm/enovak/markedlocationstage/MarkedLocation; data
-            block.append(smali.MOVE_OBJECT_16(p_reg, "v0"))
+            chunk = _make_markedlocaiton_instance_chunk("v0", "v1", p_reg, smd, s)
+            block.extend(chunk)
+           
             #input("contine?")
             
-    block = block + Instrumenter.make_comment_block("for METHOD START")
+    block = block + Instrumenter.make_comment_block("for method with location parameter")
     return block
     
     
@@ -59,13 +89,14 @@ def INVOKE_handler(scd, smd, code_unit, free_regs):
     asm_obj = smali.SmaliAssemblyInstruction.from_line(code_unit[0])
     return_type = asm_obj.types_spec.split(")")[-1]
     
-    block = Instrumenter.make_comment_block("for INVOKE")
+    block = Instrumenter.make_comment_block("for method returning location")
     
     block = block + code_unit
 
-    if(return_type == LOCATION_TYPE_STRING):
+    if(return_type == LOCATION_TYPE):
         #print()
         #print("FOUND ONE!")
+        #print("scd: " + scd.file_name)
         #print("asm obj:" + str(asm_obj) + "  " + str(type(asm_obj)))
         #print("code unit: " + str(code_unit))
         #print("types specification: " + asm_obj.types_spec)
@@ -74,17 +105,10 @@ def INVOKE_handler(scd, smd, code_unit, free_regs):
         move_result_line = code_unit[-1] 
         reg_containing_loc = StigmaStringParsingLib.get_v_and_p_numbers(move_result_line)[0]
         
-        block.append(smali.BLANK_LINE())
-        block.append(smali.NEW_INSTANCE(free_regs[0], MARKED_LOC));
-        block.append(smali.BLANK_LINE())
-        register_args = [free_regs[0], reg_containing_loc]
-        block.append(smali.INVOKE_DIRECT(register_args,  MARKED_LOC_CONSTRUCTOR))
-        block.append(smali.BLANK_LINE())
-        block.append(smali.MOVE_OBJECT(reg_containing_loc, free_regs[0]))
-        block.append(smali.BLANK_LINE())
-        #invoke-virtual {v0}, Ledu/fandm/enovak/leaks/MarkedLocation;->printLogMessage()V
-        block.append(smali.INVOKE_VIRTUAL([reg_containing_loc], MARKED_LOC_PRINTLOGMESSAGE))
-        block.append(smali.BLANK_LINE())
+        s = "\"location from return value in " + scd.extract_class_name(scd.file_name) + "\""
+        chunk = _make_markedlocaiton_instance_chunk(free_regs[0], free_regs[1], reg_containing_loc, smd, s)
+        
+        block.extend(chunk)
         
         #print("---block---")
         #for item in block:
@@ -94,8 +118,11 @@ def INVOKE_handler(scd, smd, code_unit, free_regs):
         #input("continue?")
     
     
-    block = block + Instrumenter.make_comment_block("for INVOKE")
-    return code_unit
+        block = block + Instrumenter.make_comment_block("for method returning location")
+        return block
+    
+    else:
+        return code_unit
     
 
 def main():

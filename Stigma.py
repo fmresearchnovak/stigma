@@ -377,6 +377,15 @@ def signApk():
     cmd = ["jarsigner", "-keystore", keystore_name, "-storepass", password, newAppName, stigma_alias]
     completedProcess = subprocess.run(cmd)
     completedProcess.check_returncode()
+    
+    
+def installApp():
+    new_app_abs_path = getNewAPKName()
+    print("Installing " + str(new_app_abs_path) + "... ")
+    cmd = ["adb", "install", "-r", new_app_abs_path]
+    completedProcess = subprocess.run(cmd)
+    completedProcess.check_returncode()
+    
 
 
 def deleteFiles():
@@ -411,6 +420,9 @@ if __name__ == '__main__':
     
     print("Finished in %.1f seconds" % (end - start))
     print("Result: " + os.path.abspath(getNewAPKName()))
+    
+    
+    #installApp()
     
     
     # this input is here because it is helpful to keep the temporary files
