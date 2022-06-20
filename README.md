@@ -3,6 +3,8 @@ Stigma  is a framework for modifying / instrumenting commodity Android applicati
 
 
 # Usage
+Enter the following on your command line
+<br/>
 `python3 Stigma.py /path/to/application.apk`
 
 <br/>
