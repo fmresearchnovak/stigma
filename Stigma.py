@@ -45,7 +45,7 @@ def dumpApk():
 
 def importPlugins():
     TaintTrackingInstrumentationPlugin.main()
-    # SimpleTaintTrackingPlugin.main()
+    #SimpleTaintTrackingPlugin.main()
 
     # p = os.path.dirname(os.path.realpath(__file__))
     # plugins_path = os.path.join(p,"plugins.txt")
