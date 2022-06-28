@@ -1020,21 +1020,34 @@ def INVOKE_instrumentation(scd, m, code_unit, free_reg):
     
     # INVOKE_instrumentation (this function)
     #  |
-    #  |-SINK_instrumentation (1 line)
+    #  |-_sink_instrumentation (1 or 2 lines)
     #  |-_one_line_invoke_instrumentation (1 line)
     #  +-_move_result_instrumentation (2 lines)
     #     |
-    #     |- LOCATION_instrumentation
-    #     |- LATITUDE_instrumentation
-    #     |- LONGITUDE_instrumentation
-    #     |- PHONE_NUM_instrumentation
+    #     |- LOCATION_instrumentation (SOURCE)
+    #     |- LATITUDE_instrumentation (SOURCE)
+    #     |- LONGITUDE_instrumentation (SOURCE)
+    #     |- PHONE_NUM_instrumentation (SOURCE)
     #     |- FILLED_NEW_ARRAY_instr...
     #     |- EXTERNAL_FUNCTION_instr...
     #     +- INTERNAL_FUNCTION_instr...
     #         |
-    #         |- _one_line_invoke_instr...
+    #         |- _one_line_invoke_instr... (re-used for good code-reuse)
     
     #print("\tINVOKE instrumentation: ", code_unit)   
+
+
+
+    # Prof. Novak's plan:
+    # if code_unit[0] appears in Sinks.txt:
+    #   _sink_instrumentation #(should handle 1 or 2 lines by itself, all these will be external)
+    #
+    # elif len(code_unit) > 1 and code_unit[-1] is a move-result-*:
+    #   _move_result_instrumentation #(always 2 lines, should handle internal / external by itself)
+    #
+    # else:
+    #   _one_line_invoke_instrumentation #(always 1 line, handles interal only (exteranl 1 line cannot be handled))
+
     
     if(len(code_unit) > 1 and
     re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, str(code_unit[-1]))):
