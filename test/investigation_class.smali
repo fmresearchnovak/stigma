@@ -44,7 +44,13 @@
     const-wide v10, 0x1
 
     const-wide v12, 0x1
+    
+    new-instance v1, Ljava/net/URL;
 
+    const-string v2, "www.google.com"
+
+    invoke-direct {v1, v2}, Ljava/net/URL;-><init>(Ljava/lang/String;)V
+    
     new-instance v14, Landroid/graphics/Rect;
 
     new-instance v15, Ljava/util/ArrayList;
@@ -63,7 +69,9 @@
 
 .method static OtherMethod(I)I
     .locals 0
+    invoke-virtual {v1, v0}, Landroid/location/LocationManager;->getLastKnownLocation(Ljava/lang/String;)Landroid/location/Location;
 
+    move-result-object v0
     sput p0, Ledu/fandm/enovak/MockClass;->RANDOM_INT:I
 
     return p0

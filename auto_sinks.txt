@@ -1,0 +1,7 @@
+Ljava/io/OutputStreamWriter;->write(Ljava/lang/String;II)V
+Ljava/io/OutputStream;->write([BII)V
+Ljava/io/OutputStream;->write([B)V
+Ljava/io/OutputStream;->write(I)V
+Landroid/os/Parcel;->write
+Ljava/io/ObjectOutputStream;->writeObject(
+Ljava/net/URL;-><init>(Ljava/lang/String;)V

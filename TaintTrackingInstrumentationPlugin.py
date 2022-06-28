@@ -8,12 +8,8 @@ from TaintStorageHandler import TaintStorageHandler
 # A more complete listing of these sort of things can be found in ./SourcesAndSinks.txt
 STRING_IMEI_FUNCTION = "Landroid/telephony/TelephonyManager;->getDeviceId()Ljava/lang/String;"
 STRING_PHONE_NUM_FUNCTION = "Landroid/telephony/TelephonyManager;->getLine1Number()Ljava/lang/String;"
-STRING_STREAM_WRITE_FUNCTION = "Ljava/io/OutputStreamWriter;->write(Ljava/lang/String;II)V"
-BYTE_STREAM_WRITE_FUNCTION_OVER = "Ljava/io/OutputStream;->write([BII)V"
-BYTE_STREAM_WRITE_FUNCTION = "Ljava/io/OutputStream;->write([B)V"
-INT_STREAM_WRITE_FUNCTION = "Ljava/io/OutputStream;->write(I)V"
-PARCEL_WRITE_FUNCTION = "Landroid/os/Parcel;->write"
-OBJECT_STREAM_WRITE_FUNCTION = "Ljava/io/ObjectOutputStream;->writeObject("
+
+
 STRING_LOGD_FUNCTION = "Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I"
 STRING_GET_LAST_KNOWN_LOCATION_FUNCTION = "Landroid/location/LocationManager;->getLastKnownLocation(Ljava/lang/String;)Landroid/location/Location;"
 STRING_GET_LATITUDE = "Landroid/location/Location;->getLatitude()D"
@@ -230,6 +226,9 @@ def _move_result_instrumentation(scd, m, code_unit, free_reg):
 
 
 def LOCATION_instrumentation(scd, m, code_unit, free_reg):
+    #invoke-virtual {v1, v0}, Landroid/location/LocationManager;->getLastKnownLocation(Ljava/lang/String;)Landroid/location/Location;
+    
+    #move-result-object v0
     #invoke -> getLastKnownLocation()
     #move-result
         
@@ -789,18 +788,24 @@ def MOVE_special_instrumentation(scd, m):
     #free_reg = tokens[0] # solution 1
     free_reg = "v0"
     dest_reg_num = m.old_locals_num
-    
     block = Instrumenter.make_comment_block("for METHOD START")
-    
     for p_reg in m.signature.parameter_type_map:
         taint_field_src = storage_handler.add_taint_location(scd.class_name, m.get_name(), p_reg)
         taint_field_dest = storage_handler.add_taint_location(scd.class_name, m.get_name(), "v" + str(dest_reg_num))
         dest_reg_num += 1
-        
-        block.append(smali.SGET(free_reg, taint_field_src))
-        block.append(smali.BLANK_LINE())
-        block.append(smali.SPUT(free_reg, taint_field_dest))
-        block.append(smali.BLANK_LINE())
+        if(m.get_name() == "onLocationChanged" and p_reg == "p1"):
+            block.append(smali.CONST(free_reg, "0x40000000"))
+            block.append(smali.BLANK_LINE())
+            block.append(smali.SPUT(free_reg, taint_field_dest))
+            block.append(smali.BLANK_LINE())
+            logBlock = Instrumenter.create_logd_block(m, "\"STIGMA\"", "\"Location (onLocationChanged) obtained\"",
+                                                      free_reg, free_reg)
+            block += logBlock
+        else:
+            block.append(smali.SGET(free_reg, taint_field_src))
+            block.append(smali.BLANK_LINE())
+            block.append(smali.SPUT(free_reg, taint_field_dest))
+            block.append(smali.BLANK_LINE())
         
     
     block = block + Instrumenter.make_comment_block("for METHOD START")
@@ -887,13 +892,13 @@ def CONVERTER_instrumentation(scd, m, code_unit, free_reg):
     return block
 
 
-def WRITE_instrumentation(scd, m, code_unit, free_reg):  # "write()" sinks
+def SINK_instrumentation(scd, m, code_unit, free_reg):  # all sinks
     
     cur_line = code_unit[0]
 
     results = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
     target_reg = results[1]
-
+    print(results)
     taint_loc = storage_handler.add_taint_location(scd.class_name, m.get_name(), target_reg)
 
     # TODO: re-write the below using only 3 registers (or fewer
@@ -932,6 +937,7 @@ def WRITE_instrumentation(scd, m, code_unit, free_reg):  # "write()" sinks
                 smali.BLANK_LINE(),
                 jmp_label,
                 smali.BLANK_LINE(),
+                smali.BLANK_LINE(),
                 smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for write()")]
 
     block.extend(code_unit)
@@ -955,7 +961,7 @@ def IF_instrumentation(scd, m, code_unit, free_reg): # if statement implicit flo
         # TODO: re-write the below using only 3 registers (or fewer
         # if possible
         # TODO: consolidate the below with the similar code
-        # found in WRITE_instrumentation method
+        # found in SINK_instrumentation method
         
         taint_tag_field = storage_handler.add_taint_location(scd.class_name, m.get_name(), reg)
 
@@ -1014,7 +1020,7 @@ def INVOKE_instrumentation(scd, m, code_unit, free_reg):
     
     # INVOKE_instrumentation (this function)
     #  |
-    #  |-WRITE_instrumentation (1 line)
+    #  |-SINK_instrumentation (1 line)
     #  |-_one_line_invoke_instrumentation (1 line)
     #  +-_move_result_instrumentation (2 lines)
     #     |
@@ -1030,7 +1036,7 @@ def INVOKE_instrumentation(scd, m, code_unit, free_reg):
     
     #print("\tINVOKE instrumentation: ", code_unit)   
     
-    if(len(code_unit) > 1 and \
+    if(len(code_unit) > 1 and
     re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, str(code_unit[-1]))):
         # multiple lines
         return _move_result_instrumentation(scd, m, code_unit, free_reg)
@@ -1038,14 +1044,19 @@ def INVOKE_instrumentation(scd, m, code_unit, free_reg):
     else:
         # no move result in this case
         # determine that this is a write() call and is therefore
-        # necessary for WRITE instrumentation, (short cut)
+        # necessary for SINK instrumentation, (short cut)
         line = code_unit[0]
-        if (STRING_STREAM_WRITE_FUNCTION in line or \
-        BYTE_STREAM_WRITE_FUNCTION in line or \
-        BYTE_STREAM_WRITE_FUNCTION_OVER in line or \
-        INT_STREAM_WRITE_FUNCTION in line or \
-        OBJECT_STREAM_WRITE_FUNCTION in line):
-            return WRITE_instrumentation(scd, m, code_unit, free_reg)
+        fh = open('Sinks.txt', 'r')
+        lines = fh.readlines()
+        fh.close()
+
+        for fh_line in lines:
+            fh_line = fh_line.strip()
+            print("line :", line)
+            print("fh_line: ", fh_line)
+            if(fh_line in line):
+                print("HELLO")
+                return SINK_instrumentation(scd, m, code_unit, free_reg)
         
         callee_method_name, callee_class_name = _get_callee_parts(line, scd)
         if(scd.is_internal_class(callee_class_name)): #internal

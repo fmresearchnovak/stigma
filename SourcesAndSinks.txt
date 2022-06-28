@@ -288,16 +288,16 @@ From: https://github.com/secure-software-engineering/soot-infoflow-android
 <android.content.ContentResolver: android.database.Cursor query(android.net.Uri,java.lang.String[],java.lang.String,java.lang.String[],java.lang.String,android.os.CancellationSignal)> -> _SOURCE_
 
 % This is handled by the Easy Taint Wrapper given that the URL is used afterwards
-%<java.net.URL: void <init>(java.lang.String,java.lang.String,int,java.lang.String)> -> _SINK_
-%<java.net.URL: void <init>(java.lang.String,java.lang.String,java.lang.String)> -> _SINK_
-%<java.net.URL: void <init>(java.lang.String,java.lang.String,int,java.lang.String,java.net.URLStreamHandler)> -> _SINK_
-%<java.net.URL: void <init>(java.lang.String)> -> _SINK_
-%<java.net.URL: void <init>(java.net.URL,java.lang.String)> -> _SINK_
-%<java.net.URL: void <init>(java.net.URL,java.lang.String,java.net.URLStreamHandler)> -> _SINK_
+<java.net.URL: void <init>(java.lang.String,java.lang.String,int,java.lang.String)> -> _SINK_
+<java.net.URL: void <init>(java.lang.String,java.lang.String,java.lang.String)> -> _SINK_
+<java.net.URL: void <init>(java.lang.String,java.lang.String,int,java.lang.String,java.net.URLStreamHandler)> -> _SINK_
+<java.net.URL: void <init>(java.lang.String)> -> _SINK_
+<java.net.URL: void <init>(java.net.URL,java.lang.String)> -> _SINK_
+<java.net.URL: void <init>(java.net.URL,java.lang.String,java.net.URLStreamHandler)> -> _SINK_
 
-%<android.content.Context: void startActivity(android.content.Intent)> -> _SINK_
-%<android.content.ContextWrapper: void startActivity(android.content.Intent)> -> _SINK_
-%<android.content.Context: void startActivity(android.content.Intent,android.os.Bundle)> -> _SINK_
+<android.content.Context: void startActivity(android.content.Intent)> -> _SINK_
+<android.content.ContextWrapper: void startActivity(android.content.Intent)> -> _SINK_
+<android.content.Context: void startActivity(android.content.Intent,android.os.Bundle)> -> _SINK_
 <android.content.Context: void startActivities(android.content.Intent[])> -> _SINK_
 <android.content.Context: void startActivities(android.content.Intent[],android.os.Bundle)> -> _SINK_
 <android.content.Context: android.content.ComponentName startService(android.content.Intent)> -> _SINK_
@@ -305,7 +305,7 @@ From: https://github.com/secure-software-engineering/soot-infoflow-android
 <android.content.Context: void sendBroadcast(android.content.Intent)> -> _SINK_
 <android.content.Context: void sendBroadcast(android.content.Intent,java.lang.String)> -> _SINK_
 
-%<android.app.Activity: android.content.Intent getIntent()> -> _SOURCE_
+<android.app.Activity: android.content.Intent getIntent()> -> _SOURCE_
 
 <android.app.Activity: void setResult(int,android.content.Intent)> -> _SINK_
 
@@ -313,8 +313,8 @@ From: https://github.com/secure-software-engineering/soot-infoflow-android
 % of the parameters of this method anyway. Adding this method taints the whole activity!
 % <android.app.Activity: void onActivityResult(int,int,android.content.Intent)> -> _SOURCE_
 
-%<android.app.Activity: void startActivity(android.content.Intent)> -> _SINK_
-%<android.app.Activity: void startActivity(android.content.Intent,android.os.Bundle)> -> _SINK_
+<android.app.Activity: void startActivity(android.content.Intent)> -> _SINK_
+<android.app.Activity: void startActivity(android.content.Intent,android.os.Bundle)> -> _SINK_
 <android.app.Activity: void startActivities(android.content.Intent[])> -> _SINK_
 <android.app.Activity: void startActivities(android.content.Intent[],android.os.Bundle)> -> _SINK_
 <android.app.Activity: void startActivityForResult(android.content.Intent,int)> -> _SINK_
