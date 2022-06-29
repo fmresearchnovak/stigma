@@ -94,14 +94,7 @@ def make_comment_block(comment_detail=""):
         block = [smali.BLANK_LINE(), smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA " + comment_detail), smali.BLANK_LINE()]
         return block
 
-    
-def make_merge_block(scd, m, registers, taint_loc_result, free_reg):
-    # This function creates a "merge block"
-    # A merge block takes every one of the registers in the 
-    # registers parameter (a list), and performs an ADD-FLOAT operation on their
-    # values storing the result in taint_loc_result
-    # Note: external methods may merge several registers
-
+def _make_merge_core(scd, m, registers, free_reg):
     block = []
     block.append(smali.CONST_16(free_reg[0], "0x0"))
 
@@ -113,6 +106,31 @@ def make_merge_block(scd, m, registers, taint_loc_result, free_reg):
         block.append(smali.ADD_FLOAT(free_reg[0], free_reg[0], free_reg[1]))
 
     block.append(smali.BLANK_LINE())
+    return block
+
+def make_sink_merge_block(scd, m, registers, free_reg):
+    block =_make_merge_core(scd, m, registers, free_reg)
+    block.append(smali.BLANK_LINE())
+    return block
+def make_merge_block(scd, m, registers, taint_loc_result, free_reg):
+    # This function creates a "merge block"
+    # A merge block takes every one of the registers in the 
+    # registers parameter (a list), and performs an ADD-FLOAT operation on their
+    # values storing the result in taint_loc_result
+    # Note: external methods may merge several registers
+    #
+    # block = []
+    # block.append(smali.CONST_16(free_reg[0], "0x0"))
+    #
+    # for r in registers:
+    #     taint_loc_param = storage_handler.add_taint_location(scd.class_name, m.get_name(), r)
+    #     block.append(smali.BLANK_LINE())
+    #     block.append(smali.SGET(free_reg[1], taint_loc_param))
+    #     block.append(smali.BLANK_LINE())
+    #     block.append(smali.ADD_FLOAT(free_reg[0], free_reg[0], free_reg[1]))
+    #
+    # block.append(smali.BLANK_LINE())
+    block = _make_merge_core(scd, m, registers, free_reg)
     block.append(smali.SPUT(free_reg[0], taint_loc_result))
 
     return block

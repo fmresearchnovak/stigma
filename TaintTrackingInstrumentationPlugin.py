@@ -892,28 +892,27 @@ def CONVERTER_instrumentation(scd, m, code_unit, free_reg):
     return block
 
 
-def SINK_instrumentation(scd, m, code_unit, free_reg):  # all sinks
+def _sink_instrumentation(scd, m, code_unit, free_reg):  # all sinks
     
     cur_line = code_unit[0]
 
     results = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
     target_reg = results[1]
-    print(results)
     taint_loc = storage_handler.add_taint_location(scd.class_name, m.get_name(), target_reg)
 
     # TODO: re-write the below using only 3 registers (or fewer
     # if possible
-
+    block = []
+    block.append(smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA FOR SINK"))
+    block.append(smali.BLANK_LINE())
+    new_block = Instrumenter.make_sink_merge_block(scd, m, results,free_reg)
+    block.extend(new_block)
     reg_a = free_reg[0] # 1
     reg_b = free_reg[1] # 2
-
     # This is a smali.LABEL
     jmp_label = m.make_new_jump_label()
 
-    block = [smali.BLANK_LINE(),
-                smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for write()"),
-                smali.BLANK_LINE(),
-                smali.SGET(reg_b, taint_loc),
+    block.extend([smali.MOVE_16(reg_b, reg_a), #Reg_a holds the merged value, move it to b to keep it
                 smali.BLANK_LINE(),
                 smali.CONST_16(reg_a, "0x0"),
                 smali.BLANK_LINE(),
@@ -923,7 +922,7 @@ def SINK_instrumentation(scd, m, code_unit, free_reg):  # all sinks
                 smali.BLANK_LINE(),
                 smali.CONST_STRING(reg_a, "\"STIGMAZZ\""),
                 smali.BLANK_LINE(),
-                smali.CONST_STRING(reg_b, "\"LEAK via WRITE() OCCURING!\""),
+                smali.CONST_STRING(reg_b, "\"LEAK OCCURING!\""),
                 smali.BLANK_LINE(),
                 smali.LOG_D(reg_a, reg_b),
                 smali.BLANK_LINE(),
@@ -937,8 +936,7 @@ def SINK_instrumentation(scd, m, code_unit, free_reg):  # all sinks
                 smali.BLANK_LINE(),
                 jmp_label,
                 smali.BLANK_LINE(),
-                smali.BLANK_LINE(),
-                smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA for write()")]
+                smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA FOR SINK")])
 
     block.extend(code_unit)
     return block
@@ -998,13 +996,18 @@ def IF_instrumentation(scd, m, code_unit, free_reg): # if statement implicit flo
                     jmp_label]
                     
         block = block + Instrumenter.make_comment_block("for if (implicit flow) @ end")
-
-
     return block
     
 
-        
-        
+def _if_is_a_sink_(line):
+    #Note: can be faster to change to hash_map or set to optimize
+    fh = open("Sinks.txt", "r")
+    lines = fh.readlines()
+    fh.close()
+    for fh_line in lines:
+        if fh_line in line:
+            return True
+    return False
 
 def INVOKE_instrumentation(scd, m, code_unit, free_reg):     
     
@@ -1036,45 +1039,20 @@ def INVOKE_instrumentation(scd, m, code_unit, free_reg):
     
     #print("\tINVOKE instrumentation: ", code_unit)   
 
+    callee_method_name, callee_class_name = _get_callee_parts(code_unit[0], scd)
+    if _if_is_a_sink_(code_unit[0]):
+        #_sink_instrumentation  (should handle 1 or 2 lines by itself, all these will be external)
+        return _sink_instrumentation(scd, m, code_unit, free_reg)
 
-
-    # Prof. Novak's plan:
-    # if code_unit[0] appears in Sinks.txt:
-    #   _sink_instrumentation #(should handle 1 or 2 lines by itself, all these will be external)
-    #
-    # elif len(code_unit) > 1 and code_unit[-1] is a move-result-*:
-    #   _move_result_instrumentation #(always 2 lines, should handle internal / external by itself)
-    #
-    # else:
-    #   _one_line_invoke_instrumentation #(always 1 line, handles interal only (exteranl 1 line cannot be handled))
-
-    
-    if(len(code_unit) > 1 and
-    re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, str(code_unit[-1]))):
-        # multiple lines
+    elif len(code_unit) > 1 and re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, str(code_unit[-1])):
+        # _move_result_instrumentation #(always 2 lines, should handle internal / external by itself)
         return _move_result_instrumentation(scd, m, code_unit, free_reg)
-        
-    else:
-        # no move result in this case
-        # determine that this is a write() call and is therefore
-        # necessary for SINK instrumentation, (short cut)
-        line = code_unit[0]
-        fh = open('Sinks.txt', 'r')
-        lines = fh.readlines()
-        fh.close()
 
-        for fh_line in lines:
-            fh_line = fh_line.strip()
-            print("line :", line)
-            print("fh_line: ", fh_line)
-            if(fh_line in line):
-                print("HELLO")
-                return SINK_instrumentation(scd, m, code_unit, free_reg)
-        
-        callee_method_name, callee_class_name = _get_callee_parts(line, scd)
-        if(scd.is_internal_class(callee_class_name)): #internal
-            return _one_line_invoke_instrumentation(scd, m, code_unit, free_reg)
-        
+    elif scd.is_internal_class(callee_class_name):
+        # _one_line_invoke_instrumentation #(always 1 line, handles internal only (external 1 line cannot be handled))
+        return _one_line_invoke_instrumentation(scd, m, code_unit, free_reg)
+
+    #If no condition triggered, return code as it is
     return code_unit
     
     

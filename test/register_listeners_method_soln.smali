@@ -59,6 +59,44 @@
     
     const-string v2, "Registering listeners"
 
+    # IFT INSTRUCTIONS ADDED BY STIGMA FOR SINK
+    
+    const/16 v11, 0x0
+    
+    sget v12, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_leaks_Main_registerListeners_v1:F
+    
+    add-float v11, v11, v12
+    
+    sget v12, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_leaks_Main_registerListeners_v2:F
+    
+    add-float v11, v11, v12
+    
+    
+    move/16 v12, v11
+    
+    const/16 v11, 0x0
+    
+    cmpl-float v11, v12, v11
+    
+    if-eqz v11, :stigma_jump_label_0
+    
+    const-string v11, "STIGMAZZ"
+    
+    const-string v12, "LEAK OCCURING!"
+    
+    invoke-static {v11, v12},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    
+    sget v12, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_leaks_Main_registerListeners_v2:F
+    
+    invoke-static {v12}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
+    
+    move-result-object v12
+    
+    invoke-static {v11, v12},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    
+    :stigma_jump_label_0
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA FOR SINK
     invoke-static {v1, v2}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
 
     .line 279
