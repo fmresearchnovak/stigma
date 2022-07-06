@@ -3,7 +3,7 @@ Stigma  is a framework for modifying / instrumenting commodity Android applicati
 
 
 # Usage
-###Setting the PATH environment variable (Windows only)
+### Setting the PATH environment variable (Windows only)
 In the taskbar, search for and select "Edit the system environment variables":
 <br/>![image](https://user-images.githubusercontent.com/107204379/177008087-cfa6b257-a629-40fe-a836-54a997240b11.png)
 
@@ -19,7 +19,7 @@ In the User variables, choose to "Edit" your "Path" variable:
 "Browse" and locate the folder containing your install of openjdk-11-jdk, and hence its "bin" folder, which contains both "keytool" and "jarsigner":
 <br/>![image](https://user-images.githubusercontent.com/107204379/177006414-08fab1f6-a1da-48c1-a172-6bce6887da4a.png)
 
-###Obtaining a modified APK
+### Obtaining a modified APK file
 Download an APK file to be run through Stigma. We recommend downloading from [https://www.apkmirror.com](https://www.apkmirror.com/) or [https://f-droid.org](https://f-droid.org/). 
 
 Change the working directory to the folder containing Stigma.py by entering the following on the command line:
@@ -31,7 +31,7 @@ Next, to run Stigma, do:
 `python3 Stigma.py /path/to/application.apk`
 
 <br/>
-A new APK file should be generated (and signed): `Tracked_application.apk` which can be installed / run on a device:
+A new APK file should be generated (and signed): Tracked_application.apk which can be installed / run on a device:
 
 `adb install -r Tracked_application.apk`
 
@@ -45,14 +45,14 @@ The user can then check the logcat for such `STIGMA` messages using Android Stud
 ### Limitations
 Stigma has many limitations.  It can only track very limited sources of sensitive information (GPS, IMEI, Device Phone Number) and it can lose track of that sensitive information as the target application operates.  Additionally, the detection of network connections / transmission is very primitive and may not catch many instances.  Extensive future research and improvments are ongoing.
 
-Stigma is currently ``beta'' software.  Numerous bugs and limitations exist, which limit broad compatibility with many Android apps.  It is intended to be a tool for computer science researchers working in (a) smali byte-code instrumentation or (b) dynamic information flow tracking.
+Stigma is currently "beta" software.  Numerous bugs and limitations exist, which limit broad compatibility with many Android apps.  It is intended to be a tool for computer science researchers working in (a) smali byte-code instrumentation or (b) dynamic information flow tracking.
 
 
 ### Necessary Dependencies
 * Linux, MacOS or Windows environment
 * python3
 * apktool (available in Ubuntu repository ```apt install apktool``` and here: [https://ibotpeaches.github.io/Apktool/](https://ibotpeaches.github.io/Apktool/))
-* openjdk-11-jdk (available at [https://docs.microsoft.com/en-us/java/openjdk/download](https://docs.microsoft.com/en-us/java/openjdk/download))
+* openjdk-11-jdk or newer (latest version available at [https://docs.microsoft.com/en-us/java/openjdk/download](https://docs.microsoft.com/en-us/java/openjdk/download))
   * keytool (provided by above Ubuntu package and install)
   * jarsigner (provided by above Ubuntu package and install)
 * adb (available in Ubuntu repository ```apt install adb``` and in the homebrew repository ```brew install android-platform-tools``` As well as [https://www.lifewire.com/android-debug-bridge-adb-4149410](https://www.lifewire.com/android-debug-bridge-adb-4149410))
@@ -62,13 +62,12 @@ Stigma is currently ``beta'' software.  Numerous bugs and limitations exist, whi
 * matplotlib version 3.1.2 (we recommend installing via pip3; see below).  Available in Ubuntu repository ```apt install python3-matplotlib```. Matplotlib source code is available here: [https://matplotlib.org/](https://matplotlib.org/)
 
 Recommended installation method for networkx and matplotlib is to use `pip3`. Enter the following on the command line:
-
 ```pip3 install networkx```
 ```pip3 install matplotlib```
 
 ### Optional Dependencies
 * pydot version 1.2.3 python3 module - to see control flow graphs ( `ControlFlowGraph.show()` ) (available in Ubuntu repository under python3-pydot)
-* pip3 - to install other dependencies easily (available in Ubuntu reposiroty under python-pip3)
+* pip3 - to install other dependencies easily (available in Ubuntu repository under python-pip3). If you're running python 3.4+, you automatically have `pip3` and hence, do not need to install it.
 
 
 # Utilities and Auxiliary Programs
