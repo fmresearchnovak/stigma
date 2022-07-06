@@ -3,7 +3,30 @@ Stigma  is a framework for modifying / instrumenting commodity Android applicati
 
 
 # Usage
-Enter the following on your command line
+###Setting the PATH environment variable (Windows only)
+In the taskbar, search for and select "Edit the system environment variables":
+<br/>![image](https://user-images.githubusercontent.com/107204379/177008087-cfa6b257-a629-40fe-a836-54a997240b11.png)
+
+
+Select "Environmental Variables...":
+<br/>![image](https://user-images.githubusercontent.com/107204379/177005885-582f066b-6f07-4106-87dd-93f9ae8c33e4.png)
+<br/>
+
+In the User variables, choose to "Edit" your "Path" variable:
+<br/>![image](https://user-images.githubusercontent.com/107204379/177005926-2cb10396-a6ce-49aa-b5d6-91b495351cbc.png)
+<br/>
+
+"Browse" and locate the folder containing your install of openjdk-11-jdk, and hence its "bin" folder, which contains both "keytool" and "jarsigner":
+<br/>![image](https://user-images.githubusercontent.com/107204379/177006414-08fab1f6-a1da-48c1-a172-6bce6887da4a.png)
+
+###Obtaining a modified APK
+Download an APK file to be run through Stigma. We recommend downloading from [https://www.apkmirror.com](https://www.apkmirror.com/) or [https://f-droid.org](https://f-droid.org/). 
+
+Change the working directory to the folder containing Stigma.py by entering the following on the command line:
+<br/>
+`cd path/to/folder/containing/stigma`
+
+Next, to run Stigma, do:
 <br/>
 `python3 Stigma.py /path/to/application.apk`
 
@@ -26,19 +49,19 @@ Stigma is currently ``beta'' software.  Numerous bugs and limitations exist, whi
 
 
 ### Necessary Dependencies
-* Linux or MacOS environment.  Stigma might be compatible with Windows as well, but is untested.
+* Linux, MacOS or Windows environment
 * python3
 * apktool (available in Ubuntu repository ```apt install apktool``` and here: [https://ibotpeaches.github.io/Apktool/](https://ibotpeaches.github.io/Apktool/))
-* openjdk-11-jdk
-  * keytool (provided by above Ubuntu package)
-  * jarsigner (provided by above Ubuntu package)
-* adb (available in Ubuntu repository ```apt install adb``` and in the homebrew repository ```brew install android-platform-tools``` As well as [https://www.lifewire.com/android-debug-bridge-adb-4149410](https://www.lifewire.com/android-debug-bridge-adb-4149410)
+* openjdk-11-jdk (available at [https://docs.microsoft.com/en-us/java/openjdk/download](https://docs.microsoft.com/en-us/java/openjdk/download))
+  * keytool (provided by above Ubuntu package and install)
+  * jarsigner (provided by above Ubuntu package and install)
+* adb (available in Ubuntu repository ```apt install adb``` and in the homebrew repository ```brew install android-platform-tools``` As well as [https://www.lifewire.com/android-debug-bridge-adb-4149410](https://www.lifewire.com/android-debug-bridge-adb-4149410))
   * official adb documentation: [https://developer.android.com/studio/command-line/adb](https://developer.android.com/studio/command-line/adb)
-* aapt (available in Ubuntu repository ```apt install aapt```)
-* networkx version 2.5.1 (we recommend installing via pip3; see below).  Available in Ubuntu repository ```apt install python3-networkx``` networkx source code is available here: [https://github.com/networkx/networkx](https://github.com/networkx/networkx)
-* matplotlib version 3.1.2 (we recommend installing via pip3; see below).  Available in Ubuntu repository ```apt install python3-matplotlib```  matplotlib source code is available here: [https://matplotlib.org/](https://matplotlib.org/)
+* aapt (available in Ubuntu repository ```apt install aapt``` and at [https://developer.android.com/studio/command-line/aapt2#download_aapt2](https://developer.android.com/studio/command-line/aapt2#download_aapt2))
+* networkx version 2.5.1 (we recommend installing via pip3; see below).  Available in Ubuntu repository ```apt install python3-networkx```. Networkx source code is available here: [https://github.com/networkx/networkx](https://github.com/networkx/networkx)
+* matplotlib version 3.1.2 (we recommend installing via pip3; see below).  Available in Ubuntu repository ```apt install python3-matplotlib```. Matplotlib source code is available here: [https://matplotlib.org/](https://matplotlib.org/)
 
-Recommended installation method for networkx and matplotlib is to use `pip3`
+Recommended installation method for networkx and matplotlib is to use `pip3`. Enter the following on the command line:
 
 ```pip3 install networkx```
 ```pip3 install matplotlib```
@@ -46,29 +69,6 @@ Recommended installation method for networkx and matplotlib is to use `pip3`
 ### Optional Dependencies
 * pydot version 1.2.3 python3 module - to see control flow graphs ( `ControlFlowGraph.show()` ) (available in Ubuntu repository under python3-pydot)
 * pip3 - to install other dependencies easily (available in Ubuntu reposiroty under python-pip3)
-
-
-
-# Troubleshooting
-
-### APKTOOL issues
-Suppose when re-building (apktool b) there is an error of this nature:
-
-```
-	W: /home/username/tmp/Leaks/AndroidManifest.xml:1: error: No resource identifier found for attribute 'compileSdkVersion' in package 'android'
-	W: 
-	W: /home/username/tmp/Leaks/AndroidManifest.xml:1: error: No resource identifier found for attribute 'compileSdkVersionCodename' in package 'android'
-	W: 
-	W: /home/username/tmp/Leaks/AndroidManifest.xml:7: error: No resource identifier found for attribute 'appComponentFactory' in package 'android'
-	W: 
-	brut.androlib.AndrolibException: brut.common.BrutException: could not exec (exit code = 1): [/tmp/brut_util_Jar_10922350772426511021.tmp, p, --forced-package-id, 127, --min-sdk-version, 21, --target-sdk-version, 28, --version-code, 1, --version-name, 1.2.1, --no-version-vectors, -F, /tmp/APKTOOL5520383323475068535.tmp, -e, /tmp/APKTOOL1571483018594600943.tmp, -0, arsc, -I, /home/username/.local/share/apktool/framework/1.apk, -S, /home/username/tmp/Leaks/res, -M, /home/username/tmp/Leaks/AndroidManifest.xml]
-```
-
-Then you should do: 
-
-`rm -r ~/.local/share/apktool/`
-
-Also, it may be necessary to NOT use the Ubuntu provided version of apktool.  Use the publicly available one instead: [https://ibotpeaches.github.io/Apktool/](https://ibotpeaches.github.io/Apktool/)
 
 
 # Utilities and Auxiliary Programs
