@@ -897,8 +897,8 @@ def _sink_instrumentation(scd, m, code_unit, free_reg):  # all sinks
     cur_line = code_unit[0]
 
     results = StigmaStringParsingLib.get_v_and_p_numbers(cur_line)
-    target_reg = results[1]
-    taint_loc = storage_handler.add_taint_location(scd.class_name, m.get_name(), target_reg)
+    #target_reg = results[1]
+    #taint_loc = storage_handler.add_taint_location(scd.class_name, m.get_name(), target_reg)
 
     # TODO: re-write the below using only 3 registers (or fewer
     # if possible
@@ -912,31 +912,28 @@ def _sink_instrumentation(scd, m, code_unit, free_reg):  # all sinks
     # This is a smali.LABEL
     jmp_label = m.make_new_jump_label()
 
-    block.extend([smali.MOVE_16(reg_b, reg_a), #Reg_a holds the merged value, move it to b to keep it
+    block.extend([smali.CONST_16(reg_b, "0x0"), #Reg_a holds the merged value, move it to b to keep it
                 smali.BLANK_LINE(),
-                smali.CONST_16(reg_a, "0x0"),
+                smali.CMPG_FLOAT(reg_b, reg_a, reg_b),
                 smali.BLANK_LINE(),
-                smali.CMPL_FLOAT(reg_a, reg_b, reg_a),
+                smali.IF_EQZ(reg_b, repr(jmp_label)),
                 smali.BLANK_LINE(),
-                smali.IF_EQZ(reg_a, repr(jmp_label)),
+                smali.INVOKE_STATIC([reg_a], "Ljava/lang/String;->valueOf(F)Ljava/lang/String;"),
                 smali.BLANK_LINE(),
-                smali.CONST_STRING(reg_a, "\"STIGMAZZ\""),
+                smali.MOVE_RESULT_OBJECT(reg_a),
                 smali.BLANK_LINE(),
-                smali.CONST_STRING(reg_b, "\"LEAK OCCURING!\""),
+                smali.CONST_STRING(reg_b, "\"STIGMA\""),
                 smali.BLANK_LINE(),
-                smali.LOG_D(reg_a, reg_b),
+                smali.LOG_D(reg_b, reg_a),
                 smali.BLANK_LINE(),
-                smali.SGET(reg_b, taint_loc),
+                smali.CONST_STRING(reg_a, "\"LEAK OCCURING!\""),
                 smali.BLANK_LINE(),
-                smali.INVOKE_STATIC([reg_b], "Ljava/lang/String;->valueOf(F)Ljava/lang/String;"),
-                smali.BLANK_LINE(),
-                smali.MOVE_RESULT_OBJECT(reg_b),
-                smali.BLANK_LINE(),
-                smali.LOG_D(reg_a, reg_b),
+                smali.LOG_D(reg_b, reg_a),
                 smali.BLANK_LINE(),
                 jmp_label,
                 smali.BLANK_LINE(),
-                smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA FOR SINK")])
+                smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA FOR SINK"),
+                smali.BLANK_LINE()])
 
     block.extend(code_unit)
     return block

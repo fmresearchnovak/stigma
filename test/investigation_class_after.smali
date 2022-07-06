@@ -45,8 +45,7 @@
     
     # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
-    
-    # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
+    # IFT INSTRUCTIONS ADDED BY STIGMA FOR SINK
     
     const/16 v10, 0x0
     
@@ -74,12 +73,31 @@
     
     add-float v10, v10, v11
     
-    sput v10, Lnet/stigmastorage/StorageClass1;->com_microsoft_office_lenssdk_utils_FileUtils_getRealPath_v6:F
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
+    const/16 v11, 0x0
+    
+    cmpg-float v11, v10, v11
+    
+    if-eqz v11, :stigma_jump_label_0
+    
+    invoke-static {v10}, Ljava/lang/String;->valueOf(F)Ljava/lang/String;
+    
+    move-result-object v10
+    
+    const-string v11, "STIGMA"
+    
+    invoke-static {v11, v10},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    
+    const-string v10, "LEAK OCCURING!"
+    
+    invoke-static {v11, v10},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    
+    :stigma_jump_label_0
+    
+    # IFT INSTRUCTIONS ADDED BY STIGMA FOR SINK
     
     invoke-virtual/range {v0 .. v5}, Landroid/content/ContentResolver;->query(Landroid/net/Uri;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;)Landroid/database/Cursor;
-    
+
     move-result-object v6
 
     
