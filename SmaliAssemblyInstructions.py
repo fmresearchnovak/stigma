@@ -1931,6 +1931,40 @@ class LABEL(SmaliAssemblyInstruction):
         # LABELS are weird.  If you change this code be careful of compatibility 
         # with instructions such as IF_EQZ that use a LABEL in-line
         return ":stigma_jump_label_" + str(self.n)
+        
+class TRY_START_LABEL(LABEL):
+    # e.g., :try_start_stigma_0
+    def __repr__(self):
+        return ":try_start_stigma_" + str(self.n) 
+        
+class TRY_END_LABEL(LABEL):
+    # e.g., :try_end_stigma_0
+    def __repr__(self):
+        return ":try_end_stigma_" + str(self.n)
+        
+class CATCH_LABEL(LABEL):
+    # e.g., :catch_stigma_0
+    def __repr__(self):
+        return ":catch_stigma_" + str(self.n)
+        
+        
+class CATCH_DIRECTIVE(SmaliAssemblyInstruction):
+    #  # .catch Lcom/fasterxml/jackson/core/JsonProcessingException; {:try_start_0 .. :try_end_0} :catch_0
+    def __init__(self, exception_type_id, start_label, end_label, catch_label):
+        self.exception_type_id = exception_type_id
+        self.start_label = start_label
+        self.end_label = end_label
+        self.catch_label = catch_label
+        
+    def __repr__(self):
+        # exception_type_id is cast with str() and not repr() because it
+        # is a string and not another SmaliAssemblyInstruction (or subtype) object
+        return ".catch " + str(self.exception_type_id) + " {" + repr(self.start_label) + " .. " + repr(self.end_label) + "} " + repr(self.catch_label)
+        
+        
+        
+        
+    
 
 
 class LOG_D(INVOKE_STATIC):
@@ -2242,6 +2276,28 @@ def main():
     
     asm_obj = SmaliAssemblyInstruction.from_line("check-cast v1, [Ljava/lang/String;")
     assert(str(asm_obj.get_register_type_implications()) == "{v1: [Ljava/lang/String;}")
+    
+    
+    print("\ttry catch labels test...")
+    try_start_label_asm_obj = TRY_START_LABEL(4)
+    num = try_start_label_asm_obj.n
+    assert(num == 4)
+    assert(str(try_start_label_asm_obj) == "    :try_start_stigma_4\n")
+    
+    try_end_label_asm_obj = TRY_END_LABEL(num)
+    assert(try_end_label_asm_obj.n == 4)
+    assert(str(try_end_label_asm_obj) == "    :try_end_stigma_4\n")
+    
+    catch_label_asm_obj = CATCH_LABEL(num)
+    assert(catch_label_asm_obj.n == 4)
+    assert(str(catch_label_asm_obj) == "    :catch_stigma_4\n")
+    
+    type_id = "Ljava/io/IOException;"
+    catch_directive_asm_obj = CATCH_DIRECTIVE(type_id, try_start_label_asm_obj, try_end_label_asm_obj, catch_label_asm_obj)
+    #print(str(catch_directive_asm_obj))
+    #print("    .catch Ljava/io/IOException; {:try_start_stigma_4 .. :try_end_stigma_4} :catch_stigma_4\n")
+    assert(str(catch_directive_asm_obj) == "    .catch Ljava/io/IOException; {:try_start_stigma_4 .. :try_end_stigma_4} :catch_stigma_4\n")
+    
     
     
     print("ALL SmaliAssemblyInstructions TESTS PASSED!")

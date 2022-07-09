@@ -13,6 +13,7 @@ import TaintStorageHandler
 
 import TaintTrackingInstrumentationPlugin
 import SimpleTaintTrackingPlugin
+import JSONTrailPlugin
 
 # https://docs.python.org/3/library/tempfile.html
 temp_file = tempfile.TemporaryDirectory(prefix="apkOutput_")
@@ -46,6 +47,7 @@ def dumpApk():
 def importPlugins():
     TaintTrackingInstrumentationPlugin.main()
     #SimpleTaintTrackingPlugin.main()
+    #JSONTrailPlugin.main()
 
     # p = os.path.dirname(os.path.realpath(__file__))
     # plugins_path = os.path.join(p,"plugins.txt")
