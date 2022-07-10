@@ -347,6 +347,11 @@ class SmaliMethodDef:
 		p_num = int(p_register[1:])
 		corresponding_v_num = locals_num + p_num
 		return "v" + str(corresponding_v_num)
+		
+		
+
+		
+		
 
 
 	def dereference_p_to_v_numbers(self, line):
@@ -801,6 +806,7 @@ class SmaliMethodDef:
 		# The lines of code that we add (instrument) will be instances of smali.SmaliAssemblyInstruction
 		# the lines of code that are existing already will be type string
 		# So, this check prevents us from instrumenting our new, additional code
+		#print("line: " + str(line) + "  type:" + str(type(line)) + "   isinstance smali.SmaliAssemblyInstruction:" + str(isinstance(line, smali.SmaliAssemblyInstruction)))
 		if isinstance(line, smali.SmaliAssemblyInstruction):
 			return False
 

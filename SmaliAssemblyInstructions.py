@@ -2299,6 +2299,10 @@ def main():
     assert(str(catch_directive_asm_obj) == "    .catch Ljava/io/IOException; {:try_start_stigma_4 .. :try_end_stigma_4} :catch_stigma_4\n")
     
     
+    asm_obj = INVOKE_VIRTUAL_RANGE(["v0", "p1"], "Lcom/fasterxml/jackson/databind/ObjectMapper;->writeValueAsString(Ljava/lang/Object;)Ljava/lang/String;")
+    assert(str(asm_obj) == "    invoke-virtual/range {v0 .. p1}, Lcom/fasterxml/jackson/databind/ObjectMapper;->writeValueAsString(Ljava/lang/Object;)Ljava/lang/String;\n")
+    
+    
     
     print("ALL SmaliAssemblyInstructions TESTS PASSED!")
 
