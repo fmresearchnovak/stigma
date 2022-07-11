@@ -17,6 +17,16 @@ import SimpleTaintTrackingPlugin
 # https://docs.python.org/3/library/tempfile.html
 temp_file = tempfile.TemporaryDirectory(prefix="apkOutput_")
 
+def aapt2_helper():
+    for root, dirs, files in os.walk(temp_file.name):
+        if "app-metadata.properties" in files:
+            fh = open(os.path.join(root, "app-metadata.properties"), "r")
+            lines = fh.readlines()
+            target = lines[1].split("=")
+            gradle_version = int(target[1][0])
+            if gradle_version >= 3:
+                return True
+    return False
 
 def getOriginalAPKPath():
     if (not os.path.exists(sys.argv[1])):
@@ -342,7 +352,7 @@ def rebuildApk():
     # was found to be necessary in order to re-build myfitnesspal
     # to avoid error: invalid resource directory name: ...\res navigation
     # https://github.com/iBotPeaches/Apktool/issues/2219
-    use_aapt2 = "--use-aapt2" in sys.argv[2:]
+    use_aapt2 = aapt2_helper()
     if (use_aapt2):
         rebuildCMD = ["java", "-jar", "include/apktool.jar", "b", temp_file.name, "--use-aapt2", "-o", getNewAPKName()]
     else:
