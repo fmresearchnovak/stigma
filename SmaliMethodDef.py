@@ -168,6 +168,7 @@ class SmaliMethodDef:
 		self.raw_text = text
 		
 		self.num_jumps = 0 # not used except for a sanity check
+		self.num_try_start_jumps = 0
 		
 		class_name = "Lunknownclass;"
 		if(scd != None):
@@ -346,6 +347,11 @@ class SmaliMethodDef:
 		p_num = int(p_register[1:])
 		corresponding_v_num = locals_num + p_num
 		return "v" + str(corresponding_v_num)
+		
+		
+
+		
+		
 
 
 	def dereference_p_to_v_numbers(self, line):
@@ -467,6 +473,12 @@ class SmaliMethodDef:
 	def make_new_jump_label(self):
 		res = smali.LABEL(self.num_jumps)
 		self.num_jumps += 1
+		return res
+		
+	
+	def make_new_try_start_label(self):
+		res = smali.TRY_START_LABEL(self.num_try_start_jumps)
+		self.num_try_start_jumps += 1
 		return res
 		
 		
@@ -794,6 +806,7 @@ class SmaliMethodDef:
 		# The lines of code that we add (instrument) will be instances of smali.SmaliAssemblyInstruction
 		# the lines of code that are existing already will be type string
 		# So, this check prevents us from instrumenting our new, additional code
+		#print("line: " + str(line) + "  type:" + str(type(line)) + "   isinstance smali.SmaliAssemblyInstruction:" + str(isinstance(line, smali.SmaliAssemblyInstruction)))
 		if isinstance(line, smali.SmaliAssemblyInstruction):
 			return False
 

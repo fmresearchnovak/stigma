@@ -2,10 +2,10 @@
 import os
 
 import SmaliClassDef
-import TaintTrackingInstrumentationPlugin
+import JSONTrailPlugin as plugin
 import Instrumenter
 
-path = os.path.join("test", "getRealPath.smali")
+path = os.path.join("test", "investigation_class.smali")
 print("Input File: " + str(path))
 scd = SmaliClassDef.SmaliClassDef(path)
 first_method = scd.methods[0]
@@ -18,7 +18,7 @@ print(first_method.get_register_meta_data())
 
 # def run plugin's main so it can signup so 
 # that MAX_DESIRED_NUM_REGISTERS is not 0
-TaintTrackingInstrumentationPlugin.main() 
+plugin.main() 
 scd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
 
 print()

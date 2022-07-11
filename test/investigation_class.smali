@@ -48,6 +48,10 @@
     new-instance v1, Ljava/net/URL;
 
     const-string v2, "www.google.com"
+    
+    new-instance v3, Landroid/location/Location;
+
+    invoke-direct {v3, v2}, Landroid/location/Location;-><init>(Ljava/lang/String;)V
 
     invoke-direct {v1, v2}, Ljava/net/URL;-><init>(Ljava/lang/String;)V
     
