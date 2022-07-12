@@ -5,10 +5,29 @@ import StigmaStringParsingLib
 
 import SmaliAssemblyInstructions as smali
 
+INVOKE_INSTRUCTIONS = ["invoke-virtual",
+						"invoke-super",
+						"invoke-direct",
+						"invoke-static",
+						"invoke-interface",
+						"invoke-virtual/range",
+						"invoke-super/range",
+						"invoke-direct/range",
+						"invoke-static/range",
+						"invoke-interface/range"]
+IPUT_INSTRUCTIONS = ["iput", 
+					"iput-quick",
+					"iput-wide-quick", 
+					"iput-object-quick",
+					"iput-wide",
+					"iput-object",
+					"iput-boolean",
+					"iput-byte",
+					"iput-char",
+					"iput-short"]
 OBJECT_MAPPER_TYPE_ID = "Lcom/fasterxml/jackson/databind/ObjectMapper;"
-
 # a list of SmaliType.ObjectReference objects
-TARGET_CLASSES = [SmaliTypes.from_string("Landroid/location/Location;")]
+TARGET_CLASSES = []
 
 
 def _check_is_low_numbered(smd, reg):
@@ -68,7 +87,8 @@ def _do_jackson_json_dump(scd, smd, target_reg, free_regs):
 	block.append(try_catch_label)
 	
 	return block
-
+	
+	
 def new_method_handler(scd, smd):
 	# I can use v0 and v1 since this instrumentation plugin
 	# signs up for at least 2 free regs (see it's main())
@@ -100,6 +120,7 @@ def new_method_handler(scd, smd):
 			
 	return []
 	
+	
 def new_instance_handler_deprecated(scd, smd, code_unit, free_regs):
 	# free_regs length should be 2
 	
@@ -126,6 +147,8 @@ def new_instance_handler(scd, smd, code_unit, free_regs):
 	asm_obj = smali.SmaliAssemblyInstruction.from_line(code_unit[0])
 	#print("types spec:" + str(asm_obj.types_spec))
 	
+	# was too lazy to use TARGET_CLASSES here since we have to parse out
+	# the object from the call to <init>
 	if(asm_obj.types_spec in ["Landroid/location/Location;-><init>(Ljava/lang/String;)V"]):
 		block = _do_jackson_json_dump(scd, smd, asm_obj.register_list[0], free_regs)
 		comment_chunk = Instrumenter.make_comment_block("for constructor / <init>")
@@ -135,9 +158,36 @@ def new_instance_handler(scd, smd, code_unit, free_regs):
 	return code_unit
 	
 	
+def check_cast_handler(scd, smd, code_unit, free_regs):
+	asm_obj = smali.SmaliAssemblyInstruction.from_line(code_unit[0])
+	
+	if(asm_obj.value_arg in TARGET_CLASSES):
+		block = _do_jackson_json_dump(scd, smd, asm_obj.rd, free_regs)
+		comment_chunk = Instrumenter.make_comment_block("for check-cast")
+		block = code_unit + comment_chunk + block + comment_chunk
+		return block
+	
+	return code_unit
+	
+	
+def iput_handler(scd, smd, code_unit, free_regs):
+	asm_obj = smali.SmaliAssemblyInstruction.from_line(code_unit[0])
+	
+	#print("iput handler asm_obj.class_name: " + str(asm_obj.class_name) + "  it's in there: " + str(asm_obj.class_name in TARGET_CLASSES))
+	#print("TARGET_CLASSES: " + str(TARGET_CLASSES))
+	if(asm_obj.class_name in TARGET_CLASSES):
+		block = _do_jackson_json_dump(scd, smd, asm_obj.rd, free_regs)
+		comment_chunk = Instrumenter.make_comment_block("for iput / object modification")
+		block = code_unit + comment_chunk + block + comment_chunk
+		return block
+	
+	return code_unit
+	
+	
 	
 
 def main():
+
 	
 	# this is probably a better place to write
 	# smali files into the project (such as jackson
@@ -145,6 +195,8 @@ def main():
 	
 	# getting / setting the target object from the user
 	# should probably be done here!
+	global TARGET_CLASSES
+	TARGET_CLASSES = [SmaliTypes.from_string("Landroid/location/Location;")]
 	
 	# this can create objects if the method is a callback
 	# e.g., onLocationChanged
@@ -163,16 +215,24 @@ def main():
 	#Instrumenter.sign_up("new-instance", new_instance_handler, 2, True)
 	
 	Instrumenter.sign_up("invoke-direct", new_instance_handler, 2, True)
+	Instrumenter.sign_up("check-cast", check_cast_handler, 2, True)
+	
+	for instruction in IPUT_INSTRUCTIONS:
+		Instrumenter.sign_up(instruction, iput_handler, 2, True)
+	
 	
 	''' not yet implemented
-	Instrumenter.sign_up("check-cast", new_instance_handler, 2)
 	
 	# these modify the state of the object
-	Instrumenter.sign_up("iput-*", put-handler, 2)
 	Instrumenter.sign_up("sput-*", put_handler, 2)
 	
-	# these can modify the state of the object
+	# calls on the object instance itself can modify the state of the 
+	# object of course.  For example: StringBuilder.append()
+	# invoke-virtual {v1, p0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+	# this should actually cover the invoke-direct handler setup above
+	# 
 	Instrumenter.sign_up("invoke-*", invoke_handler, 2, True)
+	
 	'''
 	
 
