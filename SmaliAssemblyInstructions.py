@@ -200,6 +200,26 @@ class _ImplicitFirstRegisterInstruction():
         regs = self.get_registers()
         return [regs[0] + 1]
         
+
+class _MethodCallInstruction():
+    
+    def get_fully_qualified_call(self):
+        return self.types_spec
+    
+    def get_owning_class_name(self):
+        parts = self.types_spec.split("->")
+        return parts[0]
+        
+    def get_method_name(self):
+        parts = self.types_spec.split("->")
+        return parts[1]
+        
+    def get_method_name_only(self):
+        parts = self.types_spec.split("->")
+        name_only = parts[1].split("(")[0]
+        return name_only
+        
+        
         
 class _ThirtyTwoBit_Parameters():
     # instruction classes that extend this type
@@ -577,6 +597,7 @@ class NEW_INSTANCE(SmaliAssemblyInstruction):
 
 
 class ARRAY_LENGTH(SmaliAssemblyInstruction):
+    # e.g., array-length v0, p2
     def __init__(self, reg_dest, reg_array_ref):
         self.rd = SmaliRegister(reg_dest)
         self.rar = SmaliRegister(reg_array_ref)
@@ -597,6 +618,7 @@ class ARRAY_LENGTH(SmaliAssemblyInstruction):
     
         
 class NEW_ARRAY(SmaliAssemblyInstruction):
+    # e.g., new-array v3, v5, [Ljava/lang/String;
     def __init__(self, reg_dest, reg_size, type_id):
         self.rd = SmaliRegister(reg_dest)
         self.rs = SmaliRegister(reg_size)
@@ -640,6 +662,7 @@ class _PARAMETER_RANGE_INSTRUCTION(SmaliAssemblyInstruction):
         self.begin_reg = SmaliRegister(element_list[0])
         self.end_reg = SmaliRegister(element_list[-1])
         self.types_spec = types_spec
+        self.register_list = self.get_registers()
         
     def get_registers(self):
         
@@ -659,6 +682,7 @@ class _PARAMETER_RANGE_INSTRUCTION(SmaliAssemblyInstruction):
 
 
 class FILLED_NEW_ARRAY(_PARAMETER_LIST_INSTRUCTION):
+    # e.g., filled-new-array {v0, v1, v2, v3}, [Ljava/lang/String;
     def opcode(self):
         return "filled-new-array"
         
@@ -670,6 +694,7 @@ class FILLED_NEW_ARRAY(_PARAMETER_LIST_INSTRUCTION):
         
 
 class FILLED_NEW_ARRAY_RANGE(_PARAMETER_RANGE_INSTRUCTION):
+    # e.g., filled-new-array/range {v10 .. v16}, [Ljava/lang/String;
     def opcode(self):
         return "filled-new-array/range"
         
@@ -682,6 +707,7 @@ class FILLED_NEW_ARRAY_RANGE(_PARAMETER_RANGE_INSTRUCTION):
         
 
 class FILL_ARRAY_DATA(_SINGLE_DEST_REGISTER_INSTRUCTION):
+    # e.g., fill-array-data v2, :array_ea
     def opcode(self):
         return "fill-array-data"
     
@@ -1250,51 +1276,50 @@ class SPUT_CHAR(_S_INSTRUCTION):
 class SPUT_SHORT(_S_INSTRUCTION):
     def opcode(self):
         return "sput-short"
+        
 
-class INVOKE_VIRTUAL(_PARAMETER_LIST_INSTRUCTION):
+class INVOKE_VIRTUAL(_MethodCallInstruction, _PARAMETER_LIST_INSTRUCTION):
     # I was too lazy to implement the get_register_type_implications
     # function for the below instructions
     # It could be done with the SmaliSignature class from SmaliMethodDef.py
     def opcode(self):
         return "invoke-virtual"
 
-class INVOKE_SUPER(_PARAMETER_LIST_INSTRUCTION):
+class INVOKE_SUPER(_MethodCallInstruction, _PARAMETER_LIST_INSTRUCTION):
     def opcode(self):
         return "invoke-super"
 
-class INVOKE_DIRECT(_PARAMETER_LIST_INSTRUCTION):
+class INVOKE_DIRECT(_MethodCallInstruction, _PARAMETER_LIST_INSTRUCTION):
     def opcode(self):
         return "invoke-direct"
 
-class INVOKE_STATIC(_PARAMETER_LIST_INSTRUCTION):
+class INVOKE_STATIC(_MethodCallInstruction, _PARAMETER_LIST_INSTRUCTION):
+    # e.g., invoke-static {v2}, Lcom/google/ads/interactivemedia/pal/NonceLoader;->zza(Ljava/lang/String;)Ljava/lang/String;
     def opcode(self):
         return "invoke-static"
 
-class INVOKE_INTERFACE(_PARAMETER_LIST_INSTRUCTION):
+class INVOKE_INTERFACE(_MethodCallInstruction, _PARAMETER_LIST_INSTRUCTION):
+    # e.g., invoke-interface {v0}, Ljava/util/concurrent/locks/Lock;->lock()V
     def opcode(self):
         return "invoke-interface"
 
-class INVOKE_VIRTUAL(_PARAMETER_LIST_INSTRUCTION):
-    def opcode(self):
-        return "invoke-virtual"
-
-class INVOKE_VIRTUAL_RANGE(_PARAMETER_RANGE_INSTRUCTION):
+class INVOKE_VIRTUAL_RANGE(_MethodCallInstruction, _PARAMETER_RANGE_INSTRUCTION):
     def opcode(self):
         return "invoke-virtual/range"
 
-class INVOKE_SUPER_RANGE(_PARAMETER_RANGE_INSTRUCTION):
+class INVOKE_SUPER_RANGE(_MethodCallInstruction, _PARAMETER_RANGE_INSTRUCTION):
     def opcode(self):
         return "invoke-virtual/range"
 
-class INVOKE_DIRECT_RANGE(_PARAMETER_RANGE_INSTRUCTION):
+class INVOKE_DIRECT_RANGE(_MethodCallInstruction, _PARAMETER_RANGE_INSTRUCTION):
     def opcode(self):
         return "invoke-direct/range"
 
-class INVOKE_STATIC_RANGE(_PARAMETER_RANGE_INSTRUCTION):
+class INVOKE_STATIC_RANGE(_MethodCallInstruction, _PARAMETER_RANGE_INSTRUCTION):
     def opcode(self):
         return "invoke-static/range"
 
-class INVOKE_INTERFACE_RANGE(_PARAMETER_RANGE_INSTRUCTION):
+class INVOKE_INTERFACE_RANGE(_MethodCallInstruction, _PARAMETER_RANGE_INSTRUCTION):
     def opcode(self):
         return "invoke-interface/range"
 
@@ -2278,7 +2303,7 @@ def main():
     assert(str(asm_obj.get_register_type_implications()) == "{v1: [Ljava/lang/String;}")
     
     
-    print("\ttry catch labels test...")
+    print("\ttry catch labels tests...")
     try_start_label_asm_obj = TRY_START_LABEL(4)
     num = try_start_label_asm_obj.n
     assert(num == 4)
@@ -2299,8 +2324,32 @@ def main():
     assert(str(catch_directive_asm_obj) == "    .catch Ljava/io/IOException; {:try_start_stigma_4 .. :try_end_stigma_4} :catch_stigma_4\n")
     
     
-    asm_obj = INVOKE_VIRTUAL_RANGE(["v0", "p1"], "Lcom/fasterxml/jackson/databind/ObjectMapper;->writeValueAsString(Ljava/lang/Object;)Ljava/lang/String;")
-    assert(str(asm_obj) == "    invoke-virtual/range {v0 .. p1}, Lcom/fasterxml/jackson/databind/ObjectMapper;->writeValueAsString(Ljava/lang/Object;)Ljava/lang/String;\n")
+    print("\tget class and method from invoke tests...")
+    try:
+        asm_obj = INVOKE_VIRTUAL_RANGE(["v0", "p1"], "Lcom/fasterxml/jackson/databind/ObjectMapper;->writeValueAsString(Ljava/lang/Object;)Ljava/lang/String;")
+        print("cannot construct an INVOKE_VIRTUAL_RANGE with pX registers.") # see comments below
+        # it is not possible since there is no context to know what p1 alias-es to.
+        # the INVOKE_* instructions try to make self.register_list
+        # since Stigma does grow(), all pX registers will be replaced
+        # so this particular example should never happen when 
+        # running Stigma on a real app
+        assert(False)
+    except ValueError:
+        assert(True)
+        
+    asm_obj = INVOKE_VIRTUAL_RANGE(["v0", "v3"], "Lcom/fasterxml/jackson/databind/ObjectMapper;->writeValueAsString(Ljava/lang/Object;)Ljava/lang/String;")
+    assert(str(asm_obj) == "    invoke-virtual/range {v0 .. v3}, Lcom/fasterxml/jackson/databind/ObjectMapper;->writeValueAsString(Ljava/lang/Object;)Ljava/lang/String;\n")
+    assert(asm_obj.get_owning_class_name() == "Lcom/fasterxml/jackson/databind/ObjectMapper;")
+    assert(asm_obj.get_method_name() == "writeValueAsString(Ljava/lang/Object;)Ljava/lang/String;")
+    assert(asm_obj.get_method_name_only() == "writeValueAsString")
+    assert(asm_obj.register_list == ["v0", "v1", "v2", "v3"])
+    
+    asm_obj = SmaliAssemblyInstruction.from_line("    invoke-direct {v1}, Ljava/lang/StringBuilder;-><init>()V\n")
+    assert(str(asm_obj) == "    invoke-direct {v1}, Ljava/lang/StringBuilder;-><init>()V\n")
+    assert(asm_obj.get_owning_class_name() == "Ljava/lang/StringBuilder;")
+    assert(asm_obj.get_method_name() == "<init>()V")
+    assert(asm_obj.get_method_name_only() == "<init>")
+    assert(asm_obj.register_list == ["v1"])
     
     
     

@@ -799,6 +799,9 @@ def internal_tests():
 def main():
 	
 	internal_tests()
+	if len(sys.argv) == 2:
+		if sys.argv[1] == "--internal-only":
+			exit(0)
 	
 	TaintTrackingInstrumentationPlugin.main()
 	
