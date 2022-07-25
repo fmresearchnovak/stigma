@@ -16,7 +16,11 @@ STRING_GET_LATITUDE = "Landroid/location/Location;->getLatitude()D"
 STRING_GET_LONGITUDE = "Landroid/location/Location;->getLongitude()D"
 storage_handler = TaintStorageHandler.get_instance()
 
-
+#global
+fh = open("Sinks.txt", "r")
+lines = fh.readlines()
+lines = set(lines)
+fh.close()
 
 def NEW_ARRAY_instrumentation(scd, m, code_unit, free_reg):
     #new-array vx,vy,type_id ; puts length vy array into vx
@@ -997,10 +1001,6 @@ def IF_instrumentation(scd, m, code_unit, free_reg): # if statement implicit flo
     
 
 def _if_is_a_sink_(line):
-    #Note: can be faster to change to hash_map or set to optimize
-    fh = open("Sinks.txt", "r")
-    lines = fh.readlines()
-    fh.close()
     for fh_line in lines:
         if fh_line in line:
             return True

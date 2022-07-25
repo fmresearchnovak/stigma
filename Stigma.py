@@ -14,7 +14,7 @@ import TaintStorageHandler
 import TaintTrackingInstrumentationPlugin
 import SimpleTaintTrackingPlugin
 import JSONTrailPlugin
-
+import distutils.dir_util
 # https://docs.python.org/3/library/tempfile.html
 temp_file = tempfile.TemporaryDirectory(prefix="apkOutput_")
 
@@ -55,9 +55,9 @@ def dumpApk():
 
 
 def importPlugins():
-    TaintTrackingInstrumentationPlugin.main()
+    #TaintTrackingInstrumentationPlugin.main()
     #SimpleTaintTrackingPlugin.main()
-    #JSONTrailPlugin.main()
+    JSONTrailPlugin.main()
 
     # p = os.path.dirname(os.path.realpath(__file__))
     # plugins_path = os.path.join(p,"plugins.txt")
@@ -179,7 +179,7 @@ def runStigma():
 
     print("Stigma ran in %.1f seconds" % (time.time() - start_time))
 
-
+#Entire com/fasterxml folder
 def writeMarkedLocationClass():
     print("Writing MarkedLocation Class")
     new_path = os.path.join(temp_file.name, "smali", "net", "stigma")
@@ -188,6 +188,7 @@ def writeMarkedLocationClass():
     ## For Windows, "copy" is as "cp" for Unix systems.
     ## We write an if statement to check for the os, and use the correct line of code for cmd accordingly
     ## Also in the Windows statement is shell=True
+    distutils.dir_util.copy_tree("smali_lib", os.path.join(temp_file.name, "smali"))
     if (os.name == "nt"):
         cmd = ["copy", "MarkedLocation.smali", new_path]
         completed_process = subprocess.run(cmd, shell=True)

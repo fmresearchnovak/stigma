@@ -210,11 +210,23 @@ def invoke_handler(scd, smd, code_unit, free_regs):
 		block = code_unit + comment_chunk + block + comment_chunk
 		return block
 		
+
+	# invoke - virtual
+	# {v0, v1}, Ljava / lang / String;->equals(Ljava / lang / Object;)Z
+	#
+	# move - result v0
+	#
+	# # IFT INSTRUCTIONS ADDED BY STIGMA for method invocation object modification
+	#
+	# new - instance v6, Lcom / fasterxml / jackson / databind / ObjectMapper;
+	#
+	# invoke - direct {v6}, Lcom / fasterxml / jackson / databind / ObjectMapper;-> < init > ()V
+	# move - object / 16 v7, v0
+	#The string is turned into a boolean (the return value of the equals is stored in v0)
+	#The move object tries to move the boolean and crashes
+
 	# it would maybe be good to look at the return type for TARGET_CLASSES as well
 	return code_unit
-	
-	
-
 def main():
 
 	
@@ -225,7 +237,7 @@ def main():
 	# getting / setting the target object from the user
 	# should probably be done here!
 	global TARGET_CLASSES
-	TARGET_CLASSES = [SmaliTypes.from_string("Landroid/location/Location;")]
+	TARGET_CLASSES = [SmaliTypes.from_string("Landroid/location/Location;"), SmaliTypes.from_string("Ljava/lang/String;")]
 	
 	# this can create objects if the method is a callback
 	# e.g., onLocationChanged
@@ -259,8 +271,9 @@ def main():
 	# calls on the object instance itself can modify the state of the 
 	# object of course.  For example: StringBuilder.append()
 	# invoke-virtual {v1, p0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-	for instruction in RELEVANT_INVOKE_INSTRUCTIONS:
-		Instrumenter.sign_up(instruction, invoke_handler, 2, True)
+
+	#for instruction in RELEVANT_INVOKE_INSTRUCTIONS:
+		#Instrumenter.sign_up(instruction, invoke_handler, 2, True)
 	
 	
 	# these modify the state of many objects?  I'm not sure
