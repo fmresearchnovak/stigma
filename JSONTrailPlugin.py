@@ -1,3 +1,4 @@
+import re
 
 import Instrumenter
 import SmaliTypes
@@ -6,13 +7,18 @@ import StigmaStringParsingLib
 import SmaliAssemblyInstructions as smali
 
 # *static* variants left out of list below
+from SmaliRegister import SmaliRegister
+
 RELEVANT_INVOKE_INSTRUCTIONS = ["invoke-virtual",
 						"invoke-super",
 						"invoke-interface",
+						"invoke-static",
+						"invoke-direct",
 						"invoke-virtual/range",
 						"invoke-super/range",
 						"invoke-direct/range",
-						"invoke-interface/range"]
+						"invoke-interface/range",
+						"invoke-static/range"]
 IPUT_INSTRUCTIONS = ["iput", 
 					"iput-quick",
 					"iput-wide-quick", 
@@ -32,7 +38,7 @@ def _check_is_low_numbered(smd, reg):
 	# it is safe to use the (static) dereference method below
 	# since this function will only be passed a pX type register
 	# in the context of new_method_handler(), which means it may 
-	# bet a pX register BEFORE the move(s) inserted by grow()
+	# put a pX register BEFORE the move(s) inserted by grow()
 	# Furthermore, within this context, it is safe to use the 
 	# smd.dereference method since it is not aware of grow() at all
 	# this is effectively an ugly hack for situations where reg is not 
@@ -43,8 +49,6 @@ def _check_is_low_numbered(smd, reg):
 	
 	
 def _do_jackson_json_dump(scd, smd, target_reg, free_regs):
-	#print("free regs: " + str(free_regs) + "  type: " + str(type(free_regs)))
-	#print("free_regs[0]:  " + str(free_regs[0]) + "  type: " + str(type(free_regs[0])))
 	free_reg_a = free_regs[0]
 	free_reg_b = free_regs[1]
 	
@@ -117,56 +121,8 @@ def new_method_handler(scd, smd):
 			return block
 			
 	return []
-	
-	
-def new_instance_handler_deprecated(scd, smd, code_unit, free_regs):
-	# free_regs length should be 2
-	
-	# probably this is nonsense since we cannot interact
-	# with the object BEFORE it is fully constructed
-	# we need to instrument after this new-instance instruction
-	# AND ALSO after the subsequent call to <init>
-	
-	#target_reg = StigmaStringParsingLib.get_v_and_p_numbers(code_unit[0])[0]
-	asm_obj = smali.SmaliAssemblyInstruction.from_line(code_unit[0])
-	
-	if(asm_obj.type_id in TARGET_CLASSES):
-		block = _do_jackson_json_dump(scd, smd, asm_obj.rd, free_regs)
-		comment_chunk = Instrumenter.make_comment_block("for new-instance")
-		block = code_unit + comment_chunk + block + comment_chunk
-		return block
-	
-	return code_unit
-	
-	
-def new_instance_handler(scd, smd, code_unit, free_regs):
-	# invoke-direct is used to call private methods and the constructor: <init>
-	# e.g., invoke-direct {v3, v2}, Landroid/location/Location;-><init>(Ljava/lang/String;)V
-	# v3 is an instance of the location and v2 contains the first real param (a string)
-	
-	asm_obj = smali.SmaliAssemblyInstruction.from_line(code_unit[0])
-	#print("types spec:" + str(asm_obj.types_spec))
-	
-	class_name = asm_obj.get_owning_class_name()
-	if(class_name in TARGET_CLASSES):
-		
-		method_name_short = asm_obj.get_method_name_only()
-		if(method_name_short == "<init>"): # is a constructor call
-			comment_s = "for constructor / <init>"
-		else:
-			comment_s = "for private method invocation object modification"
-			
-		# the first register is the calling instance since the sign-up
-		# for this does not include static invokes
-		block = _do_jackson_json_dump(scd, smd, asm_obj.register_list[0], free_regs)
-		comment_chunk = Instrumenter.make_comment_block(comment_s)
-		block = code_unit + comment_chunk + block + comment_chunk
-		return block
-			
-	
-		
-	return code_unit
-	
+
+
 	
 def check_cast_handler(scd, smd, code_unit, free_regs):
 	asm_obj = smali.SmaliAssemblyInstruction.from_line(code_unit[0])
@@ -182,9 +138,7 @@ def check_cast_handler(scd, smd, code_unit, free_regs):
 	
 def iput_handler(scd, smd, code_unit, free_regs):
 	asm_obj = smali.SmaliAssemblyInstruction.from_line(code_unit[0])
-	
-	#print("iput handler asm_obj.class_name: " + str(asm_obj.class_name) + "  it's in there: " + str(asm_obj.class_name in TARGET_CLASSES))
-	#print("TARGET_CLASSES: " + str(TARGET_CLASSES))
+
 	if(asm_obj.class_name in TARGET_CLASSES):
 		block = _do_jackson_json_dump(scd, smd, asm_obj.rd, free_regs)
 		comment_chunk = Instrumenter.make_comment_block("for iput object modification")
@@ -200,15 +154,21 @@ def invoke_handler(scd, smd, code_unit, free_regs):
 	# instrumentation below looks at the type of the calling instance which is shown
 	# before the arrow in the fully qualified method call
 	asm_obj = smali.SmaliAssemblyInstruction.from_line(code_unit[0])
-	owning_class = asm_obj.get_owning_class_name()
-	if(owning_class in TARGET_CLASSES):
-		# the first register is the calling instance since the sign-up
-		# for this does not include static invokes
-		instance_reg = asm_obj.register_list[0]
-		block = _do_jackson_json_dump(scd, smd, instance_reg, free_regs)
-		comment_chunk = Instrumenter.make_comment_block("for method invocation object modification")
-		block = code_unit + comment_chunk + block + comment_chunk
-		return block
+	#maybe make smali types out of it?
+	method_name = asm_obj.get_method_name()
+	method_name_list = method_name.split(")")
+	return_type = method_name_list[1]
+	#owning_class = asm_obj.get_owning_class_name()
+	if(return_type in TARGET_CLASSES and len(code_unit) > 1):
+		if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, code_unit[-1])):
+			# the first register is the calling instance since the sign-up
+			# for this does not include static invokes
+			asm_obj_mr = smali.SmaliAssemblyInstruction.from_line(code_unit[-1])
+			instance_reg = asm_obj_mr.get_registers()
+			block = _do_jackson_json_dump(scd, smd, instance_reg[0], free_regs)
+			comment_chunk = Instrumenter.make_comment_block("for method invocation object modification")
+			block = code_unit + comment_chunk + block + comment_chunk
+			return block
 		
 
 	# invoke - virtual
@@ -230,55 +190,22 @@ def invoke_handler(scd, smd, code_unit, free_regs):
 def main():
 
 	
-	# this is probably a better place to write
-	# smali files into the project (such as jackson
-	# or MarkedLocation)
-	
-	# getting / setting the target object from the user
+	# getting / setting the target objects from the user
 	# should probably be done here!
 	global TARGET_CLASSES
 	TARGET_CLASSES = [SmaliTypes.from_string("Landroid/location/Location;"), SmaliTypes.from_string("Ljava/lang/String;")]
 	
 	# this can create objects if the method is a callback
 	# e.g., onLocationChanged
-	# but most methods are not callbacks, they simply are passed
-	# an object that is in the target object group
-	# But, I think I can justify the idea that
-	#  the object being passed might be an interesting
-	# usage-site and worthy of logging 
-	# (it's easier to log than to not log haha!)
 	Instrumenter.sign_up_method_start(new_method_handler)
-	
-	
-	
 
-	# on purpose we don't hook this instructions becuase 
-	# the subsequence call to <init> is actually the important part
-	#Instrumenter.sign_up("new-instance", new_instance_handler, 2, True)
-	
 	# these essentially create objects
-	Instrumenter.sign_up("invoke-direct", new_instance_handler, 2, True)
 	Instrumenter.sign_up("check-cast", check_cast_handler, 2, True)
-	
-	
-	# these essentially modify objects
-	# I'm not sure it's necessary to dump everytime the target 
-	# object(s) are modified
-	for instruction in IPUT_INSTRUCTIONS:
-		Instrumenter.sign_up(instruction, iput_handler, 2, True)
-	
-	
-	# calls on the object instance itself can modify the state of the 
-	# object of course.  For example: StringBuilder.append()
-	# invoke-virtual {v1, p0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
 
-	#for instruction in RELEVANT_INVOKE_INSTRUCTIONS:
-		#Instrumenter.sign_up(instruction, invoke_handler, 2, True)
+	#Any function that returns an object of our choosing(e.g a string), we dump that object
+	for instruction in RELEVANT_INVOKE_INSTRUCTIONS:
+		Instrumenter.sign_up(instruction, invoke_handler, 2, True)
 	
-	
-	# these modify the state of many objects?  I'm not sure
-	# what to do with this so haven't written it yet
-	#Instrumenter.sign_up("sput-*", put_handler, 2)
 	
 	
 
