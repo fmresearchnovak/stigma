@@ -784,7 +784,7 @@ def internal_tests():
 	src_code_with_internal_tests = ["StigmaStringParsingLib.py", 
 		"SmaliMethodDef.py", "SmaliTypes.py", "SafeRegisterCollection.py",
 		"SmaliRegister.py", "SmaliAssemblyInstructions.py",
-		"Instrumenter.py", "TaintStorageHandler.py", "SmaliCodeIterator.py"]
+		"Instrumenter.py", "TaintStorageHandler.py", "SmaliCodeIterator.py", "SmaliClassDef.py"]
 	
 	
 	for src in src_code_with_internal_tests:

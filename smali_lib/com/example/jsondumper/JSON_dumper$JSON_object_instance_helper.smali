@@ -24,7 +24,7 @@
 .method private constructor <init>()V
     .locals 0
 
-    .line 79
+    .line 82
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
 
     return-void
@@ -34,7 +34,7 @@
     .locals 0
     .param p1, "x0"    # Lcom/example/jsondumper/JSON_dumper$1;
 
-    .line 79
+    .line 82
     invoke-direct {p0}, Lcom/example/jsondumper/JSON_dumper$JSON_object_instance_helper;-><init>()V
 
     return-void

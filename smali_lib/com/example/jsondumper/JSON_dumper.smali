@@ -246,12 +246,13 @@
 
     invoke-static {v0, v7}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     :try_end_0
-    .catch Lcom/fasterxml/jackson/core/JsonProcessingException; {:try_start_0 .. :try_end_0} :catch_3
-    .catch Ljava/io/FileNotFoundException; {:try_start_0 .. :try_end_0} :catch_2
-    .catch Ljava/io/SyncFailedException; {:try_start_0 .. :try_end_0} :catch_1
-    .catch Ljava/io/IOException; {:try_start_0 .. :try_end_0} :catch_0
+    .catch Lcom/fasterxml/jackson/core/JsonProcessingException; {:try_start_0 .. :try_end_0} :catch_4
+    .catch Ljava/io/FileNotFoundException; {:try_start_0 .. :try_end_0} :catch_3
+    .catch Ljava/io/SyncFailedException; {:try_start_0 .. :try_end_0} :catch_2
+    .catch Ljava/io/IOException; {:try_start_0 .. :try_end_0} :catch_1
+    .catch Ljava/lang/NullPointerException; {:try_start_0 .. :try_end_0} :catch_0
 
-    .line 73
+    .line 76
     nop
 
     .end local v2    # "jsonInString":Ljava/lang/String;
@@ -261,8 +262,21 @@
     .end local v6    # "outputStreamWriter":Ljava/io/OutputStreamWriter;
     goto :goto_2
 
-    .line 71
+    .line 74
     :catch_0
+    move-exception v2
+
+    .line 75
+    .local v2, "e":Ljava/lang/NullPointerException;
+    const-string v3, "Null Pointer exception"
+
+    invoke-static {v0, v3}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+
+    goto :goto_2
+
+    .line 71
+    .end local v2    # "e":Ljava/lang/NullPointerException;
+    :catch_1
     move-exception v2
 
     .line 72
@@ -271,11 +285,11 @@
 
     invoke-static {v0, v3}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
 
-    goto :goto_2
+    .end local v2    # "e":Ljava/io/IOException;
+    goto :goto_1
 
     .line 69
-    .end local v2    # "e":Ljava/io/IOException;
-    :catch_1
+    :catch_2
     move-exception v2
 
     .line 70
@@ -288,7 +302,7 @@
     goto :goto_1
 
     .line 66
-    :catch_2
+    :catch_3
     move-exception v2
 
     .line 67
@@ -301,7 +315,7 @@
     goto :goto_1
 
     .line 63
-    :catch_3
+    :catch_4
     move-exception v2
 
     .line 64
@@ -326,12 +340,12 @@
 
     invoke-static {v0, v3}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
 
-    .line 73
+    .line 76
     .end local v2    # "je":Lcom/fasterxml/jackson/core/JsonProcessingException;
     :goto_1
     nop
 
-    .line 74
+    .line 77
     :goto_2
     return-void
 .end method

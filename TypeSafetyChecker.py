@@ -138,7 +138,7 @@ class TypeSafetyChecker:
             
             
     def _type_update_instruction(self, code_unit, is_first_line_of_method, node_counter):
-        #print("type_update_instruction", code_unit)
+        #print("\ntype_update_instruction", code_unit)
         first_line = str(code_unit[0])
         first_line_tokens = StigmaStringParsingLib.break_into_tokens(first_line)
         first_instr = first_line_tokens[0]
@@ -167,8 +167,8 @@ class TypeSafetyChecker:
         
         
         last_line = str(code_unit[-1])
-        if(len(code_unit) > 1 and \
-        re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, last_line) is not None):
+        if(len(code_unit) > 1 and
+                re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, last_line) is not None):
             # an invoke-* instruction
             # or a filled-new-array instruction
             self._type_update_two_line_instruction(code_unit, line_type_map_new)
@@ -201,6 +201,7 @@ class TypeSafetyChecker:
                       
             elif(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_OBJECT, first_instr) is not None):
                 dest_reg = registers[0]
+                #print(registers)
                 src_reg = registers[1]
                 if src_reg in line_type_map_new:
                     return_type = line_type_map_new[src_reg]

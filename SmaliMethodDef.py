@@ -346,10 +346,8 @@ class SmaliMethodDef:
 		locals_num = self.get_locals_directive_num()
 		p_num = int(p_register[1:])
 		corresponding_v_num = locals_num + p_num
-		return "v" + str(corresponding_v_num)
-		
-		
-
+		v_num = "v" + str(corresponding_v_num)
+		return SmaliRegister(v_num)
 		
 		
 
@@ -385,7 +383,8 @@ class SmaliMethodDef:
 				# so, this will not replace instances of
 				# "v4" and other register-like strings in instructions
 				# such as: const-string v4, "edge v2 case p0 string v4\n"
-				line = line.replace(r, v_reg, 1)
+				#added str to v_reg
+				line = line.replace(r, str(v_reg), 1)
 		return line
 			 
 
