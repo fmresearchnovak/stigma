@@ -222,6 +222,9 @@ class ObjectReference(SmaliType):
 		# which is convenient to figure out the generic type
 		return "object"
 		
+	def get_object_simple_name(self):
+		return self.raw_type_string.split("/")[-1].strip()
+		
 
 class NonSpecificObjectReference(ObjectReference):
 	def __init__(self):
@@ -334,6 +337,7 @@ def main():
 	obj2 = from_string("Ljava/lang/String;")
 	assert(obj == obj2)
 	assert(obj == "Ljava/lang/String;")
+	assert(obj.get_object_simple_name() == "String;")
 	
 	print("ALL SmaliType TESTS PASSED!")
 
