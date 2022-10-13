@@ -86,6 +86,20 @@ Stigma is currently "beta" software.  Numerous bugs and limitations exist, which
 * aapt (available in Ubuntu repository ```apt install aapt``` and at [https://developer.android.com/studio/command-line/aapt2#download_aapt2](https://developer.android.com/studio/command-line/aapt2#download_aapt2))
 * networkx version 2.5.1 (we recommend installing via pip3; see below).  Available in Ubuntu repository ```apt install python3-networkx```. Networkx source code is available here: [https://github.com/networkx/networkx](https://github.com/networkx/networkx)
 * matplotlib version 3.1.2 (we recommend installing via pip3; see below).  Available in Ubuntu repository ```apt install python3-matplotlib```. Matplotlib source code is available here: [https://matplotlib.org/](https://matplotlib.org/)
+* Android Build Tools (`build-tools`) version 32.0.0 ([ref](https://developer.android.com/studio/releases/build-tools)). Android does not distribute Build Tools individually so the one have to install the Android SDK in which Build Tools are included. The Android SDK is available via the [Android Studio](https://developer.android.com/studio) SDK Manager. After installing the SDK from the SDK Manager in Android Studio, you also need to put the path including `apksigner` into your `PATH` environment variable. To do this,
+    1. Find your Android SDK root directory.
+       - On macOS, this is typically at `~/Library/Android/sdk`.
+       - On Windows, this is typically at `C:\Users\YOUR_USERNAME\AppData\Local\Android\Sdk`.
+       - On Linux, this is typically at `~/Android/Sdk`.
+       - *Check Android Studio's SDK Manager settings to confirm.*
+    2. Find the `build-tools` directory under your Android SDK root directory.
+       - On macOS, this is typically at `~/Library/Android/sdk/build-tools/32.0.0`.
+       - On Windows, this is typically at `C:\Users\YOUR_USERNAME\AppData\Local\Android\Sdk\build-tools\32.0.0`.
+       - On Linux, this is typically at `~/Android/Sdk/build-tools/32.0.0`.
+    3. Add the `build-tools` directory to your `PATH` environment variable.
+       - On macOS, you can add `export PATH=$PATH:~/Library/Android/sdk/build-tools/32.0.0` to your `~/.bash_profile` or your shell's equivalent configuration file.
+       - On Windows, add `C:\Users\YOUR_USERNAME\AppData\Local\Android\Sdk\build-tools\32.0.0` to your `PATH` environment variable.
+       - On Linux, add `export PATH=$PATH:~/Android/Sdk/build-tools/32.0.0` to your `~/.bashrc`, `~/.profile`, `~/.bash_profile`, or your shell's equivalent configuration file.
 
 Recommended installation method for networkx and matplotlib is to use `pip3`. Enter the following on the command line:
 ```pip3 install networkx```
