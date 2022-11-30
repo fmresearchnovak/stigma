@@ -86,11 +86,9 @@
     
     invoke-static {v12, v11},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
-    const-string v11, "STIGMA"
+    const-string v11, "LEAK OCCURING!"
     
-    const-string v12, "LEAK OCCURING!"
-    
-    invoke-static {v11, v12},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v12, v11},  Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
     
     :stigma_jump_label_0
     

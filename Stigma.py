@@ -6,13 +6,14 @@ import subprocess
 import shutil
 import glob
 import tempfile
+import re
+import importlib
 
 import SmaliClassDef
 import Instrumenter
 import TaintStorageHandler
+import StigmaStringParsingLib
 
-import TaintTrackingInstrumentationPlugin
-import SimpleTaintTrackingPlugin
 
 # https://docs.python.org/3/library/tempfile.html
 temp_file = tempfile.TemporaryDirectory(prefix="apkOutput_")
@@ -41,25 +42,32 @@ def dumpApk():
         completed_process = subprocess.run(cmd)
     completed_process.check_returncode()
     print("Apk unpacked in %.1f seconds" % (time.time() - start_time))
+    
 
 
 def importPlugins():
-    TaintTrackingInstrumentationPlugin.main()
+    #TaintTrackingInstrumentationPlugin.main()
     #SimpleTaintTrackingPlugin.main()
 
-    # p = os.path.dirname(os.path.realpath(__file__))
-    # plugins_path = os.path.join(p,"plugins.txt")
-    # print(p)
-    # start_time = time.time()
-    # f = open(plugins_path, 'r')
-    # for line in f:
-    #     if not line.startswith("#"):
-    #         line_path = os.path.join(p,line)
-    #         print(line_path)
-    #         cmd = ["python3", line_path]
-    #         completed_process = subprocess.run(cmd)
-    #         completed_process.check_returncode()
-    # print("Plugins loaded in %.1f seconds" % (time.time() - start_time))
+    # https://mathieularose.com/plugin-architecture-in-python
+    # https://docs.python.org/3/library/importlib.html
+
+    p = os.path.dirname(os.path.realpath(__file__))
+    plugins_path = os.path.join(p,"plugins.txt")
+    start_time = time.time()
+    f = open(plugins_path, 'r')
+    for line in f:
+        if not line.startswith("#") and line != "\n":
+            line = line.strip("\n")
+            line_path = os.path.join(p,line)
+            print("Loading Plugin: " + str(line))
+            #importlib.invalidate_caches() # ???
+            mod = importlib.import_module(line)
+            mod.main()
+            
+            break
+    print("Plugins loaded in %.1f seconds" % (time.time() - start_time))
+    input("Continue?")
 
 
 def getFiles():
@@ -116,7 +124,7 @@ def count_non_blank_lines_of_code():
         for line in fh.readlines():
             if not line.isspace():
                 num += 1
-    return num
+    return num      
 
 
 def wrapString(string, wrapper):

@@ -75,6 +75,15 @@ BEGINS_WITH_TWO_SQUARE_BRACKETS = r"^\s*\[\["
 BEGINS_WITH_MOVE = r"^\s*move"
 BEGINS_WITH_COMMENT = r"^\s*#"
 
+# starts with upper-case L, contains letters, numbers, forward-slashes, 
+# and dollar signs, ends with semi-colon
+# e.g., Ljava/lang/String;
+# e.g., Ledu/fandm/enovak/leaks/Main$1;
+# e.g., Lorg/json/JSONObject;
+# did not use ^ (matching beginning of string) nor $ (matching end of string)
+# since this is used to find objects referenced in the middle of instructions
+IS_OBJECT_TYPE = r"(L[a-zA-Z0-9/$]+;)" 
+
     
 
 
