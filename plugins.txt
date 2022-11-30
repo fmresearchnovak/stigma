@@ -1,3 +1,4 @@
 # List the names of the files containing your instrumentation plugin.
 #TaintTrackingInstrumentationPlugin
-SimpleTaintTrackingPlugin
+#SimpleTaintTrackingPlugin
+JSONTrailPlugin

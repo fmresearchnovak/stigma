@@ -168,6 +168,7 @@ class SmaliMethodDef:
 		self.raw_text = text
 		
 		self.num_jumps = 0 # not used except for a sanity check
+		self.num_try_start_jumps = 0
 		
 		class_name = "Lunknownclass;"
 		if(scd != None):
@@ -345,7 +346,10 @@ class SmaliMethodDef:
 		locals_num = self.get_locals_directive_num()
 		p_num = int(p_register[1:])
 		corresponding_v_num = locals_num + p_num
-		return "v" + str(corresponding_v_num)
+		v_num = "v" + str(corresponding_v_num)
+		return SmaliRegister(v_num)
+		
+		
 
 
 	def dereference_p_to_v_numbers(self, line):
@@ -379,7 +383,8 @@ class SmaliMethodDef:
 				# so, this will not replace instances of
 				# "v4" and other register-like strings in instructions
 				# such as: const-string v4, "edge v2 case p0 string v4\n"
-				line = line.replace(r, v_reg, 1)
+				#added str to v_reg
+				line = line.replace(r, str(v_reg), 1)
 		return line
 			 
 
@@ -467,6 +472,12 @@ class SmaliMethodDef:
 	def make_new_jump_label(self):
 		res = smali.LABEL(self.num_jumps)
 		self.num_jumps += 1
+		return res
+		
+	
+	def make_new_try_start_label(self):
+		res = smali.TRY_START_LABEL(self.num_try_start_jumps)
+		self.num_try_start_jumps += 1
 		return res
 		
 		
@@ -794,6 +805,7 @@ class SmaliMethodDef:
 		# The lines of code that we add (instrument) will be instances of smali.SmaliAssemblyInstruction
 		# the lines of code that are existing already will be type string
 		# So, this check prevents us from instrumenting our new, additional code
+		#print("line: " + str(line) + "  type:" + str(type(line)) + "   isinstance smali.SmaliAssemblyInstruction:" + str(isinstance(line, smali.SmaliAssemblyInstruction)))
 		if isinstance(line, smali.SmaliAssemblyInstruction):
 			return False
 

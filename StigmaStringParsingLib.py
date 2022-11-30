@@ -15,6 +15,7 @@ CLASS_NAME = "(L.+)->"
 PARAMETERS = "[(](.*)[)]"
 
 VALID_REGISTER = r"^[vp][0-9]+$"
+OBJECT = r"L[^ ^(^:^;]+;"
 
 
 BEGINS_WITH_INVOKE = r"^\s*invoke-"

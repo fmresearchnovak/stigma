@@ -28,6 +28,9 @@ class InstrumentationSignupBundle():
         self.num_regs_necessary = new_num_regs
         self.handler_reinserts_original_lines = new_instrumenter_inserts
         
+    def __str__(self):
+        return str(self.handler)
+        
 
 
 def sign_up_method_start(new_method):

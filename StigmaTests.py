@@ -784,7 +784,7 @@ def internal_tests():
 	src_code_with_internal_tests = ["StigmaStringParsingLib.py", 
 		"SmaliMethodDef.py", "SmaliTypes.py", "SafeRegisterCollection.py",
 		"SmaliRegister.py", "SmaliAssemblyInstructions.py",
-		"Instrumenter.py", "TaintStorageHandler.py", "SmaliCodeIterator.py"]
+		"Instrumenter.py", "TaintStorageHandler.py", "SmaliCodeIterator.py", "SmaliClassDef.py"]
 	
 	
 	for src in src_code_with_internal_tests:
@@ -799,6 +799,9 @@ def internal_tests():
 def main():
 	
 	internal_tests()
+	if len(sys.argv) == 2:
+		if sys.argv[1] == "--internal-only":
+			exit(0)
 	
 	TaintTrackingInstrumentationPlugin.main()
 	

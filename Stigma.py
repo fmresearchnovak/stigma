@@ -1,4 +1,4 @@
-import os
+
 import time
 import sys
 import os
@@ -9,15 +9,30 @@ import tempfile
 import re
 import importlib
 
+# only used for writeMarkedLocationClass,
+# that function (and this import) should be moved into the plugin that needs it
+import distutils 
+
 import SmaliClassDef
 import Instrumenter
 import TaintStorageHandler
 import StigmaStringParsingLib
 
 
+
 # https://docs.python.org/3/library/tempfile.html
 temp_file = tempfile.TemporaryDirectory(prefix="apkOutput_")
 
+def aapt2_helper():
+    for root, dirs, files in os.walk(temp_file.name):
+        if "app-metadata.properties" in files:
+            fh = open(os.path.join(root, "app-metadata.properties"), "r")
+            lines = fh.readlines()
+            target = lines[1].split("=")
+            gradle_version = int(target[1][0])
+            if gradle_version >= 3:
+                return True
+    return False
 
 def getOriginalAPKPath():
     if (not os.path.exists(sys.argv[1])):
@@ -48,13 +63,14 @@ def dumpApk():
 def importPlugins():
     #TaintTrackingInstrumentationPlugin.main()
     #SimpleTaintTrackingPlugin.main()
+    #JSONTrailPlugin.main()
 
     # https://mathieularose.com/plugin-architecture-in-python
     # https://docs.python.org/3/library/importlib.html
 
     p = os.path.dirname(os.path.realpath(__file__))
     plugins_path = os.path.join(p,"plugins.txt")
-    start_time = time.time()
+
     f = open(plugins_path, 'r')
     for line in f:
         if not line.startswith("#") and line != "\n":
@@ -66,8 +82,6 @@ def importPlugins():
             mod.main()
             
             break
-    print("Plugins loaded in %.1f seconds" % (time.time() - start_time))
-    input("Continue?")
 
 
 def getFiles():
@@ -173,9 +187,9 @@ def runStigma():
         comparison_instruction_count))
     fh.close()
 
-    print("Stigma ran in %.1f seconds" % (time.time() - start_time))
+    print("Instrumentation of app finished in %.1f seconds" % (time.time() - start_time))
 
-
+#Entire com/fasterxml folder
 def writeMarkedLocationClass():
     print("Writing MarkedLocation Class")
     new_path = os.path.join(temp_file.name, "smali", "net", "stigma")
@@ -184,6 +198,7 @@ def writeMarkedLocationClass():
     ## For Windows, "copy" is as "cp" for Unix systems.
     ## We write an if statement to check for the os, and use the correct line of code for cmd accordingly
     ## Also in the Windows statement is shell=True
+    distutils.dir_util.copy_tree("smali_lib", os.path.join(temp_file.name, "smali"))
     if (os.name == "nt"):
         cmd = ["copy", "MarkedLocation.smali", new_path]
         completed_process = subprocess.run(cmd, shell=True)
@@ -350,7 +365,7 @@ def rebuildApk():
     # was found to be necessary in order to re-build myfitnesspal
     # to avoid error: invalid resource directory name: ...\res navigation
     # https://github.com/iBotPeaches/Apktool/issues/2219
-    use_aapt2 = "--use-aapt2" in sys.argv[2:]
+    use_aapt2 = aapt2_helper()
     if (use_aapt2):
         rebuildCMD = ["java", "-jar", "include/apktool.jar", "b", temp_file.name, "--use-aapt2", "-o", getNewAPKName()]
     else:
@@ -394,8 +409,9 @@ def signApk():
 
     # print("Signing...")
     newAppName = getNewAPKName()
-    # jarsigner -keystore stigma-keys.keystore -storepass MzJiY2ZjNjY5Z ./leak_detect_test/Tracked_StigmaTest.apk stigma_keystore_alias
-    cmd = ["jarsigner", "-keystore", keystore_name, "-storepass", password, newAppName, stigma_alias]
+    # apksigner sign --ks stigma-keys.keystore --ks-pass pass:MzJiY2ZjNjY5Z --ks-key-alias stigma_keystore_alias ./leak_detect_test/Tracked_StigmaTest.apk
+    cmd = ["apksigner", "sign", "--ks", keystore_name, "--ks-pass", "pass:"+password, "--ks-key-alias", stigma_alias, newAppName]
+    print("Signing with apksigner:", cmd)
     if (os.name == "nt"):
         completedProcess = subprocess.run(cmd, shell=True)
     elif (os.name == "posix"):
@@ -424,7 +440,7 @@ if __name__ == '__main__':
         importPlugins()
         runStigma()
         writeStorageClasses()
-        writeMarkedLocationClass()
+        #writeMarkedLocationClass() # necessary for some plugins should be part of those plugin's code
         splitSmali()
 
     rebuildApk()

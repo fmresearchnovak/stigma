@@ -1,3 +1,6 @@
+import os.path
+
+import SmaliTypes
 import StigmaStringParsingLib
 import re
 import SmaliAssemblyInstructions as smali
@@ -130,6 +133,8 @@ class SmaliClassDef:
 
         return (static_f_name, full_name)
 
+    def get_super_class(self):
+        return SmaliTypes.from_string(self.header[1].split(" ")[1].strip())
 
     def create_taint_field(self, identifier, reg_name=""):
         # Makes a new taint_storage field in this class
@@ -341,5 +346,13 @@ class MockSmaliClassDef(SmaliClassDef):
     def is_internal_class(self, other):
         return False
 
+def tests():
+    ts = SmaliClassDef(os.path.join("test", "Main.smali"))
+    print(type(ts.get_super_class()))
+    assert (ts.get_super_class() == "Landroid/support/v7/app/AppCompatActivity;")
+    print("ALL SmaliClassDef TESTS PASSED")
+
+if __name__ == "__main__":
+    tests()
 
 
