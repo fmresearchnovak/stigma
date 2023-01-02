@@ -2,7 +2,9 @@ import matplotlib.pyplot as plt
 import csv
 import os
 
-
+# Creates the CPU overhead graph from the paper which demonstrates
+# how long it takes to execute a given number of (somewhat) random
+# smali instructions.
 
 
 
