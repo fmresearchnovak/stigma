@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+# Takes a file path as input, lists all the APKs found within
+# that filepath (recursive) that contains calls to any of
+# the "source" functions such as "getLatitude()"
+
 
 import subprocess
 import os
