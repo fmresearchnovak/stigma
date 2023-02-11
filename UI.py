@@ -3,6 +3,7 @@ from tkinter import ttk
 from tkinter.messagebox import showinfo
 
 import SmaliClassDef
+import SmaliClassNameTree
 
 # originally based on this example: https://www.pythontutorial.net/tkinter/tkinter-treeview/
 
@@ -13,6 +14,8 @@ class UI:
 		
 		
 		self.classes = []
+		iid = 0
+		self.forest = SmaliClassNameTree.SmaliClassNameTree("root", iid) # one tree to contain all others
 		
 		for path in self.smali_files:
 			# print("cur file path: " + str(name)
@@ -21,7 +24,15 @@ class UI:
 			#scd.internal_class_names.extend(class_names)
 			self.classes.append(scd)
 			
-		
+			cur_level_node = self.forest
+			parts = scd.class_name.split("/")
+			for i in range(len(parts)):
+				iid += 1
+				cur_name = parts[i]
+				cur_level_node = cur_level_node.plant_new_tree(cur_name, iid)
+			
+		print(self.forest)
+			
 		
 		
 	def launch(self):
@@ -39,7 +50,6 @@ class UI:
 		# create a treeview
 		tree = ttk.Treeview(self.root)
 		tree.heading('#0', text='Smali Classes', anchor=tk.W)
-
 
 		# adding data
 		for i in range(len(self.classes)):
@@ -61,3 +71,4 @@ class UI:
 		
 		# run the app
 		self.root.mainloop()
+
