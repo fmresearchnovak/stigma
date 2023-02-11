@@ -17,6 +17,7 @@ import SmaliClassDef
 import Instrumenter
 import TaintStorageHandler
 import StigmaStringParsingLib
+import UI
 
 
 
@@ -424,7 +425,7 @@ def deleteFiles():
 
 
 if __name__ == '__main__':
-    # we need a better interface haha!
+    # we need a better interface haha!  should use argparse!
     # Also ./apk should be a sys.argv param to the location of an APK file
     deleteFiles()
     if (len(sys.argv) >= 3):
@@ -435,6 +436,10 @@ if __name__ == '__main__':
     start = time.time()
     print("Temp files at: " + str(temp_file.name))
     dumpApk()
+    
+    ui = UI.UI(getFiles())
+    ui.launch()
+        
 
     if (not dry_run):
         importPlugins()
