@@ -1,9 +1,11 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter.messagebox import showinfo
+import subprocess
 
 import SmaliClassDef
 import SmaliClassNameTree
+
 
 # originally based on this example: https://www.pythontutorial.net/tkinter/tkinter-treeview/
 
@@ -60,7 +62,12 @@ class UI:
 			
 			cur_tree = queue.pop(0) # pops from left side of list
 			#print("cur tree:", cur_tree, "   queue length:", len(queue))
-			tktree.insert('', tk.END, text=cur_tree.pkg_name_piece, iid = cur_tree.iid, open=False)
+			#print("cur_tree.scd (", type(cur_tree.scd), "): ", cur_tree.scd)
+			#
+			# I intentionally put the full scd object into the values list here, but 
+			# it seems that the tkinter framework converts it to a string (propably via the repr() function)
+			# luckily, that string is the absolute filename, which is all I need!
+			item = tktree.insert('', tk.END, text=cur_tree.pkg_name_piece, values=[cur_tree.scd], iid = cur_tree.iid, open=False)
 			if(cur_tree.iid != 0):
 				tktree.move(cur_tree.iid, cur_tree.parent_iid, cur_tree.relative_position)
 				
@@ -105,6 +112,31 @@ class UI:
 		verscrlbar.grid(row=0, column=1, sticky=tk.NSEW)
 		
 		
+		# set the double-click binding (so we can open files)
+		tktree.bind("<Double-Button-1>", UI.onClickOpenFile)
+		
+		
 		# run the app
 		self.root.mainloop()
+		
+	
+	@staticmethod
+	def onClickOpenFile(event):
+		#print("double clicked it!")
+		#print("event:", event)
+		#print("widget:", event.widget)
+		
+		item_id = event.widget.focus()
+		item = event.widget.item(item_id)
+		#print("item id:", item_id, "   item:", item);
+		
+		abs_path = item["values"][0]
+		#print("abs_path (", type(abs_path), "): ", abs_path)
+		if(item["text"].endswith(";")):
+			cmd = ["xdg-open", abs_path]
+			print(cmd)
+			completed_process = subprocess.run(cmd)
+			completed_process.check_returncode()
+		
+		
 
