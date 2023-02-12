@@ -13,29 +13,30 @@ class UI:
 		self.smali_files = smali_files
 		
 		
-		self.classes = []
-		iid = 0
-		self.forest = SmaliClassNameTree.SmaliClassNameTree("root", iid) # one tree to contain all others
+		#self.classes = []
+		iid = 0											# scd, name, iid for tkinter, parent_iid
+		self.forest = SmaliClassNameTree.SmaliClassNameTree(None, "root", iid, None) # one tree to contain all others
 		
 		for path in self.smali_files:
 			# print("cur file path: " + str(name)
 			# parse file
 			scd = SmaliClassDef.SmaliClassDef(path)
 			#scd.internal_class_names.extend(class_names)
-			self.classes.append(scd)
+			#self.classes.append(scd)
 			
 			cur_level_node = self.forest
 			parts = scd.class_name.split("/")
 			for i in range(len(parts)):
 				iid += 1
 				cur_name = parts[i]
-				cur_level_node = cur_level_node.plant_new_tree(cur_name, iid)
+				cur_level_node = cur_level_node.plant_new_tree_for_class(scd, cur_name, iid)
 			
-		print(self.forest)
-			
+		#print(self.forest)
+		
 		
 		
 	def launch(self):
+		print("launching...")
 		
 		# create root window
 		self.root = tk.Tk()
@@ -48,15 +49,37 @@ class UI:
 
 
 		# create a treeview
-		tree = ttk.Treeview(self.root)
-		tree.heading('#0', text='Smali Classes', anchor=tk.W)
-
+		tktree = ttk.Treeview(self.root)
+		tktree.heading('#0', text='Smali Classes', anchor=tk.W)
+		
+		
+		# BFS traversal of tree
+		queue = [self.forest]
+		while(len(queue) != 0):
+			#print("queue: " + str(queue))
+			
+			cur_tree = queue.pop(0) # pops from left side of list
+			#print("cur tree:", cur_tree, "   queue length:", len(queue))
+			tktree.insert('', tk.END, text=cur_tree.pkg_name_piece, iid = cur_tree.iid, open=False)
+			if(cur_tree.iid != 0):
+				tktree.move(cur_tree.iid, cur_tree.parent_iid, cur_tree.relative_position)
+				
+			for child in cur_tree.children:
+				queue.append(child)
+			
+			
+		
+		'''
+		for i in range(len(forest)):
+			
 		# adding data
 		for i in range(len(self.classes)):
 			scd = self.classes[i]
 			tree.insert('', tk.END, text=scd.class_name, iid=i, open=False)
+			# re-arrange nodes to follow hierarchy of names
 			
-			
+		
+		
 		# adding children of first node
 		i += 1
 		tree.insert('', tk.END, text='John Doe', iid=i, open=False)
@@ -64,9 +87,22 @@ class UI:
 		tree.insert('', tk.END, text='Jane Doe', iid=i, open=False)
 		tree.move(5, 0, 0)
 		tree.move(6, 0, 1)
+		'''
 
 		# place the Treeview widget on the root window
-		tree.grid(row=0, column=0, sticky=tk.NSEW)
+		tktree.grid(row=0, column=0, sticky=tk.NSEW)
+		
+		
+		# Constructing vertical scrollbar
+		# with treeview, based on this:
+		# https://www.geeksforgeeks.org/python-tkinter-treeview-scrollbar/
+		verscrlbar = ttk.Scrollbar(self.root,
+								orient ="vertical",
+								command = tktree.yview)
+		 
+		# Configuring treeview
+		tktree.configure(yscrollcommand = verscrlbar.set)
+		verscrlbar.grid(row=0, column=1, sticky=tk.NSEW)
 		
 		
 		# run the app
