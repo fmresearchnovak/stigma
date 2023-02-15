@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter.messagebox import showinfo
 import subprocess
+import platform
 
 import SmaliClassDef
 import SmaliClassNameTree
@@ -44,6 +45,7 @@ class UI:
 		self.root = tk.Tk()
 		self.root.title('Treeview Demo - Hierarchical Data')
 		self.root.geometry('400x200')
+		self.root.configure(bg='blue')
 
 		# configure the grid layout
 		self.root.rowconfigure(0, weight=1)
@@ -133,7 +135,10 @@ class UI:
 		abs_path = item["values"][0]
 		#print("abs_path (", type(abs_path), "): ", abs_path)
 		if(item["text"].endswith(";")):
-			cmd = ["xdg-open", abs_path]
+			if(platform.system()=='Linux'):
+				cmd = ["xdg-open", abs_path]
+			elif(platform.system()=='Darwin'):
+				cmd = ["open", abs_path]
 			print(cmd)
 			completed_process = subprocess.run(cmd)
 			completed_process.check_returncode()
