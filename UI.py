@@ -39,7 +39,7 @@ class UI:
 		
 		
 	def launch(self):
-		print("launching...")
+		print("Launching UI...")
 		
 		# create root window
 		self.root = tk.Tk()
@@ -139,7 +139,7 @@ class UI:
 				cmd = ["xdg-open", abs_path]
 			elif(platform.system()=='Darwin'):
 				cmd = ["open", abs_path]
-			print(cmd)
+			#print(cmd)
 			completed_process = subprocess.run(cmd)
 			completed_process.check_returncode()
 		

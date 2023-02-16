@@ -1,4 +1,4 @@
-# List the names of the files containing your instrumentation plugin.
+# List the names of the python file/module containing your instrumentation plugin.
 #TaintTrackingInstrumentationPlugin
 #SimpleTaintTrackingPlugin
-JSONTrailPlugin
+#JSONTrailPlugin

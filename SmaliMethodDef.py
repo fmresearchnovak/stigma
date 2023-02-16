@@ -196,6 +196,8 @@ class SmaliMethodDef:
 		#this is the first free reg after we grow the locals number for the method
 		self.first_new_free_reg_num = 0  
 		
+		self.warnings_on = False
+		
 		
 	def get_register_meta_data(self):
 		num_locals = self.get_locals_directive_num()
@@ -511,7 +513,7 @@ class SmaliMethodDef:
 			# We shouldn't instrument methods that don't have code / locals
 			return []
 		
-		if(self.has_grown == 0):
+		if(self.has_grown == 0 and self.warnings_on):
 			print("Warning!  The locals for this method were not grown / expanded: " + str(self))
 			
 		

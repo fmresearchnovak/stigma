@@ -43,7 +43,7 @@ def getOriginalAPKPath():
 
 def getNewAPKName():
     name = os.path.basename(getOriginalAPKPath())
-    return "Tracked_" + name
+    return "Modified_" + name
 
 
 def dumpApk():
@@ -146,8 +146,8 @@ def wrapString(string, wrapper):
     return wrapper + str(string) + wrapper
 
 
-def runStigma():
-    print("Running Stigma")
+def runInstrumentation():
+    print("Instrumenting class files")
     start_time = time.time()
     relevantFilePaths = getFiles()
 
@@ -156,7 +156,6 @@ def runStigma():
     for path in relevantFilePaths:
         class_names.append(SmaliClassDef.SmaliClassDef.extract_class_name(path))
 
-    print("...Instrumenting class files")
     counter = 1
     comparison_instruction_count = 0
     not_enough_registers_count = 0
@@ -192,7 +191,7 @@ def runStigma():
 
 #Entire com/fasterxml folder
 def writeMarkedLocationClass():
-    print("Writing MarkedLocation Class")
+    print("Writing Support Classes (jackson, MarkedLocation.smali)")
     new_path = os.path.join(temp_file.name, "smali", "net", "stigma")
     os.makedirs(new_path, exist_ok=True)
     new_path = os.path.join(new_path, "MarkedLocation.smali")
@@ -372,7 +371,7 @@ def rebuildApk():
     else:
         rebuildCMD = ["java", "-jar", "include/apktool.jar", "b", temp_file.name, "-o", getNewAPKName()]
 
-    print("Rebuilding:", rebuildCMD)
+    #print("Rebuilding:", rebuildCMD)
     if (os.name == "nt"):
         completedProcess = subprocess.run(rebuildCMD, shell=True)
     elif (os.name == "posix"):
@@ -412,7 +411,7 @@ def signApk():
     newAppName = getNewAPKName()
     # apksigner sign --ks stigma-keys.keystore --ks-pass pass:MzJiY2ZjNjY5Z --ks-key-alias stigma_keystore_alias ./leak_detect_test/Tracked_StigmaTest.apk
     cmd = ["include/apksigner", "sign", "--ks", keystore_name, "--ks-pass", "pass:"+password, "--ks-key-alias", stigma_alias, newAppName]
-    print("Signing with apksigner:", cmd)
+    #print("Signing with apksigner:", cmd)
     if (os.name == "nt"):
         completedProcess = subprocess.run(cmd, shell=True)
     elif (os.name == "posix"):
@@ -443,8 +442,8 @@ if __name__ == '__main__':
 
     if (not dry_run):
         importPlugins()
-        runStigma()
-        writeStorageClasses()
+        runInstrumentation()
+        writeStorageClasses() # necessary for TaintTracking plugins
         #writeMarkedLocationClass() # necessary for some plugins should be part of those plugin's code
         splitSmali()
 
