@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<menu
-  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item android:icon="@drawable/settings_icon" android:id="@id/main_menu_settings" android:title="Settings" app:showAsAction="always" />
-    <item android:icon="@drawable/login_24" android:id="@id/main_menu_login" android:title="Login" app:showAsAction="ifRoom" />
-    <item android:icon="@drawable/simple_leak_24" android:id="@id/main_menu_simple_test" android:title="Simple Leak" app:showAsAction="ifRoom" />
-</menu>
