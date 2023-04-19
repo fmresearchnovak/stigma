@@ -524,6 +524,7 @@ class SmaliMethodDef:
 			insert_idx = self.find_first_valid_instruction()
 			#print("'METHOD START'  insert idx:", insert_idx, "  line:", self.raw_text[insert_idx])
 			self.embed_block(insert_idx, result_block)
+
 			
 
 		#create the control flow graph for the method text and pass it to the type safety checker
@@ -832,11 +833,10 @@ class SmaliMethodDef:
 			
 			#store the label of :cond and :goto in a map with their corresponding line number
 			if(re.search(StigmaStringParsingLib.BEGINS_WITH_COND, line) is not None or re.search(StigmaStringParsingLib.BEGINS_WITH_GOTO_LABEL, line) is not None):
-				 label_map[tokens[0]] = idx
-			
+				label_map[tokens[0]] = idx
+				 
 			#when you see an if statement or a goto statement, there are two options
 			elif re.search(StigmaStringParsingLib.BEGINS_WITH_IF, line) is not None or re.search(StigmaStringParsingLib.BEGINS_WITH_GOTO, line) is not None:
-				
 				row = [line, tokens[0], idx]                
 				label = tokens[-1]
 				

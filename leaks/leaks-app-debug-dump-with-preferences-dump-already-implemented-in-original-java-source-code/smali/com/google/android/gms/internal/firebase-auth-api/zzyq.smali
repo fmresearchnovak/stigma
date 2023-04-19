@@ -1,0 +1,87 @@
+.class final Lcom/google/android/gms/internal/firebase-auth-api/zzyq;
+.super Lcom/google/android/gms/internal/firebase-auth-api/zzys;
+.source "com.google.firebase:firebase-auth@@20.0.4"
+
+
+# instance fields
+.field final synthetic zza:Lcom/google/android/gms/internal/firebase-auth-api/zzyy;
+
+.field private zzb:I
+
+.field private final zzc:I
+
+
+# direct methods
+.method constructor <init>(Lcom/google/android/gms/internal/firebase-auth-api/zzyy;)V
+    .locals 1
+
+    iput-object p1, p0, Lcom/google/android/gms/internal/firebase-auth-api/zzyq;->zza:Lcom/google/android/gms/internal/firebase-auth-api/zzyy;
+
+    invoke-direct {p0}, Lcom/google/android/gms/internal/firebase-auth-api/zzys;-><init>()V
+
+    const/4 v0, 0x0
+
+    iput v0, p0, Lcom/google/android/gms/internal/firebase-auth-api/zzyq;->zzb:I
+
+    invoke-virtual {p1}, Lcom/google/android/gms/internal/firebase-auth-api/zzyy;->zzc()I
+
+    move-result p1
+
+    iput p1, p0, Lcom/google/android/gms/internal/firebase-auth-api/zzyq;->zzc:I
+
+    return-void
+.end method
+
+
+# virtual methods
+.method public final hasNext()Z
+    .locals 2
+
+    iget v0, p0, Lcom/google/android/gms/internal/firebase-auth-api/zzyq;->zzb:I
+
+    iget v1, p0, Lcom/google/android/gms/internal/firebase-auth-api/zzyq;->zzc:I
+
+    if-ge v0, v1, :cond_0
+
+    const/4 v0, 0x1
+
+    return v0
+
+    :cond_0
+    const/4 v0, 0x0
+
+    return v0
+.end method
+
+.method public final zza()B
+    .locals 2
+
+    iget v0, p0, Lcom/google/android/gms/internal/firebase-auth-api/zzyq;->zzb:I
+
+    iget v1, p0, Lcom/google/android/gms/internal/firebase-auth-api/zzyq;->zzc:I
+
+    if-ge v0, v1, :cond_0
+
+    .line 1
+    add-int/lit8 v1, v0, 0x1
+
+    iput v1, p0, Lcom/google/android/gms/internal/firebase-auth-api/zzyq;->zzb:I
+
+    iget-object v1, p0, Lcom/google/android/gms/internal/firebase-auth-api/zzyq;->zza:Lcom/google/android/gms/internal/firebase-auth-api/zzyy;
+
+    .line 2
+    invoke-virtual {v1, v0}, Lcom/google/android/gms/internal/firebase-auth-api/zzyy;->zzb(I)B
+
+    move-result v0
+
+    return v0
+
+    .line 0
+    :cond_0
+    new-instance v0, Ljava/util/NoSuchElementException;
+
+    .line 1
+    invoke-direct {v0}, Ljava/util/NoSuchElementException;-><init>()V
+
+    throw v0
+.end method

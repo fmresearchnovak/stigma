@@ -8,6 +8,7 @@ import glob
 import tempfile
 import re
 import importlib
+import xml
 
 # only used for writeMarkedLocationClass,
 # that function (and this import) should be moved into the plugin that needs it
@@ -16,6 +17,7 @@ import distutils
 import SmaliClassDef
 import Instrumenter
 import TaintStorageHandler
+import SmaliTypes
 import StigmaStringParsingLib
 import UI
 
@@ -129,6 +131,35 @@ def getFiles():
     # end of sanity test
 
     return relevantFilePaths
+    
+    
+def get_launcher_activity_classes():
+    manifest_path = os.path.join(temp_file.name, "AndroidManifest.xml")
+    #print("manifest path: " + manifest_path)
+    xml_tree = xml.etree.ElementTree.parse(manifest_path)
+    #print("tree: ", xml_tree)
+    xml_tree = xml_tree.getroot()
+    activities = xml_tree.findall("./application/activity")
+
+    launcher_acts = []
+    for act in activities:
+        class_name = act.attrib['{http://schemas.android.com/apk/res/android}name']
+        class_name = "L" + class_name + ";"
+        class_name = class_name.replace(".", "/");
+        for child in act:
+            if(child.tag == "intent-filter"):
+                for grand_child in child:
+                    if(grand_child.tag == "category"):
+                        if (grand_child.attrib['{http://schemas.android.com/apk/res/android}name'] == "android.intent.category.LAUNCHER"):
+                            launcher_acts.append(SmaliTypes.from_string(class_name))
+                            #print(grand_child)
+
+            #print(child)
+
+    #print(root)
+    print("Launchers Found: " + str(launcher_acts))
+    Instrumenter.LAUNCHER_ACTIVITIES = launcher_acts
+    
 
 
 def count_non_blank_lines_of_code():
@@ -436,11 +467,11 @@ if __name__ == '__main__':
     print("Temp files at: " + str(temp_file.name))
     dumpApk()
     
-    ui = UI.UI(getFiles())
-    ui.launch()
-        
+    #ui = UI.UI(getFiles())
+    #ui.launch()
 
     if (not dry_run):
+        get_launcher_activity_classes()
         importPlugins()
         runInstrumentation()
         writeStorageClasses() # necessary for TaintTracking plugins

@@ -1,0 +1,40 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "name": "Stigma on Groupme",
+            "type": "python",
+            "request": "launch",
+            "program": "Stigma.py",
+            "args": ["/home/ed/research/ift/stigma/APK/com.groupme.apk"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+
+        {
+            "name": "Stigma on Minimal App",
+            "type": "python",
+            "request": "launch",
+            "program": "Stigma.py",
+            "args": ["/home/ed/research/ift/stigma/APK/minimalapp-debug.apk"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+
+        {
+            "name": "Stigma on Leaks App",
+            "type": "python",
+            "request": "launch",
+            "program": "Stigma.py",
+            "args": ["/home/ed/research/ift/stigma/leaks/leaks-app-debug.apk"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}

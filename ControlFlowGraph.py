@@ -294,7 +294,11 @@ class ControlFlowGraph:
         This method takes a starting line index and keeps looking forward in the method text until it finds a valid label and returns that index
         '''
         for i in range(line_index, len(self.text)):
-            if re.search(StigmaStringParsingLib.BEGINS_WITH_COLON, self.text[i]):
+
+            # convert to a string in case this thing is searching through smali assembly objects
+            # regex will not run if self.text[i] is a smali assembly object
+            # self.text[i] might be a smali assembly object if it was inserted by the instrumentation plugin
+            if re.search(StigmaStringParsingLib.BEGINS_WITH_COLON, str(self.text[i])):
                 return i
         return line_index+1
     

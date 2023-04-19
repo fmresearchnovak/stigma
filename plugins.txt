@@ -2,3 +2,4 @@
 #TaintTrackingInstrumentationPlugin
 #SimpleTaintTrackingPlugin
 #JSONTrailPlugin
+DefaultSharedPreferencesDumpPlugin

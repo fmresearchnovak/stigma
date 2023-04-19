@@ -5,16 +5,22 @@ from TaintStorageHandler import TaintStorageHandler
 import re
 
 
+# this is a global populated by Stigma.py
+LAUNCHER_ACTIVITIES = []
+
 # this is a global that is incremented by
 # the sign_up method
 MAX_DESIRED_NUM_REGISTERS = 0 #we grow our .locals by this number
+
 
 # The structure of the constructor and the register_instrumentation_method functions
 # are an attempt to make this a "plugin" style application where others can write
 # more instrumentation functions.  I'm not sure it's 100% there and maybe this
 # attempt just makes the code uglier for no benefit.
 
-start_of_method_handler = None
+start_of_method_handler = None  # handler to insert code at start every method
+start_of_launcher_oncreate_method_hanlder = None # handler to insert code at start of launcher's oncreate method only
+
 instrumentation_map = {}
 storage_handler = TaintStorageHandler.get_instance()
 
@@ -45,10 +51,30 @@ def sign_up_method_start(new_method):
     # other developers could add instrumentation
     # I think the answer is "python protocols"
     start_of_method_handler = new_method
+
+
+def sign_up_launcher_activity_oncreate_start(new_method, num_regs, instrumeter_inserts_original_lines = False):
+    global start_of_launcher_oncreate_method_hanlder
+    global MAX_DESIRED_NUM_REGISTERS
+
+    if(start_of_launcher_oncreate_method_hanlder == None):
+        # keep track of the "all time max" so there are 
+        # at least that many registers (possibly high numbered)
+        # the method will be grow()-ed to ensure this
+        if(num_regs > MAX_DESIRED_NUM_REGISTERS):
+            MAX_DESIRED_NUM_REGISTERS = num_regs
+
+        start_of_launcher_oncreate_method_hanlder = new_method
+
+    else:
+        raise Exception("A handler is already registered for launcher oncreate:" + str(start_of_launcher_oncreate_method_hanlder))
+
+
     
 
 def sign_up(opcode, new_method, num_regs, instrumeter_inserts_original_lines = False):
     global MAX_DESIRED_NUM_REGISTERS
+    global instrumentation_map
     # this method allows the plugin author to submit a handler function
     # which will be called to insert new code before each and every line
     # of original smali code.
@@ -91,6 +117,8 @@ def sign_up(opcode, new_method, num_regs, instrumeter_inserts_original_lines = F
         
     else:
         raise Exception(str(opcode) + " is already registered for:" + str(instrumentation_map[opcode]))
+
+
 
 
 def make_comment_block(comment_detail=""):
