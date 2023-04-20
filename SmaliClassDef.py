@@ -2,6 +2,7 @@ import os.path
 
 import SmaliTypes
 import StigmaStringParsingLib
+import Instrumenter
 import re
 import SmaliAssemblyInstructions as smali
 from SmaliMethodDef import SmaliMethodDef
@@ -195,15 +196,6 @@ class SmaliClassDef:
 
         func_name = line.split(" ")[-1]
         return func_name not in self.methods
-        
-        
-    def grow_locals(self, n):
-        
-        if(n < 0):
-            raise ValueError("Cannot grow locals by a negative amount: " + str(n))
-        
-        for m in self.methods:
-            m.grow_locals(n)
 
 
     def instrument(self):
@@ -211,11 +203,28 @@ class SmaliClassDef:
         #     raise ValueError("Other SCDs list not passed to scd")
         
         #print("\ninstrumenting: ", self)
-
-        #this will signup our methods for instrumentation with their related opcodes
+        #this will write code into methods
         for m in self.methods:
-            if(m.signature.is_abstract == False):           
+            if(self._should_instrument_method(m)):   
+                #print("Instrumenting: " + str(m.signature.name))      
+                m.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
                 m.instrument()
+
+
+    def _should_instrument_method(self, m):
+        # maybe this method should be in the Instrumenter class
+
+        if(m.signature.is_abstract or m.signature.is_native):
+			# We shouldn't instrument methods that don't have code / locals
+            return False
+
+
+        launcher_oncreate = (Instrumenter.start_of_launcher_oncreate_method_handler != None and self in Instrumenter.LAUNCHER_ACTIVITIES and m.signature.name == "onCreate")
+        method_start = (Instrumenter.start_of_method_handler != None)
+        opcodes = (Instrumenter.instrumentation_map != {})
+        # opcodes = (none of Instrumenter.instrumentation_map.keys() are in m)
+
+        return (launcher_oncreate or method_start or opcodes)
 
 
     def write_to_file(self, class_smali_file):

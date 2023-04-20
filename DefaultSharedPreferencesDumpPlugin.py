@@ -32,10 +32,10 @@ def new_method_handler(scd, smd):
     # in the process (maybe at sign-up time?)
     if (scd in Instrumenter.LAUNCHER_ACTIVITIES and smd.signature.name == "onCreate"):
         print("Inserting new code in : " + str(smd.signature) + " of " + str(scd.class_name))
-        print("reg metadata: " + smd.get_register_meta_data())
-        print("has grown: " + str(smd.has_grown))
-        print("locals directive num: " + str(smd.get_locals_directive_num()))
-        print("v: " + str(smd.get_locals_directive_num() - smd.has_grown))
+        #print("reg metadata: " + smd.get_register_meta_data())
+        #print("has grown: " + str(smd.has_grown))
+        #print("locals directive num: " + str(smd.get_locals_directive_num()))
+        #print("v: " + str(smd.get_locals_directive_num() - smd.has_grown))
 
         block = []
         # invoke-static {p0}, Landroid/preference/PreferenceManager;->getDefaultSharedPreferences(Landroid/content/Context;)Landroid/content/SharedPreferences;
@@ -144,9 +144,7 @@ def new_method_handler(scd, smd):
 
 def main():
     
-
-    Instrumenter.MAX_DESIRED_NUM_REGISTERS = 7
-    Instrumenter.sign_up_method_start(new_method_handler)
+    Instrumenter.sign_up_launcher_activity_oncreate_start(new_method_handler, 7)
 
 
 if __name__ == "__main__":

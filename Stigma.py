@@ -207,7 +207,6 @@ def runInstrumentation():
         counter += 1
 
         # actual instrumentation
-        scd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
         scd.instrument()
         scd.overwrite_to_file()
 

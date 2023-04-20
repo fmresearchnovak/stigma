@@ -19,7 +19,7 @@ MAX_DESIRED_NUM_REGISTERS = 0 #we grow our .locals by this number
 # attempt just makes the code uglier for no benefit.
 
 start_of_method_handler = None  # handler to insert code at start every method
-start_of_launcher_oncreate_method_hanlder = None # handler to insert code at start of launcher's oncreate method only
+start_of_launcher_oncreate_method_handler = None # handler to insert code at start of launcher's oncreate method only
 
 instrumentation_map = {}
 storage_handler = TaintStorageHandler.get_instance()
@@ -54,20 +54,20 @@ def sign_up_method_start(new_method):
 
 
 def sign_up_launcher_activity_oncreate_start(new_method, num_regs, instrumeter_inserts_original_lines = False):
-    global start_of_launcher_oncreate_method_hanlder
+    global start_of_launcher_oncreate_method_handler
     global MAX_DESIRED_NUM_REGISTERS
 
-    if(start_of_launcher_oncreate_method_hanlder == None):
+    if(start_of_launcher_oncreate_method_handler == None):
         # keep track of the "all time max" so there are 
         # at least that many registers (possibly high numbered)
         # the method will be grow()-ed to ensure this
         if(num_regs > MAX_DESIRED_NUM_REGISTERS):
             MAX_DESIRED_NUM_REGISTERS = num_regs
 
-        start_of_launcher_oncreate_method_hanlder = new_method
+        start_of_launcher_oncreate_method_handler = new_method
 
     else:
-        raise Exception("A handler is already registered for launcher oncreate:" + str(start_of_launcher_oncreate_method_hanlder))
+        raise Exception("A handler is already registered for launcher oncreate:" + str(start_of_launcher_oncreate_method_handler))
 
 
     

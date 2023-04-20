@@ -509,18 +509,24 @@ class SmaliMethodDef:
 
 				
 	def instrument(self):
-		if(self.signature.is_abstract or self.signature.is_native):
-			# We shouldn't instrument methods that don't have code / locals
-			return []
-		
 		if(self.has_grown == 0 and self.warnings_on):
 			print("Warning!  The locals for this method were not grown / expanded: " + str(self))
+			raise Exception("The locals for this method were not grown / expanded: " + str(self))
 			
 		
 		# insert the lines at the beginning
 		method_beginning_instrumentation_method = Instrumenter.start_of_method_handler
 		if(method_beginning_instrumentation_method is not None):
 			result_block = method_beginning_instrumentation_method(self.scd, self)
+			insert_idx = self.find_first_valid_instruction()
+			#print("'METHOD START'  insert idx:", insert_idx, "  line:", self.raw_text[insert_idx])
+			self.embed_block(insert_idx, result_block)
+
+
+		# insert the lines at the beginning of the launcher onCreate method
+		launcher_oncreate_beginning_instrumentation_method = Instrumenter.start_of_launcher_oncreate_method_handler
+		if(launcher_oncreate_beginning_instrumentation_method is not None):
+			result_block = launcher_oncreate_beginning_instrumentation_method(self.scd, self)
 			insert_idx = self.find_first_valid_instruction()
 			#print("'METHOD START'  insert idx:", insert_idx, "  line:", self.raw_text[insert_idx])
 			self.embed_block(insert_idx, result_block)
