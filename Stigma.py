@@ -131,7 +131,23 @@ def getFiles():
     # end of sanity test
 
     return relevantFilePaths
-    
+
+
+def _has_launcher_intent_filter(xml_element):
+    for child in xml_element:
+        if(child.tag == "intent-filter"):
+            for grand_child in child:
+                if(grand_child.tag == "category"):
+                    if (grand_child.attrib['{http://schemas.android.com/apk/res/android}name'] == "android.intent.category.LAUNCHER"):
+                        #print(grand_child)
+                        return True
+    return False
+                    
+def _parse_class_name(xml_element_name_attribute):
+    class_name = "L" + xml_element_name_attribute + ";"
+    class_name = class_name.replace(".", "/");
+    c = SmaliTypes.from_string(class_name)
+    return c
     
 def get_launcher_activity_classes():
     manifest_path = os.path.join(temp_file.name, "AndroidManifest.xml")
@@ -139,26 +155,22 @@ def get_launcher_activity_classes():
     xml_tree = xml.etree.ElementTree.parse(manifest_path)
     #print("tree: ", xml_tree)
     xml_tree = xml_tree.getroot()
+    
+
     activities = xml_tree.findall("./application/activity")
-
-    launcher_acts = []
     for act in activities:
-        class_name = act.attrib['{http://schemas.android.com/apk/res/android}name']
-        class_name = "L" + class_name + ";"
-        class_name = class_name.replace(".", "/");
-        for child in act:
-            if(child.tag == "intent-filter"):
-                for grand_child in child:
-                    if(grand_child.tag == "category"):
-                        if (grand_child.attrib['{http://schemas.android.com/apk/res/android}name'] == "android.intent.category.LAUNCHER"):
-                            launcher_acts.append(SmaliTypes.from_string(class_name))
-                            #print(grand_child)
+        if(_has_launcher_intent_filter(act)):
+            smali_obj_ref = _parse_class_name(act.attrib['{http://schemas.android.com/apk/res/android}name'])
+            Instrumenter.add_new_launcher_class(smali_obj_ref)
 
-            #print(child)
+    activity_aliases = xml_tree.findall("./application/activity-alias")
+    for act in activity_aliases:
+        if(_has_launcher_intent_filter(act)):
+            smali_obj_ref = _parse_class_name(act.attrib['{http://schemas.android.com/apk/res/android}targetActivity'])
+            Instrumenter.add_new_launcher_class(smali_obj_ref)
 
     #print(root)
-    print("Launchers Found: " + str(launcher_acts))
-    Instrumenter.LAUNCHER_ACTIVITIES = launcher_acts
+    print("Launchers Found: " + str(Instrumenter.get_launcher_classes()))
     
 
 

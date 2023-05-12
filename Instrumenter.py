@@ -38,6 +38,17 @@ class InstrumentationSignupBundle():
         return str(self.handler)
         
 
+def add_new_launcher_class(smali_types_obj_ref):
+    global LAUNCHER_ACTIVITIES
+    if(smali_types_obj_ref not in LAUNCHER_ACTIVITIES):
+        LAUNCHER_ACTIVITIES.append(smali_types_obj_ref)
+
+
+def get_launcher_classes():
+    global LAUNCHER_ACTIVITIES
+    return LAUNCHER_ACTIVITIES
+
+
 
 def sign_up_method_start(new_method):
     global start_of_method_handler

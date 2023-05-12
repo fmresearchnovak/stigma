@@ -30,7 +30,7 @@ def new_method_handler(scd, smd):
 
     # this thing would be waaaaaay more efficient if we could do this if statement check earlier
     # in the process (maybe at sign-up time?)
-    if (scd in Instrumenter.LAUNCHER_ACTIVITIES and smd.signature.name == "onCreate"):
+    if (scd in Instrumenter.get_launcher_classes() and smd.signature.name == "onCreate"):
         print("Inserting new code in : " + str(smd.signature) + " of " + str(scd.class_name))
         #print("reg metadata: " + smd.get_register_meta_data())
         #print("has grown: " + str(smd.has_grown))
@@ -48,6 +48,7 @@ def new_method_handler(scd, smd):
         # minus the amount the registers were grown.
         #this_reg = "v" + str(smd.get_locals_directive_num() - smd.has_grown)
 
+        # get entry set from shared preferences data base (default one, not the named one)
         block.append(smali.MOVE_OBJECT_16("v0", "p0"))
         block.append(smali.BLANK_LINE())
         block.append(smali.INVOKE_STATIC(["v0"], "Landroid/preference/PreferenceManager;->getDefaultSharedPreferences(Landroid/content/Context;)Landroid/content/SharedPreferences;"))
@@ -62,11 +63,39 @@ def new_method_handler(scd, smd):
         block.append(smali.BLANK_LINE())
         block.append(smali.MOVE_RESULT_OBJECT("v3"))
         block.append(smali.BLANK_LINE())
+
+        # print the number of items in the entry set
+        block.append(smali.NEW_INSTANCE("v4", "Ljava/lang/StringBuilder;"))
+        block.append(smali.BLANK_LINE())
+        block.append(smali.INVOKE_DIRECT(["v4"], "Ljava/lang/StringBuilder;-><init>()V"))
+        block.append(smali.BLANK_LINE())
+        block.append(smali.CONST_STRING("v5", "\"Shared Prefs Num Items: \""))
+        block.append(smali.BLANK_LINE())
+        block.append(smali.INVOKE_VIRTUAL(["v4", "v5"], "Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;"))
+        # Although it might seem like we need a move-result-object here, we don't because the append method 
+        # modifies the existing StringBuilder on which it was called in addition to returning it.
+        block.append(smali.BLANK_LINE())
+        block.append(smali.INVOKE_INTERFACE(["v2"], "Ljava/util/Map;->size()I"))
+        block.append(smali.BLANK_LINE())
+        block.append(smali.MOVE_RESULT("v5"))
+        block.append(smali.BLANK_LINE())
+        block.append(smali.INVOKE_VIRTUAL(["v4", "v5"], "Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;"))
+        block.append(smali.BLANK_LINE())
+        block.append(smali.INVOKE_VIRTUAL(["v4"], "Ljava/lang/StringBuilder;->toString()Ljava/lang/String;"))
+        block.append(smali.BLANK_LINE())
+        block.append(smali.MOVE_RESULT_OBJECT("v4"))
+        block.append(smali.BLANK_LINE())
+        block.append(smali.CONST_STRING("v5", "\"Stigma Shared Prefs Dump\""))
+        block.append(smali.BLANK_LINE())
+        block.append(smali.INVOKE_STATIC(["v5", "v4"], "Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I"))
+        block.append(smali.BLANK_LINE())
+
+        # print the contents of the entry set
         block.append(smali.INVOKE_INTERFACE(["v3"], "Ljava/util/Set;->iterator()Ljava/util/Iterator;"))
         block.append(smali.BLANK_LINE())
         block.append(smali.MOVE_RESULT_OBJECT("v3"))
         block.append(smali.BLANK_LINE())
-        
+
         block.append(smali.LABEL(1))
 
         block.append(smali.BLANK_LINE())
@@ -90,8 +119,6 @@ def new_method_handler(scd, smd):
         block.append(smali.BLANK_LINE())
         block.append(smali.INVOKE_VIRTUAL(["v5", "v6"], "Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;"))
         block.append(smali.BLANK_LINE())
-        block.append(smali.MOVE_RESULT_OBJECT("v5"))
-        block.append(smali.BLANK_LINE())
         block.append(smali.INVOKE_INTERFACE(["v4"], "Ljava/util/Map$Entry;->getKey()Ljava/lang/Object;"))
         block.append(smali.BLANK_LINE())
         block.append(smali.MOVE_RESULT_OBJECT("v6"))
@@ -104,13 +131,9 @@ def new_method_handler(scd, smd):
         block.append(smali.BLANK_LINE())
         block.append(smali.INVOKE_VIRTUAL(["v5", "v6"], "Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;"))
         block.append(smali.BLANK_LINE())
-        block.append(smali.MOVE_RESULT_OBJECT("v5"))
-        block.append(smali.BLANK_LINE())
         block.append(smali.CONST_STRING("v6", "\"]: \""))
         block.append(smali.BLANK_LINE())
         block.append(smali.INVOKE_VIRTUAL(["v5", "v6"], "Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;"))
-        block.append(smali.BLANK_LINE())
-        block.append(smali.MOVE_RESULT_OBJECT("v5"))
         block.append(smali.BLANK_LINE())
         block.append(smali.INVOKE_INTERFACE(["v4"], "Ljava/util/Map$Entry;->getValue()Ljava/lang/Object;"))
         block.append(smali.BLANK_LINE())
@@ -121,8 +144,6 @@ def new_method_handler(scd, smd):
         block.append(smali.MOVE_RESULT_OBJECT("v6"))
         block.append(smali.BLANK_LINE())
         block.append(smali.INVOKE_VIRTUAL(["v5", "v6"], "Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;"))
-        block.append(smali.BLANK_LINE())
-        block.append(smali.MOVE_RESULT_OBJECT("v5"))
         block.append(smali.BLANK_LINE())
         block.append(smali.INVOKE_VIRTUAL(["v5"], "Ljava/lang/StringBuilder;->toString()Ljava/lang/String;"))
         block.append(smali.BLANK_LINE())

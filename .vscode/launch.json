@@ -36,5 +36,16 @@
             "console": "integratedTerminal",
             "justMyCode": true
         }
+
+
+        {
+            "name": "Stigma on Hard Coded App",
+            "type": "python",
+            "request": "launch",
+            "program": "Stigma.py",
+            "args": ["/home/ed/research/ift/stigma/APK/com.google.android.youtube.apk"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
     ]
 }
