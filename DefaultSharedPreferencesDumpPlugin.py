@@ -167,6 +167,12 @@ def main():
     
     Instrumenter.sign_up_launcher_activity_oncreate_start(new_method_handler, 7)
 
+    # getPreferences comes from the activity, it is activity specific
+    # getSharedPreferences comes from any context (activity is a type of context), it allows you to specify the name
+    # getDefaultSharedPreferences comes from the PreferenceManager and it is app-wide.
+    strings = ["getPreferences", "getSharedPreferences", "getDefaultSharedPreferences"]
+    Instrumenter.sign_up_look_for_strings_in_original_app_smali(strings)
+
 
 if __name__ == "__main__":
     main()

@@ -18,6 +18,7 @@ import SmaliClassDef
 import Instrumenter
 import TaintStorageHandler
 import SmaliTypes
+import Instrumenter
 import StigmaStringParsingLib
 import UI
 
@@ -148,6 +149,37 @@ def _parse_class_name(xml_element_name_attribute):
     class_name = class_name.replace(".", "/");
     c = SmaliTypes.from_string(class_name)
     return c
+
+
+def _look_for_individual_string(s):
+    loc = temp_file.name
+    grep_cmd = ["grep", "-r", "-I", "-H", s, loc]
+    wc_cmd = ["wc", "-l"]
+    
+    grep_process = subprocess.Popen(grep_cmd, stdout=subprocess.PIPE)
+    wc_process = subprocess.run(wc_cmd, stdin=grep_process.stdout, capture_output=True, text=True)
+
+    grep_process.stdout.close()
+
+    # decode is needed if text=True is False (the default) in 
+    # the above call to subprocess.run()
+    #count = completed_process.stdout.decode("utf-8") 
+
+    count = wc_process.stdout.strip()
+    print("\t\'" + s + "\' appears " + count + " times")
+
+
+def look_for(strings):
+    if(strings == []):
+        return 
+    
+    if(os.name == "posix"):
+        print("Searching for strings: " + str(strings))
+        for s in strings:
+            _look_for_individual_string(s)
+
+    else:
+        print("look_for_strings_in_original_app_smali() is only available on Linux systems")
     
 def get_launcher_activity_classes():
     manifest_path = os.path.join(temp_file.name, "AndroidManifest.xml")
@@ -481,9 +513,12 @@ if __name__ == '__main__':
     #ui = UI.UI(getFiles())
     #ui.launch()
 
+    get_launcher_activity_classes()
+    importPlugins()
+    look_for(Instrumenter.look_for_strings)
+
     if (not dry_run):
-        get_launcher_activity_classes()
-        importPlugins()
+
         runInstrumentation()
         writeStorageClasses() # necessary for TaintTracking plugins
         #writeMarkedLocationClass() # necessary for some plugins should be part of those plugin's code

@@ -20,6 +20,7 @@ MAX_DESIRED_NUM_REGISTERS = 0 #we grow our .locals by this number
 
 start_of_method_handler = None  # handler to insert code at start every method
 start_of_launcher_oncreate_method_handler = None # handler to insert code at start of launcher's oncreate method only
+look_for_strings = [] # list of strings (specified by user via sign_up_look_for_strings_in_original_app_smali() function) to look for in app's original smali
 
 instrumentation_map = {}
 storage_handler = TaintStorageHandler.get_instance()
@@ -133,8 +134,8 @@ def sign_up(opcode, new_method, num_regs, instrumeter_inserts_original_lines = F
 
 
 def make_comment_block(comment_detail=""):
-        block = [smali.BLANK_LINE(), smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA " + comment_detail), smali.BLANK_LINE()]
-        return block
+    block = [smali.BLANK_LINE(), smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA " + comment_detail), smali.BLANK_LINE()]
+    return block
 
 def _make_merge_core(scd, m, registers, free_reg):
     block = []
@@ -154,6 +155,7 @@ def make_sink_merge_block(scd, m, registers, free_reg):
     block =_make_merge_core(scd, m, registers, free_reg)
     block.append(smali.BLANK_LINE())
     return block
+
 def make_merge_block(scd, m, registers, taint_loc_result, free_reg):
     # This function creates a "merge block"
     # A merge block takes every one of the registers in the 
@@ -203,3 +205,8 @@ def get_next_move_result(m, line_num):
             
     return None
  
+
+def sign_up_look_for_strings_in_original_app_smali(strings):
+    global look_for_strings
+    look_for_strings = strings
+
