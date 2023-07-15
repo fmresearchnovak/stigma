@@ -3,9 +3,9 @@ Stigma  is a framework for modifying / instrumenting commodity Android applicati
 
 ### Table of Contents
 ​
-1. [Installing Dependencies] 
-2. [Optional Dependencies] 
-3. [Usage] 
+1. [Installing Dependencies](#installing-dependencies)
+2. [Optional Dependencies](#optional-dependencies)
+3. [Usage](#usage)
 4. [Limitations](#limitations)
 5. [Utilities and Auxiliary Programs](#utilities-and-auxiliary-programs)
 
