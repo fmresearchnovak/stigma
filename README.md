@@ -2,7 +2,6 @@
 Stigma  is a framework for modifying / instrumenting commodity Android applications.  It instruments the Smali assembly code of a given .APK file in and runs any provided `plugins` which specify the exact changes (if any) that will be made.  Currently, there are two (first party) plugins. One implements dynamic information flow tracking to track the use of sensitive information such as IMEI number, GPS location information, and the device phone number.  The other carries out Object Extraction on the APK in question, allowing for a more general-purpose use for Stigma. Stigma is intended to be used as a toolkit to modify android apps for future research projects.
 
 ### Table of Contents
-​
 1. [Installing Dependencies](#installing-dependencies)
 2. [Optional Dependencies](#optional-dependencies)
 3. [Usage](#usage)
