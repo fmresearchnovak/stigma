@@ -8,14 +8,14 @@ Stigma  is a framework for modifying / instrumenting commodity Android applicati
    ```apt install apktool```
    and here: [https://ibotpeaches.github.io/Apktool/](https://ibotpeaches.github.io/Apktool/))
 3. Install openjdk-11-jdk or newer (latest version available at [https://docs.microsoft.com/en-us/java/openjdk/download](https://docs.microsoft.com/en-us/java/openjdk/download))
-  * keytool (provided by above Ubuntu package and install)
-  * jarsigner (provided by above Ubuntu package and install)
+     * keytool (provided by above Ubuntu package and install)
+     * jarsigner (provided by above Ubuntu package and install)
 4. Install adb (available in Ubuntu repository
    ```apt install adb```
    and in the homebrew repository
    ```brew install android-platform-tools```
    As well as [https://www.lifewire.com/android-debug-bridge-adb-4149410](https://www.lifewire.com/android-debug-bridge-adb-4149410))
-  * official adb documentation: [https://developer.android.com/studio/command-line/adb](https://developer.android.com/studio/command-line/adb)
+     * official adb documentation: [https://developer.android.com/studio/command-line/adb](https://developer.android.com/studio/command-line/adb)
 5. Install aapt (available in Ubuntu repository
    ```apt install aapt```
    and at [https://developer.android.com/studio/command-line/aapt2#download_aapt2](https://developer.android.com/studio/command-line/aapt2#download_aapt2))
