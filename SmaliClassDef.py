@@ -215,17 +215,22 @@ class SmaliClassDef:
         # maybe this method should be in the Instrumenter class
 
         if(m.signature.is_abstract or m.signature.is_native):
-			# We shouldn't instrument methods that don't have code / locals
+            # We shouldn't instrument methods that don't have code / locals
             return False
-
-
-        launcher_oncreate = (Instrumenter.start_of_launcher_oncreate_method_handler != None and self in Instrumenter.LAUNCHER_ACTIVITIES and m.signature.name == "onCreate")
+        
+        launcher_oncreate = (Instrumenter.start_of_launcher_oncreate_method_handler != None and self.is_launcher_activity() and m.signature.name == "onCreate")
         method_start = (Instrumenter.start_of_method_handler != None)
         opcodes = (Instrumenter.instrumentation_map != {})
         # opcodes = (none of Instrumenter.instrumentation_map.keys() are in m)
 
         return (launcher_oncreate or method_start or opcodes)
 
+
+    def is_launcher_activity(self):
+        # Remember, Instrumenter.LAUNCHER_ACTIVITIES is a list of SmaliTypes.ObjectReference
+        for item in Instrumenter.LAUNCHER_ACTIVITIES:
+            if item == self: #invokes the __eq__ on the SmaliTypes.ObjectReference
+                return True
 
     def write_to_file(self, class_smali_file):
         # Write new "program" out to file
@@ -333,6 +338,7 @@ class SmaliClassDef:
         return str(self.file_name)
         
     def __eq__(self, other):
+        #print("checking equality on " + str(self) + " and " + str(other))
         if isinstance(other, SmaliClassDef):
             return self.class_name == other.class_name
         

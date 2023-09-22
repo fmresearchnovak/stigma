@@ -1,5 +1,6 @@
 
 import SmaliAssemblyInstructions
+import SmaliClassDef
 
 
 
@@ -215,6 +216,8 @@ class ObjectReference(SmaliType):
 			return other == str(self)
 		if(isinstance(other, ObjectReference)):
 			return str(other) == str(self)
+		if(isinstance(other, SmaliClassDef.SmaliClassDef)):
+			return str(self) == str(other.class_name)
 		
 	def get_generic_type(self):
 		# the children inherit this method
@@ -236,29 +239,29 @@ class NonSpecificObjectReference(ObjectReference):
 class Array(ObjectReference):
 	def unwrap_layer(self):
 		"""
-        The special case for unwrapping types of array with an aget-object instruction
-        Algorithm: remove the first character to check the type
-        
-        aget-object vX vY vZ
-        
-        vX is the destination, we will set the type of this register
-        what is returned from this function
-        
-        vY is the array, we have src_type which is the type of this array
-        
-        vZ is the index into vY, it is an int, we don't touch this
-        
-        e.g
-            1)
-                src_type: [[I
-                return "[I"
-            2)
-                src_type: [Ljava/lang/String
-                return "object"
-                
-            3) src_type= '?'
-                return ?
-        """ 
+		The special case for unwrapping types of array with an aget-object instruction
+		Algorithm: remove the first character to check the type
+		
+		aget-object vX vY vZ
+		
+		vX is the destination, we will set the type of this register
+		what is returned from this function
+		
+		vY is the array, we have src_type which is the type of this array
+		
+		vZ is the index into vY, it is an int, we don't touch this
+		
+		e.g
+			1)
+				src_type: [[I
+				return "[I"
+			2)
+				src_type: [Ljava/lang/String
+				return "object"
+				
+			3) src_type= '?'
+				return ?
+		""" 
 		unwrapped = self.raw_type_string[1:]
 		# assert(unwrapped != 64-bit-2)
 		obj = from_string(unwrapped)
