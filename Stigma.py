@@ -1,6 +1,5 @@
 
 import time
-import sys
 import os
 import subprocess
 import shutil
@@ -9,6 +8,7 @@ import tempfile
 import re
 import importlib
 import xml
+import argparse
 
 # only used for writeMarkedLocationClass,
 # that function (and this import) should be moved into the plugin that needs it
@@ -24,8 +24,13 @@ import UI
 
 
 
-# https://docs.python.org/3/library/tempfile.html
-temp_file = tempfile.TemporaryDirectory(prefix="apkOutput_")
+
+
+# global since it's used in multiple functions, and is even imported by other modules
+# it is set in the main() function
+# TO DO: make it not global
+temp_file = None 
+
 
 def aapt2_helper():
     for root, dirs, files in os.walk(temp_file.name):
@@ -36,25 +41,15 @@ def aapt2_helper():
             gradle_version = int(target[1][0])
             if gradle_version >= 3:
                 return True
-    return False
-
-def getOriginalAPKPath():
-    if (not os.path.exists(sys.argv[1])):
-        raise ValueError("Input file (" + sys.argv[1] + ") was not found or was not readable.")
-    return sys.argv[1]
+    return False 
 
 
-def getNewAPKName():
-    name = os.path.basename(getOriginalAPKPath())
-    return "Modified_" + name
-
-
-def dumpApk():
+def dumpApk(apk_path):
     # dump apk files
     start_time = time.time()
     # -f is necessary since temp_file already exists (apktool doesn't like that) 
     # -f means "force"
-    cmd = ["java", "-jar", "include/apktool.jar", "d", getOriginalAPKPath(), "-o", temp_file.name, "-f"]
+    cmd = ["java", "-jar", "include/apktool.jar", "d", apk_path, "-o", temp_file.name, "-f"]
     if (os.name == "nt"):
         completed_process = subprocess.run(cmd, shell=True)
     elif (os.name == "posix"):
@@ -64,28 +59,27 @@ def dumpApk():
     
 
 
-def importPlugins():
-    #TaintTrackingInstrumentationPlugin.main()
-    #SimpleTaintTrackingPlugin.main()
-    #JSONTrailPlugin.main()
-
+def importPlugin(plugin_name):
     # https://mathieularose.com/plugin-architecture-in-python
     # https://docs.python.org/3/library/importlib.html
 
-    p = os.path.dirname(os.path.realpath(__file__))
-    plugins_path = os.path.join(p,"plugins.txt")
+    #p = os.path.dirname(os.path.realpath(__file__))
+    #plugins_path = os.path.join(p,"plugins.txt")
 
-    f = open(plugins_path, 'r')
-    for line in f:
-        if not line.startswith("#") and line != "\n":
-            line = line.strip("\n")
-            line_path = os.path.join(p,line)
-            print("Loading Plugin: " + str(line))
-            #importlib.invalidate_caches() # ???
-            mod = importlib.import_module(line)
-            mod.main()
-            
-            break
+    #f = open(plugins_path, 'r')
+    #for line in f:
+    #    if not line.startswith("#") and line != "\n":
+    #        line = line.strip("\n")
+    #        line_path = os.path.join(p,line)
+    #        print("Loading Plugin: " + str(line))
+    #        #importlib.invalidate_caches() # ???
+    #        mod = importlib.import_module(line)
+    #        mod.main()  
+    #        break
+
+    print("Loading Plugin: " + str(plugin_name))
+    mod = importlib.import_module(plugin_name)
+    mod.main()
 
 
 def getFiles():
@@ -254,7 +248,7 @@ def runInstrumentation():
         scd.instrument()
         scd.overwrite_to_file()
 
-    analytics_path = os.path.join(temp_file.name, getNewAPKName() + "_analytics.dat")
+    analytics_path = os.path.join(temp_file.name, "analytics.dat")
     fh = open(analytics_path, "w")
     fh.write("Number of Comparisons: " + str(comparison_instruction_count) + "\n")
     fh.write("Number of instructions in which there were not enough registers to properly instrument: " + str(
@@ -430,10 +424,9 @@ def splitSmali():
 
 
 # rebuild apk
-def rebuildApk():
+def rebuildApk(newAPKName):
     # rebuilds the apk
     start_time = time.time()
-    newName = getNewAPKName()
 
     # --use-aapt2
     # was found to be necessary in order to re-build myfitnesspal
@@ -441,9 +434,9 @@ def rebuildApk():
     # https://github.com/iBotPeaches/Apktool/issues/2219
     use_aapt2 = aapt2_helper()
     if (use_aapt2):
-        rebuildCMD = ["java", "-jar", "include/apktool.jar", "b", temp_file.name, "--use-aapt2", "-o", getNewAPKName()]
+        rebuildCMD = ["java", "-jar", "include/apktool.jar", "b", temp_file.name, "--use-aapt2", "-o", newAPKName]
     else:
-        rebuildCMD = ["java", "-jar", "include/apktool.jar", "b", temp_file.name, "-o", getNewAPKName()]
+        rebuildCMD = ["java", "-jar", "include/apktool.jar", "b", temp_file.name, "-o", newAPKName]
 
     #print("Rebuilding:", rebuildCMD)
     if (os.name == "nt"):
@@ -457,7 +450,7 @@ def rebuildApk():
     print("Apk packed in %.1f seconds" % (time.time() - start_time))
 
 
-def signApk():
+def signApk(newAPKName):
     password = "MzJiY2ZjNjY5Z"
     password_bytes = (password + "\n").encode("utf-8")
     # print(password_bytes)
@@ -482,9 +475,8 @@ def signApk():
         proc.communicate(b"\n")
 
     # print("Signing...")
-    newAppName = getNewAPKName()
     # apksigner sign --ks stigma-keys.keystore --ks-pass pass:MzJiY2ZjNjY5Z --ks-key-alias stigma_keystore_alias ./leak_detect_test/Tracked_StigmaTest.apk
-    cmd = ["include/apksigner", "sign", "--ks", keystore_name, "--ks-pass", "pass:"+password, "--ks-key-alias", stigma_alias, newAppName]
+    cmd = ["include/apksigner", "sign", "--ks", keystore_name, "--ks-pass", "pass:"+password, "--ks-key-alias", stigma_alias, newAPKName]
     #print("Signing with apksigner:", cmd)
     if (os.name == "nt"):
         completedProcess = subprocess.run(cmd, shell=True)
@@ -493,48 +485,79 @@ def signApk():
     completedProcess.check_returncode()
 
 
-def deleteFiles():
-    temp_file.cleanup()
 
 
-if __name__ == '__main__':
-    # we need a better interface haha!  should use argparse!
-    # Also ./apk should be a sys.argv param to the location of an APK file
-    deleteFiles()
-    if (len(sys.argv) >= 3):
-        dry_run = "--dry-run" in sys.argv[2:]
-    else:
-        dry_run = False
+def openLauncherActivitySmaliFileForDebuggingPurposes():
+    
+    cmd = ["find", temp_file.name, "-iname", "HomeActivity.smali", "-exec", "xdg-open", "{}", ";"]
+    subprocess.run(cmd)
+
+    input("Press Enter to Continue...")
+
+
+def stigmaMainWorkflow(args):
+    # https://docs.python.org/3/library/tempfile.html
+    global temp_file # TO DO: Make this not a global if possible
+    temp_file = tempfile.TemporaryDirectory(prefix="apkOutput_")
+    temp_file.cleanup() # deletes existing temp files if they exist, this line might be unnecessary
+    print("Temp files at: " + str(temp_file.name))
 
     start = time.time()
-    print("Temp files at: " + str(temp_file.name))
-    dumpApk()
-    
+    dumpApk(args.APK)
     #ui = UI.UI(getFiles())
     #ui.launch()
-
     get_launcher_activity_classes()
-    importPlugins()
     look_for(Instrumenter.look_for_strings)
 
-    if (not dry_run):
+    newAPKName = "Modified_" + os.path.basename(args.APK)
 
+    plugin = args.plugin #[0]
+    dry_run = (plugin == None)
+    if (not dry_run):
+        importPlugin(plugin)
         runInstrumentation()
         writeStorageClasses() # necessary for TaintTracking plugins
         #writeMarkedLocationClass() # necessary for some plugins should be part of those plugin's code
         splitSmali()
 
-    rebuildApk()
-    signApk()
+    #openLauncherActivitySmaliFileForDebuggingPurposes()
+    rebuildApk(newAPKName)
+    signApk(newAPKName)
     end = time.time()
 
     print("Finished in %.1f seconds" % (end - start))
-    print("Result: " + os.path.abspath(getNewAPKName()))
+    print("Result: " + os.path.abspath(newAPKName))
 
     # this input is here because it is helpful to keep the temporary files
     # around for debugging purposes.  In final release maybe remove it.
     print("Temp files at: " + str(temp_file.name))
     input("Press Enter to Delete Temporary Files: ")
-    deleteFiles()
+    temp_file.cleanup()
+
+
+
+def main():
+
+    parser = argparse.ArgumentParser(description='Stigma: A tool for modifying the assembly code of closed source Android Apps')
+    parser.add_argument("APK", help="The path to the APK file to be modified")
+    parser.add_argument("-p", "--plugin", type=str, nargs=1, help="A plugin which defines the modifications desired.  A python3 file.")
+
+    args = parser.parse_args()
+    args.plugin = args.plugin[0]
+    print(args)
+
+    if (not os.path.exists(args.APK)):
+        raise ValueError("Input file (" + args.SomeApp_apk + ") was not found or was not readable.")
+    
+    if (args.plugin != None and (not os.path.exists(args.plugin + ".py"))):
+        raise ValueError("Plugin file (" + args.plugin + ") was not found or was not readable.")
+
+
+    stigmaMainWorkflow(args)
+
+
+if __name__ == '__main__':
+    main()
+
 
 
