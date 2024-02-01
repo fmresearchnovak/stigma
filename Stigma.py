@@ -199,8 +199,6 @@ def get_launcher_activity_classes():
     #print(root)
     return Instrumenter.get_launcher_classes()
 
-    
-
 
 def count_non_blank_lines_of_code():
     paths = getFiles()
@@ -535,9 +533,13 @@ def stigmaMainWorkflow(args):
     # this input is here because it is helpful to keep the temporary files
     # around for debugging purposes.  In final release maybe remove it.
     print("Temp files at: " + str(temp_file.name))
-    input("Press Enter to Delete Temporary Files: ")
+    input("Press Enter to Delete Temporary Files...")
     temp_file.cleanup()
 
+    cmd = ["adb", "install", "-r", newAPKName]
+    print(str(cmd))
+    input("Press Enter to Install Modified APK...")
+    subprocess.run(cmd)
 
 
 def main():
