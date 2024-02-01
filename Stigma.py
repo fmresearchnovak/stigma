@@ -77,6 +77,7 @@ def importPlugin(plugin_name):
     #        mod.main()  
     #        break
 
+    plugin_name = plugin_name.strip(".py")
     print("Loading Plugin: " + str(plugin_name))
     mod = importlib.import_module(plugin_name)
     mod.main()
@@ -196,7 +197,8 @@ def get_launcher_activity_classes():
             Instrumenter.add_new_launcher_class(smali_obj_ref)
 
     #print(root)
-    print("Launchers Found: " + str(Instrumenter.get_launcher_classes()))
+    return Instrumenter.get_launcher_classes()
+
     
 
 
@@ -487,12 +489,13 @@ def signApk(newAPKName):
 
 
 
-def openLauncherActivitySmaliFileForDebuggingPurposes():
+def openWithThirdPartyProgram(filename):
     
-    cmd = ["find", temp_file.name, "-iname", "HomeActivity.smali", "-exec", "xdg-open", "{}", ";"]
+    filename = os.path.basename(filename)
+    cmd = ["find", temp_file.name, "-iname", filename, "-exec", "xdg-open", "{}", ";"] # only works on Linux for now!
+    #print("cmd: " + str(cmd))
     subprocess.run(cmd)
-
-    input("Press Enter to Continue...")
+    #input("Press Enter to Continue...")
 
 
 def stigmaMainWorkflow(args):
@@ -503,24 +506,25 @@ def stigmaMainWorkflow(args):
     print("Temp files at: " + str(temp_file.name))
 
     start = time.time()
+
     dumpApk(args.APK)
     #ui = UI.UI(getFiles())
     #ui.launch()
-    get_launcher_activity_classes()
+    launchers = get_launcher_activity_classes()
+    print("Launchers Found: " + str(launchers))
+    #print("Launchers[0] type: " + str(type(launchers[0])))
     look_for(Instrumenter.look_for_strings)
-
     newAPKName = "Modified_" + os.path.basename(args.APK)
-
     plugin = args.plugin #[0]
     dry_run = (plugin == None)
     if (not dry_run):
         importPlugin(plugin)
         runInstrumentation()
-        writeStorageClasses() # necessary for TaintTracking plugins
-        #writeMarkedLocationClass() # necessary for some plugins should be part of those plugin's code
+        writeStorageClasses() # necessary for TaintTracking plugins, should be part of those plugins' code
+        #writeMarkedLocationClass() # necessary for some plugins should be part of those plugins' code
         splitSmali()
 
-    #openLauncherActivitySmaliFileForDebuggingPurposes()
+    openWithThirdPartyProgram(launchers[0].get_object_smali_file_basename())
     rebuildApk(newAPKName)
     signApk(newAPKName)
     end = time.time()
@@ -538,18 +542,19 @@ def stigmaMainWorkflow(args):
 
 def main():
 
-    parser = argparse.ArgumentParser(description='Stigma: A tool for modifying the assembly code of closed source Android Apps')
+    parser = argparse.ArgumentParser(description='''Stigma: A tool for modifying the assembly code of closed source Android Apps.\n
+                                     Example usage: python3 Stigma.py SomeApp.apk -p ./DefaultSharedPreferencesPlugin.py''')
     parser.add_argument("APK", help="The path to the APK file to be modified")
     parser.add_argument("-p", "--plugin", type=str, nargs=1, help="A plugin which defines the modifications desired.  A python3 file.")
 
     args = parser.parse_args()
     args.plugin = args.plugin[0]
-    print(args)
+    #print(args)
 
     if (not os.path.exists(args.APK)):
         raise ValueError("Input file (" + args.SomeApp_apk + ") was not found or was not readable.")
     
-    if (args.plugin != None and (not os.path.exists(args.plugin + ".py"))):
+    if (args.plugin != None and (not os.path.exists(args.plugin))):
         raise ValueError("Plugin file (" + args.plugin + ") was not found or was not readable.")
 
 

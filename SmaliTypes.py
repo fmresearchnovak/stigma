@@ -227,6 +227,10 @@ class ObjectReference(SmaliType):
 		
 	def get_object_simple_name(self):
 		return self.raw_type_string.split("/")[-1].strip()
+	
+	def get_object_smali_file_basename(self):
+		return self.get_object_simple_name().strip(";") + ".smali"
+
 		
 
 class NonSpecificObjectReference(ObjectReference):
