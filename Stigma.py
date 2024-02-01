@@ -200,6 +200,16 @@ def get_launcher_activity_classes():
     return Instrumenter.get_launcher_classes()
 
 
+def get_package_name():
+    manifest_path = os.path.join(temp_file.name, "AndroidManifest.xml")
+    #print("manifest path: " + manifest_path)
+    xml_tree = xml.etree.ElementTree.parse(manifest_path)
+    #print("tree: ", xml_tree)
+    xml_tree = xml_tree.getroot()
+    return xml_tree.attrib['package']
+    
+
+
 def count_non_blank_lines_of_code():
     paths = getFiles()
     num = 0
@@ -532,14 +542,23 @@ def stigmaMainWorkflow(args):
 
     # this input is here because it is helpful to keep the temporary files
     # around for debugging purposes.  In final release maybe remove it.
-    print("Temp files at: " + str(temp_file.name))
+    print("\nTemp files at: " + str(temp_file.name))
     input("Press Enter to Delete Temporary Files...")
     temp_file.cleanup()
 
     cmd = ["adb", "install", "-r", newAPKName]
-    print(str(cmd))
+    print("\n" + str(cmd))
     input("Press Enter to Install Modified APK...")
     subprocess.run(cmd)
+
+    #pkg_name = get_package_name()
+    #print("\nPackage Name: " + pkg_name)
+    #cmd = ["adb", "shell", "am", "start", "-n", pkg_name + "/" + str(launchers[0])]
+    # The above cmd is: ['adb', 'shell', 'am', 'start', '-n', 'uk.co.broadbandspeedchecker/Luk/co/broadbandspeedchecker/activities/OnBoardingActivity;']
+    # but needs to be: ['adb', 'shell', 'am', 'start', '-n', 'uk.co.broadbandspeedchecker/uk.co.broadbandspeedchecker.activities.OnBoardingActivity']
+    #print(str(cmd))
+    #input("Press Enter to Launch Modified APK...")
+    #subprocess.run(cmd)
 
 
 def main():
@@ -550,15 +569,16 @@ def main():
     parser.add_argument("-p", "--plugin", type=str, nargs=1, help="A plugin which defines the modifications desired.  A python3 file.")
 
     args = parser.parse_args()
-    args.plugin = args.plugin[0]
+
     #print(args)
 
     if (not os.path.exists(args.APK)):
         raise ValueError("Input file (" + args.SomeApp_apk + ") was not found or was not readable.")
     
-    if (args.plugin != None and (not os.path.exists(args.plugin))):
-        raise ValueError("Plugin file (" + args.plugin + ") was not found or was not readable.")
-
+    if (args.plugin != None):
+        args.plugin = args.plugin[0]
+        if(not os.path.exists(args.plugin)):
+            raise ValueError("Plugin file \'" + str(args.plugin) + "\' was not found or was not readable.")
 
     stigmaMainWorkflow(args)
 
