@@ -56,28 +56,40 @@ def dumpApk(apk_path):
         completed_process = subprocess.run(cmd)
     completed_process.check_returncode()
     print("Apk unpacked in %.1f seconds" % (time.time() - start_time))
-    
+
+
+def findPlugin(p):
+    # checks a few variations for the plugin name so Stigma is easier
+    # to use on the command line.  For example
+    # python3 Stigma.py SomeApp.apk -p DefaultSharedPreferencesPlugin works 
+    # even though "DefaultSharedPreferencesPlugin.py" is in the plugin directory
+    if (p != None):
+        variations = []
+        variations.append(p)
+        variations.append(p + ".py")
+        variations.append(os.path.join("plugin", os.path.basename(p)))
+        variations.append(os.path.join("plugin", os.path.basename(p + ".py")))
+        #print(variations)
+
+        for v in variations:
+            if (os.path.exists(v)):
+                #print("Loading Plugin: " + str(v))
+                return v
+            
+        raise ValueError("Plugin file \'" + str(p) + "\' was not found or was not readable.")    
 
 
 def importPlugin(plugin_name):
     # https://mathieularose.com/plugin-architecture-in-python
     # https://docs.python.org/3/library/importlib.html
 
-    #p = os.path.dirname(os.path.realpath(__file__))
-    #plugins_path = os.path.join(p,"plugins.txt")
+    # if the plugin is "plugin/DefaultSharedPreferencesPlugin.py"
+    # then we need to import "plugin.DefaultSharedPreferencesPlugin"
+    plugin_name = plugin_name.replace(".py", "")
+    plugin_name = plugin_name.replace("/", ".") # i'm concerned they might have entered /path/from/root/to/plugin.py
 
-    #f = open(plugins_path, 'r')
-    #for line in f:
-    #    if not line.startswith("#") and line != "\n":
-    #        line = line.strip("\n")
-    #        line_path = os.path.join(p,line)
-    #        print("Loading Plugin: " + str(line))
-    #        #importlib.invalidate_caches() # ???
-    #        mod = importlib.import_module(line)
-    #        mod.main()  
-    #        break
-
-    plugin_name = plugin_name.strip(".py")
+    # plugin_name = plugin_name.replace("\\", ".")
+    # plugin_name = plugin_name.replace(".\\", ".")
     print("Loading Plugin: " + str(plugin_name))
     mod = importlib.import_module(plugin_name)
     mod.main()
@@ -523,16 +535,15 @@ def stigmaMainWorkflow(args):
     #print("Launchers[0] type: " + str(type(launchers[0])))
     look_for(Instrumenter.look_for_strings)
     newAPKName = "Modified_" + os.path.basename(args.APK)
-    plugin = args.plugin #[0]
-    dry_run = (plugin == None)
+    dry_run = (args.plugin == None)
     if (not dry_run):
-        importPlugin(plugin)
+        importPlugin(args.plugin)
         runInstrumentation()
         writeStorageClasses() # necessary for TaintTracking plugins, should be part of those plugins' code
         #writeMarkedLocationClass() # necessary for some plugins should be part of those plugins' code
         splitSmali()
 
-    openWithThirdPartyProgram(launchers[0].get_object_smali_file_basename())
+    #openWithThirdPartyProgram(launchers[0].get_object_smali_file_basename())
     rebuildApk(newAPKName)
     signApk(newAPKName)
     end = time.time()
@@ -566,19 +577,16 @@ def main():
     parser = argparse.ArgumentParser(description='''Stigma: A tool for modifying the assembly code of closed source Android Apps.\n
                                      Example usage: python3 Stigma.py SomeApp.apk -p ./DefaultSharedPreferencesPlugin.py''')
     parser.add_argument("APK", help="The path to the APK file to be modified")
-    parser.add_argument("-p", "--plugin", type=str, nargs=1, help="A plugin which defines the modifications desired.  A python3 file.")
+    parser.add_argument("-p", "--plugin", type=str, nargs=1, help="A plugin which defi nes the modifications desired.  A python3 file.")
 
     args = parser.parse_args()
 
-    #print(args)
+
+    args.plugin = findPlugin(args.plugin[0])
 
     if (not os.path.exists(args.APK)):
         raise ValueError("Input file (" + args.SomeApp_apk + ") was not found or was not readable.")
     
-    if (args.plugin != None):
-        args.plugin = args.plugin[0]
-        if(not os.path.exists(args.plugin)):
-            raise ValueError("Plugin file \'" + str(args.plugin) + "\' was not found or was not readable.")
 
     stigmaMainWorkflow(args)
 

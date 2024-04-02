@@ -4,7 +4,7 @@ import SmaliClassDef
 import StigmaStringParsingLib
 import ControlFlowGraph
 import TypeSafetyChecker
-import TaintTrackingInstrumentationPlugin
+import plugin.TaintTrackingInstrumentationPlugin as TaintTrackingInstrumentationPlugin
 import Instrumenter
 
 import sys

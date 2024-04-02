@@ -10,7 +10,7 @@
             "type": "python",
             "request": "launch",
             "program": "Stigma.py",
-            "args": ["/home/ed/research/ift/stigma/APK/com.groupme.apk"],
+            "args": ["/home/ed/research/android_sec/APK/com.groupme.apk", "-p", "ManualEditingPlugin"],
             "console": "integratedTerminal",
             "justMyCode": true
         },

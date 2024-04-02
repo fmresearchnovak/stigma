@@ -1,5 +1,0 @@
-# List the names of the python file/module containing your instrumentation plugin.
-#TaintTrackingInstrumentationPlugin
-#SimpleTaintTrackingPlugin
-#JSONTrailPlugin
-DefaultSharedPreferencesDumpPlugin

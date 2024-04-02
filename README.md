@@ -9,11 +9,9 @@ Stigma  is a framework for modifying / instrumenting commodity Android applicati
 5. [Utilities and Auxiliary Programs](#utilities-and-auxiliary-programs)
 
 ### Installing Dependencies
-1. Have one of the following Operating Systems: Linux, MacOS or Windows environment
-1. Have python3 installed
-2. Install apktool (available in Ubuntu repository
-   ```apt install apktool```
-   and here: [https://ibotpeaches.github.io/Apktool/](https://ibotpeaches.github.io/Apktool/))
+1. Have one of the following Operating Systems: Linux (best supported), MacOS or Windows
+1. Install python 3.x
+1. Install python dependencies (see requirements.txt)
 3. Install openjdk-11-jdk or newer (latest version available at [https://docs.microsoft.com/en-us/java/openjdk/download](https://docs.microsoft.com/en-us/java/openjdk/download))
      * keytool (provided by above Ubuntu package and install)
      * jarsigner (provided by above Ubuntu package and install)
@@ -26,12 +24,6 @@ Stigma  is a framework for modifying / instrumenting commodity Android applicati
 5. Install aapt (available in Ubuntu repository
    ```apt install aapt```
    and at [https://developer.android.com/studio/command-line/aapt2#download_aapt2](https://developer.android.com/studio/command-line/aapt2#download_aapt2))
-6. Install networkx version 2.5.1 (we recommend installing via pip3; see below).  Available in Ubuntu repository
-   ```apt install python3-networkx```
-   Networkx source code is available here: [https://github.com/networkx/networkx](https://github.com/networkx/networkx)
-7. Install matplotlib version 3.1.2 (we recommend installing via pip3; see below).  Available in Ubuntu repository
-   ```apt install python3-matplotlib```
-   Matplotlib source code is available here: [https://matplotlib.org/](https://matplotlib.org/)
 8. Android Build Tools (`build-tools`) version 32.0.0 ([ref](https://developer.android.com/studio/releases/build-tools)). Android does not distribute Build Tools individually so the one have to install the Android SDK in which Build Tools are included. The Android SDK is available via the [Android Studio](https://developer.android.com/studio) SDK Manager. After installing the SDK from the SDK Manager in Android Studio, you also need to put the path including `apksigner` into your `PATH` environment variable. To do this,
     1. Find your Android SDK root directory.
        - On macOS, this is typically at `~/Library/Android/sdk`.
@@ -47,30 +39,19 @@ Stigma  is a framework for modifying / instrumenting commodity Android applicati
        - On Windows, add `C:\Users\YOUR_USERNAME\AppData\Local\Android\Sdk\build-tools\32.0.0` to your `PATH` environment variable.
        - On Linux, add `export PATH=$PATH:~/Android/Sdk/build-tools/32.0.0` to your `~/.bashrc`, `~/.profile`, `~/.bash_profile`, or your shell's equivalent configuration file.
 
-Recommended installation method for networkx and matplotlib is to use `pip3`. Enter the following on the command line:
-```pip3 install networkx```
-```pip3 install matplotlib```
 
 ### Optional Dependencies
 * Android Studio - to view logcat easily (available at [https://developer.android.com/studio](https://developer.android.com/studio))
 * pydot version 1.2.3 python3 module - to see control flow graphs ( `ControlFlowGraph.show()` ) (available in Ubuntu repository under python3-pydot)
-* pip3 - to install other dependencies easily (available in Ubuntu repository under python-pip3). If you're running python 3.4+, you automatically have `pip3` and hence, do not need to install it.
 
 
 # Usage
-### Obtaining a modified APK file
-Download an APK file to be run through Stigma. We recommend downloading from [https://www.apkmirror.com](https://www.apkmirror.com/) or [https://f-droid.org](https://f-droid.org/). 
 
-Change the working directory to the folder containing Stigma.py by entering the following on the command line:
-<br/>
-`cd path/to/folder/containing/stigma`
+`python3 Stigma.py /path/to/some_app.apk -p SomePlugin`
 
-Next, to run Stigma, do:
-<br/>
-`python3 Stigma.py /path/to/application.apk`
-<br/>
+You likely need to download some APK file to be run through Stigma. We recommend downloading from [https://www.apkmirror.com](https://www.apkmirror.com/) or [https://f-droid.org](https://f-droid.org/). 
 
-A new APK file should be generated (and signed): Tracked_application.apk
+After successfully running, a new APK file should be generated (and signed): `Modified_some_app.apk`
 
 ### Running modified APK file on your Android Phone
 
@@ -82,15 +63,9 @@ Provide wired connection of Android Phone with computer containing Stigma. Ensur
 
 Install / run the modified APK:
 
-`adb install -r Tracked_application.apk`
+`adb install -r Modified_some_app.apk`
 
-The "tracked" version of the application will monitor the use of sensitive information (e.g., GPS coordinates) using the aforementioned first party plugin.  In the tracked version, if that sensitive information is transmitted over a network connection such as WiFi (i.e., "leaked") by the app, there will be an entry made in the Android logging system: logcat.  That entry will have the tag `STIGMA` and a short message indicating the nature of the event, e.g., 
-
-`STIGMA, LEAK via WRITE() OCCURING!`
-
-The user can then check the logcat for such `STIGMA` messages using Android Studio or `adb logcat` on computer connected to the device running the app.
-
-To stress-test the modified APK file and obtain potential logcat entries, run the Monkey program (sample script present in `monkey-basic.sh`). Replace "edu.fandm.novak" with package name of the app in question. Search for the app on Google Play Store, obtain the package name from the url (present after "?id=")
+Most plugins insert LogCat messages into the app that can be viewed by searching for the keyword ``Stigma''.  Please consider the source code of the plugin you're using.
 
 ### Enabling Developer Options on Android Phone
 The following tutorial is on an OPPO A96. Options will be similar across the board for other Android phones.
