@@ -4,7 +4,6 @@ import SmaliTypes
 import StigmaStringParsingLib
 import Instrumenter
 import re
-import SmaliAssemblyInstructions as smali
 from SmaliMethodDef import SmaliMethodDef
 
 

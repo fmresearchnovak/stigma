@@ -2,10 +2,7 @@
 import time
 import os
 import subprocess
-import shutil
 import glob
-import tempfile
-import re
 import importlib
 import xml
 import argparse
@@ -19,21 +16,13 @@ import Instrumenter
 import TaintStorageHandler
 import SmaliTypes
 import Instrumenter
-import StigmaStringParsingLib
-import UI
+import StigmaState
 
-
-
-
-
-# global since it's used in multiple functions, and is even imported by other modules
-# it is set in the main() function
-# TO DO: make it not global
-temp_file = None 
 
 
 def aapt2_helper():
-    for root, dirs, files in os.walk(temp_file.name):
+    tmp_file_name = StigmaState.Environment().get_temp_file().name
+    for root, dirs, files in os.walk(tmp_file_name):
         if "app-metadata.properties" in files:
             fh = open(os.path.join(root, "app-metadata.properties"), "r")
             lines = fh.readlines()
@@ -46,10 +35,11 @@ def aapt2_helper():
 
 def dumpApk(apk_path):
     # dump apk files
+    tmp_file_name = StigmaState.Environment().get_temp_file().name
     start_time = time.time()
     # -f is necessary since temp_file already exists (apktool doesn't like that) 
     # -f means "force"
-    cmd = ["java", "-jar", "include/apktool.jar", "d", apk_path, "-o", temp_file.name, "-f"]
+    cmd = ["java", "-jar", "include/apktool.jar", "d", apk_path, "-o", tmp_file_name, "-f"]
     if (os.name == "nt"):
         completed_process = subprocess.run(cmd, shell=True)
     elif (os.name == "posix"):
@@ -125,7 +115,8 @@ def getFiles():
     # This gets all the files that end in ".smali" from the entire
     # application.  This assumes all of the framework files
     # as well as any files authored by the app developer.
-    relevantFilePaths = glob.glob(temp_file.name + '/**/*.smali', recursive=True)
+    tmp_file = StigmaState.Environment().get_temp_file()
+    relevantFilePaths = glob.glob(tmp_file.name + '/**/*.smali', recursive=True)
     # print(relevantFilePaths)
     # end of second chunk
 
@@ -159,7 +150,7 @@ def _parse_class_name(xml_element_name_attribute):
 
 
 def _look_for_individual_string(s):
-    loc = temp_file.name
+    loc = StigmaState.Environment().get_temp_file().name
     grep_cmd = ["grep", "-r", "-I", "-H", s, loc]
     wc_cmd = ["wc", "-l"]
     
@@ -189,7 +180,8 @@ def look_for(strings):
         print("look_for_strings_in_original_app_smali() is only available on Linux systems")
     
 def get_launcher_activity_classes():
-    manifest_path = os.path.join(temp_file.name, "AndroidManifest.xml")
+    tmp_file_name = StigmaState.Environment().get_temp_file().name
+    manifest_path = os.path.join(tmp_file_name, "AndroidManifest.xml")
     #print("manifest path: " + manifest_path)
     xml_tree = xml.etree.ElementTree.parse(manifest_path)
     #print("tree: ", xml_tree)
@@ -213,7 +205,8 @@ def get_launcher_activity_classes():
 
 
 def get_package_name():
-    manifest_path = os.path.join(temp_file.name, "AndroidManifest.xml")
+    tmp_file_name = StigmaState.Environment().get_temp_file().name
+    manifest_path = os.path.join(tmp_file_name, "AndroidManifest.xml")
     #print("manifest path: " + manifest_path)
     xml_tree = xml.etree.ElementTree.parse(manifest_path)
     #print("tree: ", xml_tree)
@@ -270,7 +263,8 @@ def runInstrumentation():
         scd.instrument()
         scd.overwrite_to_file()
 
-    analytics_path = os.path.join(temp_file.name, "analytics.dat")
+    tmp_file_name = StigmaState.Environment().get_temp_file().name
+    analytics_path = os.path.join(tmp_file_name, "analytics.dat")
     fh = open(analytics_path, "w")
     fh.write("Number of Comparisons: " + str(comparison_instruction_count) + "\n")
     fh.write("Number of instructions in which there were not enough registers to properly instrument: " + str(
@@ -282,13 +276,14 @@ def runInstrumentation():
 #Entire com/fasterxml folder
 def writeMarkedLocationClass():
     print("Writing Support Classes (jackson, MarkedLocation.smali)")
-    new_path = os.path.join(temp_file.name, "smali", "net", "stigma")
+    tmp_file_name = StigmaState.Environment().get_temp_file().name
+    new_path = os.path.join(tmp_file_name, "smali", "net", "stigma")
     os.makedirs(new_path, exist_ok=True)
     new_path = os.path.join(new_path, "MarkedLocation.smali")
     ## For Windows, "copy" is as "cp" for Unix systems.
     ## We write an if statement to check for the os, and use the correct line of code for cmd accordingly
     ## Also in the Windows statement is shell=True
-    distutils.dir_util.copy_tree("smali_lib", os.path.join(temp_file.name, "smali"))
+    distutils.dir_util.copy_tree("smali_lib", os.path.join(tmp_file_name, "smali"))
     if (os.name == "nt"):
         cmd = ["copy", "MarkedLocation.smali", new_path]
         completed_process = subprocess.run(cmd, shell=True)
@@ -302,6 +297,7 @@ def writeStorageClasses():
     storage_handler = TaintStorageHandler.TaintStorageHandler.get_instance()
     # print(storage_handler)
     print("Creating Taint Storage Locations")
+    temp_file = StigmaState.Environment().get_temp_file()
     path = os.path.join(temp_file.name, "smali", "net", "stigmastorage")
     os.makedirs(path, exist_ok=True)
     for storage_class in storage_handler.storage_classes:
@@ -415,10 +411,11 @@ def splitSmali():
 
     print("...Re-arranging files")
     # print(str(len(resultLists)) + " groups")
-    path = os.path.join(temp_file.name, "smali")
+    tmp_file_name = StigmaState.Environment().get_temp_file().name
+    path = os.path.join(tmp_file_name, "smali")
     for idx, group in enumerate(resultLists):
         if (idx > 0):
-            path = os.path.join(temp_file.name, "smali_classes" + str(idx + 1))
+            path = os.path.join(tmp_file_name, "smali_classes" + str(idx + 1))
             os.makedirs(path, exist_ok=True)
 
         # print("dir path: ", path)
@@ -450,6 +447,7 @@ def rebuildApk(newAPKName):
     # rebuilds the apk
     start_time = time.time()
 
+    temp_file = StigmaState.Environment().get_temp_file()
     # --use-aapt2
     # was found to be necessary in order to re-build myfitnesspal
     # to avoid error: invalid resource directory name: ...\res navigation
@@ -510,19 +508,17 @@ def signApk(newAPKName):
 
 
 def openWithThirdPartyProgram(filename):
-    
     filename = os.path.basename(filename)
+    temp_file = StigmaState.Environment().get_temp_file()
     cmd = ["find", temp_file.name, "-iname", filename, "-exec", "xdg-open", "{}", ";"] # only works on Linux for now!
     #print("cmd: " + str(cmd))
     subprocess.run(cmd)
     #input("Press Enter to Continue...")
 
 
+
 def stigmaMainWorkflow(args):
-    # https://docs.python.org/3/library/tempfile.html
-    global temp_file # TO DO: Make this not a global if possible
-    temp_file = tempfile.TemporaryDirectory(prefix="apkOutput_")
-    temp_file.cleanup() # deletes existing temp files if they exist, this line might be unnecessary
+    temp_file = StigmaState.Environment().get_temp_file()
     print("Temp files at: " + str(temp_file.name))
 
     start = time.time()

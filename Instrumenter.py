@@ -6,7 +6,7 @@ import re
 
 
 # this is a global populated by Stigma.py
-LAUNCHER_ACTIVITIES = []
+LAUNCHER_ACTIVITIES = [] # TO-DO: Implement this inside StigmaState.py
 
 # this is a global that is incremented by
 # the sign_up method
