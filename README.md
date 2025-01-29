@@ -11,8 +11,8 @@ Stigma  is a framework for modifying / instrumenting commodity Android applicati
 ### Installing Dependencies
 1. Have one of the following Operating Systems: Linux (best supported), MacOS or Windows
 1. Install python 3.x
-1. Install python dependencies (see requirements.txt)
-3. Install openjdk-11-jdk or newer (latest version available at [https://docs.microsoft.com/en-us/java/openjdk/download](https://docs.microsoft.com/en-us/java/openjdk/download))
+1. Install python dependencies (```pip install -r requirements.txt```)
+3. Install openjdk-11-jdk or newer (available in the Ubuntu repository ```apt install openjdk-11-jdk``` or the latest version is available at [https://docs.microsoft.com/en-us/java/openjdk/download](https://docs.microsoft.com/en-us/java/openjdk/download))
      * keytool (provided by above Ubuntu package and install)
      * jarsigner (provided by above Ubuntu package and install)
 4. Install adb (available in Ubuntu repository
@@ -24,7 +24,7 @@ Stigma  is a framework for modifying / instrumenting commodity Android applicati
 5. Install aapt (available in Ubuntu repository
    ```apt install aapt```
    and at [https://developer.android.com/studio/command-line/aapt2#download_aapt2](https://developer.android.com/studio/command-line/aapt2#download_aapt2))
-8. Android Build Tools (`build-tools`) version 32.0.0 ([ref](https://developer.android.com/studio/releases/build-tools)). Android does not distribute Build Tools individually so the one have to install the Android SDK in which Build Tools are included. The Android SDK is available via the [Android Studio](https://developer.android.com/studio) SDK Manager. After installing the SDK from the SDK Manager in Android Studio, you also need to put the path including `apksigner` into your `PATH` environment variable. To do this,
+8. Android Build Tools (`build-tools`) version 32.0.0 ([ref](https://developer.android.com/studio/releases/build-tools)). Android does not distribute Build Tools individually so it is necessary to install the Android SDK in which Build Tools are included. The Android SDK is available via the [Android Studio](https://developer.android.com/studio) SDK Manager. After installing the SDK from the SDK Manager in Android Studio, you also need to put the path including `apksigner` into your `PATH` environment variable. To do this,
     1. Find your Android SDK root directory.
        - On macOS, this is typically at `~/Library/Android/sdk`.
        - On Windows, this is typically at `C:\Users\YOUR_USERNAME\AppData\Local\Android\Sdk`.

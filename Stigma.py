@@ -7,10 +7,6 @@ import importlib
 import xml
 import argparse
 
-# only used for writeMarkedLocationClass,
-# that function (and this import) should be moved into the plugin that needs it
-import distutils 
-
 import SmaliClassDef
 import Instrumenter
 import TaintStorageHandler
@@ -273,24 +269,6 @@ def runInstrumentation():
 
     print("Instrumentation of app finished in %.1f seconds" % (time.time() - start_time))
 
-#Entire com/fasterxml folder
-def writeMarkedLocationClass():
-    print("Writing Support Classes (jackson, MarkedLocation.smali)")
-    tmp_file_name = StigmaState.Environment().get_temp_file().name
-    new_path = os.path.join(tmp_file_name, "smali", "net", "stigma")
-    os.makedirs(new_path, exist_ok=True)
-    new_path = os.path.join(new_path, "MarkedLocation.smali")
-    ## For Windows, "copy" is as "cp" for Unix systems.
-    ## We write an if statement to check for the os, and use the correct line of code for cmd accordingly
-    ## Also in the Windows statement is shell=True
-    distutils.dir_util.copy_tree("smali_lib", os.path.join(tmp_file_name, "smali"))
-    if (os.name == "nt"):
-        cmd = ["copy", "MarkedLocation.smali", new_path]
-        completed_process = subprocess.run(cmd, shell=True)
-    elif (os.name == "posix"):
-        cmd = ["cp", "MarkedLocation.smali", new_path]
-        completed_process = subprocess.run(cmd)
-    completed_process.check_returncode()
 
 
 def writeStorageClasses():
