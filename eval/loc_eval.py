@@ -7,7 +7,6 @@ import csv
 import os
 import glob
 import Stigma
-import numpy as np
 
 
 def main():
@@ -70,8 +69,8 @@ def main():
 
 
     # tick_label=names
-    plt.bar(np.arange(len(loc_befores)), loc_befores, tick_label=names, width=width)
-    plt.bar(np.arange(len(loc_afters)) + width, loc_afters, tick_label=names, width=width)
+    plt.bar(list(range(len(loc_befores))), loc_befores, tick_label=names, width=width)
+    plt.bar(list(range(len(loc_afters))) + width, loc_afters, tick_label=names, width=width)
     
     plt.ylabel("Lines of Code (non-blank)")
     plt.xlabel("Application")
