@@ -9,8 +9,8 @@ Stigma  is a framework for modifying / instrumenting commodity Android applicati
 5. [Utilities and Auxiliary Programs](#utilities-and-auxiliary-programs)
 
 ### Installing Dependencies
-1. Have one of the following Operating Systems: Linux (best supported), MacOS or Windows
-1. Install python 3.x
+1. Have one of the following Operating Systems: Linux (Ubuntu 22.04 is best supported), MacOS or Windows
+1. Install python 3.x (python 3.10 is recommended)
 1. Install python dependencies (```pip install -r requirements.txt```)
 3. Install openjdk-11-jdk or newer (available in the Ubuntu repository ```apt install openjdk-11-jdk``` or the latest version is available at [https://docs.microsoft.com/en-us/java/openjdk/download](https://docs.microsoft.com/en-us/java/openjdk/download))
      * keytool (provided by above Ubuntu package and install)
