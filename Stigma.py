@@ -62,8 +62,13 @@ def findPlugin(p):
                 #print("Loading Plugin: " + str(v))
                 return v
             
-        raise ValueError("Plugin file \'" + str(p) + "\' was not found or was not readable.")    
+        plugin_path = os.path.abspath("plugins/")
+        raise ValueError("Plugin file \'" + str(p) + "\' was not found or was not readable.\nPre-existing plugins can be found in " + plugin_path)    
 
+def findAPK(apk):
+    if (not os.path.exists(apk)):
+        raise ValueError("Input file (" + args.APK + ") was not found or was not readable.")
+    return apk
 
 def importPlugin(plugin_name):
     # https://mathieularose.com/plugin-architecture-in-python
@@ -551,16 +556,13 @@ def main():
     parser = argparse.ArgumentParser(description='''Stigma: A tool for modifying the assembly code of closed source Android Apps.\n
                                      Example usage: python3 Stigma.py SomeApp.apk -p ./DefaultSharedPreferencesPlugin.py''')
     parser.add_argument("APK", help="The path to the APK file to be modified")
-    parser.add_argument("-p", "--plugin", type=str, nargs=1, help="A plugin which defi nes the modifications desired.  A python3 file.")
+    parser.add_argument("-p", "--plugin", type=str, nargs=1, help="A plugin which defines the modifications desired.  A python3 file.")
 
     args = parser.parse_args()
 
 
     args.plugin = findPlugin(args.plugin[0])
-
-    if (not os.path.exists(args.APK)):
-        raise ValueError("Input file (" + args.SomeApp_apk + ") was not found or was not readable.")
-    
+    args.APK = findAPK(args.APK)
 
     stigmaMainWorkflow(args)
 
