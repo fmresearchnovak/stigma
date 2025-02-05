@@ -63,11 +63,13 @@ def findPlugin(p):
                 return v
             
         plugin_path = os.path.abspath("plugins/")
-        raise ValueError("Plugin file \'" + str(p) + "\' was not found or was not readable.\nPre-existing plugins can be found in " + plugin_path)    
+        print("Plugin file \'" + str(p) + "\' was not found or was not readable.\nPre-existing plugins can be found in " + plugin_path)
+        exit(1)
 
 def findAPK(apk):
     if (not os.path.exists(apk)):
-        raise ValueError("Input file (" + args.APK + ") was not found or was not readable.")
+        print("Input file (" + args.APK + ") was not found or was not readable.")
+        exit(1)
     return apk
 
 def importPlugin(plugin_name):
@@ -536,10 +538,11 @@ def stigmaMainWorkflow(args):
     input("Press Enter to Delete Temporary Files...")
     temp_file.cleanup()
 
-    cmd = ["adb", "install", "-r", newAPKName]
-    print("\n" + str(cmd))
-    input("Press Enter to Install Modified APK...")
-    subprocess.run(cmd)
+    if (args.install_automatically):
+        cmd = ["adb", "install", "-r", newAPKName]
+        print("\n" + str(cmd))
+        input("Press Enter to Install Modified APK...")
+        subprocess.run(cmd)
 
     #pkg_name = get_package_name()
     #print("\nPackage Name: " + pkg_name)
@@ -555,11 +558,16 @@ def main():
 
     parser = argparse.ArgumentParser(description='''Stigma: A tool for modifying the assembly code of closed source Android Apps.\n
                                      Example usage: python3 Stigma.py SomeApp.apk -p ./DefaultSharedPreferencesPlugin.py''')
+
+    # required arguments
     parser.add_argument("APK", help="The path to the APK file to be modified")
     parser.add_argument("-p", "--plugin", type=str, nargs=1, help="A plugin which defines the modifications desired.  A python3 file.")
 
-    args = parser.parse_args()
+    # optional arguments
+    parser.add_argument("-i", "--install-automatically", action="store_true", help="Automatically install the modified APK on a connected Android device using adb.")
 
+
+    args = parser.parse_args()
 
     args.plugin = findPlugin(args.plugin[0])
     args.APK = findAPK(args.APK)

@@ -65,6 +65,8 @@ Install / run the modified APK:
 
 `adb install -r Modified_some_app.apk`
 
+Use command line option `-i` or `--install-automatically` to have Stigma.py automatically run the command above when the instrumentation process is finished.
+
 Most plugins insert LogCat messages into the app that can be viewed by searching for the keyword ``Stigma''.  Please consider the source code of the plugin you're using.
 
 ### Enabling Developer Options on Android Phone

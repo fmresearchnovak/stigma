@@ -8,6 +8,7 @@ import StigmaState
 
 def _open_file_browser_GUI(filename):
     # https://stackoverflow.com/questions/17317219/is-there-an-platform-independent-equivalent-of-os-startfile
+    print("Opening file browser in: " + filename)
     if sys.platform == "win32":
         os.startfile(filename)
     else:
