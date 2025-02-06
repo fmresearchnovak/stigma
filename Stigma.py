@@ -62,7 +62,7 @@ def findPlugin(p):
                 #print("Loading Plugin: " + str(v))
                 return v
             
-        plugin_path = os.path.abspath("plugins/")
+        plugin_path = os.path.abspath("plugins")
         print("Plugin file \'" + str(p) + "\' was not found or was not readable.\nPre-existing plugins can be found in " + plugin_path)
         exit(1)
 
@@ -79,7 +79,12 @@ def importPlugin(plugin_name):
     # if the plugin is "plugin/DefaultSharedPreferencesPlugin.py"
     # then we need to import "plugin.DefaultSharedPreferencesPlugin"
     plugin_name = plugin_name.replace(".py", "")
-    plugin_name = plugin_name.replace("/", ".") # i'm concerned they might have entered /path/from/root/to/plugin.py
+    if (os.name == "nt"):
+        # windowsOS
+        plugin_name = plugin_name.replace("\\", ".") # i'm concerned they might have entered /path/from/root/to/plugin.py
+    elif (os.name == "posix"):
+        # macOS
+        plugin_name = plugin_name.replace("/", ".")
 
     # plugin_name = plugin_name.replace("\\", ".")
     # plugin_name = plugin_name.replace(".\\", ".")
