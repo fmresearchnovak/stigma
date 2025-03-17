@@ -62,7 +62,7 @@ def findPlugin(p):
                 #print("Loading Plugin: " + str(v))
                 return v
             
-        plugin_path = os.path.abspath("plugins")
+        plugin_path = os.path.abspath("plugin")
         print("Plugin file \'" + str(p) + "\' was not found or was not readable.\nPre-existing plugins can be found in " + plugin_path)
         exit(1)
 
