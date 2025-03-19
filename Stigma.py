@@ -487,8 +487,10 @@ def signApk(newAPKName):
     # print("Signing...")
     # apksigner sign --ks stigma-keys.keystore --ks-pass pass:MzJiY2ZjNjY5Z --ks-key-alias stigma_keystore_alias ./leak_detect_test/Tracked_StigmaTest.apk
     cmd = ["include/apksigner", "sign", "--ks", keystore_name, "--ks-pass", "pass:"+password, "--ks-key-alias", stigma_alias, newAPKName]
-    #print("Signing with apksigner:", cmd)
     if (os.name == "nt"):
+        cmd.insert(0, "bash")
+        cmd[1] = "./include/apksigner"
+        #print("Signing with apksigner:", cmd)
         completedProcess = subprocess.run(cmd, shell=True)
     elif (os.name == "posix"):
         completedProcess = subprocess.run(cmd)
