@@ -2,46 +2,47 @@
 Stigma  is a framework for modifying / instrumenting commodity Android applications.  It instruments the Smali assembly code of a given .APK file in and runs any provided `plugins` which specify the exact changes (if any) that will be made.  Currently, there are two (first party) plugins. One implements dynamic information flow tracking to track the use of sensitive information such as IMEI number, GPS location information, and the device phone number.  The other carries out Object Extraction on the APK in question, allowing for a more general-purpose use for Stigma. Stigma is intended to be used as a toolkit to modify android apps for future research projects.
 
 ### Table of Contents
-1. [Installing Dependencies](#installing-dependencies)
+1. [Dependencies](#dependencies)
 2. [Optional Dependencies](#optional-dependencies)
 3. [Usage](#usage)
 4. [Limitations](#limitations)
 5. [Utilities and Auxiliary Programs](#utilities-and-auxiliary-programs)
 
-### Installing Dependencies
-1. Have one of the following Operating Systems: Linux (Ubuntu 22.04 is best supported), MacOS or Windows
-1. Install python 3.x (python 3.10 is recommended)
-1. Install python dependencies (```pip install -r requirements.txt```)
-3. Install openjdk-11-jdk or newer (available in the Ubuntu repository ```apt install openjdk-11-jdk``` or the latest version is available at [https://docs.microsoft.com/en-us/java/openjdk/download](https://docs.microsoft.com/en-us/java/openjdk/download))
+### Dependencies
+1. Oone of the following Operating Systems: Linux (Ubuntu 22.04 is best supported), MacOS or Windows
+1. Python 3.x (python 3.10 is recommended)
+1. python module dependencies (```pip install -r requirements.txt```)
+3. OpenJDK 11 or newer (available in the Ubuntu repository ```apt install openjdk-11-jdk``` or the latest version available at [https://docs.microsoft.com/en-us/java/openjdk/download](https://docs.microsoft.com/en-us/java/openjdk/download))
      * keytool (provided by above Ubuntu package and install)
      * jarsigner (provided by above Ubuntu package and install)
-4. Install adb (available in Ubuntu repository
+
+
+### Optional Dependencies
+* ADB for installing APK files onto a device or emulator (available in Ubuntu repository
    ```apt install adb```
    and in the homebrew repository
    ```brew install android-platform-tools```
-   As well as [https://www.lifewire.com/android-debug-bridge-adb-4149410](https://www.lifewire.com/android-debug-bridge-adb-4149410))
+   as well as [https://www.lifewire.com/android-debug-bridge-adb-4149410](https://www.lifewire.com/android-debug-bridge-adb-4149410))
      * official adb documentation: [https://developer.android.com/studio/command-line/adb](https://developer.android.com/studio/command-line/adb)
-5. Install aapt (available in Ubuntu repository
+* AAPT for part of the application unpacking and repacking done by Stigma (available in Ubuntu repository
    ```apt install aapt```
    and at [https://developer.android.com/studio/command-line/aapt2#download_aapt2](https://developer.android.com/studio/command-line/aapt2#download_aapt2))
-8. Android Build Tools (`build-tools`) version 32.0.0 ([ref](https://developer.android.com/studio/releases/build-tools)). Android does not distribute Build Tools individually so it is necessary to install the Android SDK in which Build Tools are included. The Android SDK is available via the [Android Studio](https://developer.android.com/studio) SDK Manager. After installing the SDK from the SDK Manager in Android Studio, you also need to put the path including `apksigner` into your `PATH` environment variable. To do this,
-    1. Find your Android SDK root directory.
+
+* Android Studio - to use the build tools and to view logcat easily (available at [https://developer.android.com/studio](https://developer.android.com/studio))
+   * Android does not distribute the Build Tools individually.  They are available as part of the android SDK, which can most easily be acquired via [Android Studio](https://developer.android.com/studio).  Use the SDK Manager from within android studio to install a recent version of the SDK which will include the build tools. After installing the SDK from the SDK Manager in Android Studio, you may want to put the path including `apksigner` into your `PATH` environment variable. To do this,
+      1. Find your Android SDK root directory.
        - On macOS, this is typically at `~/Library/Android/sdk`.
        - On Windows, this is typically at `C:\Users\YOUR_USERNAME\AppData\Local\Android\Sdk`.
        - On Linux, this is typically at `~/Android/Sdk`.
        - *Check Android Studio's SDK Manager settings to confirm.*
-    2. Find the `build-tools` directory under your Android SDK root directory.
+      2. Find the `build-tools` directory under your Android SDK root directory.
        - On macOS, this is typically at `~/Library/Android/sdk/build-tools/32.0.0`.
        - On Windows, this is typically at `C:\Users\YOUR_USERNAME\AppData\Local\Android\Sdk\build-tools\32.0.0`.
        - On Linux, this is typically at `~/Android/Sdk/build-tools/32.0.0`.
-    3. Add the `build-tools` directory to your `PATH` environment variable.
+      3. Add the `build-tools` directory to your `PATH` environment variable.
        - On macOS, you can add `export PATH=$PATH:~/Library/Android/sdk/build-tools/32.0.0` to your `~/.bash_profile` or your shell's equivalent configuration file.
        - On Windows, add `C:\Users\YOUR_USERNAME\AppData\Local\Android\Sdk\build-tools\32.0.0` to your `PATH` environment variable.
        - On Linux, add `export PATH=$PATH:~/Android/Sdk/build-tools/32.0.0` to your `~/.bashrc`, `~/.profile`, `~/.bash_profile`, or your shell's equivalent configuration file.
-
-
-### Optional Dependencies
-* Android Studio - to view logcat easily (available at [https://developer.android.com/studio](https://developer.android.com/studio))
 * pydot version 1.2.3 python3 module - to see control flow graphs ( `ControlFlowGraph.show()` ) (available in Ubuntu repository under python3-pydot)
 
 
