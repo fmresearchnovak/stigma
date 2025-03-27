@@ -1,8 +1,11 @@
 import re
+import os
+import subprocess
 
 import Instrumenter
 import SmaliTypes
 import StigmaStringParsingLib
+import StigmaState
 
 import SmaliAssemblyInstructions as smali
 
@@ -31,7 +34,7 @@ def new_method_handler(scd, smd):
     # this thing would be waaaaaay more efficient if we could do this if statement check earlier
     # in the process (maybe at sign-up time?)
     if (scd in Instrumenter.get_launcher_classes() and smd.signature.name == "onCreate"):
-        print("Inserting new code in : " + str(smd.signature) + " of " + str(scd.class_name))
+        print("Inserting new code in: " + str(smd.signature) + " of " + str(scd.class_name))
         #print("reg metadata: " + smd.get_register_meta_data())
         #print("has grown: " + str(smd.has_grown))
         #print("locals directive num: " + str(smd.get_locals_directive_num()))
@@ -163,16 +166,57 @@ def new_method_handler(scd, smd):
     return block
 
 
+
+def _look_for_individual_string(s):
+    loc = StigmaState.Environment().get_temp_file().name
+    grep_cmd = ["grep", "-r", "-I", "-H", s, loc]
+    wc_cmd = ["wc", "-l"]
+    
+    grep_process = subprocess.Popen(grep_cmd, stdout=subprocess.PIPE)
+    wc_process = subprocess.run(wc_cmd, stdin=grep_process.stdout, capture_output=True, text=True)
+
+    grep_process.stdout.close()
+
+    # decode is needed if text=True is False (the default) in 
+    # the above call to subprocess.run()
+    #count = completed_process.stdout.decode("utf-8") 
+
+    count = wc_process.stdout.strip()
+    print("\t\'" + s + "\' appears " + count + " times")
+
+
+def look_for(strings):
+    if(strings == []):
+        return 
+    
+    if(os.name == "posix"):
+        print("Searching for strings: " + str(strings))
+        for s in strings:
+            _look_for_individual_string(s)
+
+    else:
+        print("look_for(strings) is only available on Linux systems")
+
+
+
 def main():
     
     Instrumenter.sign_up_launcher_activity_oncreate_start(new_method_handler, 7)
 
-    # getPreferences comes from the activity, it is activity specific
-    # getSharedPreferences comes from any context (activity is a type of context), it allows you to specify the name
+    # getPreferences comes from the activity, it is activity specific, so the FQN might be something like
+    #       Lorg/telegram/MessageActivity;->getPreferences(I)Landroid/content/SharedPreferences;
+    #
+    # getSharedPreferences comes from any context so it's app wide (note, activity is a type of context), it allows you to specify the name
     # getDefaultSharedPreferences comes from the PreferenceManager and it is app-wide.
-    strings = ["getPreferences", "getSharedPreferences", "getDefaultSharedPreferences"]
-    Instrumenter.sign_up_look_for_strings_in_original_app_smali(strings)
+    #strings = ["getPreferences", "getSharedPreferences", "getDefaultSharedPreferences"]
+    strings = [";->getPreferences(I)Landroid/content/SharedPreferences;", 
+        "Landroid/content/Context;->getSharedPreferences(Ljava/lang/String;I)Landroid/content/SharedPreferences;", 
+        "Landroid/preference/PreferenceManager;->getDefaultSharedPreferences(Landroid/content/Context;)Landroid/content/SharedPreferences;",
+        "Landroid/content/SharedPreferences;"]
+    look_for(strings)
 
 
 if __name__ == "__main__":
     main()
+
+

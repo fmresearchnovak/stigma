@@ -1,5 +1,7 @@
 import re
+
 import ValidSmaliInstructions
+
 
 BEGINS_WITH_DOT = r"^\s*\."  # oat "assembler" directives begin with a .dot
 BEGINS_WITH_HASHTAG = r"^\s*\#"
@@ -84,8 +86,6 @@ BEGINS_WITH_COMMENT = r"^\s*#"
 # did not use ^ (matching beginning of string) nor $ (matching end of string)
 # since this is used to find objects referenced in the middle of instructions
 IS_OBJECT_TYPE = r"(L[a-zA-Z0-9/$]+;)" 
-
-    
 
 
 

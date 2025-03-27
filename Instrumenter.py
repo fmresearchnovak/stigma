@@ -20,7 +20,6 @@ MAX_DESIRED_NUM_REGISTERS = 0 #we grow our .locals by this number
 
 start_of_method_handler = None  # handler to insert code at start every method
 start_of_launcher_oncreate_method_handler = None # handler to insert code at start of launcher's oncreate method only
-look_for_strings = [] # list of strings (specified by user via sign_up_look_for_strings_in_original_app_smali() function) to look for in app's original smali
 
 instrumentation_map = {}
 storage_handler = TaintStorageHandler.get_instance()
@@ -204,9 +203,3 @@ def get_next_move_result(m, line_num):
             return None
             
     return None
- 
-
-def sign_up_look_for_strings_in_original_app_smali(strings):
-    global look_for_strings
-    look_for_strings = strings
-
