@@ -66,7 +66,39 @@ You likely need to download some APK file to be run through Stigma. We recommend
 
 After successfully running, a new APK file should be generated (and signed): `Modified_some_app.apk`  
 
-You can run this APK on an emulator or physical device.  Using the ExamplePlugin you should be able to see "Stigma" and "Example Plugin" appear in the logcat.
+You can run this APK on an emulator or physical device.  Using ExamplePlugin.py you should be able to see "Stigma" and "Example Plugin" appear in the logcat.
+
+
+#### Example Use
+Running the example plugin on the popular app [F-Droid](https://f-droid.org/) (*which is itself an app market*).
+
+`$ python Stigma.py -p ExamplePlugin ~/tmp/F-Droid.apk`  
+`Temp files at: /tmp/apkOutput_zsh3choe`  
+`I: Using Apktool 2.11.1 on F-Droid.apk with 8 threads`  
+`I: Baksmaling classes.dex...`  
+...
+`I: Built apk into: Modified_F-Droid.apk`  
+`Apk packed in 8.6 seconds`  
+`Finished in 45.7 seconds`  
+`Result: /path/to/stigma/Modified_F-Droid.apk`  
+`Temp files at: /tmp/apkOutput_zsh3choe`  
+`Press Enter to Delete Temporary Files...`  
+`$`
+`$ adb install -r Modified_F-Droid.apk`  
+`Performing Streamed Install`  
+`Success`  
+`$ adb logcat | grep STIGMA`  
+*Launch the App on the Device*  
+<img src="exemplary_use.png" width=50% height=50%>
+
+
+
+
+
+
+
+
+
 
 
 ### Running modified APK file on your Android Phone
@@ -129,9 +161,11 @@ In the User variables, choose to "Edit" your "Path" variable:
 
 # Utilities and Auxiliary Programs
 
-* `stigma/count_pools.sh` - Bash command line utility for counting the references to strings, types, fields, and methods.  Requires the installation of [the smali command line tool](https://github.com/JesusFreke/smali/).
+* `count_pools.sh` - Bash command line utility for counting the references to strings, types, fields, and methods.  Requires the installation of [the smali command line tool](https://github.com/JesusFreke/smali/).
 
-* `stigma/valid_smali_instructions.txt` and `stigma/ValidSmaliInstrunctions.py` comprehensive collection of all valid smali opcode names.
+* `valid_smali_instructions.txt` and `ValidSmaliInstrunctions.py` comprehensive collection of all valid smali opcode names.
 
-* `stigma/app_check_eval.py` utility that searches for small collection of likely source function calls.  Takes a path to a folder (containing APKs) as input.
+* `app_check_eval.py` utility that searches for small collection of likely source function calls.  Takes a path to a folder (containing APKs) as input.
 [](https://github.com/fmresearchnovak/stigma.git)
+
+* Several others in auxiliary/
