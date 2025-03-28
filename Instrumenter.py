@@ -133,7 +133,7 @@ def sign_up(opcode, new_method, num_regs, instrumeter_inserts_original_lines = F
 
 
 def make_comment_block(comment_detail=""):
-    block = [smali.BLANK_LINE(), smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA " + comment_detail), smali.BLANK_LINE()]
+    block = [smali.BLANK_LINE(), smali.COMMENT("INSTRUCTIONS ADDED BY STIGMA " + comment_detail), smali.BLANK_LINE()]
     return block
 
 def _make_merge_core(scd, m, registers, free_reg):

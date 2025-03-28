@@ -687,7 +687,7 @@ class SmaliMethodDef:
 		#3) implement moves to free up lower numbered registers if possible
 		# reset empty old / pre-existing move lists
 		code_unit_regs = SmaliCodeIterator.get_regs_from_code_unit(code_unit)
-		self.moves_before = [smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers")]
+		self.moves_before = [smali.COMMENT("INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers")]
 		self.moves_after = []
 		dest_reg = SmaliRegister.from_components("v", new_first_free_reg_num)
 		
@@ -715,7 +715,7 @@ class SmaliMethodDef:
 			
 			if safe_regs.is_full():
 				self.moves_after.insert(0, smali.BLANK_LINE())
-				self.moves_after.append(smali.COMMENT("IFT INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers"))
+				self.moves_after.append(smali.COMMENT("INSTRUCTIONS ADDED BY STIGMA to free up low numbered registers"))
 				self.moves_after.append(smali.BLANK_LINE())
 				return safe_regs
 				

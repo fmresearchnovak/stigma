@@ -23,7 +23,6 @@ def new_method_handler(scd, smd):
         block.append(smali.CONST_STRING("v1", "\"Example Plugin\""))
         block.append(smali.BLANK_LINE())
         block.append(smali.INVOKE_STATIC(["v0", "v1"], "Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I"))
-        block.append(smali.BLANK_LINE())
 
         # Note: This block can use v0, v1, v2 (3 total registers) because this instrumentation plugin set
         # the MAX_DESIRED_NUM_REGISTERS to 3 by passing 3 to sign_up_launcher_activity_oncreate_start in main()
