@@ -62,7 +62,7 @@ def findPlugin(p):
                 #print("Loading Plugin: " + str(v))
                 return v
             
-        plugin_path = os.path.abspath("plugins")
+        plugin_path = os.path.abspath("plugin")
         print("Plugin file \'" + str(p) + "\' was not found or was not readable.\nPre-existing plugins can be found in " + plugin_path)
         exit(1)
 
@@ -156,36 +156,6 @@ def _parse_class_name(xml_element_name_attribute):
     c = SmaliTypes.from_string(class_name)
     return c
 
-
-def _look_for_individual_string(s):
-    loc = StigmaState.Environment().get_temp_file().name
-    grep_cmd = ["grep", "-r", "-I", "-H", s, loc]
-    wc_cmd = ["wc", "-l"]
-    
-    grep_process = subprocess.Popen(grep_cmd, stdout=subprocess.PIPE)
-    wc_process = subprocess.run(wc_cmd, stdin=grep_process.stdout, capture_output=True, text=True)
-
-    grep_process.stdout.close()
-
-    # decode is needed if text=True is False (the default) in 
-    # the above call to subprocess.run()
-    #count = completed_process.stdout.decode("utf-8") 
-
-    count = wc_process.stdout.strip()
-    print("\t\'" + s + "\' appears " + count + " times")
-
-
-def look_for(strings):
-    if(strings == []):
-        return 
-    
-    if(os.name == "posix"):
-        print("Searching for strings: " + str(strings))
-        for s in strings:
-            _look_for_individual_string(s)
-
-    else:
-        print("look_for_strings_in_original_app_smali() is only available on Linux systems")
     
 def get_launcher_activity_classes():
     tmp_file_name = StigmaState.Environment().get_temp_file().name
@@ -456,7 +426,11 @@ def rebuildApk(newAPKName):
     try:
         completedProcess.check_returncode()
     except:
-        input("continue?")
+        print()
+        print("Consider deleting framework files '~/.local/share/apktool/framework/1.apk'")
+        response = input("continue?").lower()
+        if(response != "y" and response != "yes"):
+            exit(2)
     print("Apk packed in %.1f seconds" % (time.time() - start_time))
 
 
@@ -487,8 +461,10 @@ def signApk(newAPKName):
     # print("Signing...")
     # apksigner sign --ks stigma-keys.keystore --ks-pass pass:MzJiY2ZjNjY5Z --ks-key-alias stigma_keystore_alias ./leak_detect_test/Tracked_StigmaTest.apk
     cmd = ["include/apksigner", "sign", "--ks", keystore_name, "--ks-pass", "pass:"+password, "--ks-key-alias", stigma_alias, newAPKName]
-    #print("Signing with apksigner:", cmd)
     if (os.name == "nt"):
+        cmd.insert(0, "bash")
+        cmd[1] = "./include/apksigner"
+        #print("Signing with apksigner:", cmd)
         completedProcess = subprocess.run(cmd, shell=True)
     elif (os.name == "posix"):
         completedProcess = subprocess.run(cmd)
@@ -519,7 +495,7 @@ def stigmaMainWorkflow(args):
     launchers = get_launcher_activity_classes()
     print("Launchers Found: " + str(launchers))
     #print("Launchers[0] type: " + str(type(launchers[0])))
-    look_for(Instrumenter.look_for_strings)
+
     newAPKName = "Modified_" + os.path.basename(args.APK)
     dry_run = (args.plugin == None)
     if (not dry_run):
