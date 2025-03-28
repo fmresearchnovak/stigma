@@ -1,20 +1,31 @@
 # Stigma
-Stigma  is a framework for modifying / instrumenting commodity Android applications.  It instruments the Smali assembly code of a given .APK file in and runs any provided `plugins` which specify the exact changes (if any) that will be made.  Currently, there are two (first party) plugins. One implements dynamic information flow tracking to track the use of sensitive information such as IMEI number, GPS location information, and the device phone number.  The other carries out Object Extraction on the APK in question, allowing for a more general-purpose use for Stigma. Stigma is intended to be used as a toolkit to modify android apps for future research projects.
+Stigma  is a framework for modifying / instrumenting commodity Android application APKs.  It allows users to define and integrate plugins, which specify the exact changes to be made.  Currently, there are several (first party) plugins found in the ```plugin/``` directory.
+
+Stigma is currently **alpha** software. Numerous bugs and limitations exist, which limit broad compatibility with many Android apps. It is intended to be a tool for computer science researchers working in smali byte-code instrumentation or dynamic information flow tracking. 
 
 ### Table of Contents
 1. [Dependencies](#dependencies)
 2. [Optional Dependencies](#optional-dependencies)
 3. [Usage](#usage)
-4. [Limitations](#limitations)
+4. [Windows Support](#windows)
 5. [Utilities and Auxiliary Programs](#utilities-and-auxiliary-programs)
 
 ### Dependencies
-1. Oone of the following Operating Systems: Linux (Ubuntu 22.04 is best supported), MacOS or Windows
-1. Python 3.x (python 3.10 is recommended)
-1. python module dependencies (```pip install -r requirements.txt```)
-3. OpenJDK 11 or newer (available in the Ubuntu repository ```apt install openjdk-11-jdk``` or the latest version available at [https://docs.microsoft.com/en-us/java/openjdk/download](https://docs.microsoft.com/en-us/java/openjdk/download))
-     * keytool (provided by above Ubuntu package and install)
-     * jarsigner (provided by above Ubuntu package and install)
+1. One of the following Operating Systems: Linux (Ubuntu 22.04 is best supported) or MacOS
+1. Python 3.x (Python 3.12 is recommended)
+1. Python module dependencies (```pip install -r requirements.txt```)
+3. OpenJDK 21 or newer (available in the Ubuntu repository ```apt install openjdk-21-jdk``` or the latest version available at [https://docs.microsoft.com/en-us/java/openjdk/download](https://docs.microsoft.com/en-us/java/openjdk/download))
+     * keytool (*provided by openjdk-21-jdk Ubuntu package*)
+     * jarsigner (*provided by openjdk-21-jdk Ubuntu package*)
+
+
+It is recommended to use a virtual environment for easier python module dependency resolution.  
+`$ cd /path/to/stigma/`  
+`$ python3 -m venv .venv`  
+`$ source .venv/bin/activate`  
+`$ pip install -r requirements.txt`  
+
+
 
 
 ### Optional Dependencies
@@ -46,13 +57,17 @@ Stigma  is a framework for modifying / instrumenting commodity Android applicati
 * pydot version 1.2.3 python3 module - to see control flow graphs ( `ControlFlowGraph.show()` ) (available in Ubuntu repository under python3-pydot)
 
 
-# Usage
-
-`python3 Stigma.py /path/to/some_app.apk -p SomePlugin`
+### Usage
+`$ cd /path/to/stigma`  
+`$ source .venv/bin/activate`  (*Necessary if virtual environment is being used*)  
+`$ python3 Stigma.py /path/to/some_app.apk -p ExamplePlugin`  
 
 You likely need to download some APK file to be run through Stigma. We recommend downloading from [https://www.apkmirror.com](https://www.apkmirror.com/) or [https://f-droid.org](https://f-droid.org/). 
 
-After successfully running, a new APK file should be generated (and signed): `Modified_some_app.apk`
+After successfully running, a new APK file should be generated (and signed): `Modified_some_app.apk`  
+
+You can run this APK on an emulator or physical device.  Using the ExamplePlugin you should be able to see "Stigma" and "Example Plugin" appear in the logcat.
+
 
 ### Running modified APK file on your Android Phone
 
@@ -82,7 +97,18 @@ Open Version:
 Tap on Build number 7 times. You will eventually receive a confirmation for Developer mode, similar to the one shown below:
 <br/><img src="https://user-images.githubusercontent.com/107204379/181112972-8aea60f4-c24a-4d02-8c87-5686354ed9bb.png" width=50% height=50%>
 
-### Setting the PATH environment variables (Windows only)
+
+
+
+
+
+
+
+
+
+### Windows
+Windows use is generally not supported.  But, it is likely possible since stigma is built in Java and Python.
+Setting the PATH environment variables (Windows only)
 Set up both `adb` and the `openjdk` tools (`keytool` and `jarsigner`) as PATH environment variables, with the following tutorial showing a specific example for the `openjdk` tools.
 <br/>
 
@@ -99,13 +125,6 @@ In the User variables, choose to "Edit" your "Path" variable:
 
 "Browse" and locate the folder containing your install of openjdk, and hence its "bin" folder, which contains both "keytool" and "jarsigner":
 <br/><img src="https://user-images.githubusercontent.com/107204379/177006414-08fab1f6-a1da-48c1-a172-6bce6887da4a.png" width=50% height=50%>
-
-
-### Limitations
-Stigma has many limitations.  It can only track very limited sources of sensitive information (GPS, IMEI, Device Phone Number) and it can lose track of that sensitive information as the target application operates.  Additionally, the detection of network connections / transmission is very primitive and may not catch many instances.  Extensive future research and improvments are ongoing.
-
-Stigma is currently "beta" software.  Numerous bugs and limitations exist, which limit broad compatibility with many Android apps.  It is intended to be a tool for computer science researchers working in (a) smali byte-code instrumentation or (b) dynamic information flow tracking.
-
 
 
 # Utilities and Auxiliary Programs

@@ -3,7 +3,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-#
+# VS-Code Jargon
+.vscode/
 
 # Pycharm Jargon
 .idea/
