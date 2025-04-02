@@ -68,7 +68,7 @@ def findPlugin(p):
 
 def findAPK(apk):
     if (not os.path.exists(apk)):
-        print("Input file (" + args.APK + ") was not found or was not readable.")
+        print("Input file (" + apk + ") was not found or was not readable.")
         exit(1)
     return apk
 
