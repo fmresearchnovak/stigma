@@ -1,7 +1,7 @@
 # Stigma
 Stigma  is a framework for modifying / instrumenting commodity Android application APKs.  It allows users to define and integrate plugins, which specify the exact changes to be made.  Currently, there are several (first party) plugins found in the ```plugin/``` directory.
 
-Stigma is currently **alpha** software. Numerous bugs and limitations exist, which limit broad compatibility with many Android apps. It is intended to be a tool for computer science researchers working in smali byte-code instrumentation or dynamic information flow tracking. 
+Stigma is currently **alpha** software. Numerous bugs and limitations exist, which hinder broad compatibility with many Android apps. It is intended to be a tool for computer science researchers working in smali byte-code instrumentation or dynamic information flow tracking. 
 
 ### Table of Contents
 1. [Dependencies](#dependencies)
