@@ -26,6 +26,43 @@ It is recommended to use a virtual environment for easier python module dependen
 `$ pip install -r requirements.txt`  
 
 
+### Usage
+`$ cd /path/to/stigma`  
+`$ source .venv/bin/activate`  (*Necessary iif virtual environment is being used*)  
+`$ python3 Stigma.py /path/to/some_app.apk -p ExamplePlugin`  
+
+You likely need to download some APK file to be run through Stigma. We recommend downloading from [https://www.apkmirror.com](https://www.apkmirror.com/) or [https://f-droid.org](https://f-droid.org/). 
+
+After successfully running, a new APK file should be generated (and signed): `Modified_some_app.apk`  
+
+You can run this APK on an emulator or physical device.  Using ExamplePlugin.py you should be able to see "Stigma" and "Example Plugin" appear in the logcat.
+
+
+#### Example Use
+Running the example plugin on the popular app [F-Droid](https://f-droid.org/) (*which is itself an app market*).
+
+`$ python Stigma.py -p ExamplePlugin ~/tmp/F-Droid.apk`  
+`Temp files at: /tmp/apkOutput_zsh3choe`  
+`I: Using Apktool 2.11.1 on F-Droid.apk with 8 threads`  
+`I: Baksmaling classes.dex...`  
+[. . .] <br>
+`I: Built apk into: Modified_F-Droid.apk`  
+`Apk packed in 8.6 seconds`  
+`Finished in 45.7 seconds`  
+`Result: /path/to/stigma/Modified_F-Droid.apk`  
+`Temp files at: /tmp/apkOutput_zsh3choe`  
+`Press Enter to Delete Temporary Files...`  
+`$`<br>
+`$ adb install -r Modified_F-Droid.apk`  
+`Performing Streamed Install`  
+`Success`  
+`$ adb logcat | grep --line-buffered STIGMA`  
+*Launch the App on the Device*  
+<img src="exemplary_use.png" width=100%>
+
+Done!
+---
+<br><br><br>
 
 
 ### Optional Dependencies
@@ -39,7 +76,7 @@ It is recommended to use a virtual environment for easier python module dependen
    ```apt install aapt```
    and at [https://developer.android.com/studio/command-line/aapt2#download_aapt2](https://developer.android.com/studio/command-line/aapt2#download_aapt2))
 
-* Android Studio - to use the build tools and to view logcat easily (available at [https://developer.android.com/studio](https://developer.android.com/studio))
+* Android Studio to use the build tools and to view logcat easily (available at [https://developer.android.com/studio](https://developer.android.com/studio))
    * Android does not distribute the Build Tools individually.  They are available as part of the android SDK, which can most easily be acquired via [Android Studio](https://developer.android.com/studio).  Use the SDK Manager from within android studio to install a recent version of the SDK which will include the build tools. After installing the SDK from the SDK Manager in Android Studio, you may want to put the path including `apksigner` into your `PATH` environment variable. To do this,
       1. Find your Android SDK root directory.
        - On macOS, this is typically at `~/Library/Android/sdk`.
@@ -57,39 +94,6 @@ It is recommended to use a virtual environment for easier python module dependen
 * pydot version 1.2.3 python3 module - to see control flow graphs ( `ControlFlowGraph.show()` ) (available in Ubuntu repository under python3-pydot)
 
 
-### Usage
-`$ cd /path/to/stigma`  
-`$ source .venv/bin/activate`  (*Necessary if virtual environment is being used*)  
-`$ python3 Stigma.py /path/to/some_app.apk -p ExamplePlugin`  
-
-You likely need to download some APK file to be run through Stigma. We recommend downloading from [https://www.apkmirror.com](https://www.apkmirror.com/) or [https://f-droid.org](https://f-droid.org/). 
-
-After successfully running, a new APK file should be generated (and signed): `Modified_some_app.apk`  
-
-You can run this APK on an emulator or physical device.  Using ExamplePlugin.py you should be able to see "Stigma" and "Example Plugin" appear in the logcat.
-
-
-#### Example Use
-Running the example plugin on the popular app [F-Droid](https://f-droid.org/) (*which is itself an app market*).
-
-`$ python Stigma.py -p ExamplePlugin ~/tmp/F-Droid.apk`  
-`Temp files at: /tmp/apkOutput_zsh3choe`  
-`I: Using Apktool 2.11.1 on F-Droid.apk with 8 threads`  
-`I: Baksmaling classes.dex...`  
-...
-`I: Built apk into: Modified_F-Droid.apk`  
-`Apk packed in 8.6 seconds`  
-`Finished in 45.7 seconds`  
-`Result: /path/to/stigma/Modified_F-Droid.apk`  
-`Temp files at: /tmp/apkOutput_zsh3choe`  
-`Press Enter to Delete Temporary Files...`  
-`$`
-`$ adb install -r Modified_F-Droid.apk`  
-`Performing Streamed Install`  
-`Success`  
-`$ adb logcat | grep STIGMA`  
-*Launch the App on the Device*  
-<img src="exemplary_use.png" width=50% height=50%>
 
 
 
