@@ -433,6 +433,11 @@ def rebuildApk(newAPKName):
             exit(2)
     print("Apk packed in %.1f seconds" % (time.time() - start_time))
 
+def alignApk(unalignedAPKName, modifiedAPKName):
+    cmd = ["zipalign", "4", unalignedAPKName, modifiedAPKName]
+    subprocess.run(cmd)
+    cmd = ["rm", unalignedAPKName]
+    subprocess.run(cmd)
 
 def signApk(newAPKName):
     password = "MzJiY2ZjNjY5Z"
@@ -471,8 +476,6 @@ def signApk(newAPKName):
     completedProcess.check_returncode()
 
 
-
-
 def openWithThirdPartyProgram(filename):
     filename = os.path.basename(filename)
     temp_file = StigmaState.Environment().get_temp_file()
@@ -496,7 +499,9 @@ def stigmaMainWorkflow(args):
     print("Launchers Found: " + str(launchers))
     #print("Launchers[0] type: " + str(type(launchers[0])))
 
-    newAPKName = "Modified_" + os.path.basename(args.APK)
+    unalignedAPKName = "Unaligned_" + os.path.basename(args.APK)
+    modifiedAPKName = "Modified_" + os.path.basename(args.APK)
+
     dry_run = (args.plugin == None)
     if (not dry_run):
         importPlugin(args.plugin)
@@ -506,12 +511,14 @@ def stigmaMainWorkflow(args):
         splitSmali()
 
     #openWithThirdPartyProgram(launchers[0].get_object_smali_file_basename())
-    rebuildApk(newAPKName)
-    signApk(newAPKName)
+    rebuildApk(unalignedAPKName)
+    alignApk(unalignedAPKName, modifiedAPKName)
+    signApk(modifiedAPKName)
+
     end = time.time()
 
     print("Finished in %.1f seconds" % (end - start))
-    print("Result: " + os.path.abspath(newAPKName))
+    print("Result: " + os.path.abspath(modifiedAPKName))
 
     # this input is here because it is helpful to keep the temporary files
     # around for debugging purposes.  In final release maybe remove it.
@@ -520,7 +527,7 @@ def stigmaMainWorkflow(args):
     temp_file.cleanup()
 
     if (args.install_automatically):
-        cmd = ["adb", "install", "-r", newAPKName]
+        cmd = ["adb", "install", "-r", modifiedAPKName]
         print("\n" + str(cmd))
         input("Press Enter to Install Modified APK...")
         subprocess.run(cmd)
