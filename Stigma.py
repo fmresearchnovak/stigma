@@ -434,7 +434,8 @@ def rebuildApk(newAPKName):
     print("Apk packed in %.1f seconds" % (time.time() - start_time))
 
 def alignApk(unalignedAPKName, modifiedAPKName):
-    cmd = ["zipalign", "4", unalignedAPKName, modifiedAPKName]
+    # https://pedrovhb.com/posts/fix_it_yourself/
+    cmd = ["include/zipalign", "4", unalignedAPKName, modifiedAPKName]
     subprocess.run(cmd)
     cmd = ["rm", unalignedAPKName]
     subprocess.run(cmd)
