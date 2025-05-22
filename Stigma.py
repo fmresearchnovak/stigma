@@ -6,6 +6,7 @@ import glob
 import importlib
 import xml
 import argparse
+import tempfile
 
 import SmaliClassDef
 import Instrumenter
@@ -403,7 +404,7 @@ def splitSmali():
 
 
 # rebuild apk
-def rebuildApk(newAPKName):
+def rebuildApk(newAPKName, temp_directory_name):
     # rebuilds the apk
     start_time = time.time()
 
@@ -414,9 +415,9 @@ def rebuildApk(newAPKName):
     # https://github.com/iBotPeaches/Apktool/issues/2219
     use_aapt2 = aapt2_helper()
     if (use_aapt2):
-        rebuildCMD = ["java", "-jar", "include/apktool.jar", "b", temp_file.name, "--use-aapt2", "-o", newAPKName]
+        rebuildCMD = ["java", "-jar", "include/apktool.jar", "b", temp_file.name, "--use-aapt2", "-o", os.path.join(temp_directory_name, newAPKName)]
     else:
-        rebuildCMD = ["java", "-jar", "include/apktool.jar", "b", temp_file.name, "-o", newAPKName]
+        rebuildCMD = ["java", "-jar", "include/apktool.jar", "b", temp_file.name, "-o", os.path.join(temp_directory_name, newAPKName)]
 
     #print("Rebuilding:", rebuildCMD)
     if (os.name == "nt"):
@@ -433,11 +434,9 @@ def rebuildApk(newAPKName):
             exit(2)
     print("Apk packed in %.1f seconds" % (time.time() - start_time))
 
-def alignApk(unalignedAPKName, modifiedAPKName):
+def alignApk(unalignedAPKName, modifiedAPKName, temp_directory_name):
     # https://pedrovhb.com/posts/fix_it_yourself/
-    cmd = ["include/zipalign", "4", unalignedAPKName, modifiedAPKName]
-    subprocess.run(cmd)
-    cmd = ["rm", unalignedAPKName]
+    cmd = ["include/zipalign", "4", os.path.join(temp_directory_name, unalignedAPKName), modifiedAPKName]
     subprocess.run(cmd)
 
 def signApk(newAPKName):
@@ -488,8 +487,8 @@ def openWithThirdPartyProgram(filename):
 
 
 def stigmaMainWorkflow(args):
-    temp_file = StigmaState.Environment().get_temp_file()
-    print("Temp files at: " + str(temp_file.name))
+    temp_APK = StigmaState.Environment().get_temp_file()
+    print("Temp files at: " + str(temp_APK.name))
 
     start = time.time()
 
@@ -511,9 +510,12 @@ def stigmaMainWorkflow(args):
         #writeMarkedLocationClass() # necessary for some plugins should be part of those plugins' code
         splitSmali()
 
+    # https://stackoverflow.com/questions/3223604/how-do-i-create-a-temporary-directory-in-python
+    temp_directory = tempfile.TemporaryDirectory(prefix = "stigma_temp")
+
     #openWithThirdPartyProgram(launchers[0].get_object_smali_file_basename())
-    rebuildApk(unalignedAPKName)
-    alignApk(unalignedAPKName, modifiedAPKName)
+    rebuildApk(unalignedAPKName, temp_directory.name)
+    alignApk(unalignedAPKName, modifiedAPKName, temp_directory.name)
     signApk(modifiedAPKName)
 
     end = time.time()
@@ -523,9 +525,10 @@ def stigmaMainWorkflow(args):
 
     # this input is here because it is helpful to keep the temporary files
     # around for debugging purposes.  In final release maybe remove it.
-    print("\nTemp files at: " + str(temp_file.name))
+    print("\nTemp files at: " + str(temp_APK.name))
     input("Press Enter to Delete Temporary Files...")
-    temp_file.cleanup()
+    temp_APK.cleanup()
+    temp_directory.cleanup()
 
     if (args.install_automatically):
         cmd = ["adb", "install", "-r", modifiedAPKName]
