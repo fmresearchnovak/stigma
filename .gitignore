@@ -14,6 +14,7 @@ __pycache__/
 
 # Smali test files
 # include these so tests function
+SendMessagesHelper.smali
 #*.smali
 
 # Distribution / packaging

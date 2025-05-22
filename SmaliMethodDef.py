@@ -153,6 +153,8 @@ class SmaliMethodSignature:
 	def __str__(self):
 		return str(self.sig_line.strip()) # + " " + str(self.parameter_type_map)
 
+	def __eq__(self, other):
+		return str(self) == str(other)
 		
 
 class SmaliMethodDef:
@@ -932,7 +934,8 @@ class SmaliMethodDef:
 		else:
 			return False
 			
-			
+	def get_signature(self):
+		return self.signature
 
 
 def tests():
