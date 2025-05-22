@@ -1,12 +1,12 @@
 
 
-# SmaliAssemblyInstructions.py
-#
-# Each of these classes is basically in thin wrapper around a string 
-# They correspond to the instructions for smali bytecode as listed
-# here: http://pallergabor.uw.hu/androidblog/dalvik_opcodes.html
-# Implementation is incomplete.  Only the instructions necessary 
-# for taint-tracking implementation of the stigma project are present.
+'''
+ SmaliAssemblyInstructions.py
+
+ Each of these classes is basically in thin wrapper around a string 
+ They correspond to the instructions for smali bytecode as listed
+ here: http://pallergabor.uw.hu/androidblog/dalvik_opcodes.html
+'''
 
 
 # When adding a new class to this file
@@ -43,12 +43,22 @@ from SmaliRegister import SmaliRegister
 
 
 class SmaliAssemblyInstruction():
+    ''' A representation of a smali assembly instruction.  Basically a wrapper around the instruction as a string '''
 
     
     @staticmethod
     def from_line(raw_line_string):
-        #print("constructing SmaliAssemblyInstruction From: " + str(raw_line_string))
+        ''' 
+        Returns a SmaliAssemblyInstruction object from a given string
+        
+        Parameters:
+           raw_line_string (str): The string representation of a smali assembly instruction
+        
+        Returns:
+           SmaliAssemblyInstruction: The corresponding SmaliAssemblyInstruction object
+        '''
 
+        #print("constructing SmaliAssemblyInstruction From: " + str(raw_line_string))
         line = raw_line_string.strip("\n")
         if(StigmaStringParsingLib.is_comment(line)):
             return COMMENT(line)
