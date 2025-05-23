@@ -29,10 +29,10 @@ def test_instance(instruction, reg):
     # MOVE instances: if reg is origin, add destination to regs
     # Destination is first
     # If reg is destination, remove from regs
+    instruction_regs = instruction.get_registers()
     if isinstance(instruction, SmaliAssemblyInstructions.MOVE):
         print("MOVE")
         if not isinstance(instruction, SmaliAssemblyInstructions._SINGLE_REGISTER_INSTRUCTION):
-            instruction_regs = instruction.get_registers()
             if instruction_regs[1] == reg:
                 print("TARGET IS ORIGIN, ADD DESTINATION " + str(instruction_regs[0]))
                 return instruction_regs[0]
@@ -41,10 +41,22 @@ def test_instance(instruction, reg):
                 return "REMOVE CURRENT"
     elif isinstance(instruction, SmaliAssemblyInstructions.IGET_OBJECT):
         print("IGET")
+        if not isinstance(instruction, SmaliAssemblyInstructions._SINGLE_REGISTER_INSTRUCTION):
+            if instruction_regs[1] == reg:
+                print("TARGET IS ORIGIN, ADD DESTINATION " + str(instruction_regs[0]))
+                return instruction_regs[0]
+            else: # instruction_regs[0] == reg
+                print("TARGET IS DESTINATION, OVERWRITTEN")
+                return "REMOVE CURRENT"
         return "v4"
     elif isinstance(instruction, SmaliAssemblyInstructions.IPUT_OBJECT):
         print("IPUT")
-        return "v4"
+        if instruction_regs[0] == reg:
+            print("TARGET IS ORIGIN, ADD DESTINATION " + str(instruction_regs[1]))
+            return instruction_regs[1]
+        else: # instruction_regs[1] == reg
+            print("TARGET IS DESTINATION, OVERWRITTEN")
+            return "REMOVE CURRENT"
     else:
         return "null"
 
@@ -83,7 +95,7 @@ def main(filename, line_number, reg):
                 if register in line:
                     print("register " + register + " is in line " + line)
                     instruction = SmaliAssemblyInstructions.SmaliAssemblyInstruction().from_line(line)
-                    reg_to_add = test_instance(instruction, register)
+                    reg_to_add = str(test_instance(instruction, register))
 
                     if reg_to_add == "REMOVE CURRENT":
                         registers_to_check.remove(register)
