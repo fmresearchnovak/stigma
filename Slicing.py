@@ -1,4 +1,5 @@
 import re
+import argparse
 
 import SmaliRegister
 import SmaliClassDef
@@ -61,7 +62,7 @@ def test_instance(instruction, reg):
         return "null"
 
 
-def main(filename, line_number, reg):
+def trace(filename, line_number, reg):
     fh = open(filename, "r")
     lines = fh.readlines()
     fh.close()
@@ -103,6 +104,18 @@ def main(filename, line_number, reg):
                         registers_to_check.append(reg_to_add)
 
                     break # only log the line once
-            
-                
-main("SendMessagesHelper.smali", 27946, "v4")
+
+def main():
+    parser = argparse.ArgumentParser(description = "Given a line of code and a register to track, traces the contents of the register throughout the process.")
+
+    parser.add_argument("filename", help="The file that contains the target line of code.")
+    parser.add_argument("line_number", help="Line number of the line of code containing a reference to the desired register.")
+    parser.add_argument("register", help="The register that you wish to trace the data of.")
+
+    # https://stackoverflow.com/questions/69981912/why-i-am-getting-this-error-typeerror-namespace-object-is-not-subscriptable
+    args = parser.parse_args()
+    trace(args.filename, int(args.line_number), args.register)
+
+
+main()
+#main("SendMessagesHelper.smali", 27946, "v4")

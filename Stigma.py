@@ -36,7 +36,7 @@ def dumpApk(apk_path):
     start_time = time.time()
     # -f is necessary since temp_file already exists (apktool doesn't like that) 
     # -f means "force"
-    cmd = ["java", "-jar", "include/apktool.jar", "d", apk_path, "-o", tmp_file_name, "-f"]
+    cmd = ["java", "-jar", "pre-builts/apktool.jar", "d", apk_path, "-o", tmp_file_name, "-f"]
     if (os.name == "nt"):
         completed_process = subprocess.run(cmd, shell=True)
     elif (os.name == "posix"):
@@ -415,9 +415,9 @@ def rebuildApk(newAPKName, temp_directory_name):
     # https://github.com/iBotPeaches/Apktool/issues/2219
     use_aapt2 = aapt2_helper()
     if (use_aapt2):
-        rebuildCMD = ["java", "-jar", "include/apktool.jar", "b", temp_file.name, "--use-aapt2", "-o", os.path.join(temp_directory_name, newAPKName)]
+        rebuildCMD = ["java", "-jar", "pre-builts/apktool.jar", "b", temp_file.name, "--use-aapt2", "-o", os.path.join(temp_directory_name, newAPKName)]
     else:
-        rebuildCMD = ["java", "-jar", "include/apktool.jar", "b", temp_file.name, "-o", os.path.join(temp_directory_name, newAPKName)]
+        rebuildCMD = ["java", "-jar", "pre-builts/apktool.jar", "b", temp_file.name, "-o", os.path.join(temp_directory_name, newAPKName)]
 
     #print("Rebuilding:", rebuildCMD)
     if (os.name == "nt"):
@@ -436,7 +436,7 @@ def rebuildApk(newAPKName, temp_directory_name):
 
 def alignApk(unalignedAPKName, modifiedAPKName, temp_directory_name):
     # https://pedrovhb.com/posts/fix_it_yourself/
-    cmd = ["include/zipalign", "4", os.path.join(temp_directory_name, unalignedAPKName), modifiedAPKName]
+    cmd = ["pre-builts/zipalign", "4", os.path.join(temp_directory_name, unalignedAPKName), modifiedAPKName]
     subprocess.run(cmd)
 
 def signApk(newAPKName):
@@ -465,10 +465,10 @@ def signApk(newAPKName):
 
     # print("Signing...")
     # apksigner sign --ks stigma-keys.keystore --ks-pass pass:MzJiY2ZjNjY5Z --ks-key-alias stigma_keystore_alias ./leak_detect_test/Tracked_StigmaTest.apk
-    cmd = ["include/apksigner", "sign", "--ks", keystore_name, "--ks-pass", "pass:"+password, "--ks-key-alias", stigma_alias, newAPKName]
+    cmd = ["pre-builts/apksigner", "sign", "--ks", keystore_name, "--ks-pass", "pass:"+password, "--ks-key-alias", stigma_alias, newAPKName]
     if (os.name == "nt"):
         cmd.insert(0, "bash")
-        cmd[1] = "./include/apksigner"
+        cmd[1] = "./pre-builts/apksigner"
         #print("Signing with apksigner:", cmd)
         completedProcess = subprocess.run(cmd, shell=True)
     elif (os.name == "posix"):
