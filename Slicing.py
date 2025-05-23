@@ -7,6 +7,12 @@ import SmaliAssemblyInstructions
 import StigmaStringParsingLib
 import SmaliCodeIterator
 
+def findAPK(apk):
+    if (not os.path.exists(apk)):
+        print("Input file (" + apk + ") was not found or was not readable.")
+        exit(1)
+    return apk
+
 def get_function_name(filename, line_number, lines):
     match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_METHOD, lines[line_number])
     while(match_object == None):
@@ -108,13 +114,20 @@ def trace(filename, line_number, reg):
 def main():
     parser = argparse.ArgumentParser(description = "Given a line of code and a register to track, traces the contents of the register throughout the process.")
 
+    #parser.add_argument("APK", help="The path to the APK file that the target file is located in.")
     parser.add_argument("filename", help="The file that contains the target line of code.")
     parser.add_argument("line_number", help="Line number of the line of code containing a reference to the desired register.")
     parser.add_argument("register", help="The register that you wish to trace the data of.")
 
     # https://stackoverflow.com/questions/69981912/why-i-am-getting-this-error-typeerror-namespace-object-is-not-subscriptable
     args = parser.parse_args()
+
+    #args.APK = findAPK(args.APK)
+
+    #trace(os.path.join(args.APK, args.filename), int(args.line_number), args.register)
     trace(args.filename, int(args.line_number), args.register)
+
+    #APK stuff doesn't work yet
 
 
 main()
