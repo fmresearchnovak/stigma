@@ -1,5 +1,6 @@
 import re
 import argparse
+import subprocess
 
 import SmaliRegister
 import SmaliClassDef
@@ -44,6 +45,7 @@ def test_instance(instruction, location, original_line):
     # if target is origin, add destination, if target is destination, overwrite
     if isinstance(instruction, SmaliAssemblyInstructions.MOVE):
         print("MOVE")
+        # TO DO: account for move-result
         if not isinstance(instruction, SmaliAssemblyInstructions._SINGLE_REGISTER_INSTRUCTION):
             if instruction_regs[1] == location:
                 print("ADDING NEW LOCATION " + str(instruction_regs[0]))
@@ -95,6 +97,7 @@ def test_instance(instruction, location, original_line):
                 return "REMOVE CURRENT"
     
     else:
+        print("No new locations added.")
         return location # nothing happens
 
 def trace(filename, line_number, reg):
@@ -147,6 +150,27 @@ def trace(filename, line_number, reg):
                         locations_to_check.remove(location)
                     elif loc_to_add not in locations_to_check:
                         locations_to_check.append(loc_to_add)
+                    
+                    # if the output is an instance variable, pause the check here and look for it in all files
+                    if isinstance(instruction, SmaliAssemblyInstructions._I_INSTRUCTION):
+                        # change this manually while APK input is unfinished
+                        folder = "stigma"
+                        cmd = ["grep", str(instruction.get_instance_variable()).replace("\n", ""), "-r"]
+                        #print(" ".join(cmd))
+                        grep_result = subprocess.run(cmd, stdout = subprocess.PIPE)
+                        #print("CMD RESULT: " + str(grep_result.stdout))
+
+                        instances_list = str(grep_result.stdout)[2:].split("\\n")
+                        instances_list.pop()
+
+                        for instance in instances_list:
+                            instance = instance.split("    ")
+
+                            file = instance[0]
+                            line = instance[1]
+
+                            if line.find(instruction.opcode()) != -1:
+                                print(instance)
 
                     break # only log the line once
 
