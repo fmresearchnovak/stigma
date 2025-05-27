@@ -32,41 +32,70 @@ def find_smali_method_def_obj(method_signature_str, smali_class):
 
     return curr_method
 
-def test_instance(instruction, reg):
-    # MOVE instances: if reg is origin, add destination to regs
-    # Destination is first
-    # If reg is destination, remove from regs
+def test_instance(instruction, location, original_line):
+    first = False
+    if original_line == str(instruction).replace("\n", ""):
+        first = True
+
+    # registers for each instruction
     instruction_regs = instruction.get_registers()
+
+    # MOVE instances: first is destination, second is origin
+    # if target is origin, add destination, if target is destination, overwrite
     if isinstance(instruction, SmaliAssemblyInstructions.MOVE):
         print("MOVE")
         if not isinstance(instruction, SmaliAssemblyInstructions._SINGLE_REGISTER_INSTRUCTION):
-            if instruction_regs[1] == reg:
-                print("TARGET IS ORIGIN, ADD DESTINATION " + str(instruction_regs[0]))
+            if instruction_regs[1] == location:
+                print("ADDING NEW LOCATION " + str(instruction_regs[0]))
                 return instruction_regs[0]
-            else: # instruction_regs[0] == reg
-                print("TARGET IS DESTINATION, OVERWRITTEN")
-                return "REMOVE CURRENT"
+            else: # instruction_regs[0] == location
+                if first:
+                    print("TARGET IS DESTINATION, BUT THIS IS THE FIRST LINE SO THIS IS THE STARTING VALUE")
+                    return location
+                else:
+                    print("TARGET IS DESTINATION, OVERWRITTEN")
+                    return "REMOVE CURRENT"
+
+    # IGET-OBJECT instances: first is destination, second is object, third is name of instance variable
+    # instance variable from object is put into destination
+    # if target is destination, overwrite
+    # if target is object, do nothing
+    # if target is instance variable, add destination
     elif isinstance(instruction, SmaliAssemblyInstructions.IGET_OBJECT):
         print("IGET")
-        if not isinstance(instruction, SmaliAssemblyInstructions._SINGLE_REGISTER_INSTRUCTION):
-            if instruction_regs[1] == reg:
-                print("TARGET IS ORIGIN, ADD DESTINATION " + str(instruction_regs[0]))
-                return instruction_regs[0]
-            else: # instruction_regs[0] == reg
+        instance_var = instruction.get_instance_variable()
+        if instance_var == location:
+            print("ADDING NEW LOCATION " + instruction_regs[0])
+            return instruction_regs[0]
+        else: # instruction_regs[0] = location
+            if first:
+                print("TARGET IS DESTINATION, BUT THIS IS THE FIRST LINE SO THIS IS THE STARTING VALUE")
+                return location
+            else:
                 print("TARGET IS DESTINATION, OVERWRITTEN")
                 return "REMOVE CURRENT"
-        return "v4"
+
+    # IPUT-OBJECT instances: first is origin, second is object, third is name of instance variable
+    # origin is put into instance variable in object
+    # if target is origin, add instance variable
+    # if target is object, do nothing
+    # if target is instance variable, overwrite
     elif isinstance(instruction, SmaliAssemblyInstructions.IPUT_OBJECT):
         print("IPUT")
-        if instruction_regs[0] == reg:
-            print("TARGET IS ORIGIN, ADD DESTINATION " + str(instruction_regs[1]))
-            return instruction_regs[1]
-        else: # instruction_regs[1] == reg
-            print("TARGET IS DESTINATION, OVERWRITTEN")
-            return "REMOVE CURRENT"
+        instance_var = instruction.get_instance_variable()
+        if instruction_regs[0] == location:
+            print("ADDING NEW LOCATION " + instance_var)
+            return instance_var
+        else: # instance_var == location
+            if first:
+                print("TARGET IS DESTINATION, BUT THIS IS THE FIRST LINE SO THIS IS THE STARTING VALUE")
+                return location
+            else:
+                print("TARGET IS DESTINATION, OVERWRITTEN")
+                return "REMOVE CURRENT"
+    
     else:
-        return "null"
-
+        return location # nothing happens
 
 def trace(filename, line_number, reg):
     fh = open(filename, "r")
@@ -83,31 +112,41 @@ def trace(filename, line_number, reg):
     smali_method_def_obj = find_smali_method_def_obj(method_signature_str, smali_class)
     full_text = SmaliCodeIterator.SmaliCodeIterator(smali_method_def_obj.raw_text)
 
-    # forward tracing
-    target_line = lines[line_number]
+    # -----------------------------------------
+    #             FORWARD TRACING
+    # -----------------------------------------
+
+    # stores the target line, the line in filename at line_number
+    target_line = lines[line_number].replace("\n", "")
     target_line_found = False
 
-    registers_to_check = []
-    registers_to_check.append(reg)
+    # list of registers that the code will look for, registers are added if the original value goes to them
+    # "r" = register, "i" = instance variable
+    locations_to_check = []
+    locations_to_check.append(reg)
 
     for line in SmaliCodeIterator.SmaliCodeIterator(smali_method_def_obj.raw_text):
-        line = "".join(line)
+        line = "".join(line).replace("\n", "")
 
-        if line.replace("\n", "") == target_line.replace("\n", ""):
+        if line == target_line:
             print("Target found")
             target_line_found = True
 
         if target_line_found:
-            for register in registers_to_check:
-                if register in line:
-                    print("register " + register + " is in line " + line)
-                    instruction = SmaliAssemblyInstructions.SmaliAssemblyInstruction().from_line(line)
-                    reg_to_add = str(test_instance(instruction, register))
+            for location in locations_to_check:
+                if location in line:
+                    print("----------------------------------------------------")
+                    print("LOCATION = " + location)
+                    print("LINE = " + line)
+                    print("DETERMINING NEW LOCATIONS...")
 
-                    if reg_to_add == "REMOVE CURRENT":
-                        registers_to_check.remove(register)
-                    elif reg_to_add not in registers_to_check:
-                        registers_to_check.append(reg_to_add)
+                    instruction = SmaliAssemblyInstructions.SmaliAssemblyInstruction().from_line(line)
+                    loc_to_add = str(test_instance(instruction, location, target_line))
+
+                    if loc_to_add == "REMOVE CURRENT":
+                        locations_to_check.remove(location)
+                    elif loc_to_add not in locations_to_check:
+                        locations_to_check.append(loc_to_add)
 
                     break # only log the line once
 
