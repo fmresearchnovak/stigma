@@ -24,19 +24,15 @@ class SmaliClassDef:
         self.header = []
         self.static_fields = []
         self.instance_fields = []
-        
+
         # list of the class names (strings) of all internal classes
-        # should probably be a set
-        self.internal_class_names = []
-        
+        self.internal_class_names = [] # TODO: Properly initialize this with a value here in the constructor
 
         # This is a list of SmaliMethodDef (as seen above) which aids instrumentation later
         self.methods = []
-        self.file_name = file_name
         
+        self.file_name = file_name
         self.class_name = SmaliClassDef.extract_class_name(file_name)
-        self.internal_class_names.append(self.class_name)
-        #print("self.class_name created: ", self.class_name)
         
         fh = open(file_name, "r")
         lines = fh.readlines()

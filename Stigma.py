@@ -2,7 +2,6 @@
 import time
 import os
 import subprocess
-import glob
 import importlib
 import xml
 import argparse
@@ -14,6 +13,7 @@ import TaintStorageHandler
 import SmaliTypes
 import Instrumenter
 import StigmaState
+import SmaliCodeBase
 
 
 
@@ -94,52 +94,6 @@ def importPlugin(plugin_name):
     mod.main()
 
 
-def getFiles():
-    # find relevant files (strong assumptions here!)
-    # This first chunk basically is hard-coded to
-    # select the non-framework files written in the leaks
-    # test-bed app.  The non-framework files are usually thought
-    # of as "the code the developer actually wrote"
-    # This chunk is for debugging purposes to debug stigma itself.
-
-    # path1 = "./apkOutput/smali_classes2"
-    # dirs = listdir(path1)
-
-    # dirsExtracted = [s for s in dirs if s != "androidx" and s!= "android"]
-
-    # path2 = path1 +"/" + dirsExtracted[0]
-
-    # path3 = path2 +"/" + listdir(path2)[0]
-
-    # path4 = path3 +"/" + listdir(path3)[0]
-
-    # path5 = path4 +"/" + listdir(path4)[0]
-
-    # smaliFiles = listdir(path5)
-
-    # relevantFilePaths = [path5 + "/" + file for file in smaliFiles if file != "BuildConfig.smali" and file[:2] != "R$" and file != "R.smali"]
-    # End of first chunk
-
-    # beginning of second chunk
-    # This gets all the files that end in ".smali" from the entire
-    # application.  This assumes all of the framework files
-    # as well as any files authored by the app developer.
-    tmp_file = StigmaState.Environment().get_temp_file()
-    relevantFilePaths = glob.glob(tmp_file.name + '/**/*.smali', recursive=True)
-    # print(relevantFilePaths)
-    # end of second chunk
-
-    # This is just a quick sanity test.
-    if (len(set(relevantFilePaths)) != len(relevantFilePaths)):
-        print("There are duplicates!!")
-        for item in relevantFilePaths:
-            print(item)
-
-        exit(1);
-    # end of sanity test
-
-    return relevantFilePaths
-
 
 def _has_launcher_intent_filter(xml_element):
     for child in xml_element:
@@ -194,8 +148,8 @@ def get_package_name():
     
 
 
-def count_non_blank_lines_of_code():
-    paths = getFiles()
+def count_non_blank_lines_of_code(path_to_directory):
+    paths = SmaliCodeBase.SmaliCodeBase.findSmaliFiles(path_to_directory)
     num = 0
     for path in paths:
         fh = open(path, "r")
@@ -209,30 +163,21 @@ def wrapString(string, wrapper):
     return wrapper + str(string) + wrapper
 
 
+
+
+
 def runInstrumentation():
-    print("Instrumenting class files")
     start_time = time.time()
-    relevantFilePaths = getFiles()
+    print("Loading smali class files from disk")
 
-    # getting list of all classes in this project
-    class_names = []
-    for path in relevantFilePaths:
-        class_names.append(SmaliClassDef.SmaliClassDef.extract_class_name(path))
+    tmp_file = StigmaState.Environment().get_temp_file()
+    scb = SmaliCodeBase.SmaliCodeBase(tmp_file.name)
 
+
+    print("Instrumenting class files")
+    total_files = len(scb.class_names)
     counter = 1
-    comparison_instruction_count = 0
-    not_enough_registers_count = 0
-    total_files = len(class_names)
-    for path in relevantFilePaths:
-        # print("cur file path: " + str(name))
-        # parse file
-        scd = SmaliClassDef.SmaliClassDef(path)
-        scd.internal_class_names.extend(class_names)
-
-        # analytics stuff
-        comparison_instruction_count = comparison_instruction_count + scd.get_num_comparison_instructions()
-        for every_method in scd.methods:
-            not_enough_registers_count += every_method.not_enough_free_registers_count
+    for scd in scb.classes:
 
         # Progress bar
         print(f'...{str(counter)}/{str(total_files)}', end='\r')
@@ -245,9 +190,8 @@ def runInstrumentation():
     tmp_file_name = StigmaState.Environment().get_temp_file().name
     analytics_path = os.path.join(tmp_file_name, "analytics.dat")
     fh = open(analytics_path, "w")
-    fh.write("Number of Comparisons: " + str(comparison_instruction_count) + "\n")
-    fh.write("Number of instructions in which there were not enough registers to properly instrument: " + str(
-        comparison_instruction_count))
+    fh.write("Number of Comparisons: " + str(scb.comparison_instruction_count) + "\n")
+    fh.write("Number of instructions in which there were not enough registers to properly instrument: " + str(scb.comparison_instruction_count))
     fh.close()
 
     print("Instrumentation of app finished in %.1f seconds" % (time.time() - start_time))
@@ -320,8 +264,8 @@ def splitSmali():
     # max signed short: 32767
     # max unsigned byte: 255
     # max signed byte: 127
-
-    smaliFiles = getFiles()
+    path = StigmaState.Environment().get_temp_file().name
+    smaliFiles = SmaliCodeBase.SmaliCodeBase.findSmaliFiles(path)
 
     # see the instructions that correspond to the 4 different
     # countable things: type_id, string_id, field_id,
@@ -493,6 +437,7 @@ def stigmaMainWorkflow(args):
     start = time.time()
 
     dumpApk(args.APK)
+
     #ui = UI.UI(getFiles())
     #ui.launch()
     launchers = get_launcher_activity_classes()
