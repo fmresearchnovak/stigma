@@ -100,6 +100,109 @@ def test_instance(instruction, location, original_line):
         print("No new locations added.")
         return location # nothing happens
 
+
+
+# REWRITTEN VERSION OF FUNCTION BELOW
+def forward_tracing(filename, line_number, location, files_to_search, line_directory):
+
+    # STEP 1: Create list of registers (and instance variables) to check for
+    locations_to_check = []
+    locations_to_check.append(location)
+
+    # STEP 2: Open input file
+    fh = open(filename, "r")
+    lines = fh.readlines()
+    fh.close()
+
+    # STEP 3: Get the method that the target line is in as a SmaliClassDef object
+    line_number -= 1
+
+    #smali_reg = SmaliRegister.SmaliRegister(reg)
+    smali_class = SmaliClassDef.SmaliClassDef(filename)
+
+    method_signature_str = get_function_name(filename, line_number, lines)
+    smali_method_def_obj = find_smali_method_def_obj(method_signature_str, smali_class)
+    full_text = SmaliCodeIterator.SmaliCodeIterator(smali_method_def_obj.raw_text)
+
+    # STEP 4: Find the text of the target line
+    target_line = lines[line_number].replace("\n", "")
+    target_line_found = False
+
+    # STEP 5: Loop through the method and get the target line
+    for line in SmaliCodeIterator.SmaliCodeIterator(smali_method_def_obj.raw_text):
+        line = "".join(line).replace("\n", "")
+
+        if line == target_line:
+            print("Target found")
+            target_line_found = True
+
+        # STEP 6: Once the target line is found, send every line containing a location in locations_to_track to the test_instance function
+        if target_line_found:
+            for location in locations_to_check:
+                if location in line:
+                    print("----------------------------------------------------")
+                    print("LOCATION = " + location)
+                    print("LINE = " + line)
+                    print("DETERMINING NEW LOCATIONS...")
+
+                    instruction = SmaliAssemblyInstructions.SmaliAssemblyInstruction().from_line(line)
+                    loc_to_add = str(test_instance(instruction, location, target_line))
+
+                    if loc_to_add == "REMOVE CURRENT":
+                        locations_to_check.remove(location)
+                    elif loc_to_add not in locations_to_check:
+                        locations_to_check.append(loc_to_add)
+
+                    # STEP 7: For every instance variable added to tracking that is not in the current file, add the file name and lines to line_directory
+                    if isinstance(instruction, SmaliAssemblyInstructions._I_INSTRUCTION):
+                        # something to specify folder
+                        cmd = ["grep", str(instruction.get_instance_variable()).replace("\n", ""), "-r"]
+                        grep_result = subprocess.run(cmd, stdout = subprocess.PIPE)
+
+                        # result is a list of uses of the instance variable
+                        uses_list = str(grep_result.stdout)[2:].split("\\n")
+                        uses_list.pop()
+
+                        for use in uses_list:
+                            use = use.split(":", 1)
+
+                            file = use[0]
+                            line = use[1].strip() # https://www.geeksforgeeks.org/python-remove-spaces-from-a-string/
+
+                            if file != filename:
+                                if file not in files_to_search:
+                                    files_to_search.append(file)
+                                
+                                if file in line_directory:
+                                    line_directory[file].append(line)
+                                else:
+                                    line_directory[file] = [line]
+
+                    break
+    
+    # STEP 8: Choose the next file to open, and add the first value to the locations to check, and find line number
+    if len(files_to_search) > 0:
+        new_file = files_to_search[0]
+        new_instance_to_check = line_directory[new_file][0]
+        line_directory[new_file].pop(0)
+
+        if len(line_directory[new_file]) == 0:
+            files_to_search.remove(new_file)
+
+        fh = open(filename, "r")
+        lines = fh.readlines()
+        fh.close()
+
+        new_line_number = lines.index(new_instance_to_check) + 1
+
+        # STEP 9: Repeat all of the steps for the new file and its locations to check
+        return forward_tracing(new_file, new_line_number, new_instance_to_check, files_to_search, line_directory)
+
+    else:
+        # return activity_log
+
+        
+
 def trace(filename, line_number, reg):
     fh = open(filename, "r")
     lines = fh.readlines()
@@ -127,6 +230,9 @@ def trace(filename, line_number, reg):
     # "r" = register, "i" = instance variable
     locations_to_check = []
     locations_to_check.append(reg)
+
+    # create a dict which will contain (file: instance 1, instance 2...)
+    instance_var_directory = {}
 
     for line in SmaliCodeIterator.SmaliCodeIterator(smali_method_def_obj.raw_text):
         line = "".join(line).replace("\n", "")
@@ -156,21 +262,25 @@ def trace(filename, line_number, reg):
                         # change this manually while APK input is unfinished
                         folder = "stigma"
                         cmd = ["grep", str(instruction.get_instance_variable()).replace("\n", ""), "-r"]
-                        #print(" ".join(cmd))
                         grep_result = subprocess.run(cmd, stdout = subprocess.PIPE)
-                        #print("CMD RESULT: " + str(grep_result.stdout))
 
-                        instances_list = str(grep_result.stdout)[2:].split("\\n")
-                        instances_list.pop()
+                        # result is a list of uses of the instance variable
+                        uses_list = str(grep_result.stdout)[2:].split("\\n")
+                        uses_list.pop()
 
-                        for instance in instances_list:
-                            instance = instance.split("    ")
+                        for use in uses_list:
+                            use = use.split(":", 1)
 
-                            file = instance[0]
-                            line = instance[1]
+                            file = use[0]
+                            line = use[1].strip() # https://www.geeksforgeeks.org/python-remove-spaces-from-a-string/
 
-                            if line.find(instruction.opcode()) != -1:
-                                print(instance)
+                            if file in instance_var_directory:
+                                instance_var_directory[file].append(line)
+                            else:
+                                instance_var_directory[file] = [line]
+                        
+                        print(instance_var_directory)
+
 
                     break # only log the line once
 
