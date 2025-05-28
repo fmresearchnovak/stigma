@@ -7,19 +7,38 @@ import Instrumenter
 import SmaliMethodDef
 
 
-
 class SmaliClassDef:
-    # self.other_scds: a dictionary of other SmaliClassDef objects for this project / app
-    # self.header: a list of strings, lines from the beginning of the file
-    # self.static_fields: a list of strings, the static fields in this class
-    # self.instance_fields: a list of strings, the instance fields in this class
-    # self.methods: a list of SmaliMethodDef objects in this class
-    # self.file_name: the (absolute?) path to the file
-    # self.class_name: extracted from the first line of the smali file
-    #       example: Lcom/google/android/material/animation/AnimationUtils;
+    ''' This class represents a Smali class definition.
+    Each smali class definition exists entirely in one .smali file.
+    Roughly, the structure of a smali class definition is:
+    1) OOP and name information
+    2) Class fields
+    3) Method definitions
+    
+    self.header: a list of strings, lines from the beginning of the file, OOP and name information.
+        example: ['.class public Lcom/google/android/material/animation/AnimationUtils;',
+                  '.super Ljava/lang/Object;',
+                  '.source "AnimationUtils.java"']
+    self.static_fields: a list of strings, the static fields in this class
+        example: ['.field public static final ANIMATION_DURATION:I']
+    self.instance_fields: a list of strings, the instance fields in this class
+        example: ['.field private mInterpolator:Landroid/animation/TimeInterpolator;']
+    self.internal_class_names: a list of strings, the of all the classes defined in the entire smali code base
+        example: ['Lcom/google/android/material/animation/AnimationUtils$1;',
+                  'Lcom/google/android/material/animation/AnimationUtils$2;']
+        This is used to determine if a class is internal
+    self.methods: a list of SmaliMethodDef objects in this class
+    self.file_name: the (absolute?) path to the file, a string
+    self.class_name: extracted from the first line of the smali file
+        example: "AnimationUtils"
+    '''
 
 
     def __init__(self, file_name):
+        ''' Constructor for SmaliClassDef.
+        Parameters:
+            file_name: a path to a smali file, a string
+        '''
         # These are just lists of strings
         # Should be filled in before instrument
         self.header = []
@@ -88,6 +107,13 @@ class SmaliClassDef:
         
     @staticmethod
     def extract_class_name(filename):
+        ''' Returns the "fully qualified name of the class contained in the file given by filename
+        For example if the file name is "./edu/enovak/MainActivity.smali"" this function returns "Ledu/enovak/MainActivity;"
+        Parameters:
+            filename: a file path, a string
+        Returns:
+            The "fully qualified" name of the class, a string
+        '''
         fh = open(filename, 'r')
         line = fh.readline()
         return line.split()[-1].strip("\n")
@@ -350,7 +376,12 @@ class SmaliClassDef:
 
 
 class MockSmaliClassDef(SmaliClassDef):
+    '''A fake version of SmaliClassDef used for debugging and development purposes.
+    TODO: Move this to StigmaTests.py since that's the only place it's used.'''
+
     def __init__(self):
+        '''The constructor for a MockSmaliClassDef'''
+
         self.file_name = ""
         self.class_name = "LMockClass;"
         
@@ -367,9 +398,17 @@ class MockSmaliClassDef(SmaliClassDef):
 
 def tests():
     ts = SmaliClassDef(os.path.join("test", "Main.smali"))
-    print(type(ts.get_super_class()))
+    #print(type(ts.get_super_class()))
     assert (ts.get_super_class() == "Landroid/support/v7/app/AppCompatActivity;")
+
+
+    assert(SmaliClassDef.extract_class_name("./test/Main.smali") == "Ledu/fandm/enovak/leaks/Main;")
+
     print("ALL SmaliClassDef TESTS PASSED")
+
+    # TODO: Write more tests
+    #   1) build a SmaliClassDef from a file in tests/
+    #   2) call a bunch of the methods and make sure they return the right results
 
 if __name__ == "__main__":
     tests()

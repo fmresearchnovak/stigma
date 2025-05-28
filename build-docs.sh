@@ -8,7 +8,7 @@ pyfiles=("SmaliAssemblyInstructions.py SmaliRegister.py" "SmaliClassDef.py" "Sma
 # loop through the list of files and call pydoc on each one
 for pyfile in ${pyfiles[@]}; do
     filename=$(basename "$pyfile" .py)
-    pydoc3 -w "$pyfile"
+    pydoc3 -w "$filename"
     # move the generated HTML file to the docs directory
     mv "$filename.html" "doc/"
 done
