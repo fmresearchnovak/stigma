@@ -107,6 +107,13 @@ class SmaliClassDef:
         
     @staticmethod
     def extract_class_name(filename):
+        ''' Returns the "fully qualified name of the class contained in the file given by filename
+        For example if the file name is "./edu/enovak/MainActivity.smali"" this function returns "Ledu/enovak/MainActivity;"
+        Parameters:
+            filename: a file path, a string
+        Returns:
+            The "fully qualified" name of the class, a string
+        '''
         fh = open(filename, 'r')
         line = fh.readline()
         return line.split()[-1].strip("\n")
@@ -369,7 +376,12 @@ class SmaliClassDef:
 
 
 class MockSmaliClassDef(SmaliClassDef):
+    '''A fake version of SmaliClassDef used for debugging and development purposes.
+    TODO: Move this to StigmaTests.py since that's the only place it's used.'''
+
     def __init__(self):
+        '''The constructor for a MockSmaliClassDef'''
+
         self.file_name = ""
         self.class_name = "LMockClass;"
         
@@ -388,7 +400,15 @@ def tests():
     ts = SmaliClassDef(os.path.join("test", "Main.smali"))
     #print(type(ts.get_super_class()))
     assert (ts.get_super_class() == "Landroid/support/v7/app/AppCompatActivity;")
+
+
+    assert(SmaliClassDef.extract_class_name("./test/Main.smali") == "Ledu/fandm/enovak/leaks/Main;")
+
     print("ALL SmaliClassDef TESTS PASSED")
+
+    # TODO: Write more tests
+    #   1) build a SmaliClassDef from a file in tests/
+    #   2) call a bunch of the methods and make sure they return the right results
 
 if __name__ == "__main__":
     tests()

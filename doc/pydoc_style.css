@@ -1,0 +1,175 @@
+/* pydoc_style.css */
+
+/* General Body Styling */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f8f9fa;
+    margin: 20px;
+    padding: 0;
+}
+
+/* Page Title and Header */
+.heading {
+    width: 100%;
+    margin-bottom: 30px;
+    border-collapse: collapse;
+    background-color: #e9ecef;
+    border-radius: 8px;
+    overflow: hidden; /* Ensures border-radius applies to background */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.heading-text {
+    background-color: #007bff; /* Primary blue for header */
+    color: white;
+    padding: 15px 20px;
+}
+
+.heading-text .title {
+    font-size: 1.5em;
+    font-weight: bold;
+    padding-left: 20px; /* Adjust padding for visual alignment */
+}
+
+.heading-text .extra {
+    text-align: right;
+    font-size: 0.9em;
+    vertical-align: bottom;
+    padding-right: 20px;
+}
+
+.heading-text .extra a {
+    color: #cce5ff; /* Lighter blue for links in header */
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.heading-text .extra a:hover {
+    color: white;
+    text-decoration: underline;
+}
+
+.heading-text a {
+    color: white;
+}
+
+/* Main Content Sections */
+.section {
+    width: 100%;
+    margin-bottom: 30px;
+    border-collapse: collapse;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.section-title {
+    font-size: 1.8em;
+    font-weight: bold;
+    padding: 15px 20px;
+    color: white;
+    background-color: #6c757d; /* Darker gray for section titles */
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+/* Specific Section Colors (Optional: for more visual distinction) */
+.pkg-content-decor .section-title { background-color: #28a745; } /* Green for Modules */
+.index-decor .section-title       { background-color: #ffc107; color: #333; } /* Yellow for Classes */
+.title-decor .section-title       { background-color: #17a2b8; } /* Teal for Class/Method Definitions */
+.functions-decor .section-title   { background-color: #dc3545; } /* Red for Functions */
+
+
+/* Table Layout for Content (Modules/Classes/Functions lists) */
+.singlecolumn {
+    padding: 15px 20px;
+    vertical-align: top; /* Align content to the top */
+}
+
+/* Multi-column layout for Modules/Classes lists */
+.multicolumn {
+    vertical-align: top;
+    padding-right: 20px;
+    padding-bottom: 10px;
+    width: 33%; /* Adjust for 3 columns */
+}
+
+.multicolumn a {
+    display: block; /* Make links block-level for better click area */
+    padding: 3px 0;
+}
+
+/* Links within content */
+a {
+    color: #007bff;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+a:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+/* Code Snippets and Docstrings */
+.code {
+    font-family: 'Fira Code', 'Cascadia Code', 'Consolas', 'Monaco', monospace;
+    background-color: #e9ecef; /* Light gray for code blocks */
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-size: 0.95em;
+    display: inline-block; /* Allows padding */
+    white-space: pre-wrap; /* Wraps long lines */
+    word-break: break-all; /* Breaks words if necessary */
+}
+
+dl dt {
+    font-weight: bold;
+    color: #0056b3; /* Darker blue for definition terms */
+    margin-top: 10px;
+    font-size: 1.1em;
+}
+
+dl dd {
+    margin-left: 20px;
+    margin-bottom: 10px;
+}
+
+hr {
+    border: none;
+    border-top: 1px solid #dee2e6;
+    margin: 20px 0;
+}
+
+/* Indentation Spacing */
+/* This specific HTML uses non-breaking spaces for indentation. */
+/* It's less ideal than proper CSS padding/margin, but we can make it look better. */
+span.code[style*="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"] { /* Targeting the specific nbsp pattern */
+    margin-left: 20px; /* Add visual indent */
+    background-color: transparent; /* Don't highlight the indentation */
+    padding: 0;
+}
+
+/* Specific styling for the Class Definition header lines */
+.title-decor td.decor {
+    vertical-align: top;
+}
+.title-decor span.code {
+    background-color: transparent; /* No background on these specific indents */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .heading-text .title {
+        font-size: 1.8em;
+    }
+    .section-title {
+        font-size: 1.5em;
+    }
+    .multicolumn {
+        width: 100%; /* Stack columns on small screens */
+        padding-right: 0;
+    }
+}
