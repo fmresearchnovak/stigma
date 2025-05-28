@@ -17,7 +17,7 @@ STRING_GET_LONGITUDE = "Landroid/location/Location;->getLongitude()D"
 storage_handler = TaintStorageHandler.get_instance()
 
 #global
-fh = open("Sinks.txt", "r")
+fh = open("auxiliary/Sinks.txt", "r")
 lines = fh.readlines()
 lines = set(lines)
 fh.close()

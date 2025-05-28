@@ -2293,7 +2293,7 @@ def main():
     asm_obj = SmaliAssemblyInstruction.from_line("iget-object v4, v2, Landroid/HypotheticalClass;->MyLoc:Landroid/location/LocationManager;")
     assert(str(asm_obj) == "    iget-object v4, v2, Landroid/HypotheticalClass;->MyLoc:Landroid/location/LocationManager;\n")
     assert(str(asm_obj.get_register_type_implications()) == "{v2: Landroid/HypotheticalClass;, v4: Landroid/location/LocationManager;}")
-    assert(str(asm.obj.get_instance_variable()) == "Landroid/HypotheticalClass;->MyLoc:Landroid/location/LocationManager;")
+    assert(str(asm_obj.get_instance_variable()) == "Landroid/HypotheticalClass;->MyLoc:Landroid/location/LocationManager;")
     
     asm_obj = SmaliAssemblyInstruction.from_line("iget-object v13, v13, Landroid/support/constraint/solver/Cache;->mIndexedVariables:[Landroid/support/constraint/solver/SolverVariable;")
     assert(str(asm_obj.get_register_type_implications()) == "{v13: [Landroid/support/constraint/solver/SolverVariable;}")

@@ -1,10 +1,11 @@
 import os.path
+import re
 
 import SmaliTypes
 import StigmaStringParsingLib
 import Instrumenter
-import re
-from SmaliMethodDef import SmaliMethodDef
+import SmaliMethodDef
+
 
 
 class SmaliClassDef:
@@ -57,7 +58,7 @@ class SmaliClassDef:
                     idx += 1
 
                 #print(str(match_object) + " in line: " + lines[idx])
-                smd = SmaliMethodDef(method_code, self)
+                smd = SmaliMethodDef.SmaliMethodDef(method_code, self)
                 self.methods.append(smd)
             
             #if all file is eaten up (eating last method)
