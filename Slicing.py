@@ -44,6 +44,37 @@ def grep_test(target, path):
     for use in uses_list:
         print(use)
 
+def generate_directed_graph(graph):
+    first = True
+    print(graph)
+    for key in graph:
+        for index in range(0, len(graph[key])):
+            value = graph[key][index]
+
+            if key[0] == "L":
+                split = key.split("/")
+                key = split[len(split) - 1]
+            if value[0] == "L":
+                split = value.split("/")
+                value = split[len(split) - 1]
+
+            entry = ""
+
+            if first == True:
+                entry += str(key) + "[" + str(key) + "]"
+                first = False
+            else:
+                entry += str(key)
+            
+            entry += " --> "
+
+            if value in graph and len(graph[value]) > 1:
+                entry += str(value) + "{" + str(value) + "};"
+            else:
+                entry += str(value) + "[" + str(value) + "];"
+
+            print(entry)
+
 def test_instance(instruction, location, original_line):
     first = False
     if original_line == str(instruction).replace("\n", ""):
@@ -140,18 +171,21 @@ def test_instance(instruction, location, original_line):
     # INVOKE instances: jump to the appropriate function
     elif isinstance(instruction, SmaliAssemblyInstructions.INVOKE_VIRTUAL):
         result_register = str(instruction).split("}, ")[1].replace("\n", "")
-        return "INVOKE FUNCTION"
+        return location
+        #return "INVOKE FUNCTION"
     
     # TWO REG EQ (IF) instances: don't know what to do yet
     elif isinstance(instruction, SmaliAssemblyInstructions._TWO_REG_EQ):
         print("IF STATEMENT")
-        return instruction.target
+        return location
+        #return instruction.target
 
     # RETURN instances: tell forward tracing function to end the current function here
     # if return is location, keep track of where that goes
     elif isinstance(instruction, SmaliAssemblyInstructions.RETURN):
         print("RETURN STATEMENT")
-        return "RETURN"
+        return location
+        #return "RETURN"
     
     else:
         print("No new locations added.")
@@ -164,6 +198,9 @@ def forward_tracing(filename, line_number, location, files_to_search, line_direc
     print("=================================")
     print(filename)
     print("=================================")
+
+    # this is for the directed graph
+    edges = {}
 
     # STEP 1: Create list of registers (and instance variables) to check for
     locations_to_check = []
@@ -199,7 +236,7 @@ def forward_tracing(filename, line_number, location, files_to_search, line_direc
         # STEP 6: Once the target line is found, send every line containing a location in locations_to_track to the test_instance function
         if target_line_found:
             for location in locations_to_check:
-                if (location + ",") in line or (location in line and ";" in location):
+                if location in line:
                     print("----------------------------------------------------")
                     print("LOCATION = " + location)
                     print("LINE = " + line)
@@ -225,13 +262,21 @@ def forward_tracing(filename, line_number, location, files_to_search, line_direc
                                 locations_to_check.append(loc_to_add)
                                 print("Added to locations")
 
+                    if loc_to_add != "REMOVE CURRENT" and loc_to_add != location:
+                        if location in edges:
+                            if loc_to_add not in edges[location]:
+                                edges[location].append(loc_to_add)
+                        else:
+                            edges[location] = [loc_to_add]
+
                     print(locations_to_check)
 
                     # STEP 7: For every instance variable added to tracking that is not in the current file, add the file name and lines to line_directory
                     if isinstance(instruction, SmaliAssemblyInstructions._I_INSTRUCTION) and loc_to_add != "REMOVE CURRENT":
                         print(str(instruction) + " is I_INSTRUCTION, find instance variables throughout files...")
                         # something to specify folder
-                        cmd = ["grep", str(instruction.get_instance_variable()).replace("\n", ""), "-r", tmp_file_name]
+                        #cmd = ["grep", str(instruction.get_instance_variable()).replace("\n", ""), "-r", tmp_file_name]
+                        cmd = ["grep", str(instruction.get_instance_variable()).replace("\n", ""), "-r"]
                         grep_result = subprocess.run(cmd, stdout = subprocess.PIPE)
 
                         # result is a list of uses of the instance variable
@@ -255,6 +300,8 @@ def forward_tracing(filename, line_number, location, files_to_search, line_direc
 
                     break
     
+    generate_directed_graph(edges)
+
     # STEP 8: Choose the next file to open, and add the first value to the locations to check, and find line number
     if len(files_to_search) > 0:
         new_file = files_to_search[0]
@@ -293,19 +340,21 @@ def forward_tracing(filename, line_number, location, files_to_search, line_direc
 def main():
     parser = argparse.ArgumentParser(description = "Given a line of code and a register to track, traces the contents of the register throughout the process.")
 
-    parser.add_argument("APK", help="The path to the APK file that the target file is located in.")
+    #parser.add_argument("APK", help="The path to the APK file that the target file is located in.")
     parser.add_argument("filename", help="The file that contains the target line of code.")
     parser.add_argument("line_number", help="Line number of the line of code containing a reference to the desired register.")
     parser.add_argument("register", help="The register that you wish to trace the data of.")
 
     args = parser.parse_args()
-    apk_path = findAPK(args.APK)
+    #apk_path = findAPK(args.APK)
 
     # https://stackoverflow.com/questions/69981912/why-i-am-getting-this-error-typeerror-namespace-object-is-not-subscriptable
     args = parser.parse_args()
 
+    
     temp_APK = StigmaState.Environment().get_temp_file()
     tmp_file_name = StigmaState.Environment().get_temp_file().name
+    '''
     start_time = time.time()
     cmd = ["java", "-jar", "pre-builts/apktool.jar", "d", apk_path, "-o", tmp_file_name, "-f"]
     if (os.name == "nt"):
@@ -316,8 +365,10 @@ def main():
     print("Apk unpacked in %.1f seconds" % (time.time() - start_time))
 
     forward_tracing(args.filename, int(args.line_number), args.register, [], {}, tmp_file_name)
+    '''
 
-    #grep_test("Lorg/telegram/tgnet/TLRPC$Message;->media:Lorg/telegram/tgnet/TLRPC$MessageMedia", tmp_file_name)
+    #the following code tests it without the APK file so that lines can be easily edited
+    forward_tracing(args.filename, int(args.line_number), args.register, [], {}, tmp_file_name)
 
 main()
 
