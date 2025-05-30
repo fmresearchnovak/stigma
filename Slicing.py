@@ -53,10 +53,10 @@ def generate_directed_graph(graph):
 
             if key[0] == "L":
                 split = key.split("/")
-                key = split[len(split) - 1]
+                key = split[len(split) - 1].replace(";", "")
             if value[0] == "L":
                 split = value.split("/")
-                value = split[len(split) - 1]
+                value = split[len(split) - 1].replace(";", "")
 
             entry = ""
 
