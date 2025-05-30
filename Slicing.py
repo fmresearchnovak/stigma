@@ -36,6 +36,7 @@ def find_smali_method_def_obj(method_signature_str, smali_class):
 
     return curr_method
 
+# GREP TEST: TEST FUNCTION FOR FINDING INSTANCES OF A CERTAIN VALUE THROUGHOUT THE APK CODE
 def grep_test(target, path):
     cmd = ["grep", target, "-r", path]
     grep_result = subprocess.run(cmd, stdout = subprocess.PIPE)
@@ -50,6 +51,36 @@ def test_instance(instruction, location, original_line):
 
     # registers for each instruction
     instruction_regs = instruction.get_registers()
+
+    # CONST/INSTANCE-OF instances: overwrite destination
+    if isinstance(instruction, SmaliAssemblyInstructions.CONST) or isinstance(instruction, SmaliAssemblyInstructions.INSTANCE_OF):
+        print("SINGLE REGISTER OVERWRITE")
+        if instruction_regs[0] == location:
+            if first:
+                print("TARGET IS DESTINATION, BUT THIS IS THE FIRST LINE SO THIS IS THE STARTING VALUE")
+                return location
+            else:
+                print("TARGET IS DESTINATION, OVERWRITTEN")
+                return "REMOVE CURRENT"
+
+    # TRIPLE REGISTER INSTRUCTIONS: overwrite destination register, with the exception of APUT
+    # This covers the arthimetic instructions and logic
+    if isinstance(instruction, SmaliAssemblyInstructions._TRIPLE_REGISTER_INSTRUCTION):
+        if not isinstance(instruction, SmaliAssemblyInstructions.APUT):
+            print("ARTHIMETIC/LOGIC INSTRUCTION")
+            if instruction_regs[1] == location or instruction_regs[2] == location:
+                print(str(instruction_regs[0]) + " HAS PART OF " + str(location) + "'S DATA")
+                print("THIS CANNOT BE TRACKED YET")
+                return location
+            else: # instruction_regs[0] == location
+                if first:
+                    print("TARGET IS DESTINATION, BUT THIS IS THE FIRST LINE SO THIS IS THE STARTING VALUE")
+                    return location
+                else:
+                    print("TARGET IS DESTINATION, OVERWRITTEN")
+                    return "REMOVE CURRENT"
+        else: # APUT INSTRUCTION
+            print("APUT INSTRUCTION")
 
     # MOVE instances: first is destination, second is origin
     # if target is origin, add destination, if target is destination, overwrite
@@ -68,7 +99,7 @@ def test_instance(instruction, location, original_line):
                     print("TARGET IS DESTINATION, OVERWRITTEN")
                     return "REMOVE CURRENT"
 
-    # IGET-OBJECT instances: first is destination, second is object, third is name of instance variable
+    # IGET instances: first is destination, second is object, third is name of instance variable
     # instance variable from object is put into destination
     # if target is destination, overwrite
     # if target is object, do nothing
@@ -87,7 +118,7 @@ def test_instance(instruction, location, original_line):
                 print("TARGET IS DESTINATION, OVERWRITTEN")
                 return "REMOVE CURRENT"
 
-    # IPUT-OBJECT instances: first is origin, second is object, third is name of instance variable
+    # IPUT instances: first is origin, second is object, third is name of instance variable
     # origin is put into instance variable in object
     # if target is origin, add instance variable
     # if target is object, do nothing
@@ -105,6 +136,22 @@ def test_instance(instruction, location, original_line):
             else:
                 print("TARGET IS DESTINATION, OVERWRITTEN")
                 return "REMOVE CURRENT"
+
+    # INVOKE instances: jump to the appropriate function
+    elif isinstance(instruction, SmaliAssemblyInstructions.INVOKE_VIRTUAL):
+        result_register = str(instruction).split("}, ")[1].replace("\n", "")
+        return "INVOKE FUNCTION"
+    
+    # TWO REG EQ (IF) instances: don't know what to do yet
+    elif isinstance(instruction, SmaliAssemblyInstructions._TWO_REG_EQ):
+        print("IF STATEMENT")
+        return instruction.target
+
+    # RETURN instances: tell forward tracing function to end the current function here
+    # if return is location, keep track of where that goes
+    elif isinstance(instruction, SmaliAssemblyInstructions.RETURN):
+        print("RETURN STATEMENT")
+        return "RETURN"
     
     else:
         print("No new locations added.")
@@ -145,7 +192,7 @@ def forward_tracing(filename, line_number, location, files_to_search, line_direc
     for line in SmaliCodeIterator.SmaliCodeIterator(smali_method_def_obj.raw_text):
         line = "".join(line).replace("\n", "")
 
-        if line == target_line:
+        if target_line in line:
             print("Target found")
             target_line_found = True
 
@@ -162,16 +209,26 @@ def forward_tracing(filename, line_number, location, files_to_search, line_direc
                     loc_to_add = str(test_instance(instruction, location, target_line))
                     print("loc to add = " + str(loc_to_add))
 
-                    if loc_to_add == "REMOVE CURRENT":
-                        locations_to_check.remove(location)
-                    elif loc_to_add not in locations_to_check:
-                        locations_to_check.append(loc_to_add)
-                        print("Added to locations")
+                    # SPECIAL INSTRUCTIONS DEPENDING ON LOC_TO_ADD RESULT
+                    match loc_to_add:
+                        case "REMOVE CURRENT":
+                            locations_to_check.remove(location)
+                        case "INVOKE FUNCTION":
+                            full_line = str(instruction)
+                            # this function travels to different files
+                        case "IF INSTRUCTION":
+                            return # jump to a different line in the file, keep the current line in a variable
+                        case "RETURN":
+                            return (new_files_to_search, new_line_directory, value_being_returned)
+                        case _:
+                            if loc_to_add not in locations_to_check:
+                                locations_to_check.append(loc_to_add)
+                                print("Added to locations")
 
                     print(locations_to_check)
 
                     # STEP 7: For every instance variable added to tracking that is not in the current file, add the file name and lines to line_directory
-                    if isinstance(instruction, SmaliAssemblyInstructions._I_INSTRUCTION):
+                    if isinstance(instruction, SmaliAssemblyInstructions._I_INSTRUCTION) and loc_to_add != "REMOVE CURRENT":
                         print(str(instruction) + " is I_INSTRUCTION, find instance variables throughout files...")
                         # something to specify folder
                         cmd = ["grep", str(instruction.get_instance_variable()).replace("\n", ""), "-r", tmp_file_name]
@@ -182,7 +239,6 @@ def forward_tracing(filename, line_number, location, files_to_search, line_direc
                         uses_list.pop()
 
                         for use in uses_list:
-                            #print(use)
                             use = use.split(":", 1)
 
                             file = use[0]
@@ -210,8 +266,6 @@ def forward_tracing(filename, line_number, location, files_to_search, line_direc
             files_to_search.remove(new_file)
 
         fh = open(new_file, "r")
-        #lines = fh.readlines()
-
 
         # get the location name not the line name
         new_location = new_instance_to_check.split(" ", 3)[3]
@@ -227,98 +281,14 @@ def forward_tracing(filename, line_number, location, files_to_search, line_direc
 
         fh.close()
 
-        #new_line_number = lines.index(new_instance_to_check) + 1
-
         # STEP 9: Repeat all of the steps for the new file and its locations to check
         print("NEW ITERATION WITH " + new_file + " " + str(new_line_number) + " " + new_location)
-        #return forward_tracing(new_file, new_line_number, new_location, files_to_search, line_directory, tmp_file_name)S
+        #return forward_tracing(new_file, new_line_number, new_location, files_to_search, line_directory, tmp_file_name)
         return
 
     else:
         # return activity_log
         return
-
-        
-def trace(filename, line_number, reg):
-    fh = open(filename, "r")
-    lines = fh.readlines()
-    fh.close()
-
-    # account for index 0
-    line_number -= 1
-
-    smali_reg = SmaliRegister.SmaliRegister(reg)
-    smali_class = SmaliClassDef.SmaliClassDef(filename)
-
-    method_signature_str = get_function_name(filename, line_number, lines)
-    smali_method_def_obj = find_smali_method_def_obj(method_signature_str, smali_class)
-    full_text = SmaliCodeIterator.SmaliCodeIterator(smali_method_def_obj.raw_text)
-
-    # -----------------------------------------
-    #             FORWARD TRACING
-    # -----------------------------------------
-
-    # stores the target line, the line in filename at line_number
-    target_line = lines[line_number].replace("\n", "")
-    target_line_found = False
-
-    # list of registers that the code will look for, registers are added if the original value goes to them
-    # "r" = register, "i" = instance variable
-    locations_to_check = []
-    locations_to_check.append(reg)
-
-    # create a dict which will contain (file: instance 1, instance 2...)
-    instance_var_directory = {}
-
-    for line in SmaliCodeIterator.SmaliCodeIterator(smali_method_def_obj.raw_text):
-        line = "".join(line).replace("\n", "")
-
-        if line == target_line:
-            print("Target found")
-            target_line_found = True
-
-        if target_line_found:
-            for location in locations_to_check:
-                if location in line:
-                    print("----------------------------------------------------")
-                    print("LOCATION = " + location)
-                    print("LINE = " + line)
-                    print("DETERMINING NEW LOCATIONS...")
-
-                    instruction = SmaliAssemblyInstructions.SmaliAssemblyInstruction().from_line(line)
-                    loc_to_add = str(test_instance(instruction, location, target_line))
-
-                    if loc_to_add == "REMOVE CURRENT":
-                        locations_to_check.remove(location)
-                    elif loc_to_add not in locations_to_check:
-                        locations_to_check.append(loc_to_add)
-                    
-                    # if the output is an instance variable, pause the check here and look for it in all files
-                    if isinstance(instruction, SmaliAssemblyInstructions._I_INSTRUCTION):
-                        # change this manually while APK input is unfinished
-                        folder = "stigma"
-                        cmd = ["grep", str(instruction.get_instance_variable()).replace("\n", ""), "-r"]
-                        grep_result = subprocess.run(cmd, stdout = subprocess.PIPE)
-
-                        # result is a list of uses of the instance variable
-                        uses_list = str(grep_result.stdout)[2:].split("\\n")
-                        uses_list.pop()
-
-                        for use in uses_list:
-                            use = use.split(":", 1)
-
-                            file = use[0]
-                            line = use[1].strip() # https://www.geeksforgeeks.org/python-remove-spaces-from-a-string/
-
-                            if file in instance_var_directory:
-                                instance_var_directory[file].append(line)
-                            else:
-                                instance_var_directory[file] = [line]
-                        
-                        print(instance_var_directory)
-
-
-                    break # only log the line once
 
 def main():
     parser = argparse.ArgumentParser(description = "Given a line of code and a register to track, traces the contents of the register throughout the process.")
@@ -345,7 +315,6 @@ def main():
     completed_process.check_returncode()
     print("Apk unpacked in %.1f seconds" % (time.time() - start_time))
 
-    #trace(args.filename, int(args.line_number), args.register)
     forward_tracing(args.filename, int(args.line_number), args.register, [], {}, tmp_file_name)
 
     #grep_test("Lorg/telegram/tgnet/TLRPC$Message;->media:Lorg/telegram/tgnet/TLRPC$MessageMedia", tmp_file_name)
@@ -358,3 +327,5 @@ main()
 # NEW ITERATION WITH /tmp/apkOutput_45yq44ko/smali_classes4/org/telegram/messenger/SecretChatHelper.smali 6501 Lorg/telegram/tgnet/TLRPC$MessageMedia;->last_name:Ljava/lang/String
 # NEW ITERATION WITH /tmp/apkOutput_45yq44ko/smali_classes4/org/telegram/messenger/SecretChatHelper.smali 6505 Lorg/telegram/tgnet/TLRPC$MessageMedia;->first_name:Ljava/lang/String
 # MAKE STATEMENT TO PREVENT GOING TO THE SAME LINE OF A FILE TWICE
+
+# WHEN OVERWRITE HAPPENS WITH I INSTRUCTION DON'T RUN GREP FOR THE INSTANCE VARIABLE
