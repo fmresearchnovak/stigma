@@ -24,7 +24,7 @@ def get_function_name(filename, line_number, lines):
         match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_METHOD, lines[line_number])
     
     method_signature_str = lines[line_number].replace("\n", "")
-    return method_signature_str, line_number + 1
+    return method_signature_str
 
 def find_smali_method_def_obj(method_signature_str, smali_class):
     method_index = 0
@@ -74,7 +74,7 @@ def generate_directed_graph(graph):
             else:
                 entry += str(value) + "[" + str(value) + "];"
             
-            entry += " <!- Line number: " + str(number) + " -->"
+            entry += " <!-- Line number: " + str(number) + " -->"
 
             print(entry)
 
@@ -220,8 +220,8 @@ def forward_tracing(filename, line_number, location, files_to_search, line_direc
     #smali_reg = SmaliRegister.SmaliRegister(reg)
     smali_class = SmaliClassDef.SmaliClassDef(filename)
 
-    method_signature_str, current_line_number = get_function_name(filename, line_number, lines)
-    print("METHOD LINE NUMBER: " + str(current_line_number))
+    method_signature_str = get_function_name(filename, line_number, lines)
+
     smali_method_def_obj = find_smali_method_def_obj(method_signature_str, smali_class)
     full_text = SmaliCodeIterator.SmaliCodeIterator(smali_method_def_obj.raw_text)
 
@@ -229,8 +229,13 @@ def forward_tracing(filename, line_number, location, files_to_search, line_direc
     target_line = lines[line_number].replace("\n", "")
     target_line_found = False
 
+    current_line_number = line_number
+
     # STEP 5: Loop through the method and get the target line
     for line in SmaliCodeIterator.SmaliCodeIterator(smali_method_def_obj.raw_text):
+        if len(line) > 1:
+            current_line_number += len(line) - 1
+
         line = "".join(line).replace("\n", "")
 
         if target_line in line:
@@ -240,6 +245,7 @@ def forward_tracing(filename, line_number, location, files_to_search, line_direc
         # STEP 6: Once the target line is found, send every line containing a location in locations_to_track to the test_instance function
         if target_line_found:
             current_line_number += 1
+
             for location in locations_to_check:
                 if location in line:
                     print("----------------------------------------------------")
