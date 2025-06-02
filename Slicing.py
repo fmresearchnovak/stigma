@@ -53,9 +53,13 @@ def generate_directed_graph(graph):
             number = graph[key][index][1]
 
             if key[0] == "L":
+                if "->" in key:
+                    key = key.split("->")[0]
                 split = key.split("/")
                 key = split[len(split) - 1].replace(";", "")
             if value[0] == "L":
+                if "->" in value:
+                    value = value.split("->")[0]
                 split = value.split("/")
                 value = split[len(split) - 1].replace(";", "")
 
