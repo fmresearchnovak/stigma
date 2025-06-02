@@ -24,7 +24,7 @@ def get_function_name(filename, line_number, lines):
         match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_METHOD, lines[line_number])
     
     method_signature_str = lines[line_number].replace("\n", "")
-    return method_signature_str
+    return method_signature_str, line_number + 1
 
 def find_smali_method_def_obj(method_signature_str, smali_class):
     method_index = 0
@@ -49,7 +49,8 @@ def generate_directed_graph(graph):
     print(graph)
     for key in graph:
         for index in range(0, len(graph[key])):
-            value = graph[key][index]
+            value = graph[key][index][0]
+            number = graph[key][index][1]
 
             if key[0] == "L":
                 split = key.split("/")
@@ -72,6 +73,8 @@ def generate_directed_graph(graph):
                 entry += str(value) + "{" + str(value) + "};"
             else:
                 entry += str(value) + "[" + str(value) + "];"
+            
+            entry += " <!- Line number: " + str(number) + " -->"
 
             print(entry)
 
@@ -217,7 +220,8 @@ def forward_tracing(filename, line_number, location, files_to_search, line_direc
     #smali_reg = SmaliRegister.SmaliRegister(reg)
     smali_class = SmaliClassDef.SmaliClassDef(filename)
 
-    method_signature_str = get_function_name(filename, line_number, lines)
+    method_signature_str, current_line_number = get_function_name(filename, line_number, lines)
+    print("METHOD LINE NUMBER: " + str(current_line_number))
     smali_method_def_obj = find_smali_method_def_obj(method_signature_str, smali_class)
     full_text = SmaliCodeIterator.SmaliCodeIterator(smali_method_def_obj.raw_text)
 
@@ -235,6 +239,7 @@ def forward_tracing(filename, line_number, location, files_to_search, line_direc
 
         # STEP 6: Once the target line is found, send every line containing a location in locations_to_track to the test_instance function
         if target_line_found:
+            current_line_number += 1
             for location in locations_to_check:
                 if location in line:
                     print("----------------------------------------------------")
@@ -264,10 +269,16 @@ def forward_tracing(filename, line_number, location, files_to_search, line_direc
 
                     if loc_to_add != "REMOVE CURRENT" and loc_to_add != location:
                         if location in edges:
-                            if loc_to_add not in edges[location]:
-                                edges[location].append(loc_to_add)
+                            duplicate = False
+                            for pair in edges[location]:
+                                if pair[0] == loc_to_add:
+                                    duplicate = True
+                                    break
+                            if not duplicate:
+                                edges[location].append([loc_to_add, current_line_number])
+
                         else:
-                            edges[location] = [loc_to_add]
+                            edges[location] = [[loc_to_add, current_line_number]]   
 
                     print(locations_to_check)
 
