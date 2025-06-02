@@ -8,7 +8,7 @@
 <table class="heading">
 <tr class="heading-text decor">
 <td class="title">&nbsp;<br><strong class="title">SmaliClassDef</strong></td>
-<td class="extra"><a href=".">index</a><br><a href="file:/home/ed/stigma/SmaliClassDef.py">/home/ed/stigma/SmaliClassDef.py</a></td></tr></table>
+<td class="extra"><a href=".">index</a><br><a href="file:/home/ed/research/android_sec/stigma/SmaliClassDef.py">/home/ed/research/android_sec/stigma/SmaliClassDef.py</a></td></tr></table>
     <p></p>
 <p>
 <table class="section">
@@ -17,12 +17,13 @@
     
 <tr><td class="decor pkg-content-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
 <td class="singlecolumn"><table><tr><td class="multicolumn"><a href="Instrumenter.html">Instrumenter</a><br>
-<a href="SmaliMethodDef.html">SmaliMethodDef</a><br>
-</td><td class="multicolumn"><a href="SmaliTypes.html">SmaliTypes</a><br>
-<a href="StigmaStringParsingLib.html">StigmaStringParsingLib</a><br>
-</td><td class="multicolumn"><a href="os.html">os</a><br>
-<a href="re.html">re</a><br>
-</td><td class="multicolumn"></td></tr></table></td></tr></table><p>
+<a href="SmaliAssemblyInstructions.html">SmaliAssemblyInstructions</a><br>
+</td><td class="multicolumn"><a href="SmaliMethodDef.html">SmaliMethodDef</a><br>
+<a href="SmaliTypes.html">SmaliTypes</a><br>
+</td><td class="multicolumn"><a href="StigmaStringParsingLib.html">StigmaStringParsingLib</a><br>
+<a href="os.html">os</a><br>
+</td><td class="multicolumn"><a href="re.html">re</a><br>
+</td></tr></table></td></tr></table><p>
 <table class="section">
 <tr class="decor index-decor heading-text">
 <td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Classes</strong></td></tr>
@@ -67,13 +68,17 @@ Methods inherited from <a href="SmaliClassDef.html#SmaliClassDef">SmaliClassDef<
 
 <dl><dt><a name="MockSmaliClassDef-__str__"><strong>__str__</strong></a>(self)</dt><dd><span class="code">Return&nbsp;str(self).</span></dd></dl>
 
-<dl><dt><a name="MockSmaliClassDef-create_taint_field"><strong>create_taint_field</strong></a>(self, identifier, reg_name='')</dt></dl>
+<dl><dt><a name="MockSmaliClassDef-get_num_comparison_instructions"><strong>get_num_comparison_instructions</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;the&nbsp;number&nbsp;of&nbsp;comparison&nbsp;(if&nbsp;statement)&nbsp;instructions&nbsp;in&nbsp;this&nbsp;class.<br>
+This&nbsp;is&nbsp;the&nbsp;sum&nbsp;of&nbsp;the&nbsp;number&nbsp;of&nbsp;comparison&nbsp;instructions&nbsp;in&nbsp;each&nbsp;method.<br>
+This&nbsp;is&nbsp;used&nbsp;for&nbsp;gathering&nbsp;statistics&nbsp;about&nbsp;the&nbsp;class.<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;number&nbsp;of&nbsp;comparison&nbsp;instructions&nbsp;in&nbsp;this&nbsp;class,&nbsp;an&nbsp;integer</span></dd></dl>
 
-<dl><dt><a name="MockSmaliClassDef-create_taint_field_smart"><strong>create_taint_field_smart</strong></a>(self, calling_method, reg_name='')</dt></dl>
-
-<dl><dt><a name="MockSmaliClassDef-get_num_comparison_instructions"><strong>get_num_comparison_instructions</strong></a>(self)</dt></dl>
-
-<dl><dt><a name="MockSmaliClassDef-get_num_field_declarations"><strong>get_num_field_declarations</strong></a>(self)</dt></dl>
+<dl><dt><a name="MockSmaliClassDef-get_num_field_declarations"><strong>get_num_field_declarations</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;the&nbsp;number&nbsp;of&nbsp;field&nbsp;declarations&nbsp;in&nbsp;this&nbsp;class.<br>
+This&nbsp;is&nbsp;the&nbsp;sum&nbsp;of&nbsp;the&nbsp;number&nbsp;of&nbsp;static&nbsp;fields&nbsp;and&nbsp;instance&nbsp;fields.<br>
+This&nbsp;is&nbsp;used&nbsp;for&nbsp;gathering&nbsp;statistics&nbsp;about&nbsp;the&nbsp;class.<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;number&nbsp;of&nbsp;field&nbsp;declarations&nbsp;in&nbsp;this&nbsp;class,&nbsp;an&nbsp;integer</span></dd></dl>
 
 <dl><dt><a name="MockSmaliClassDef-get_num_field_references"><strong>get_num_field_references</strong></a>(self)</dt></dl>
 
@@ -84,13 +89,17 @@ This&nbsp;is&nbsp;the&nbsp;sum&nbsp;of&nbsp;the&nbsp;number&nbsp;of&nbsp;lines&n
 Returns:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;number&nbsp;of&nbsp;lines&nbsp;in&nbsp;this&nbsp;class,&nbsp;an&nbsp;integer</span></dd></dl>
 
-<dl><dt><a name="MockSmaliClassDef-get_num_method_declarations"><strong>get_num_method_declarations</strong></a>(self)</dt></dl>
+<dl><dt><a name="MockSmaliClassDef-get_num_method_declarations"><strong>get_num_method_declarations</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;the&nbsp;number&nbsp;of&nbsp;method&nbsp;declarations&nbsp;in&nbsp;this&nbsp;class.<br>
+This&nbsp;is&nbsp;the&nbsp;number&nbsp;of&nbsp;methods&nbsp;in&nbsp;this&nbsp;class.<br>
+This&nbsp;is&nbsp;used&nbsp;for&nbsp;gathering&nbsp;statistics&nbsp;about&nbsp;the&nbsp;class.<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;number&nbsp;of&nbsp;method&nbsp;declarations&nbsp;in&nbsp;this&nbsp;class,&nbsp;an&nbsp;integer</span></dd></dl>
 
 <dl><dt><a name="MockSmaliClassDef-get_num_method_references"><strong>get_num_method_references</strong></a>(self)</dt></dl>
 
 <dl><dt><a name="MockSmaliClassDef-get_num_static_fields"><strong>get_num_static_fields</strong></a>(self)</dt></dl>
 
-<dl><dt><a name="MockSmaliClassDef-get_super_class"><strong>get_super_class</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;the&nbsp;super&nbsp;class&nbsp;of&nbsp;this&nbsp;class&nbsp;based&nbsp;on&nbsp;the&nbsp;value&nbsp;in&nbsp;self.<strong>header</strong><br>
+<dl><dt><a name="MockSmaliClassDef-get_super_class"><strong>get_super_class</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;the&nbsp;super&nbsp;(parent)&nbsp;class&nbsp;of&nbsp;this&nbsp;class&nbsp;based&nbsp;on&nbsp;the&nbsp;value&nbsp;in&nbsp;self.<strong>header</strong><br>
 Returns:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;SmaliTypes.ObjectReference&nbsp;<a href="builtins.html#object">object</a>&nbsp;representing&nbsp;the&nbsp;super&nbsp;class&nbsp;of&nbsp;this&nbsp;class.</span></dd></dl>
 
@@ -100,9 +109,19 @@ Calls&nbsp;the&nbsp;<a href="#MockSmaliClassDef-instrument">instrument</a>()&nbs
 Returns:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;None</span></dd></dl>
 
-<dl><dt><a name="MockSmaliClassDef-is_external_function"><strong>is_external_function</strong></a>(self, line)</dt></dl>
+<dl><dt><a name="MockSmaliClassDef-is_external_function"><strong>is_external_function</strong></a>(self, line)</dt><dd><span class="code">Checks&nbsp;if&nbsp;the&nbsp;given&nbsp;line&nbsp;is&nbsp;a&nbsp;function&nbsp;call&nbsp;to&nbsp;a&nbsp;method&nbsp;not&nbsp;defined&nbsp;in&nbsp;this&nbsp;class.<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;line:&nbsp;A&nbsp;line&nbsp;from&nbsp;a&nbsp;smali&nbsp;file,&nbsp;maybe&nbsp;a&nbsp;string,&nbsp;a&nbsp;SmaliAssemblyInstruction,&nbsp;or&nbsp;anything&nbsp;that<br>
+&nbsp;&nbsp;&nbsp;&nbsp;can&nbsp;be&nbsp;converted&nbsp;to&nbsp;a&nbsp;string<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;if&nbsp;the&nbsp;line&nbsp;is&nbsp;a&nbsp;function&nbsp;call&nbsp;to&nbsp;a&nbsp;method&nbsp;not&nbsp;defined&nbsp;in&nbsp;this&nbsp;class,&nbsp;False&nbsp;otherwise</span></dd></dl>
 
-<dl><dt><a name="MockSmaliClassDef-is_internal_function"><strong>is_internal_function</strong></a>(self, line)</dt></dl>
+<dl><dt><a name="MockSmaliClassDef-is_internal_function"><strong>is_internal_function</strong></a>(self, line)</dt><dd><span class="code">Checks&nbsp;if&nbsp;the&nbsp;given&nbsp;line&nbsp;is&nbsp;a&nbsp;function&nbsp;call&nbsp;to&nbsp;a&nbsp;method&nbsp;defined&nbsp;in&nbsp;this&nbsp;class.<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;line:&nbsp;A&nbsp;line&nbsp;from&nbsp;a&nbsp;smali&nbsp;file,&nbsp;maybe&nbsp;a&nbsp;string,&nbsp;a&nbsp;SmaliAssemblyInstruction,&nbsp;or&nbsp;anything&nbsp;that<br>
+&nbsp;&nbsp;&nbsp;&nbsp;can&nbsp;be&nbsp;converted&nbsp;to&nbsp;a&nbsp;string<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;if&nbsp;the&nbsp;line&nbsp;is&nbsp;a&nbsp;function&nbsp;call&nbsp;to&nbsp;a&nbsp;method&nbsp;defined&nbsp;in&nbsp;this&nbsp;class,&nbsp;False&nbsp;otherwise</span></dd></dl>
 
 <dl><dt><a name="MockSmaliClassDef-is_launcher_activity"><strong>is_launcher_activity</strong></a>(self)</dt><dd><span class="code">Checks&nbsp;if&nbsp;this&nbsp;class&nbsp;is&nbsp;a&nbsp;launcher&nbsp;activity.&nbsp;&nbsp;In&nbsp;Android,&nbsp;when&nbsp;an&nbsp;app&nbsp;is&nbsp;launched<br>
 a&nbsp;launcher&nbsp;activity&nbsp;is&nbsp;started.&nbsp;&nbsp;This&nbsp;method&nbsp;checks&nbsp;if&nbsp;this&nbsp;class&nbsp;is&nbsp;one&nbsp;of&nbsp;those.<br>
@@ -115,7 +134,7 @@ It&nbsp;Calls&nbsp;<a href="#MockSmaliClassDef-write_to_file">write_to_file</a>(
 Returns:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;None</span></dd></dl>
 
-<dl><dt><a name="MockSmaliClassDef-verbose"><strong>verbose</strong></a>(self)</dt></dl>
+<dl><dt><a name="MockSmaliClassDef-verboseprint"><strong>verboseprint</strong></a>(self)</dt></dl>
 
 <dl><dt><a name="MockSmaliClassDef-write_to_file"><strong>write_to_file</strong></a>(self, class_smali_file)</dt><dd><span class="code">Writes&nbsp;the&nbsp;current&nbsp;state&nbsp;of&nbsp;this&nbsp;class&nbsp;to&nbsp;a&nbsp;smali&nbsp;file.&nbsp;&nbsp;If&nbsp;changes&nbsp;were&nbsp;made&nbsp;to&nbsp;the&nbsp;content<br>
 of&nbsp;this&nbsp;class&nbsp;(perhapes&nbsp;via&nbsp;a&nbsp;plugin&nbsp;executed&nbsp;by&nbsp;calling&nbsp;<a href="#SmaliClassDef">SmaliClassDef</a>.<a href="#MockSmaliClassDef-instrument">instrument</a>()),&nbsp;this&nbsp;function&nbsp;writes&nbsp;those&nbsp;changes&nbsp;to&nbsp;disk.<br>
@@ -193,13 +212,17 @@ Parameters:<br>
 
 <dl><dt><a name="SmaliClassDef-__str__"><strong>__str__</strong></a>(self)</dt><dd><span class="code">Return&nbsp;str(self).</span></dd></dl>
 
-<dl><dt><a name="SmaliClassDef-create_taint_field"><strong>create_taint_field</strong></a>(self, identifier, reg_name='')</dt></dl>
+<dl><dt><a name="SmaliClassDef-get_num_comparison_instructions"><strong>get_num_comparison_instructions</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;the&nbsp;number&nbsp;of&nbsp;comparison&nbsp;(if&nbsp;statement)&nbsp;instructions&nbsp;in&nbsp;this&nbsp;class.<br>
+This&nbsp;is&nbsp;the&nbsp;sum&nbsp;of&nbsp;the&nbsp;number&nbsp;of&nbsp;comparison&nbsp;instructions&nbsp;in&nbsp;each&nbsp;method.<br>
+This&nbsp;is&nbsp;used&nbsp;for&nbsp;gathering&nbsp;statistics&nbsp;about&nbsp;the&nbsp;class.<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;number&nbsp;of&nbsp;comparison&nbsp;instructions&nbsp;in&nbsp;this&nbsp;class,&nbsp;an&nbsp;integer</span></dd></dl>
 
-<dl><dt><a name="SmaliClassDef-create_taint_field_smart"><strong>create_taint_field_smart</strong></a>(self, calling_method, reg_name='')</dt></dl>
-
-<dl><dt><a name="SmaliClassDef-get_num_comparison_instructions"><strong>get_num_comparison_instructions</strong></a>(self)</dt></dl>
-
-<dl><dt><a name="SmaliClassDef-get_num_field_declarations"><strong>get_num_field_declarations</strong></a>(self)</dt></dl>
+<dl><dt><a name="SmaliClassDef-get_num_field_declarations"><strong>get_num_field_declarations</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;the&nbsp;number&nbsp;of&nbsp;field&nbsp;declarations&nbsp;in&nbsp;this&nbsp;class.<br>
+This&nbsp;is&nbsp;the&nbsp;sum&nbsp;of&nbsp;the&nbsp;number&nbsp;of&nbsp;static&nbsp;fields&nbsp;and&nbsp;instance&nbsp;fields.<br>
+This&nbsp;is&nbsp;used&nbsp;for&nbsp;gathering&nbsp;statistics&nbsp;about&nbsp;the&nbsp;class.<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;number&nbsp;of&nbsp;field&nbsp;declarations&nbsp;in&nbsp;this&nbsp;class,&nbsp;an&nbsp;integer</span></dd></dl>
 
 <dl><dt><a name="SmaliClassDef-get_num_field_references"><strong>get_num_field_references</strong></a>(self)</dt></dl>
 
@@ -210,13 +233,17 @@ This&nbsp;is&nbsp;the&nbsp;sum&nbsp;of&nbsp;the&nbsp;number&nbsp;of&nbsp;lines&n
 Returns:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;number&nbsp;of&nbsp;lines&nbsp;in&nbsp;this&nbsp;class,&nbsp;an&nbsp;integer</span></dd></dl>
 
-<dl><dt><a name="SmaliClassDef-get_num_method_declarations"><strong>get_num_method_declarations</strong></a>(self)</dt></dl>
+<dl><dt><a name="SmaliClassDef-get_num_method_declarations"><strong>get_num_method_declarations</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;the&nbsp;number&nbsp;of&nbsp;method&nbsp;declarations&nbsp;in&nbsp;this&nbsp;class.<br>
+This&nbsp;is&nbsp;the&nbsp;number&nbsp;of&nbsp;methods&nbsp;in&nbsp;this&nbsp;class.<br>
+This&nbsp;is&nbsp;used&nbsp;for&nbsp;gathering&nbsp;statistics&nbsp;about&nbsp;the&nbsp;class.<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;number&nbsp;of&nbsp;method&nbsp;declarations&nbsp;in&nbsp;this&nbsp;class,&nbsp;an&nbsp;integer</span></dd></dl>
 
 <dl><dt><a name="SmaliClassDef-get_num_method_references"><strong>get_num_method_references</strong></a>(self)</dt></dl>
 
 <dl><dt><a name="SmaliClassDef-get_num_static_fields"><strong>get_num_static_fields</strong></a>(self)</dt></dl>
 
-<dl><dt><a name="SmaliClassDef-get_super_class"><strong>get_super_class</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;the&nbsp;super&nbsp;class&nbsp;of&nbsp;this&nbsp;class&nbsp;based&nbsp;on&nbsp;the&nbsp;value&nbsp;in&nbsp;self.<strong>header</strong><br>
+<dl><dt><a name="SmaliClassDef-get_super_class"><strong>get_super_class</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;the&nbsp;super&nbsp;(parent)&nbsp;class&nbsp;of&nbsp;this&nbsp;class&nbsp;based&nbsp;on&nbsp;the&nbsp;value&nbsp;in&nbsp;self.<strong>header</strong><br>
 Returns:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;SmaliTypes.ObjectReference&nbsp;<a href="builtins.html#object">object</a>&nbsp;representing&nbsp;the&nbsp;super&nbsp;class&nbsp;of&nbsp;this&nbsp;class.</span></dd></dl>
 
@@ -226,11 +253,21 @@ Calls&nbsp;the&nbsp;<a href="#SmaliClassDef-instrument">instrument</a>()&nbsp;me
 Returns:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;None</span></dd></dl>
 
-<dl><dt><a name="SmaliClassDef-is_external_function"><strong>is_external_function</strong></a>(self, line)</dt></dl>
+<dl><dt><a name="SmaliClassDef-is_external_function"><strong>is_external_function</strong></a>(self, line)</dt><dd><span class="code">Checks&nbsp;if&nbsp;the&nbsp;given&nbsp;line&nbsp;is&nbsp;a&nbsp;function&nbsp;call&nbsp;to&nbsp;a&nbsp;method&nbsp;not&nbsp;defined&nbsp;in&nbsp;this&nbsp;class.<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;line:&nbsp;A&nbsp;line&nbsp;from&nbsp;a&nbsp;smali&nbsp;file,&nbsp;maybe&nbsp;a&nbsp;string,&nbsp;a&nbsp;SmaliAssemblyInstruction,&nbsp;or&nbsp;anything&nbsp;that<br>
+&nbsp;&nbsp;&nbsp;&nbsp;can&nbsp;be&nbsp;converted&nbsp;to&nbsp;a&nbsp;string<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;if&nbsp;the&nbsp;line&nbsp;is&nbsp;a&nbsp;function&nbsp;call&nbsp;to&nbsp;a&nbsp;method&nbsp;not&nbsp;defined&nbsp;in&nbsp;this&nbsp;class,&nbsp;False&nbsp;otherwise</span></dd></dl>
 
 <dl><dt><a name="SmaliClassDef-is_internal_class"><strong>is_internal_class</strong></a>(self, other_class_name)</dt></dl>
 
-<dl><dt><a name="SmaliClassDef-is_internal_function"><strong>is_internal_function</strong></a>(self, line)</dt></dl>
+<dl><dt><a name="SmaliClassDef-is_internal_function"><strong>is_internal_function</strong></a>(self, line)</dt><dd><span class="code">Checks&nbsp;if&nbsp;the&nbsp;given&nbsp;line&nbsp;is&nbsp;a&nbsp;function&nbsp;call&nbsp;to&nbsp;a&nbsp;method&nbsp;defined&nbsp;in&nbsp;this&nbsp;class.<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;line:&nbsp;A&nbsp;line&nbsp;from&nbsp;a&nbsp;smali&nbsp;file,&nbsp;maybe&nbsp;a&nbsp;string,&nbsp;a&nbsp;SmaliAssemblyInstruction,&nbsp;or&nbsp;anything&nbsp;that<br>
+&nbsp;&nbsp;&nbsp;&nbsp;can&nbsp;be&nbsp;converted&nbsp;to&nbsp;a&nbsp;string<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;if&nbsp;the&nbsp;line&nbsp;is&nbsp;a&nbsp;function&nbsp;call&nbsp;to&nbsp;a&nbsp;method&nbsp;defined&nbsp;in&nbsp;this&nbsp;class,&nbsp;False&nbsp;otherwise</span></dd></dl>
 
 <dl><dt><a name="SmaliClassDef-is_launcher_activity"><strong>is_launcher_activity</strong></a>(self)</dt><dd><span class="code">Checks&nbsp;if&nbsp;this&nbsp;class&nbsp;is&nbsp;a&nbsp;launcher&nbsp;activity.&nbsp;&nbsp;In&nbsp;Android,&nbsp;when&nbsp;an&nbsp;app&nbsp;is&nbsp;launched<br>
 a&nbsp;launcher&nbsp;activity&nbsp;is&nbsp;started.&nbsp;&nbsp;This&nbsp;method&nbsp;checks&nbsp;if&nbsp;this&nbsp;class&nbsp;is&nbsp;one&nbsp;of&nbsp;those.<br>
@@ -243,7 +280,7 @@ It&nbsp;Calls&nbsp;<a href="#SmaliClassDef-write_to_file">write_to_file</a>()&nb
 Returns:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;None</span></dd></dl>
 
-<dl><dt><a name="SmaliClassDef-verbose"><strong>verbose</strong></a>(self)</dt></dl>
+<dl><dt><a name="SmaliClassDef-verboseprint"><strong>verboseprint</strong></a>(self)</dt></dl>
 
 <dl><dt><a name="SmaliClassDef-write_to_file"><strong>write_to_file</strong></a>(self, class_smali_file)</dt><dd><span class="code">Writes&nbsp;the&nbsp;current&nbsp;state&nbsp;of&nbsp;this&nbsp;class&nbsp;to&nbsp;a&nbsp;smali&nbsp;file.&nbsp;&nbsp;If&nbsp;changes&nbsp;were&nbsp;made&nbsp;to&nbsp;the&nbsp;content<br>
 of&nbsp;this&nbsp;class&nbsp;(perhapes&nbsp;via&nbsp;a&nbsp;plugin&nbsp;executed&nbsp;by&nbsp;calling&nbsp;<a href="#SmaliClassDef">SmaliClassDef</a>.<a href="#SmaliClassDef-instrument">instrument</a>()),&nbsp;this&nbsp;function&nbsp;writes&nbsp;those&nbsp;changes&nbsp;to&nbsp;disk.<br>
