@@ -120,12 +120,21 @@ class SmaliClassDef:
     
     @staticmethod
     def is_function(line):
+        ''' Checks if the given line is a function call or not.  It checks if the line begins with "invoke-"
+        Parameters:
+            line: A line from a smali file, maybe a string, a SmaliAssemblyInstruction, or anything that
+            can be converted to a string
+        Returns:
+            True if the line is a function call, False otherwise
+        '''
+        #print("is_function: " + str(line))
         # check this line is a method (begins with "invoke-*")
-        match_object = re.match(StigmaStringParsingLib.REGEX_BEGINS_WITH_INVOKE, line)
+        match_object = re.match(StigmaStringParsingLib.REGEX_BEGINS_WITH_INVOKE, str(line))
         return match_object is not None            
             
     @staticmethod
     def _get_taint_storage_name_pair(identifier, reg_name):
+        ''' Returns a pair of strings, the first is the name of the taint_storage field'''
         # computes the name of a taint_storage field given the
         # identifier and the register name
 
@@ -157,6 +166,10 @@ class SmaliClassDef:
         return (static_f_name, full_name)
 
     def get_super_class(self):
+        ''' Returns the super class of this class based on the value in self.header
+        Returns:
+            A SmaliTypes.ObjectReference object representing the super class of this class.
+        '''
         return SmaliTypes.from_string(self.header[1].split(" ")[1].strip())
 
     def create_taint_field(self, identifier, reg_name=""):
@@ -221,11 +234,12 @@ class SmaliClassDef:
 
 
     def instrument(self):
-        # if self.other_scds == {}:
-        #     raise ValueError("Other SCDs list not passed to scd")
-        
-        #print("\ninstrumenting: ", self)
-        #this will write code into methods
+        ''' Instrument (modify) the methods of this class.
+        Increases the number of local registers (.locals) in the target methods.
+        Calls the instrument() method on each SmaliMethodDef object in the target methods.
+        Returns:
+            None
+        '''
         for m in self.methods:
             if(self._should_instrument_method(m)):   
                 #print("Instrumenting: " + str(m.signature.name))      
@@ -249,12 +263,23 @@ class SmaliClassDef:
 
 
     def is_launcher_activity(self):
+        ''' Checks if this class is a launcher activity.  In Android, when an app is launched
+         a launcher activity is started.  This method checks if this class is one of those.
+         Returns:
+            True if this class is a launcher activity, False otherwise
+        '''
         # Remember, Instrumenter.LAUNCHER_ACTIVITIES is a list of SmaliTypes.ObjectReference
         for item in Instrumenter.LAUNCHER_ACTIVITIES:
             if item == self: #invokes the __eq__ on the SmaliTypes.ObjectReference
                 return True
 
     def write_to_file(self, class_smali_file):
+        ''' Writes the current state of this class to a smali file.  If changes were made to the content
+        of this class (perhapes via a plugin executed by calling SmaliClassDef.instrument()), this function writes those changes to disk.
+        Parameters:
+            class_smali_file: a path, likely ending in .smali; a string
+        Returns:
+            None'''
         # Write new "program" out to file
         fh = open(class_smali_file, "w")
 
@@ -271,10 +296,21 @@ class SmaliClassDef:
         
         
     def overwrite_to_file(self):
+        ''' Overwrites the current state of this class to the smali file.  If changes were made to the content
+        of this class (perhaps via a plugin executed by calling SmaliClassDef.instrument()), this function writes those changes to disk.
+        It Calls write_to_file() with the existing file_name attribute of this class as the path.
+        Returns:
+            None
+        '''
         self.write_to_file(self.file_name)
 
 
     def get_num_lines(self):
+        ''' Returns the number of lines in this class.
+        This is the sum of the number of lines in the header, static fields, instance fields, and methods including blank lines.
+        Returns:
+            The number of lines in this class, an integer
+        '''
         total_lines = len(self.header) + len(self.static_fields) + len(self.instance_fields)
         for m in self.methods:
             total_lines = total_lines + len(m.raw_text)

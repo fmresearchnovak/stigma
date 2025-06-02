@@ -79,7 +79,10 @@ Methods inherited from <a href="SmaliClassDef.html#SmaliClassDef">SmaliClassDef<
 
 <dl><dt><a name="MockSmaliClassDef-get_num_instance_fields"><strong>get_num_instance_fields</strong></a>(self)</dt></dl>
 
-<dl><dt><a name="MockSmaliClassDef-get_num_lines"><strong>get_num_lines</strong></a>(self)</dt></dl>
+<dl><dt><a name="MockSmaliClassDef-get_num_lines"><strong>get_num_lines</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;the&nbsp;number&nbsp;of&nbsp;lines&nbsp;in&nbsp;this&nbsp;class.<br>
+This&nbsp;is&nbsp;the&nbsp;sum&nbsp;of&nbsp;the&nbsp;number&nbsp;of&nbsp;lines&nbsp;in&nbsp;the&nbsp;header,&nbsp;static&nbsp;fields,&nbsp;instance&nbsp;fields,&nbsp;and&nbsp;methods&nbsp;including&nbsp;blank&nbsp;lines.<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;number&nbsp;of&nbsp;lines&nbsp;in&nbsp;this&nbsp;class,&nbsp;an&nbsp;integer</span></dd></dl>
 
 <dl><dt><a name="MockSmaliClassDef-get_num_method_declarations"><strong>get_num_method_declarations</strong></a>(self)</dt></dl>
 
@@ -87,21 +90,39 @@ Methods inherited from <a href="SmaliClassDef.html#SmaliClassDef">SmaliClassDef<
 
 <dl><dt><a name="MockSmaliClassDef-get_num_static_fields"><strong>get_num_static_fields</strong></a>(self)</dt></dl>
 
-<dl><dt><a name="MockSmaliClassDef-get_super_class"><strong>get_super_class</strong></a>(self)</dt></dl>
+<dl><dt><a name="MockSmaliClassDef-get_super_class"><strong>get_super_class</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;the&nbsp;super&nbsp;class&nbsp;of&nbsp;this&nbsp;class&nbsp;based&nbsp;on&nbsp;the&nbsp;value&nbsp;in&nbsp;self.<strong>header</strong><br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;SmaliTypes.ObjectReference&nbsp;<a href="builtins.html#object">object</a>&nbsp;representing&nbsp;the&nbsp;super&nbsp;class&nbsp;of&nbsp;this&nbsp;class.</span></dd></dl>
 
-<dl><dt><a name="MockSmaliClassDef-instrument"><strong>instrument</strong></a>(self)</dt></dl>
+<dl><dt><a name="MockSmaliClassDef-instrument"><strong>instrument</strong></a>(self)</dt><dd><span class="code">Instrument&nbsp;(modify)&nbsp;the&nbsp;methods&nbsp;of&nbsp;this&nbsp;class.<br>
+Increases&nbsp;the&nbsp;number&nbsp;of&nbsp;local&nbsp;registers&nbsp;(.locals)&nbsp;in&nbsp;the&nbsp;target&nbsp;methods.<br>
+Calls&nbsp;the&nbsp;<a href="#MockSmaliClassDef-instrument">instrument</a>()&nbsp;method&nbsp;on&nbsp;each&nbsp;SmaliMethodDef&nbsp;<a href="builtins.html#object">object</a>&nbsp;in&nbsp;the&nbsp;target&nbsp;methods.<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;None</span></dd></dl>
 
 <dl><dt><a name="MockSmaliClassDef-is_external_function"><strong>is_external_function</strong></a>(self, line)</dt></dl>
 
 <dl><dt><a name="MockSmaliClassDef-is_internal_function"><strong>is_internal_function</strong></a>(self, line)</dt></dl>
 
-<dl><dt><a name="MockSmaliClassDef-is_launcher_activity"><strong>is_launcher_activity</strong></a>(self)</dt></dl>
+<dl><dt><a name="MockSmaliClassDef-is_launcher_activity"><strong>is_launcher_activity</strong></a>(self)</dt><dd><span class="code">Checks&nbsp;if&nbsp;this&nbsp;class&nbsp;is&nbsp;a&nbsp;launcher&nbsp;activity.&nbsp;&nbsp;In&nbsp;Android,&nbsp;when&nbsp;an&nbsp;app&nbsp;is&nbsp;launched<br>
+a&nbsp;launcher&nbsp;activity&nbsp;is&nbsp;started.&nbsp;&nbsp;This&nbsp;method&nbsp;checks&nbsp;if&nbsp;this&nbsp;class&nbsp;is&nbsp;one&nbsp;of&nbsp;those.<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;True&nbsp;if&nbsp;this&nbsp;class&nbsp;is&nbsp;a&nbsp;launcher&nbsp;activity,&nbsp;False&nbsp;otherwise</span></dd></dl>
 
-<dl><dt><a name="MockSmaliClassDef-overwrite_to_file"><strong>overwrite_to_file</strong></a>(self)</dt></dl>
+<dl><dt><a name="MockSmaliClassDef-overwrite_to_file"><strong>overwrite_to_file</strong></a>(self)</dt><dd><span class="code">Overwrites&nbsp;the&nbsp;current&nbsp;state&nbsp;of&nbsp;this&nbsp;class&nbsp;to&nbsp;the&nbsp;smali&nbsp;file.&nbsp;&nbsp;If&nbsp;changes&nbsp;were&nbsp;made&nbsp;to&nbsp;the&nbsp;content<br>
+of&nbsp;this&nbsp;class&nbsp;(perhaps&nbsp;via&nbsp;a&nbsp;plugin&nbsp;executed&nbsp;by&nbsp;calling&nbsp;<a href="#SmaliClassDef">SmaliClassDef</a>.<a href="#MockSmaliClassDef-instrument">instrument</a>()),&nbsp;this&nbsp;function&nbsp;writes&nbsp;those&nbsp;changes&nbsp;to&nbsp;disk.<br>
+It&nbsp;Calls&nbsp;<a href="#MockSmaliClassDef-write_to_file">write_to_file</a>()&nbsp;with&nbsp;the&nbsp;existing&nbsp;file_name&nbsp;attribute&nbsp;of&nbsp;this&nbsp;class&nbsp;as&nbsp;the&nbsp;path.<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;None</span></dd></dl>
 
 <dl><dt><a name="MockSmaliClassDef-verbose"><strong>verbose</strong></a>(self)</dt></dl>
 
-<dl><dt><a name="MockSmaliClassDef-write_to_file"><strong>write_to_file</strong></a>(self, class_smali_file)</dt></dl>
+<dl><dt><a name="MockSmaliClassDef-write_to_file"><strong>write_to_file</strong></a>(self, class_smali_file)</dt><dd><span class="code">Writes&nbsp;the&nbsp;current&nbsp;state&nbsp;of&nbsp;this&nbsp;class&nbsp;to&nbsp;a&nbsp;smali&nbsp;file.&nbsp;&nbsp;If&nbsp;changes&nbsp;were&nbsp;made&nbsp;to&nbsp;the&nbsp;content<br>
+of&nbsp;this&nbsp;class&nbsp;(perhapes&nbsp;via&nbsp;a&nbsp;plugin&nbsp;executed&nbsp;by&nbsp;calling&nbsp;<a href="#SmaliClassDef">SmaliClassDef</a>.<a href="#MockSmaliClassDef-instrument">instrument</a>()),&nbsp;this&nbsp;function&nbsp;writes&nbsp;those&nbsp;changes&nbsp;to&nbsp;disk.<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;class_smali_file:&nbsp;a&nbsp;path,&nbsp;likely&nbsp;ending&nbsp;in&nbsp;.smali;&nbsp;a&nbsp;string<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;None</span></dd></dl>
 
 <hr>
 Static methods inherited from <a href="SmaliClassDef.html#SmaliClassDef">SmaliClassDef</a>:<br>
@@ -112,7 +133,12 @@ Parameters:<br>
 Returns:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;"fully&nbsp;qualified"&nbsp;name&nbsp;of&nbsp;the&nbsp;class,&nbsp;a&nbsp;string</span></dd></dl>
 
-<dl><dt><a name="MockSmaliClassDef-is_function"><strong>is_function</strong></a>(line)</dt></dl>
+<dl><dt><a name="MockSmaliClassDef-is_function"><strong>is_function</strong></a>(line)</dt><dd><span class="code">Checks&nbsp;if&nbsp;the&nbsp;given&nbsp;line&nbsp;is&nbsp;a&nbsp;function&nbsp;call&nbsp;or&nbsp;not.&nbsp;&nbsp;It&nbsp;checks&nbsp;if&nbsp;the&nbsp;line&nbsp;begins&nbsp;with&nbsp;"invoke-"<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;line:&nbsp;A&nbsp;line&nbsp;from&nbsp;a&nbsp;smali&nbsp;file,&nbsp;maybe&nbsp;a&nbsp;string,&nbsp;a&nbsp;SmaliAssemblyInstruction,&nbsp;or&nbsp;anything&nbsp;that<br>
+&nbsp;&nbsp;&nbsp;&nbsp;can&nbsp;be&nbsp;converted&nbsp;to&nbsp;a&nbsp;string<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;if&nbsp;the&nbsp;line&nbsp;is&nbsp;a&nbsp;function&nbsp;call,&nbsp;False&nbsp;otherwise</span></dd></dl>
 
 <hr>
 Data descriptors inherited from <a href="SmaliClassDef.html#SmaliClassDef">SmaliClassDef</a>:<br>
@@ -179,7 +205,10 @@ Parameters:<br>
 
 <dl><dt><a name="SmaliClassDef-get_num_instance_fields"><strong>get_num_instance_fields</strong></a>(self)</dt></dl>
 
-<dl><dt><a name="SmaliClassDef-get_num_lines"><strong>get_num_lines</strong></a>(self)</dt></dl>
+<dl><dt><a name="SmaliClassDef-get_num_lines"><strong>get_num_lines</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;the&nbsp;number&nbsp;of&nbsp;lines&nbsp;in&nbsp;this&nbsp;class.<br>
+This&nbsp;is&nbsp;the&nbsp;sum&nbsp;of&nbsp;the&nbsp;number&nbsp;of&nbsp;lines&nbsp;in&nbsp;the&nbsp;header,&nbsp;static&nbsp;fields,&nbsp;instance&nbsp;fields,&nbsp;and&nbsp;methods&nbsp;including&nbsp;blank&nbsp;lines.<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;number&nbsp;of&nbsp;lines&nbsp;in&nbsp;this&nbsp;class,&nbsp;an&nbsp;integer</span></dd></dl>
 
 <dl><dt><a name="SmaliClassDef-get_num_method_declarations"><strong>get_num_method_declarations</strong></a>(self)</dt></dl>
 
@@ -187,9 +216,15 @@ Parameters:<br>
 
 <dl><dt><a name="SmaliClassDef-get_num_static_fields"><strong>get_num_static_fields</strong></a>(self)</dt></dl>
 
-<dl><dt><a name="SmaliClassDef-get_super_class"><strong>get_super_class</strong></a>(self)</dt></dl>
+<dl><dt><a name="SmaliClassDef-get_super_class"><strong>get_super_class</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;the&nbsp;super&nbsp;class&nbsp;of&nbsp;this&nbsp;class&nbsp;based&nbsp;on&nbsp;the&nbsp;value&nbsp;in&nbsp;self.<strong>header</strong><br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;SmaliTypes.ObjectReference&nbsp;<a href="builtins.html#object">object</a>&nbsp;representing&nbsp;the&nbsp;super&nbsp;class&nbsp;of&nbsp;this&nbsp;class.</span></dd></dl>
 
-<dl><dt><a name="SmaliClassDef-instrument"><strong>instrument</strong></a>(self)</dt></dl>
+<dl><dt><a name="SmaliClassDef-instrument"><strong>instrument</strong></a>(self)</dt><dd><span class="code">Instrument&nbsp;(modify)&nbsp;the&nbsp;methods&nbsp;of&nbsp;this&nbsp;class.<br>
+Increases&nbsp;the&nbsp;number&nbsp;of&nbsp;local&nbsp;registers&nbsp;(.locals)&nbsp;in&nbsp;the&nbsp;target&nbsp;methods.<br>
+Calls&nbsp;the&nbsp;<a href="#SmaliClassDef-instrument">instrument</a>()&nbsp;method&nbsp;on&nbsp;each&nbsp;SmaliMethodDef&nbsp;<a href="builtins.html#object">object</a>&nbsp;in&nbsp;the&nbsp;target&nbsp;methods.<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;None</span></dd></dl>
 
 <dl><dt><a name="SmaliClassDef-is_external_function"><strong>is_external_function</strong></a>(self, line)</dt></dl>
 
@@ -197,13 +232,25 @@ Parameters:<br>
 
 <dl><dt><a name="SmaliClassDef-is_internal_function"><strong>is_internal_function</strong></a>(self, line)</dt></dl>
 
-<dl><dt><a name="SmaliClassDef-is_launcher_activity"><strong>is_launcher_activity</strong></a>(self)</dt></dl>
+<dl><dt><a name="SmaliClassDef-is_launcher_activity"><strong>is_launcher_activity</strong></a>(self)</dt><dd><span class="code">Checks&nbsp;if&nbsp;this&nbsp;class&nbsp;is&nbsp;a&nbsp;launcher&nbsp;activity.&nbsp;&nbsp;In&nbsp;Android,&nbsp;when&nbsp;an&nbsp;app&nbsp;is&nbsp;launched<br>
+a&nbsp;launcher&nbsp;activity&nbsp;is&nbsp;started.&nbsp;&nbsp;This&nbsp;method&nbsp;checks&nbsp;if&nbsp;this&nbsp;class&nbsp;is&nbsp;one&nbsp;of&nbsp;those.<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;True&nbsp;if&nbsp;this&nbsp;class&nbsp;is&nbsp;a&nbsp;launcher&nbsp;activity,&nbsp;False&nbsp;otherwise</span></dd></dl>
 
-<dl><dt><a name="SmaliClassDef-overwrite_to_file"><strong>overwrite_to_file</strong></a>(self)</dt></dl>
+<dl><dt><a name="SmaliClassDef-overwrite_to_file"><strong>overwrite_to_file</strong></a>(self)</dt><dd><span class="code">Overwrites&nbsp;the&nbsp;current&nbsp;state&nbsp;of&nbsp;this&nbsp;class&nbsp;to&nbsp;the&nbsp;smali&nbsp;file.&nbsp;&nbsp;If&nbsp;changes&nbsp;were&nbsp;made&nbsp;to&nbsp;the&nbsp;content<br>
+of&nbsp;this&nbsp;class&nbsp;(perhaps&nbsp;via&nbsp;a&nbsp;plugin&nbsp;executed&nbsp;by&nbsp;calling&nbsp;<a href="#SmaliClassDef">SmaliClassDef</a>.<a href="#SmaliClassDef-instrument">instrument</a>()),&nbsp;this&nbsp;function&nbsp;writes&nbsp;those&nbsp;changes&nbsp;to&nbsp;disk.<br>
+It&nbsp;Calls&nbsp;<a href="#SmaliClassDef-write_to_file">write_to_file</a>()&nbsp;with&nbsp;the&nbsp;existing&nbsp;file_name&nbsp;attribute&nbsp;of&nbsp;this&nbsp;class&nbsp;as&nbsp;the&nbsp;path.<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;None</span></dd></dl>
 
 <dl><dt><a name="SmaliClassDef-verbose"><strong>verbose</strong></a>(self)</dt></dl>
 
-<dl><dt><a name="SmaliClassDef-write_to_file"><strong>write_to_file</strong></a>(self, class_smali_file)</dt></dl>
+<dl><dt><a name="SmaliClassDef-write_to_file"><strong>write_to_file</strong></a>(self, class_smali_file)</dt><dd><span class="code">Writes&nbsp;the&nbsp;current&nbsp;state&nbsp;of&nbsp;this&nbsp;class&nbsp;to&nbsp;a&nbsp;smali&nbsp;file.&nbsp;&nbsp;If&nbsp;changes&nbsp;were&nbsp;made&nbsp;to&nbsp;the&nbsp;content<br>
+of&nbsp;this&nbsp;class&nbsp;(perhapes&nbsp;via&nbsp;a&nbsp;plugin&nbsp;executed&nbsp;by&nbsp;calling&nbsp;<a href="#SmaliClassDef">SmaliClassDef</a>.<a href="#SmaliClassDef-instrument">instrument</a>()),&nbsp;this&nbsp;function&nbsp;writes&nbsp;those&nbsp;changes&nbsp;to&nbsp;disk.<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;class_smali_file:&nbsp;a&nbsp;path,&nbsp;likely&nbsp;ending&nbsp;in&nbsp;.smali;&nbsp;a&nbsp;string<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;None</span></dd></dl>
 
 <hr>
 Static methods defined here:<br>
@@ -214,7 +261,12 @@ Parameters:<br>
 Returns:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;"fully&nbsp;qualified"&nbsp;name&nbsp;of&nbsp;the&nbsp;class,&nbsp;a&nbsp;string</span></dd></dl>
 
-<dl><dt><a name="SmaliClassDef-is_function"><strong>is_function</strong></a>(line)</dt></dl>
+<dl><dt><a name="SmaliClassDef-is_function"><strong>is_function</strong></a>(line)</dt><dd><span class="code">Checks&nbsp;if&nbsp;the&nbsp;given&nbsp;line&nbsp;is&nbsp;a&nbsp;function&nbsp;call&nbsp;or&nbsp;not.&nbsp;&nbsp;It&nbsp;checks&nbsp;if&nbsp;the&nbsp;line&nbsp;begins&nbsp;with&nbsp;"invoke-"<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;line:&nbsp;A&nbsp;line&nbsp;from&nbsp;a&nbsp;smali&nbsp;file,&nbsp;maybe&nbsp;a&nbsp;string,&nbsp;a&nbsp;SmaliAssemblyInstruction,&nbsp;or&nbsp;anything&nbsp;that<br>
+&nbsp;&nbsp;&nbsp;&nbsp;can&nbsp;be&nbsp;converted&nbsp;to&nbsp;a&nbsp;string<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;if&nbsp;the&nbsp;line&nbsp;is&nbsp;a&nbsp;function&nbsp;call,&nbsp;False&nbsp;otherwise</span></dd></dl>
 
 <hr>
 Data descriptors defined here:<br>
