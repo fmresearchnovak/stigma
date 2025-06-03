@@ -206,36 +206,80 @@ def find_path(folder, filename):
             return os.path.join(root, filename)
     return None
 
+def get_lines_from_file(filename, tmp_file_name):
+    file_path = find_path(tmp_file_name, filename)
+    fh = open(file_path, "r")
+    lines = fh.readlines()
+    fh.close()
+    return lines, file_path
+
+def fix_line(line):
+    return "".join(line).replace("\n", "")
+
+def location_in_string_exact(location, line):
+    pattern = rf"{re.escape(location)}(?!\d)"
+    return bool(re.search(pattern, line))
+
+def analyze_line(location, line, target_line):
+    current_line_number += 1
+
+    for location in locations_to_check:
+        if location_in_string_exact(location, line):
+            print("----------------------------------------------------")
+            print("LOCATION = " + location)
+            print("LINE = " + line)
+            print("DETERMINING NEW LOCATIONS...")
+
+            instruction = SmaliAssemblyInstructions.SmaliAssemblyInstruction().from_line(line)
+            loc_to_add = str(test_instance(instruction, location, target_line))
+            print("loc to add = " + str(loc_to_add))
+
+            # SPECIAL INSTRUCTIONS DEPENDING ON LOC_TO_ADD RESULT
+            match loc_to_add:
+                case "REMOVE CURRENT":
+                    locations_to_check.remove(location)
+                case "INVOKE FUNCTION":
+                    full_line = str(instruction)
+                    # this function travels to different files
+                case "IF INSTRUCTION":
+                    return # jump to a different line in the file, keep the current line in a variable
+                case "RETURN":
+                    return (new_files_to_search, new_line_directory, value_being_returned)
+                case _:
+                    if loc_to_add not in locations_to_check:
+                        locations_to_check.append(loc_to_add)
+                        print("Added to locations")
+
+
+temp_APK = StigmaState.Environment().get_temp_file()
+tmp_file_name = StigmaState.Environment().get_temp_file().name
+
+edges = {}
+locations_to_check = []
+files_to_search = []
+line_directory = {}
+
+current_line_number = 0
 
 # REWRITTEN VERSION OF FUNCTION BELOW
-def forward_tracing(filename, line_number, location, files_to_search, line_directory, tmp_file_name):
+def forward_tracing(filename, line_number, location, app_smali_files):
     print("=================================")
     print(filename)
     print("=================================")
 
-    # this is for the directed graph
-    edges = {}
-
     # STEP 1: Create list of registers (and instance variables) to check for
-    locations_to_check = []
     locations_to_check.append(location)
 
     # STEP 2: Open input file
-    file_path = find_path(tmp_file_name, filename)
-    print(file_path)
-
-    fh = open(file_path, "r")
-    lines = fh.readlines()
-    fh.close()
+    print(tmp_file_name)
+    lines, file_path = get_lines_from_file(filename, tmp_file_name)
 
     # STEP 3: Get the method that the target line is in as a SmaliClassDef object
-    line_number -= 1
-
     #smali_reg = SmaliRegister.SmaliRegister(reg)
-    smali_class = SmaliClassDef.SmaliClassDef(filename)
+    smali_class = SmaliClassDef.SmaliClassDef(file_path)
 
-    method_signature_str = get_function_name(filename, line_number, lines)
-
+    line_number -= 1
+    method_signature_str = get_function_name(file_path, line_number, lines)
     smali_method_def_obj = find_smali_method_def_obj(method_signature_str, smali_class)
     full_text = SmaliCodeIterator.SmaliCodeIterator(smali_method_def_obj.raw_text)
 
@@ -250,18 +294,20 @@ def forward_tracing(filename, line_number, location, files_to_search, line_direc
         if len(line) > 1:
             current_line_number += len(line) - 1
 
-        line = "".join(line).replace("\n", "")
+        line = fix_line(line)
 
         if target_line in line:
-            print("Target found")
             target_line_found = True
 
         # STEP 6: Once the target line is found, send every line containing a location in locations_to_track to the test_instance function
         if target_line_found:
+            #analyze_line(location, line, target_line)
+
             current_line_number += 1
 
             for location in locations_to_check:
-                if location + " " in line or location + "," in line:
+                
+                if location_in_string_exact(location, line):
                     print("----------------------------------------------------")
                     print("LOCATION = " + location)
                     print("LINE = " + line)
@@ -381,10 +427,6 @@ def main():
 
     # https://stackoverflow.com/questions/69981912/why-i-am-getting-this-error-typeerror-namespace-object-is-not-subscriptable
     args = parser.parse_args()
-
-    
-    temp_APK = StigmaState.Environment().get_temp_file()
-    tmp_file_name = StigmaState.Environment().get_temp_file().name
     
     start_time = time.time()
     cmd = ["java", "-jar", "pre-builts/apktool.jar", "d", apk_path, "-o", tmp_file_name, "-f"]
@@ -396,10 +438,10 @@ def main():
     print("Apk unpacked in %.1f seconds" % (time.time() - start_time))
 
     app_smali_files = SmaliCodeBase.SmaliCodeBase.findSmaliFiles(tmp_file_name)
-    #print(app_smali_files)
+    print(app_smali_files)
     
     print(tmp_file_name)
-    forward_tracing(args.filename, int(args.line_number), args.register, [], {}, tmp_file_name)
+    forward_tracing(args.filename, int(args.line_number), args.register, app_smali_files)
 
     #the following code tests it without the APK file so that lines can be easily edited
     #forward_tracing(args.filename, int(args.line_number), args.register, [], {}, tmp_file_name)
