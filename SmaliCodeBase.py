@@ -98,7 +98,15 @@ def tests():
 
     # Test 1: Create a SmaliCodeBase object and check if it loads classes correctly
     scb = SmaliCodeBase("test")
-    assert (len(scb.classes)  == 74)
+    assert(len(scb.classes)  == 74)
+    assert(scb.class_names[1] == "Landroid/support/v4/util/ContainerHelpers;");
+
+    # Check the class names match SCB objects created
+    for i in range(0, len(scb.class_names)):
+        assert(isinstance(scb.classes[i], SmaliClassDef.SmaliClassDef))
+
+        # Put the SmaliClassDef on the LHS so that we invoke the __eq__ method of SmaliClassDef
+        assert(scb.classes[i] == scb.class_names[i])
 
 
 

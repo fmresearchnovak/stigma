@@ -410,7 +410,7 @@ class SmaliClassDef:
             return self.class_name == other.raw_type_string
         
         if isinstance(other, str):
-            return str(self) == other
+            return str(self.class_name) == other
         
         return False
 
