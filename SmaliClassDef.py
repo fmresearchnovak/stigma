@@ -5,6 +5,7 @@ import SmaliTypes
 import StigmaStringParsingLib
 import Instrumenter
 import SmaliMethodDef
+import SmaliAssemblyInstructions
 
 
 class SmaliClassDef:
@@ -129,95 +130,27 @@ class SmaliClassDef:
         '''
         #print("is_function: " + str(line))
         # check this line is a method (begins with "invoke-*")
-        match_object = re.match(StigmaStringParsingLib.REGEX_BEGINS_WITH_INVOKE, str(line))
-        return match_object is not None            
-            
-    @staticmethod
-    def _get_taint_storage_name_pair(identifier, reg_name):
-        ''' Returns a pair of strings, the first is the name of the taint_storage field'''
-        # computes the name of a taint_storage field given the
-        # identifier and the register name
+        match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_INVOKE, str(line))
+        return match_object is not None
 
-        # <init> and v2 as input => init_v2_TAINT:I
-        # assert("init_v2_TAINT:I" in scd.static_fields)
-
-        # add-int v2, v3, v4
-        # foo_v2_Taint:I <- foo_v3_taint:I OR foo_v4_taint:I
-        # 
-        # 
-        # Some bug here?
-        # iput v2, p1, someclass->somefield
-        # iget v3, p2, someclass->somefield
-        # 
-        # somefield_p1_TAINT:I <- foo_v2_taint:F
-        # 
-
-        # identifier = method name or instance field name
-        # most method names are expected: "getIMEI(0", "leakSomething())"
-        # edge case 1: constructors show up as  <init> and <cinit>
-        identifier = identifier.replace("<", "")
-        identifier = identifier.replace(">", "")
-        if reg_name != "":
-            static_f_name = str(identifier) + "_" + str(reg_name) + "_TAINT:F"
-        else:
-            static_f_name = str(identifier) + "_TAINT:F"
-        full_name = ".field public static " + static_f_name + "\n"
-
-        return (static_f_name, full_name)
 
     def get_super_class(self):
-        ''' Returns the super class of this class based on the value in self.header
+        ''' Returns the super (parent) class of this class based on the value in self.header
         Returns:
             A SmaliTypes.ObjectReference object representing the super class of this class.
         '''
         return SmaliTypes.from_string(self.header[1].split(" ")[1].strip())
 
-    def create_taint_field(self, identifier, reg_name=""):
-        # Makes a new taint_storage field in this class
 
-        static_f_name, full_name = self._get_taint_storage_name_pair(identifier, reg_name)
-
-        # could be more efficient as a hash map instead of a list but that might change the order
-        # AND, the number of items is small (probably < 50) so it doesn't really matter
-        if full_name not in self.static_fields:
-            self.static_fields.append(full_name)
-            self.static_fields.append("\n") # because entire list will be appended to output file
-
-        return static_f_name
-        
-        
-    def create_taint_field_smart(self, calling_method, reg_name=""):
-        # Currently not called anywhere in the program.  This method
-        # might be useful in the future if we decide that the taint
-        # tags need to be instance fields and not always static
-        # That decision would require substantial changes to the instrumenters
-        
-        # See comments in create_taint_field()
-        identifier = calling_method.get_name()
-        identifier = identifier.replace("<", "")
-        identifier = identifier.replace(">", "")
-        
-        # might have two consecutive under-scores but who cares
-        name = "_".join([identifier, reg_name, "TAINT:T"])
-        
-        if(calling_method.is_static()):
-            full_name = ".field public static " + name + "\n"
-            fields_list = self.static_fields
-
-        else:
-            full_name = ".field public " + name + "\n"
-            fields_list = self.instance_fields
-
-        # could be more efficient as a hash map instead of a list but that might change the order
-        # AND, the number of items is small (probably < 50) so it doesn't really matter
-        if full_name not in fields_list:
-            fields_list.append(full_name)
-            fields_list.append("\n") # because entire list will be appended to output file
-
-        return name
-
-
+    
     def is_internal_function(self, line):
+        ''' Checks if the given line is a function call to a method defined in this class.
+        Parameters:
+            line: A line from a smali file, maybe a string, a SmaliAssemblyInstruction, or anything that
+            can be converted to a string
+        Returns:
+            True if the line is a function call to a method defined in this class, False otherwise
+        '''
         if not self.is_function(line):
             return False
 
@@ -226,6 +159,13 @@ class SmaliClassDef:
 
 
     def is_external_function(self, line):
+        ''' Checks if the given line is a function call to a method not defined in this class.
+        Parameters:
+            line: A line from a smali file, maybe a string, a SmaliAssemblyInstruction, or anything that
+            can be converted to a string
+        Returns:
+            True if the line is a function call to a method not defined in this class, False otherwise
+        '''
         if not self.is_function(line):
             return False
 
@@ -317,7 +257,7 @@ class SmaliClassDef:
         return total_lines
         
 
-    def verbose(self):
+    def verboseprint(self):
         for line in self.header + self.static_fields + self.instance_fields:
             print(line)
         print("# methods\n")
@@ -328,6 +268,12 @@ class SmaliClassDef:
 
 
     def get_num_comparison_instructions(self):
+        ''' Returns the number of comparison (if statement) instructions in this class.
+        This is the sum of the number of comparison instructions in each method.
+        This is used for gathering statistics about the class.
+        Returns:
+            The number of comparison instructions in this class, an integer
+        '''
         count = 0
         for m in self.methods:
             count = count + m.get_num_comparison_instructions()
@@ -336,10 +282,22 @@ class SmaliClassDef:
 
 
     def get_num_field_declarations(self):
+        ''' Returns the number of field declarations in this class.
+        This is the sum of the number of static fields and instance fields.
+        This is used for gathering statistics about the class.
+        Returns:
+            The number of field declarations in this class, an integer 
+        '''
         return self.get_num_static_fields() + self.get_num_instance_fields()
         
         
     def get_num_method_declarations(self):
+        ''' Returns the number of method declarations in this class.
+        This is the number of methods in this class.
+        This is used for gathering statistics about the class.
+        Returns:
+            The number of method declarations in this class, an integer
+        '''
         return len(self.methods)
 
 
@@ -436,6 +394,16 @@ def tests():
     ts = SmaliClassDef(os.path.join("test", "Main.smali"))
     #print(type(ts.get_super_class()))
     assert (ts.get_super_class() == "Landroid/support/v7/app/AppCompatActivity;")
+    assert (ts.class_name == "Ledu/fandm/enovak/leaks/Main;");
+
+
+    assert(SmaliClassDef.is_function("invoke-virtual {p0}, Landroid/support/v7/app/AppCompatActivity;->getSupportActionBar()Landroid/support/v7/app/ActionBar;"))
+    #print([str(x) for x in ts.methods]) 
+    function_call_line = ts.methods[6].raw_text[7]
+    function_call_instruction = SmaliAssemblyInstructions.from_line(function_call_line)
+    assert(SmaliClassDef.is_function(function_call_instruction))
+    assert(SmaliClassDef.is_function(function_call_line))
+    assert(SmaliClassDef.is_function("iput-object v0, p0, Lnet/stigma/Main;->TAG:Ljava/lang/String;") == False)
 
 
     assert(SmaliClassDef.extract_class_name("./test/Main.smali") == "Ledu/fandm/enovak/leaks/Main;")

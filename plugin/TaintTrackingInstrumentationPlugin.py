@@ -167,7 +167,6 @@ def IGET_instrumentation(scd, m, code_unit, free_reg):
 
     # maybe we should be using the second register as well?  make_merge_block
     # isn't setup to do that though.
-    #taint_field_dest = scd.create_taint_field(m.get_name(), regs[0])
     taint_field_dest = storage_handler.add_taint_location(scd.class_name, m.get_name(), regs[0])
             
     block = Instrumenter.make_comment_block("for IGET")
@@ -379,7 +378,6 @@ def FILLED_NEW_ARRAY_instrumentation(scd, m, code_unit, free_reg):
     result_line = code_unit[-1]    
     result_reg = StigmaStringParsingLib.get_v_and_p_numbers(result_line)[0]
 
-    #taint_loc_result = scd.create_taint_field(m.get_name(), result_reg)
     taint_loc_result = storage_handler.add_taint_location(scd.class_name, m.get_name(), result_reg)
     block = Instrumenter.make_comment_block("for FILLED-NEW-ARRAY")
     block = block + Instrumenter.make_merge_block(scd, m, regs, taint_loc_result, free_reg)
@@ -578,7 +576,7 @@ def RETURN_instrumentation(scd, m, code_unit, free_reg):
     # this is necessary because the tag must be in a package
     # that the caller class can access.  This is not easy to know
     # when looking only at smali code
-    #taint_field_dest = scd.create_taint_field("return", "field")
+
     cur_line = code_unit[0]
     
     block = Instrumenter.make_comment_block("for RETURN")

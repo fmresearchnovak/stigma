@@ -42,6 +42,19 @@ import SmaliTypes
 from SmaliRegister import SmaliRegister
 
 
+def from_line(raw_line_string):
+    ''' 
+    Returns a SmaliAssemblyInstruction object from a given string.  
+    Wrapper of SmaliAssemblyInstruction.from_line()
+    Parameters:
+       raw_line_string (str): The string representation of a smali assembly instruction
+    Returns:
+       SmaliAssemblyInstruction: The corresponding SmaliAssemblyInstruction object
+    '''
+    
+    return SmaliAssemblyInstruction.from_line(raw_line_string)
+
+
 class SmaliAssemblyInstruction():
     ''' A representation of a smali assembly instruction.  Basically a wrapper around the instruction as a string '''
 
