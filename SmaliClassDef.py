@@ -325,7 +325,6 @@ class SmaliClassDef:
                 
     @staticmethod
     def _count_fields(fieldsList):
-        regexBeginsWithField = r"^\s*.field"
         count = 0
         for line in fieldsList:
             search_object = re.search(regexBeginsWithField, line)
