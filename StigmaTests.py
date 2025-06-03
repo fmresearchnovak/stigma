@@ -2,6 +2,7 @@
 
 import sys
 import subprocess
+import os
 
 import SmaliMethodDef
 import SmaliClassDef
@@ -283,7 +284,7 @@ def grow_locals_test_1():
 	smd = SmaliMethodDef.SmaliMethodDef(method_list, None)
 	smd.grow_locals(3)
 	#print(smd)
-	smd.write_to_file(str(smd.get_name()) + ".smali")
+	smd.write_to_file(os.path.join("test", str(smd.get_name()) + ".smali"))
 
 
 	test_line = "    invoke-virtual {v1}, Ljava/lang/Object;->toString()Ljava/lang/String;\n"
@@ -800,12 +801,15 @@ def internal_tests():
 
 def main():
 	
+	
 	internal_tests()
 	if len(sys.argv) == 2:
 		if sys.argv[1] == "--internal-only":
 			exit(0)
 	
+	
 	TaintTrackingInstrumentationPlugin.main()
+	
 	
 	comparison_count_test1()
 	
@@ -816,10 +820,12 @@ def main():
 	type_safety_checker_control_flow_test()                   
 	type_safety_checker_control_flow_test_edge_case_1()       
 	type_safety_checker_control_flow_test_edge_case_2()      
+	
 	type_safety_checker_control_flow_test_edge_case_3()      
 	type_safety_checker_small_constructor_test()
 	type_safety_checker_empty_method_test()
 	type_safety_checker_action_bar_try_catch_leaks() 
+	
 
 	grow_locals_test_1()
 	grow_locals_test_2()
@@ -827,6 +833,7 @@ def main():
 	type_safety_checker_aget2_test()
 	type_safety_checker_leaks_test()
 	type_safety_weather_app_test()
+	
 	
 	
 	# custom tests

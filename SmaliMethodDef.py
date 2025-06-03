@@ -993,7 +993,7 @@ def tests():
 	smd.cfg = ControlFlowGraph(smd.raw_text)
 	smd.tsc = TypeSafetyChecker(smd.signature, smd.cfg)  
 	assert(smd.find_first_valid_instruction() == 8)
-	print(smd.get_name())
+	#print(smd.get_name())
 	
 	
 	
