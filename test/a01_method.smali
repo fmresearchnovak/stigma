@@ -1,3 +1,4 @@
+.class Ledu/fandm/enovak/a01;
 .method public static A01(Lcom/facebook/ads/redexgen/X/IL;[I[BIILandroid/graphics/Paint;Landroid/graphics/Canvas;)I
     .locals 15
 

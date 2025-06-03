@@ -117,7 +117,12 @@ class SmaliClassDef:
         '''
         fh = open(filename, 'r')
         line = fh.readline()
-        return line.split()[-1].strip("\n")
+        class_name = line.split()[-1].strip("\n")
+        try:
+            SmaliTypes.from_string(class_name)
+        except Exception as e:
+            raise Exception("Error parsing class name from file: " + filename + "\n" + str(e))
+        return class_name
     
     @staticmethod
     def is_function(line):

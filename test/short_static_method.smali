@@ -1,3 +1,4 @@
+.class Ledu/fandm/enovak/leakPasswd;
 .method public static leakPasswd()V
     .locals 1
 

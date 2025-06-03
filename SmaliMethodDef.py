@@ -72,7 +72,12 @@ class SmaliMethodSignature:
 			# p0 holds the object reference and p1 the second 
 			# parameter register.
 
-			self.parameter_type_map[SmaliRegister("p0")] = SmaliTypes.from_string(class_name)
+			try:
+				self.parameter_type_map[SmaliRegister("p0")] = SmaliTypes.from_string(class_name)
+			except Exception as e:
+				print(e)
+				raise Exception("Error parsing line of code in: " + self.get_fully_qualified_name())
+			
 			self.num_of_parameters = 1
 			self.num_of_parameter_registers = 1
 			p_idx = 1

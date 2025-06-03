@@ -1,3 +1,4 @@
+.class Ledu/fandm/enovak/diffPartial_method_class;
 .method private static diffPartial(Landroid/support/v7/util/DiffUtil$Callback;IIII[I[II)Landroid/support/v7/util/DiffUtil$Snake;
     .locals 18
     .param p0, "cb"    # Landroid/support/v7/util/DiffUtil$Callback;

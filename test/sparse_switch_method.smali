@@ -1,3 +1,4 @@
+.class Ledu/fandm/enovak/SparseSwitchClass;
 .method public static getOpticalBounds(Landroid/graphics/drawable/Drawable;)Landroid/graphics/Rect;
     .locals 14
     .param p0, "drawable"    # Landroid/graphics/drawable/Drawable;

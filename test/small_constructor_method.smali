@@ -1,3 +1,4 @@
+.class Ledu/fandm/enovak/small_constructor_method_class;
 .method static constructor <clinit>()V
     .locals 1
 

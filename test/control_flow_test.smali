@@ -1,3 +1,4 @@
+.class Ledu/fandm/enovak/ControlFlowTest;
 .method public static resolve(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
     .locals 10
     .param p0    # Ljava/lang/String;

@@ -86,8 +86,25 @@ class SmaliCodeBase():
             for every_method in scd.methods:
                 self.not_enough_registers_count += every_method.not_enough_free_registers_count
 
+            SCDs.append(scd)
+
 
         return SCDs
 
 
 
+def tests():
+    print("Testing SmaliCodeBase")
+
+    # Test 1: Create a SmaliCodeBase object and check if it loads classes correctly
+    scb = SmaliCodeBase("test")
+    assert (len(scb.classes)  == 74)
+
+
+
+
+    print("ALL SmaliCodeBase TESTS PASSED")
+
+
+if __name__ == "__main__":
+    tests()

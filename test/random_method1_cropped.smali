@@ -1,3 +1,4 @@
+.class final Ledu/enovak/random_method1_cropped;;
 .method public leakPasswd(Landroid/view/View;)V
     .locals 6
     .param p1, "v"    # Landroid/view/View;

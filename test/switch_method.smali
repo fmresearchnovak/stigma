@@ -1,3 +1,4 @@
+.class final Ledu/enovak/switch_method;
 .method public onOptionsItemSelected(Landroid/view/MenuItem;)Z
 
     .locals 2

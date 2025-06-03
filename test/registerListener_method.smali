@@ -1,3 +1,4 @@
+.class final Ledu/enovak/registerListenerClass;
 .method private registerListeners()V
     .locals 9
 

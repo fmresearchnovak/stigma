@@ -1,3 +1,4 @@
+.class Ledu/fandm/enovak/EdgeCaseClass;
 .method public static a(Lorg/mozilla/javascript/Context;Lorg/mozilla/javascript/ScriptableObject;Z)Lorg/mozilla/javascript/ScriptableObject;
     .locals 17
 
