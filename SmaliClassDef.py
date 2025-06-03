@@ -189,8 +189,14 @@ class SmaliClassDef:
 
 
     def _should_instrument_method(self, m):
-        # maybe this method should be in the Instrumenter class
-
+        '''Determines if a given method should be modified (instrumented) or not.
+        Parameters:
+            m: a SmaliMethodDef object representing the method to check
+        Returns:
+            True if the method should be instrumented, False otherwise
+        '''
+        
+        # TODO: maybe this method should be in the Instrumenter.py class?
         if(m.signature.is_abstract or m.signature.is_native):
             # We shouldn't instrument methods that don't have code / locals
             return False
@@ -303,6 +309,19 @@ class SmaliClassDef:
 
 
     def _count_references(self, filter_function):
+        ''' Counts the number of occurrences of a specific type of reference in this class.
+        Specifically, it is used to count the unique field names and unique method names used in this class.
+        This information is used for splitting the smali files into sub-folders, which is done in splitSmali() in Stigma.py.
+        Parameters:
+            filter_function: a function that takes a line of smali code and returns True or False depending on desired filtering.
+            Examples of a filter function would be a function that returns True if the given line is a method call instruction.
+        Returns:
+            The number of unique references in this class, an integer.
+
+        Example, suppose the class calls Log.d() 5 times and Log.e() 3 times in the various methods.  
+        When passed the "is_method_call_instruction" filter, _count_references() will return 2 since there are 2 unique methods called.
+        '''
+
         # this should be computed here and not computed else-where 
         # and cached.  The reasoning is because the number of field
         # references changes drastically after the instrumentation
@@ -317,10 +336,27 @@ class SmaliClassDef:
         
 
     def get_num_field_references(self):
+        ''' Wrapper for _count_references() that counts the number of field references in this class.
+        Parameters:
+            None
+        Returns:
+            The number of unique field references in this class, an integer
+
+        Example, suppose the class has 3 fields "String TAG", "Context mContext", and "int x" and references a field called "String UserName" from a different class.
+        This function will return 4 since there are 4 unique fields referenced.
+        '''
         return self._count_references(StigmaStringParsingLib.is_field_instruction)
 
         
     def get_num_method_references(self):
+        ''' Wrapper for _count_references() that counts the number of method references in this class.
+        Parameters:
+            None
+        Returns:
+            The number of unique method references in this class, an integer
+        Example, suppose the class calls foo() 6 times and blah() 3 times, with blah() being defined in another class.
+        This function will return 2 since there are 2 unique methods called.
+        '''
         return self._count_references(StigmaStringParsingLib.is_method_call_instruction)
                     
                 
