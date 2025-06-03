@@ -205,6 +205,17 @@ class SmaliAssemblyInstruction():
         return {}
     
 
+    def split(self, separator):
+        ''' Calls split on this instruction as a string.  Identical semantics to str.split().
+        Parameters:
+           separator (str): The separator to split on
+        Returns:
+           list: A list of strings that are the result of the split operation
+        '''
+        return repr(self).split(separator)
+        
+    
+
 class _ImplicitRegistersInstruction():
     # instructions that have implicit registers
     # all such cases are "wide" instructions that 

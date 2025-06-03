@@ -121,7 +121,7 @@ class SmaliClassDef:
     
     @staticmethod
     def is_function(line):
-        ''' Checks if the given line is a function call or not.  It checks if the line begins with "invoke-"
+        ''' Checks if the given line is a valid smali function call or not.  It checks if the line begins with "invoke-"
         Parameters:
             line: A line from a smali file, maybe a string, a SmaliAssemblyInstruction, or anything that
             can be converted to a string
@@ -143,34 +143,35 @@ class SmaliClassDef:
 
 
     
-    def is_internal_function(self, line):
-        ''' Checks if the given line is a function call to a method defined in this class.
+    def is_inter_class_function_call(self, line):
+        ''' Checks if the given line is a function call to a function defined in this class.
+        This is the inverse of is_extra_class_function_call.
         Parameters:
             line: A line from a smali file, maybe a string, a SmaliAssemblyInstruction, or anything that
             can be converted to a string
         Returns:
-            True if the line is a function call to a method defined in this class, False otherwise
+            True if the line is a function call to a function defined in this class, False otherwise
         '''
         if not self.is_function(line):
             return False
-
+        
+        if( isinstance(line, SmaliAssemblyInstructions._MethodCallInstruction) ):
+            return line.get_fully_qualified_call() in self.methods
+        
         func_name = line.split(" ")[-1]
         return func_name in self.methods
 
 
-    def is_external_function(self, line):
-        ''' Checks if the given line is a function call to a method not defined in this class.
+    def is_extra_class_function_call(self, line):
+        ''' Checks if the given line is a function call to a function not defined in this class.
+        This is the inverse of is_inter_class_function_call.
         Parameters:
             line: A line from a smali file, maybe a string, a SmaliAssemblyInstruction, or anything that
             can be converted to a string
         Returns:
-            True if the line is a function call to a method not defined in this class, False otherwise
+            True if the line is a function call to a function not defined in this class, False otherwise
         '''
-        if not self.is_function(line):
-            return False
-
-        func_name = line.split(" ")[-1]
-        return func_name not in self.methods
+        return not self.is_inter_class_function_call(line) and self.is_function(line)
 
 
     def instrument(self):
@@ -391,22 +392,44 @@ class MockSmaliClassDef(SmaliClassDef):
         return False
 
 def tests():
+    print("Testing SmaliClassDef")
+
+    print("\tTesting Constructor and class name extraction...")
     ts = SmaliClassDef(os.path.join("test", "Main.smali"))
     #print(type(ts.get_super_class()))
     assert (ts.get_super_class() == "Landroid/support/v7/app/AppCompatActivity;")
     assert (ts.class_name == "Ledu/fandm/enovak/leaks/Main;");
+    assert(SmaliClassDef.extract_class_name("./test/Main.smali") == "Ledu/fandm/enovak/leaks/Main;")
 
 
-    assert(SmaliClassDef.is_function("invoke-virtual {p0}, Landroid/support/v7/app/AppCompatActivity;->getSupportActionBar()Landroid/support/v7/app/ActionBar;"))
+    print("\tTesting is_function stuff...")
     #print([str(x) for x in ts.methods]) 
-    function_call_line = ts.methods[6].raw_text[7]
-    function_call_instruction = SmaliAssemblyInstructions.from_line(function_call_line)
-    assert(SmaliClassDef.is_function(function_call_instruction))
-    assert(SmaliClassDef.is_function(function_call_line))
+
+    extra_class_function_call_line = "invoke-virtual {p0}, Landroid/support/v7/app/AppCompatActivity;->getSupportActionBar()Landroid/support/v7/app/ActionBar;"
+    extra_class_function_call_instruction = SmaliAssemblyInstructions.from_line(extra_class_function_call_line)
+    #print("function_call_line: " + str(extra_class_function_call_instruction))
+    assert(SmaliClassDef.is_function(extra_class_function_call_instruction))
+    assert(SmaliClassDef.is_function(extra_class_function_call_line))
     assert(SmaliClassDef.is_function("iput-object v0, p0, Lnet/stigma/Main;->TAG:Ljava/lang/String;") == False)
 
+    #print([str(x) for x in ts.methods])
+    #print(ts.methods[8])
+    inter_class_function_call_line = ts.methods[8].raw_text[135].strip('\n')
+    inter_class_function_call_instruction = SmaliAssemblyInstructions.from_line(inter_class_function_call_line)
+    #print("inter_class_function_call_line: " + str(inter_class_function_call_line))
 
-    assert(SmaliClassDef.extract_class_name("./test/Main.smali") == "Ledu/fandm/enovak/leaks/Main;")
+    assert(ts.is_inter_class_function_call(extra_class_function_call_line) == False)
+    assert(ts.is_inter_class_function_call(extra_class_function_call_instruction) == False)
+    assert(ts.is_inter_class_function_call(inter_class_function_call_line) == True)
+    assert(ts.is_inter_class_function_call(inter_class_function_call_instruction) == True)
+
+    assert(ts.is_extra_class_function_call(extra_class_function_call_line) == True)
+    assert(ts.is_extra_class_function_call(extra_class_function_call_instruction) == True)
+    assert(ts.is_extra_class_function_call(inter_class_function_call_line) == False)
+    assert(ts.is_extra_class_function_call(inter_class_function_call_instruction) == False)
+
+
+
 
     print("ALL SmaliClassDef TESTS PASSED")
 

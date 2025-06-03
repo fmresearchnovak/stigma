@@ -30,12 +30,14 @@ class SmaliMethodSignature:
 	def __init__(self, sig_line, class_name):
 		
 		self.sig_line = sig_line
+		self.class_name = class_name
 		
 		sig_tokens = sig_line.split(" ")
 		#print("\n\n" + str(sig_tokens))
 		assert(sig_tokens[0] == ".method")
 		
 		name = sig_tokens[-1]
+		self.name_with_data_types = name.strip('\n') # e.g., myMethod(Ljava/lang/String;)I;
 		self.name = name.split("(")[0]
 		
 		modifiers = sig_tokens[1:-1]
@@ -154,7 +156,12 @@ class SmaliMethodSignature:
 		return str(self.sig_line.strip()) # + " " + str(self.parameter_type_map)
 
 	def __eq__(self, other):
-		return str(self) == str(other)
+		return str(self.get_fully_qualified_name()) == str(other.get_fully_qualified_name())
+	
+	def get_fully_qualified_name(self):
+		# returns the fully qualified name of the method
+		# e.g., Lcom/example/MyClass;->myMethod(Ljava/lang/String;)V
+		return self.class_name + "->" + self.name_with_data_types
 		
 
 class SmaliMethodDef:
@@ -926,16 +933,21 @@ class SmaliMethodDef:
 
 	def __eq__(self, other):
 		if isinstance(other, str):
-			return self.get_signature() == other
+			return self.get_signature().get_fully_qualified_name() == other
 
 		elif isinstance(other, SmaliMethodDef):
-			return self.get_signature() == other.get_signature()
+			return self.get_signature() ==  other.get_signature()
+		
+		elif isinstance(other, SmaliMethodSignature):
+			return self.get_signature() == other
 
 		else:
 			return False
-			
+
+
 	def get_signature(self):
 		return self.signature
+	
 
 
 def tests():
@@ -972,6 +984,7 @@ def tests():
 	assert(sig.parameter_type_map == {"p0": "I"})
 	assert(sig.num_of_parameters == 1)
 	assert(sig.num_of_parameter_registers == 1)
+	assert(sig.get_fully_qualified_name() == "Lmy/package/MyClass;->reverseTransit(I)I")
 
 
 	print("\tfind_first_valid_instruction...")
@@ -980,6 +993,7 @@ def tests():
 	smd.cfg = ControlFlowGraph(smd.raw_text)
 	smd.tsc = TypeSafetyChecker(smd.signature, smd.cfg)  
 	assert(smd.find_first_valid_instruction() == 8)
+	print(smd.get_name())
 	
 	
 	
