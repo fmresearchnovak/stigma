@@ -29,9 +29,9 @@ class SmaliClassDef:
                   'Lcom/google/android/material/animation/AnimationUtils$2;']
         This is used to determine if a class is internal
     self.methods: a list of SmaliMethodDef objects in this class
-    self.file_name: the (absolute?) path to the file, a string
-    self.class_name: extracted from the first line of the smali file
-        example: "AnimationUtils"
+    self.file_name: the (absolute) path to the file, a string
+    self.class_name: extracted from the first line of the smali file, the "fully qualified" name of the class, a string
+        example: "Lcom/google/android/material/animation/AnimationUtils;"
     '''
 
 
@@ -359,23 +359,18 @@ class SmaliClassDef:
         '''
         return self._count_references(StigmaStringParsingLib.is_method_call_instruction)
                     
-                
-    @staticmethod
-    def _count_fields(fieldsList):
-        count = 0
-        for line in fieldsList:
-            search_object = re.search(regexBeginsWithField, line)
-            if(search_object != None):
-                count+=1
-        return count
-
-    def get_num_static_fields(self):
-        return self._count_fields(self.static_fields)
-
-    def get_num_instance_fields(self):
-        return self._count_fields(self.instance_fields)
         
     def is_internal_class(self, other_class_name):
+        ''' Checks if the given class name is an "internal" class of the SmaliCodeBase.
+        A class is considered internal if the definition (smali file) of the class can be found in this SmaliCodeBase.
+        Parameters:
+            other_class_name: a string representing the name of the class to check
+        Returns:
+            True if the class is an internal class, False otherwise
+
+        Example: Ledu/fandm/enovak/leaks/Main; is likely to be an internal class of the SmaliCodeBase
+        Example: Ljava/lang/String; is likely to be an external class of the SmaliCodeBase since the definition of this class is part of the Java library and not the app being analyzed.
+        '''
         #print("\nis_internal_class(" + str(other_class_name) + ")")
         #print("self.class_name:" + str(self.class_name))
         # print("self.internal_class_names:", self.internal_class_names)
@@ -387,9 +382,20 @@ class SmaliClassDef:
         return False
         
     def __str__(self):
+        ''' Returns a string representation of this class.
+        Uses self.file_name and likely returns something of the form "/tmp/apkOutput_blah/smali_classes2/edu/fandm/enovak/leaks/Main.smali"
+        '''
         return str(self.file_name)
         
     def __eq__(self, other):
+        ''' Checks if this class is equal to another class.
+        Two classes are considered equal if they have the same self.class_name.
+        Note: self.class_name is the "fully qualified" name of the class, e.g. "Ljava/lang/String;"
+        Parameters:
+            other: another SmaliClassDef object, a SmaliTypes.ObjectReference, or a string representing the class name in "fully qualified" format.
+        Returns:
+            True if the class names are equal, False otherwise
+        '''
         #print("checking equality on " + str(self) + " and " + str(other))
         if isinstance(other, SmaliClassDef):
             return self.class_name == other.class_name
@@ -464,13 +470,9 @@ def tests():
     assert(ts.is_extra_class_function_call(inter_class_function_call_instruction) == False)
 
 
-
-
     print("ALL SmaliClassDef TESTS PASSED")
 
-    # TODO: Write more tests
-    #   1) build a SmaliClassDef from a file in tests/
-    #   2) call a bunch of the methods and make sure they return the right results
+    # TODO: Write more tests!  One for each method in SmaliClassDef
 
 if __name__ == "__main__":
     tests()
