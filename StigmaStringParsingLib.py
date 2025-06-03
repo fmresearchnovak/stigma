@@ -78,6 +78,8 @@ BEGINS_WITH_TWO_SQUARE_BRACKETS = r"^\s*\[\["
 BEGINS_WITH_MOVE = r"^\s*move"
 BEGINS_WITH_COMMENT = r"^\s*#"
 
+regexBeginsWithField = r"^\s*.field"
+
 # starts with upper-case L, contains letters, numbers, forward-slashes, 
 # and dollar signs, ends with semi-colon
 # e.g., Ljava/lang/String;
