@@ -9,6 +9,7 @@ import SmaliClassDef
 import SmaliAssemblyInstructions
 import StigmaStringParsingLib
 import SmaliCodeIterator
+import SmaliCodeBase
 import StigmaState
 
 def findAPK(apk):
@@ -53,9 +54,13 @@ def generate_directed_graph(graph):
             number = graph[key][index][1]
 
             if key[0] == "L":
+                if "->" in key:
+                    key = key.split("->")[0]
                 split = key.split("/")
                 key = split[len(split) - 1].replace(";", "")
             if value[0] == "L":
+                if "->" in value:
+                    value = value.split("->")[0]
                 split = value.split("/")
                 value = split[len(split) - 1].replace(";", "")
 
@@ -194,6 +199,12 @@ def test_instance(instruction, location, original_line):
         print("No new locations added.")
         return location # nothing happens
 
+def find_path(folder, filename):
+    #Source: Gemini
+    for root, _, files in os.walk(folder):
+        if filename in files:
+            return os.path.join(root, filename)
+    return None
 
 
 # REWRITTEN VERSION OF FUNCTION BELOW
@@ -210,7 +221,10 @@ def forward_tracing(filename, line_number, location, files_to_search, line_direc
     locations_to_check.append(location)
 
     # STEP 2: Open input file
-    fh = open(filename, "r")
+    file_path = find_path(tmp_file_name, filename)
+    print(file_path)
+
+    fh = open(file_path, "r")
     lines = fh.readlines()
     fh.close()
 
@@ -247,7 +261,7 @@ def forward_tracing(filename, line_number, location, files_to_search, line_direc
             current_line_number += 1
 
             for location in locations_to_check:
-                if location in line:
+                if location + " " in line or location + "," in line:
                     print("----------------------------------------------------")
                     print("LOCATION = " + location)
                     print("LINE = " + line)
@@ -291,9 +305,9 @@ def forward_tracing(filename, line_number, location, files_to_search, line_direc
                     # STEP 7: For every instance variable added to tracking that is not in the current file, add the file name and lines to line_directory
                     if isinstance(instruction, SmaliAssemblyInstructions._I_INSTRUCTION) and loc_to_add != "REMOVE CURRENT":
                         print(str(instruction) + " is I_INSTRUCTION, find instance variables throughout files...")
-                        # something to specify folder
-                        #cmd = ["grep", str(instruction.get_instance_variable()).replace("\n", ""), "-r", tmp_file_name]
-                        cmd = ["grep", str(instruction.get_instance_variable()).replace("\n", ""), "-r"]
+
+                        cmd = ["grep", str(instruction.get_instance_variable()).replace("\n", ""), "-r", tmp_file_name]
+                        #cmd = ["grep", str(instruction.get_instance_variable()).replace("\n", ""), "-r"] for testing
                         grep_result = subprocess.run(cmd, stdout = subprocess.PIPE)
 
                         # result is a list of uses of the instance variable
@@ -357,13 +371,13 @@ def forward_tracing(filename, line_number, location, files_to_search, line_direc
 def main():
     parser = argparse.ArgumentParser(description = "Given a line of code and a register to track, traces the contents of the register throughout the process.")
 
-    #parser.add_argument("APK", help="The path to the APK file that the target file is located in.")
+    parser.add_argument("APK", help="The path to the APK file that the target file is located in.")
     parser.add_argument("filename", help="The file that contains the target line of code.")
     parser.add_argument("line_number", help="Line number of the line of code containing a reference to the desired register.")
     parser.add_argument("register", help="The register that you wish to trace the data of.")
 
     args = parser.parse_args()
-    #apk_path = findAPK(args.APK)
+    apk_path = findAPK(args.APK)
 
     # https://stackoverflow.com/questions/69981912/why-i-am-getting-this-error-typeerror-namespace-object-is-not-subscriptable
     args = parser.parse_args()
@@ -371,7 +385,7 @@ def main():
     
     temp_APK = StigmaState.Environment().get_temp_file()
     tmp_file_name = StigmaState.Environment().get_temp_file().name
-    '''
+    
     start_time = time.time()
     cmd = ["java", "-jar", "pre-builts/apktool.jar", "d", apk_path, "-o", tmp_file_name, "-f"]
     if (os.name == "nt"):
@@ -381,11 +395,14 @@ def main():
     completed_process.check_returncode()
     print("Apk unpacked in %.1f seconds" % (time.time() - start_time))
 
+    app_smali_files = SmaliCodeBase.SmaliCodeBase.findSmaliFiles(tmp_file_name)
+    #print(app_smali_files)
+    
+    print(tmp_file_name)
     forward_tracing(args.filename, int(args.line_number), args.register, [], {}, tmp_file_name)
-    '''
 
     #the following code tests it without the APK file so that lines can be easily edited
-    forward_tracing(args.filename, int(args.line_number), args.register, [], {}, tmp_file_name)
+    #forward_tracing(args.filename, int(args.line_number), args.register, [], {}, tmp_file_name)
 
 main()
 
