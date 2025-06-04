@@ -72,6 +72,10 @@ class TracingManager:
             self.line_directory[file].append(line)
         else:
             self.line_directory[file] = [line]
+    
+    def remove_file(self, file):
+        if len(self.line_directory[file]) == 0:
+            self.files_to_search.remove(file)
 
     def get_files(self):
         return self.files_to_search
@@ -385,93 +389,17 @@ def forward_tracing(filename, line_number, location, tracingManager):
         if target_line_found:
             analyze_line(filename, location, line, target_line, current_line_number, tracingManager)
 
-            '''
-            current_line_number += 1
-
-            for location in locations_to_check:
-                
-                if location_in_string_exact(location, line):
-                    print("----------------------------------------------------")
-                    print("LOCATION = " + location)
-                    print("LINE = " + line)
-                    print("DETERMINING NEW LOCATIONS...")
-
-                    instruction = SmaliAssemblyInstructions.SmaliAssemblyInstruction().from_line(line)
-                    loc_to_add = str(test_instance(instruction, location, target_line))
-                    print("loc to add = " + str(loc_to_add))
-
-                    # SPECIAL INSTRUCTIONS DEPENDING ON LOC_TO_ADD RESULT
-                    match loc_to_add:
-                        case "REMOVE CURRENT":
-                            locations_to_check.remove(location)
-                        case "INVOKE FUNCTION":
-                            full_line = str(instruction)
-                            # this function travels to different files
-                        case "IF INSTRUCTION":
-                            return # jump to a different line in the file, keep the current line in a variable
-                        case "RETURN":
-                            return (new_files_to_search, new_line_directory, value_being_returned)
-                        case _:
-                            if loc_to_add not in locations_to_check:
-                                locations_to_check.append(loc_to_add)
-                                print("Added to locations")
-
-                    if loc_to_add != "REMOVE CURRENT" and loc_to_add != location:
-                        # ADD_EDGE
-                        if location in edges:
-                            duplicate = False
-                            for pair in edges[location]:
-                                if pair[0] == loc_to_add:
-                                    duplicate = True
-                                    break
-                            if not duplicate:
-                                edges[location].append([loc_to_add, current_line_number])
-
-                        else:
-                            edges[location] = [[loc_to_add, current_line_number]]   
-
-                    print(locations_to_check)
-
-                    # STEP 7: For every instance variable added to tracking that is not in the current file, add the file name and lines to line_directory
-                    if isinstance(instruction, SmaliAssemblyInstructions._I_INSTRUCTION) and loc_to_add != "REMOVE CURRENT":
-                        print(str(instruction) + " is I_INSTRUCTION, find instance variables throughout files...")
-
-                        cmd = ["grep", str(instruction.get_instance_variable()).replace("\n", ""), "-r", tmp_file_name]
-                        #cmd = ["grep", str(instruction.get_instance_variable()).replace("\n", ""), "-r"] for testing
-                        grep_result = subprocess.run(cmd, stdout = subprocess.PIPE)
-
-                        # result is a list of uses of the instance variable
-                        uses_list = str(grep_result.stdout)[2:].split("\\n")
-                        uses_list.pop()
-
-                        for use in uses_list:
-                            use = use.split(":", 1)
-
-                            file = use[0]
-                            line = use[1].strip() # https://www.geeksforgeeks.org/python-remove-spaces-from-a-string/
-
-                            if file != filename:
-                                if file not in files_to_search:
-                                    files_to_search.append(file)
-                                
-                                if file in line_directory:
-                                    line_directory[file].append(line)
-                                else:
-                                    line_directory[file] = [line]
-
-                    break
-    '''
     generate_directed_graph(tracingManager.edges)
 
     # STEP 8: Choose the next file to open, and add the first value to the locations to check, and find line number
-    if len(files_to_search) > 0:
-        new_file = files_to_search[0]
-        new_instance_to_check = line_directory[new_file][0]
+    if len(tracingManager.get_files()) > 0:
+        new_file = tracingManager.files_to_search[0]
+        new_instance_to_check = tracingManager.line_directory[new_file][0]
         
-        line_directory[new_file].pop(0)
+        tracingManager.line_directory[new_file].pop(0)
 
-        if len(line_directory[new_file]) == 0:
-            files_to_search.remove(new_file)
+        if len(tracingManager.line_directory[new_file]) == 0:
+            tracingManager.remove_file(new_file)
 
         fh = open(new_file, "r")
 
