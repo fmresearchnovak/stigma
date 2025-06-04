@@ -37,7 +37,7 @@ class TracingManager:
         # filename -> instances of a tracked location for that file
         self.line_directory = {}
 
-    def add_edge(location, destination, line_number):
+    def add_edge(self, location, destination, line_number):
         if location in self.edges:
             duplicate = False
             for pair in self.edges[location]:
@@ -50,17 +50,21 @@ class TracingManager:
         else:
             self.edges[location] = [[destination, line_number]]
 
-    def get_edges():
+    def get_edges(self):
         return self.edges
 
-    def add_location(location):
+    def add_location(self, location):
         if location not in self.locations_to_check:
             self.locations_to_check.append(location)
 
-    def get_locations():
+    def remove_location(self, location):
+        if location in self.locations_to_check:
+            self.locations_to_check.remove(location)
+
+    def get_locations(self):
         return self.locations_to_check
 
-    def add_file(file):
+    def add_file(self, file, line):
         if file not in self.files_to_search:
             self.files_to_search.append(file)
         
@@ -68,6 +72,9 @@ class TracingManager:
             self.line_directory[file].append(line)
         else:
             self.line_directory[file] = [line]
+
+    def get_files(self):
+        return self.files_to_search
 
 
 def findAPK(apk):
@@ -278,10 +285,10 @@ def location_in_string_exact(location, line):
     pattern = rf"{re.escape(location)}(?!\d)"
     return bool(re.search(pattern, line))
 
-def analyze_line(location, line, target_line):
+def analyze_line(filename, location, line, target_line, current_line_number, tracingManager):
     current_line_number += 1
 
-    for location in locations_to_check:
+    for location in tracingManager.locations_to_check:
         if location_in_string_exact(location, line):
             print("----------------------------------------------------")
             print("LOCATION = " + location)
@@ -295,7 +302,7 @@ def analyze_line(location, line, target_line):
             # SPECIAL INSTRUCTIONS DEPENDING ON LOC_TO_ADD RESULT
             match loc_to_add:
                 case "REMOVE CURRENT":
-                    locations_to_check.remove(location)
+                    tracingManager.remove_location(location)
                 case "INVOKE FUNCTION":
                     full_line = str(instruction)
                     # this function travels to different files
@@ -304,28 +311,17 @@ def analyze_line(location, line, target_line):
                 case "RETURN":
                     return (new_files_to_search, new_line_directory, value_being_returned)
                 case _:
-                    if loc_to_add not in locations_to_check:
-                        locations_to_check.append(loc_to_add)
+                    if loc_to_add not in tracingManager.get_locations():
+                        tracingManager.add_location(loc_to_add)
                         print("Added to locations")
             
             if loc_to_add != "REMOVE CURRENT" and loc_to_add != location:
-                # ADD_EDGE
-                if location in edges:
-                    duplicate = False
-                    for pair in edges[location]:
-                        if pair[0] == loc_to_add:
-                            duplicate = True
-                            break
-                    if not duplicate:
-                        edges[location].append([loc_to_add, current_line_number])
-
-                else:
-                    edges[location] = [[loc_to_add, current_line_number]]
+                tracingManager.add_edge(location, loc_to_add, current_line_number)
             
             if isinstance(instruction, SmaliAssemblyInstructions._I_INSTRUCTION) and loc_to_add != "REMOVE CURRENT":
                 print(str(instruction) + " is I_INSTRUCTION, find instance variables throughout files...")
 
-                cmd = ["grep", str(instruction.get_instance_variable()).replace("\n", ""), "-r", tmp_file_name]
+                cmd = ["grep", str(instruction.get_instance_variable()).replace("\n", ""), "-r", tracingManager.tmp_file_name]
                 #cmd = ["grep", str(instruction.get_instance_variable()).replace("\n", ""), "-r"] for testing
                 grep_result = subprocess.run(cmd, stdout = subprocess.PIPE)
 
@@ -340,26 +336,21 @@ def analyze_line(location, line, target_line):
                     line = use[1].strip() # https://www.geeksforgeeks.org/python-remove-spaces-from-a-string/
 
                     if file != filename:
-                        if file not in files_to_search:
-                            files_to_search.append(file)
-                        
-                        if file in line_directory:
-                            line_directory[file].append(line)
-                        else:
-                            line_directory[file] = [line]
+                        tracingManager.add_file(file, line)
 
             break
 
 # REWRITTEN VERSION OF FUNCTION BELOW
-def forward_tracing(filename, line_number, location, files_to_search, line_directory, tmp_file_name):
+def forward_tracing(filename, line_number, location, tracingManager):
     print("=================================")
     print(filename)
     print("=================================")
 
-    edges = {}
-    # STEP 1: Create list of registers (and instance variables) to check for
-    locations_to_check = []
-    locations_to_check.append(location)
+    tmp_file_name = tracingManager.tmp_file_name
+
+    # STEP 1: Add first location to locations_to_check
+    print(location)
+    tracingManager.add_location(location)
 
     # STEP 2: Open input file
     print(tmp_file_name)
@@ -392,8 +383,9 @@ def forward_tracing(filename, line_number, location, files_to_search, line_direc
 
         # STEP 6: Once the target line is found, send every line containing a location in locations_to_track to the test_instance function
         if target_line_found:
-            #analyze_line(location, line, target_line)
-        
+            analyze_line(filename, location, line, target_line, current_line_number, tracingManager)
+
+            '''
             current_line_number += 1
 
             for location in locations_to_check:
@@ -468,8 +460,8 @@ def forward_tracing(filename, line_number, location, files_to_search, line_direc
                                     line_directory[file] = [line]
 
                     break
-    
-    generate_directed_graph(edges)
+    '''
+    generate_directed_graph(tracingManager.edges)
 
     # STEP 8: Choose the next file to open, and add the first value to the locations to check, and find line number
     if len(files_to_search) > 0:
@@ -538,7 +530,8 @@ def main():
     #print(app_smali_files)
     
     print(tmp_file_name)
-    forward_tracing(args.filename, int(args.line_number), args.register, [], {}, tmp_file_name)
+    tracingManager = TracingManager()
+    forward_tracing(args.filename, int(args.line_number), args.register, tracingManager)
 
     #the following code tests it without the APK file so that lines can be easily edited
     #forward_tracing(args.filename, int(args.line_number), args.register, [], {}, tmp_file_name)
