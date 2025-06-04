@@ -1,4 +1,3 @@
-.class Ledu/fandm/enovak/diffPartial_GROWN;
 # methods
 .method private static diffPartial(Landroid/support/v7/util/DiffUtil$Callback;IIII[I[II)Landroid/support/v7/util/DiffUtil$Snake;
     .locals 22
@@ -13,7 +12,7 @@
 
     .line 204
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     move-object/16 v18, p0
     
@@ -32,7 +31,7 @@
     move/16 v25, p7
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     move-object/from16 v0, v18
 

@@ -993,7 +993,7 @@ def tests():
 
 
 	print("\tfind_first_valid_instruction...")
-	text = open("./test/leakPasswd.smali").readlines()
+	text = open("./test/leakPasswd.smali").readlines()[1:]
 	smd = SmaliMethodDef(text, None)
 	smd.cfg = ControlFlowGraph(smd.raw_text)
 	smd.tsc = TypeSafetyChecker(smd.signature, smd.cfg)  

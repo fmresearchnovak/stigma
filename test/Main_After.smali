@@ -73,12 +73,12 @@
 
     .line 37
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     move-object/16 v0, p0
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     invoke-direct {v0}, Landroid/support/v7/app/AppCompatActivity;-><init>()V
 
@@ -100,12 +100,12 @@
 
     .line 37
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     move-object/16 v0, p0
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     invoke-direct {v0}, Ledu/fandm/enovak/leaks/Main;->registerListeners()V
 
@@ -118,12 +118,12 @@
 
     .line 37
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     move-object/16 v1, p0
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     iget-object v0, v1, Ledu/fandm/enovak/leaks/Main;->host:Ljava/lang/String;
 
@@ -136,12 +136,12 @@
 
     .line 37
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     move-object/16 v1, p0
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     iget-object v0, v1, Ledu/fandm/enovak/leaks/Main;->port:Ljava/lang/Integer;
 
@@ -154,14 +154,14 @@
 
     .line 368
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     move-object/16 v4, p0
     
     move-object/16 v5, p1
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     const v0, 0x7f070059
 
@@ -226,12 +226,12 @@
 
     .line 275
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     move-object/16 v10, p0
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     const-string v0, "network"
 
@@ -432,14 +432,14 @@
 
     .line 339
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     move-object/16 v10, p0
     
     move-object/16 v11, p1
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     const-string v0, "android.permission.READ_PHONE_STATE"
 
@@ -606,14 +606,14 @@
 
     .line 327
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     move-object/16 v6, p0
     
     move-object/16 v7, p1
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     new-instance v0, Ljava/text/SimpleDateFormat;
 
@@ -714,14 +714,14 @@
 
     .line 180
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     move-object/16 v6, p0
     
     move-object/16 v7, p1
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     const v0, 0x7f070050
 
@@ -816,14 +816,14 @@
 
     .line 200
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     move-object/16 v4, p0
     
     move-object/16 v5, p1
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     const-string v0, "android.permission.READ_PHONE_NUMBERS"
 
@@ -923,14 +923,14 @@
 
     .line 59
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     move-object/16 v6, p0
     
     move-object/16 v7, p1
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     invoke-super {v6, v7}, Landroid/support/v7/app/AppCompatActivity;->onCreate(Landroid/os/Bundle;)V
 
@@ -1057,14 +1057,14 @@
 
     .line 114
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     move-object/16 v2, p0
     
     move-object/16 v3, p1
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     invoke-virtual {v2}, Ledu/fandm/enovak/leaks/Main;->getMenuInflater()Landroid/view/MenuInflater;
 
@@ -1088,14 +1088,14 @@
 
     .line 120
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     move-object/16 v2, p0
     
     move-object/16 v3, p1
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     invoke-interface {v3}, Landroid/view/MenuItem;->getItemId()I
 
@@ -1157,7 +1157,7 @@
 
     .line 221
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     move-object/16 v4, p0
     
@@ -1168,7 +1168,7 @@
     move-object/16 v7, p3
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     const/4 v0, 0x1
 
@@ -1216,12 +1216,12 @@
 
     .line 91
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     move-object/16 v5, p0
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     invoke-super {v5}, Landroid/support/v7/app/AppCompatActivity;->onResume()V
 
@@ -1378,12 +1378,12 @@
 
     .line 245
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     move-object/16 v1, p0
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     const-string v0, "location"
 
@@ -1415,14 +1415,14 @@
 
     .line 139
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     move-object/16 v3, p0
     
     move-object/16 v4, p1
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     sget-object v0, Ledu/fandm/enovak/leaks/Main;->TAG:Ljava/lang/String;
 
@@ -1538,12 +1538,12 @@
 
     .line 321
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     move-object/16 v2, p0
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     iget-object v0, v2, Ledu/fandm/enovak/leaks/Main;->locationManager:Landroid/location/LocationManager;
 

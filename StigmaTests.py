@@ -32,7 +32,7 @@ def type_saftey_checker_test3():
 def type_safety_checker_control_flow_test():
 	print("\nRunning control flow test")
 	fh = open("./test/control_flow_test.smali", "r")
-	method_text = fh.readlines()
+	method_text = fh.readlines()[1:]
 	fh.close()
 	
 	smd =  SmaliMethodDef.SmaliMethodDef(method_text, None)   
@@ -54,7 +54,7 @@ def type_safety_checker_control_flow_test():
 def type_safety_checker_control_flow_test_edge_case_1():
 	print("\nRunning control flow test 1")
 	fh = open("./test/a01_method.smali", "r")
-	method_list = fh.readlines()
+	method_list = fh.readlines()[1:]
 	fh.close()
 	smd =  SmaliMethodDef.SmaliMethodDef(method_list, None)
 	print("Looks like it didnt crash!, congragulations!!!")
@@ -65,7 +65,7 @@ def type_safety_checker_control_flow_test_edge_case_1():
 def type_safety_checker_control_flow_test_edge_case_2():
 	print("\nRunning control flow test 2")
 	fh = open("./test/zza_method.smali", "r")
-	method_list = fh.readlines()
+	method_list = fh.readlines()[1:]
 	fh.close()
 	smd =  SmaliMethodDef.SmaliMethodDef(method_list, None)
 	print("Looks like it didnt crash!, congragulations!!!")
@@ -77,7 +77,7 @@ def type_safety_checker_control_flow_test_edge_case_3():
 	
 	
 	fh = open("./test/registerListener_method.smali", "r")
-	method_list = fh.readlines()
+	method_list = fh.readlines()[1:]
 	fh.close()
 	smd =  SmaliMethodDef.SmaliMethodDef(method_list, None)
 	print("Looks like it didnt crash!, congragulations!!!")
@@ -86,7 +86,7 @@ def type_safety_checker_control_flow_test_edge_case_3():
 def type_safety_checker_small_constructor_test():
 	print("\nRunning small constructor test")
 	fh = open("./test/small_constructor_method.smali", "r")
-	method_list = fh.readlines()
+	method_list = fh.readlines()[1:]
 	smd = SmaliMethodDef.SmaliMethodDef(method_list, None)
 	#print(smd.get_num_registers())
 	assert(smd.get_num_registers() == 1)
@@ -96,7 +96,7 @@ def type_safety_checker_small_constructor_test():
 def type_safety_checker_empty_method_test():
 	print("\nRunning empty method test")
 	fh  = open("./test/empty_method.smali", "r")
-	method_text = fh.readlines()
+	method_text = fh.readlines()[1:]
 	fh.close()
 	
 	smd = SmaliMethodDef.SmaliMethodDef(method_text, None)
@@ -109,7 +109,7 @@ def type_safety_checker_empty_method_test():
 def type_safety_checker_action_bar_try_catch_leaks():
 	print("\nRunning action bar test")
 	fh = open("./test/setActionBarUp_method.smali", "r")
-	method_list = fh.readlines()
+	method_list = fh.readlines()[1:]
 	fh.close()
 	
 	smd = SmaliMethodDef.SmaliMethodDef(method_list, None)
@@ -121,7 +121,7 @@ def type_safety_checker_action_bar_try_catch_leaks():
 def type_safety_checker_leaks_test():
 	print("\nRunning type safety checker leaks test")
 	
-	method_text = open("./test/edge_case_method1.smali", "r").readlines()
+	method_text = open("./test/edge_case_method1.smali", "r").readlines()[1:]
 	mock_class = SmaliClassDef.MockSmaliClassDef()
 	smd = SmaliMethodDef.SmaliMethodDef(method_text, mock_class)
 	#print(smd.get_num_registers())
@@ -140,7 +140,7 @@ def type_safety_checker_aget2_test():
 	
 	
 	fh = open("test/diffPartial_method.smali", "r")
-	method_list = fh.readlines()
+	method_list = fh.readlines()[1:]
 	fh.close()
 	#print("Building SMD")
 	mock_class = SmaliClassDef.MockSmaliClassDef();
@@ -179,7 +179,7 @@ def comparison_count_test1():
 	print("\nRunning comparison count test")
 	print("\ttest/random_method1.smali")
 	fh = open ("./test/random_method1.smali", "r")
-	method_text = fh.readlines()
+	method_text = fh.readlines()[1:]
 
 	smd =  SmaliMethodDef.SmaliMethodDef(method_text, None)
 	
@@ -195,7 +195,7 @@ def types_from_parameters_test():
 	print("\nTesting types_from_parameters...")
 	print("\ttest/random_method1.smali")
 	fh = open ("./test/random_method1.smali", "r")
-	method_text = fh.readlines()
+	method_text = fh.readlines()[1:]
 	smd = SmaliMethodDef.SmaliMethodDef(method_text, None)
 	
 	cfg = ControlFlowGraph.ControlFlowGraph(smd.raw_text)
@@ -232,7 +232,7 @@ def type_saftey_checker_tests():
 	print("\ttest/random_method1_cropped.smali")
 	
 	fh = open("test/random_method1_cropped.smali", "r")
-	method_text = fh.readlines()
+	method_text = fh.readlines()[1:]
 	n = len(method_text)
 
 	smd =  SmaliMethodDef.SmaliMethodDef(method_text, None)
@@ -278,7 +278,7 @@ def grow_locals_test_1():
 	print("\nRunning grow locals test")
 	print("\ttest/random_method1.smali")
 	fh = open("./test/random_method1.smali", "r")
-	method_list = fh.readlines()
+	method_list = fh.readlines()[1:]
 	fh.close()
 
 	smd = SmaliMethodDef.SmaliMethodDef(method_list, None)
@@ -787,7 +787,8 @@ def internal_tests():
 	src_code_with_internal_tests = ["StigmaStringParsingLib.py", 
 		"SmaliMethodDef.py", "SmaliTypes.py", "SafeRegisterCollection.py",
 		"SmaliRegister.py", "SmaliAssemblyInstructions.py",
-		"Instrumenter.py", "TaintStorageHandler.py", "SmaliCodeIterator.py", "SmaliClassDef.py"]
+		"Instrumenter.py", "TaintStorageHandler.py", "SmaliCodeIterator.py", "SmaliClassDef.py", 
+		"SmaliCodeBase.py"]
 	
 	
 	for src in src_code_with_internal_tests:

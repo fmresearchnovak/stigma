@@ -1,18 +1,17 @@
-.class final Ledu/enovak/leakPasswdClass;
 .method public leakPasswd(Landroid/view/View;)V
     .locals 9
     .param p1, "v"    # Landroid/view/View;
 
     .line 181
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA 
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     move-object/16 v6, p0
     
     move-object/16 v7, p1
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA 
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     const v0, 0x7f070050
 

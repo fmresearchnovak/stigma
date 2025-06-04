@@ -101,7 +101,7 @@ def tests():
 	
 	print("\ttest 1...")
 	fh = open("./test/random_method1.smali", "r")
-	code = fh.readlines();
+	code = fh.readlines()[1:];
 	fh.close()
 	
 	cuc1 = SmaliCodeIterator(code)
@@ -145,7 +145,7 @@ def tests():
 		
 		
 	fh = open("./test/diffPartial_method.smali", "r")
-	code = fh.readlines()
+	code = fh.readlines()[1:]
 	fh.close()
 	
 	print("\ttest 2...")
