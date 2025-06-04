@@ -1,3 +1,4 @@
+.class Ledu/fandm/enovak/leakPasswdClass;
 .method public leakPasswd(Landroid/view/View;)V
     .locals 9
     .param p1, "v"    # Landroid/view/View;

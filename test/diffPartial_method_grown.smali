@@ -1,3 +1,4 @@
+.class LMockClass;
 # methods
 .method private static diffPartial(Landroid/support/v7/util/DiffUtil$Callback;IIII[I[II)Landroid/support/v7/util/DiffUtil$Snake;
     .locals 22

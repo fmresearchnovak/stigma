@@ -283,8 +283,7 @@ def grow_locals_test_1():
 
 	smd = SmaliMethodDef.SmaliMethodDef(method_list, None)
 	smd.grow_locals(3)
-	#print(smd)
-	smd.write_to_file(os.path.join("test", str(smd.get_name()) + ".smali"))
+	# TODO: write some assertions here about what the should look like now that it's grow()'ed
 
 
 	test_line = "    invoke-virtual {v1}, Ljava/lang/Object;->toString()Ljava/lang/String;\n"

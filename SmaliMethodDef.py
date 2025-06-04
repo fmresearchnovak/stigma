@@ -497,18 +497,6 @@ class SmaliMethodDef:
 		return res
 		
 		
-	def write_to_file(self, filename):
-		fh = open(filename, "w")
-		
-		for line in self.raw_text:
-			s = str(line)
-			if(s == "" or s[-1] != "\n"):
-				s = s + "\n"
-			fh.write(s)
-
-		fh.close()
-		
-		
 	def embed_line(self, position, line):
 		self.raw_text.insert(position, line)
 

@@ -429,6 +429,7 @@ class MockSmaliClassDef(SmaliClassDef):
         self.internal_class_names = [self.class_name]
         
         self.header = []
+        self.header.append(".class LMockClass;\n")
         self.static_fields = []
         self.instance_fields = []
         
