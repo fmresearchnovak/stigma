@@ -30,6 +30,9 @@ class TracingManager:
         # filename -> instances of a tracked location for that file
         self.line_directory = {}
 
+        # smali files
+        self.smali_files = []
+
         self.target_line = ""
         self.current_line_number = 0
 
@@ -336,7 +339,7 @@ def analyze_line(filename, location, line, tracingManager):
                     file = use[0]
                     line = use[1].strip() # https://www.geeksforgeeks.org/python-remove-spaces-from-a-string/
 
-                    if file != filename:
+                    if file != filename and file in tracingManager.smali_files:
                         tracingManager.add_file(file, line)
 
             break
@@ -438,14 +441,16 @@ def main():
     args = parser.parse_args()
     apk_path = findAPK(args.APK)
 
-    temp_APK = StigmaState.Environment().get_temp_file()
-    tmp_file_name = StigmaState.Environment().get_temp_file().name
+    #temp_APK = StigmaState.Environment().get_temp_file()
+    #tmp_file_name = StigmaState.Environment().get_temp_file().name
+
+    tracingManager = TracingManager()
 
     # https://stackoverflow.com/questions/69981912/why-i-am-getting-this-error-typeerror-namespace-object-is-not-subscriptable
     
     # dumping the APK file
     start_time = time.time()
-    cmd = ["java", "-jar", "pre-builts/apktool.jar", "d", apk_path, "-o", tmp_file_name, "-f"]
+    cmd = ["java", "-jar", "pre-builts/apktool.jar", "d", apk_path, "-o", tracingManager.tmp_file_name, "-f"]
     if (os.name == "nt"):
         completed_process = subprocess.run(cmd, shell=True)
     elif (os.name == "posix"):
@@ -454,11 +459,9 @@ def main():
     print("Apk unpacked in %.1f seconds" % (time.time() - start_time))
 
     # getting the smali files
-    app_smali_files = SmaliCodeBase.SmaliCodeBase.findSmaliFiles(tmp_file_name)
+    tracingManager.smali_files = SmaliCodeBase.SmaliCodeBase.findSmaliFiles(tracingManager.tmp_file_name)
     #print(app_smali_files)
-    
-    print(tmp_file_name)
-    tracingManager = TracingManager()
+        
     forward_tracing(args.filename, int(args.line_number), args.register, tracingManager)
 
     #the following code tests it without the APK file so that lines can be easily edited
