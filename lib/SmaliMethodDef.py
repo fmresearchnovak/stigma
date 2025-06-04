@@ -148,13 +148,13 @@ class SmaliMethodSignature:
 		Returns the index of the first semicolon in a string.
 		
 		Parameters:
-		idx:
-		string: String representation of a Smali method
+		idx: current index
+		string: String representation of a Smali method parameter
 
 		Returns:
 		idx: the index of the semicolon
 		'''
-		
+
 		while(string[idx] != ";"):
 			idx+=1
 			#print("this one")
@@ -162,6 +162,17 @@ class SmaliMethodSignature:
 		
 	@staticmethod
 	def fast_forward_to_not_bracket(idx, string):
+		''' 
+		Returns the index of the first non-start bracket in a string.
+		
+		Parameters:
+		idx: current index
+		string: String representation of a Smali method parameter
+
+		Returns:
+		idx: the index of the non-start bracket
+		'''
+
 		while(string[idx] == "["):
 			#print("that one")
 			idx+=1
@@ -175,7 +186,13 @@ class SmaliMethodSignature:
 		return str(self.get_fully_qualified_name()) == str(other.get_fully_qualified_name())
 	
 	def get_fully_qualified_name(self):
-		# returns the fully qualified name of the method
+		'''
+		Returns the fully qualified name of the method (how it appears in Smali code)
+
+		Returns:
+		self.class_name -> self.name_with_data_types
+		'''
+
 		# e.g., Lcom/example/MyClass;->myMethod(Ljava/lang/String;)V
 		return self.class_name + "->" + self.name_with_data_types
 		
@@ -450,6 +467,13 @@ class SmaliMethodDef:
 
 
 	def get_num_registers(self):
+		'''
+		Returns the number of registers used by the Smali method.
+
+		Returns:
+		ans: the number of local registers plus the number of parameter registers
+		'''
+
 		# the total number of registers used by this function
 		ans = self.get_locals_directive_num() + self.signature.num_of_parameter_registers
 		#if(not self.signature.is_static):
