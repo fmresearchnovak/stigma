@@ -25,6 +25,50 @@ class TracingManager:
         self.temp_APK = StigmaState.Environment().get_temp_file()
         self.tmp_file_name = StigmaState.Environment().get_temp_file().name
 
+        # edges for the directed graph
+        self.edges = {}
+
+        # locations (registers/variables) tracked
+        self.locations_to_check = []
+
+        # files found containing a tracked location
+        self.files_to_search = []
+
+        # filename -> instances of a tracked location for that file
+        self.line_directory = {}
+
+    def add_edge(location, destination, line_number):
+        if location in self.edges:
+            duplicate = False
+            for pair in self.edges[location]:
+                if pair[0] == destination:
+                    duplicate = True
+                    break
+            if not duplicate:
+                self.edges[location].append([destination, line_number])
+
+        else:
+            self.edges[location] = [[destination, line_number]]
+
+    def get_edges():
+        return self.edges
+
+    def add_location(location):
+        if location not in self.locations_to_check:
+            self.locations_to_check.append(location)
+
+    def get_locations():
+        return self.locations_to_check
+
+    def add_file(file):
+        if file not in self.files_to_search:
+            self.files_to_search.append(file)
+        
+        if file in self.line_directory:
+            self.line_directory[file].append(line)
+        else:
+            self.line_directory[file] = [line]
+
 
 def findAPK(apk):
     if (not os.path.exists(apk)):
@@ -265,6 +309,7 @@ def analyze_line(location, line, target_line):
                         print("Added to locations")
             
             if loc_to_add != "REMOVE CURRENT" and loc_to_add != location:
+                # ADD_EDGE
                 if location in edges:
                     duplicate = False
                     for pair in edges[location]:
@@ -380,6 +425,7 @@ def forward_tracing(filename, line_number, location, files_to_search, line_direc
                                 print("Added to locations")
 
                     if loc_to_add != "REMOVE CURRENT" and loc_to_add != location:
+                        # ADD_EDGE
                         if location in edges:
                             duplicate = False
                             for pair in edges[location]:
@@ -461,6 +507,7 @@ def forward_tracing(filename, line_number, location, files_to_search, line_direc
         return
 
 def main():
+    # ARGPARSE FORMAT
     parser = argparse.ArgumentParser(description = "Given a line of code and a register to track, traces the contents of the register throughout the process.")
 
     parser.add_argument("APK", help="The path to the APK file that the target file is located in.")
@@ -475,8 +522,8 @@ def main():
     tmp_file_name = StigmaState.Environment().get_temp_file().name
 
     # https://stackoverflow.com/questions/69981912/why-i-am-getting-this-error-typeerror-namespace-object-is-not-subscriptable
-    args = parser.parse_args()
     
+    # dumping the APK file
     start_time = time.time()
     cmd = ["java", "-jar", "pre-builts/apktool.jar", "d", apk_path, "-o", tmp_file_name, "-f"]
     if (os.name == "nt"):
@@ -486,6 +533,7 @@ def main():
     completed_process.check_returncode()
     print("Apk unpacked in %.1f seconds" % (time.time() - start_time))
 
+    # getting the smali files
     app_smali_files = SmaliCodeBase.SmaliCodeBase.findSmaliFiles(tmp_file_name)
     #print(app_smali_files)
     
