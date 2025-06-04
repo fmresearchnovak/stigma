@@ -12,11 +12,6 @@ import SmaliCodeIterator
 import SmaliCodeBase
 import StigmaState
 
-#edges = {}
-#locations_to_check = []
-#files_to_search = []
-#line_directory = {}
-
 class TracingManager:
 
     def __init__(self):
@@ -290,6 +285,15 @@ def location_in_string_exact(location, line):
     pattern = rf"{re.escape(location)}(?!\d)"
     return bool(re.search(pattern, line))
 
+def grep_instances(variable, tracingManager):
+    cmd = ["grep", str(variable).replace("\n", ""), "-r", tracingManager.tmp_file_name]
+    grep_result = subprocess.run(cmd, stdout = subprocess.PIPE)
+
+    # result is a list of uses of the instance variable
+    uses_list = str(grep_result.stdout)[2:].split("\\n")
+    uses_list.pop()
+    return uses_list
+
 def analyze_line(filename, location, line, tracingManager):
     tracingManager.current_line_number += 1
 
@@ -324,15 +328,7 @@ def analyze_line(filename, location, line, tracingManager):
                 tracingManager.add_edge(location, loc_to_add, tracingManager.current_line_number)
             
             if isinstance(instruction, SmaliAssemblyInstructions._I_INSTRUCTION) and loc_to_add != "REMOVE CURRENT":
-                print(str(instruction) + " is I_INSTRUCTION, find instance variables throughout files...")
-
-                cmd = ["grep", str(instruction.get_instance_variable()).replace("\n", ""), "-r", tracingManager.tmp_file_name]
-                #cmd = ["grep", str(instruction.get_instance_variable()).replace("\n", ""), "-r"] for testing
-                grep_result = subprocess.run(cmd, stdout = subprocess.PIPE)
-
-                # result is a list of uses of the instance variable
-                uses_list = str(grep_result.stdout)[2:].split("\\n")
-                uses_list.pop()
+                uses_list = grep_instances(instruction.get_instance_variable(), tracingManager)
 
                 for use in uses_list:
                     use = use.split(":", 1)
@@ -344,6 +340,41 @@ def analyze_line(filename, location, line, tracingManager):
                         tracingManager.add_file(file, line)
 
             break
+
+def next_iteration(tracingManager):
+    if len(tracingManager.get_files()) > 0:
+        new_file = tracingManager.files_to_search[0]
+        new_instance_to_check = tracingManager.line_directory[new_file][0]
+        
+        tracingManager.line_directory[new_file].pop(0)
+
+        if len(tracingManager.line_directory[new_file]) == 0:
+            tracingManager.remove_file(new_file)
+
+        fh = open(new_file, "r")
+
+        # get the location name not the line name
+        new_location = new_instance_to_check.split(" ", 3)[3]
+        new_location = new_location[:len(new_location) - 1]
+
+        # loop through to get line
+        new_line_number = 0
+        tracingManager.target_line = new_location
+        curr_line = ""
+        while tracingManager.target_line not in curr_line:
+            new_line_number += 1
+            curr_line = fh.readline()
+
+        fh.close()
+
+        # STEP 9: Repeat all of the steps for the new file and its locations to check
+        print("NEW ITERATION WITH " + new_file + " " + str(new_line_number) + " " + new_location)
+        #return forward_tracing(new_file, new_line_number, new_location, files_to_search, line_directory, tmp_file_name)
+        return
+
+    else:
+        # return activity_log
+        return
 
 # REWRITTEN VERSION OF FUNCTION BELOW
 def forward_tracing(filename, line_number, location, tracingManager):
@@ -393,39 +424,7 @@ def forward_tracing(filename, line_number, location, tracingManager):
     generate_directed_graph(tracingManager.edges)
 
     # STEP 8: Choose the next file to open, and add the first value to the locations to check, and find line number
-    if len(tracingManager.get_files()) > 0:
-        new_file = tracingManager.files_to_search[0]
-        new_instance_to_check = tracingManager.line_directory[new_file][0]
-        
-        tracingManager.line_directory[new_file].pop(0)
-
-        if len(tracingManager.line_directory[new_file]) == 0:
-            tracingManager.remove_file(new_file)
-
-        fh = open(new_file, "r")
-
-        # get the location name not the line name
-        new_location = new_instance_to_check.split(" ", 3)[3]
-        new_location = new_location[:len(new_location) - 1]
-
-        # loop through to get line
-        new_line_number = 0
-        tracingManager.target_line = new_location
-        curr_line = ""
-        while tracingManager.target_line not in curr_line:
-            new_line_number += 1
-            curr_line = fh.readline()
-
-        fh.close()
-
-        # STEP 9: Repeat all of the steps for the new file and its locations to check
-        print("NEW ITERATION WITH " + new_file + " " + str(new_line_number) + " " + new_location)
-        #return forward_tracing(new_file, new_line_number, new_location, files_to_search, line_directory, tmp_file_name)
-        return
-
-    else:
-        # return activity_log
-        return
+    return next_iteration(tracingManager)
 
 def main():
     # ARGPARSE FORMAT
