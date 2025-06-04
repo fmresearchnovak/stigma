@@ -17,8 +17,6 @@ import StigmaState
 #files_to_search = []
 #line_directory = {}
 
-current_line_number = 0
-
 class TracingManager:
 
     def __init__(self):
@@ -36,6 +34,9 @@ class TracingManager:
 
         # filename -> instances of a tracked location for that file
         self.line_directory = {}
+
+        self.target_line = ""
+        self.current_line_number = 0
 
     def add_edge(self, location, destination, line_number):
         if location in self.edges:
@@ -289,8 +290,8 @@ def location_in_string_exact(location, line):
     pattern = rf"{re.escape(location)}(?!\d)"
     return bool(re.search(pattern, line))
 
-def analyze_line(filename, location, line, target_line, current_line_number, tracingManager):
-    current_line_number += 1
+def analyze_line(filename, location, line, tracingManager):
+    tracingManager.current_line_number += 1
 
     for location in tracingManager.locations_to_check:
         if location_in_string_exact(location, line):
@@ -300,7 +301,7 @@ def analyze_line(filename, location, line, target_line, current_line_number, tra
             print("DETERMINING NEW LOCATIONS...")
 
             instruction = SmaliAssemblyInstructions.SmaliAssemblyInstruction().from_line(line)
-            loc_to_add = str(test_instance(instruction, location, target_line))
+            loc_to_add = str(test_instance(instruction, location, tracingManager.target_line))
             print("loc to add = " + str(loc_to_add))
 
             # SPECIAL INSTRUCTIONS DEPENDING ON LOC_TO_ADD RESULT
@@ -320,7 +321,7 @@ def analyze_line(filename, location, line, target_line, current_line_number, tra
                         print("Added to locations")
             
             if loc_to_add != "REMOVE CURRENT" and loc_to_add != location:
-                tracingManager.add_edge(location, loc_to_add, current_line_number)
+                tracingManager.add_edge(location, loc_to_add, tracingManager.current_line_number)
             
             if isinstance(instruction, SmaliAssemblyInstructions._I_INSTRUCTION) and loc_to_add != "REMOVE CURRENT":
                 print(str(instruction) + " is I_INSTRUCTION, find instance variables throughout files...")
@@ -370,24 +371,24 @@ def forward_tracing(filename, line_number, location, tracingManager):
     full_text = SmaliCodeIterator.SmaliCodeIterator(smali_method_def_obj.raw_text)
 
     # STEP 4: Find the text of the target line
-    target_line = lines[line_number].replace("\n", "")
+    tracingManager.target_line = lines[line_number].replace("\n", "")
     target_line_found = False
 
-    current_line_number = line_number
+    tracingManager.current_line_number = line_number
 
     # STEP 5: Loop through the method and get the target line
     for line in SmaliCodeIterator.SmaliCodeIterator(smali_method_def_obj.raw_text):
         if len(line) > 1:
-            current_line_number += len(line) - 1
+            tracingManager.current_line_number += len(line) - 1
 
         line = fix_line(line)
 
-        if target_line in line:
+        if tracingManager.target_line in line:
             target_line_found = True
 
         # STEP 6: Once the target line is found, send every line containing a location in locations_to_track to the test_instance function
         if target_line_found:
-            analyze_line(filename, location, line, target_line, current_line_number, tracingManager)
+            analyze_line(filename, location, line, tracingManager)
 
     generate_directed_graph(tracingManager.edges)
 
@@ -409,9 +410,9 @@ def forward_tracing(filename, line_number, location, tracingManager):
 
         # loop through to get line
         new_line_number = 0
-        target_line = new_location
+        tracingManager.target_line = new_location
         curr_line = ""
-        while target_line not in curr_line:
+        while tracingManager.target_line not in curr_line:
             new_line_number += 1
             curr_line = fh.readline()
 
