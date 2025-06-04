@@ -1,8 +1,13 @@
+import sys
 import re
 import argparse
 import subprocess
 import time
 import os
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+other_dir = os.path.join(current_dir, 'lib')
+sys.path.insert(0, other_dir)
 
 import SmaliRegister
 import SmaliClassDef
