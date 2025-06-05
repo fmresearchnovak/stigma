@@ -1,11 +1,17 @@
 import os.path
 import re
+import sys
 
 import SmaliTypes
 import StigmaStringParsingLib
-import Instrumenter
 import SmaliMethodDef
 import SmaliAssemblyInstructions
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+other_dir = os.path.join(current_dir, "..", 'stigma')
+sys.path.insert(0, other_dir)
+
+import Instrumenter
 
 
 class SmaliClassDef:

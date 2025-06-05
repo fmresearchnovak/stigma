@@ -4,6 +4,10 @@ import sys
 import subprocess
 import os
 
+current_dir = os.path.dirname(os.path.abspath(__file__))
+other_dir = os.path.join(current_dir, 'lib')
+sys.path.insert(0, other_dir)
+
 import SmaliMethodDef
 import SmaliClassDef
 import ControlFlowGraph
@@ -783,11 +787,11 @@ def internal_tests():
 	
 	print("--Running Internal Tests--")
 	
-	src_code_with_internal_tests = ["StigmaStringParsingLib.py", 
-		"SmaliMethodDef.py", "SmaliTypes.py", "SafeRegisterCollection.py",
-		"SmaliRegister.py", "SmaliAssemblyInstructions.py",
-		"Instrumenter.py", "TaintStorageHandler.py", "SmaliCodeIterator.py", "SmaliClassDef.py", 
-		"SmaliCodeBase.py"]
+	src_code_with_internal_tests = ["lib/StigmaStringParsingLib.py", 
+		"lib/SmaliMethodDef.py", "lib/SmaliTypes.py", "lib/SafeRegisterCollection.py",
+		"lib/SmaliRegister.py", "lib/SmaliAssemblyInstructions.py",
+		"Instrumenter.py", "TaintStorageHandler.py", "lib/SmaliCodeIterator.py", "lib/SmaliClassDef.py", 
+		"lib/SmaliCodeBase.py"]
 	
 	
 	for src in src_code_with_internal_tests:

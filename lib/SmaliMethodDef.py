@@ -1,17 +1,24 @@
 import re
+import sys
+import os
 
 import SmaliTypes
 import SmaliAssemblyInstructions as smali
 import StigmaStringParsingLib
-import Instrumenter
 
 from SmaliRegister import SmaliRegister
-from ControlFlowGraph import ControlFlowGraph
 from TypeSafetyChecker import TypeSafetyChecker
 from SafeRegisterCollection import SafeRegisterCollection
 from SmaliCodeIterator import SmaliCodeIterator
 
 import inspect
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+other_dir = os.path.join(current_dir, "..")
+sys.path.insert(0, other_dir)
+
+import Instrumenter
+from ControlFlowGraph import ControlFlowGraph
 		
 class SmaliMethodSignature:
 
@@ -909,8 +916,8 @@ class SmaliMethodDef:
 		Determnines whether code should be inserted into a smali method.
 
 		Parameters:
-		line:
-		containing_node:
+		line: the existing line of code where we want to put our new code
+		containing_node: the node (segment of code created by the control flow graph) that the line of code is in
 
 		Returns:
 		A boolean
