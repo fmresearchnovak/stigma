@@ -335,7 +335,7 @@ def analyze_line(filename, location, line, tracingManager):
             if loc_to_add != "REMOVE CURRENT" and loc_to_add != location:
                 tracingManager.add_edge(location, loc_to_add, tracingManager.current_line_number)
             
-            if isinstance(instruction, SmaliAssemblyInstructions._I_INSTRUCTION) and loc_to_add != "REMOVE CURRENT":
+            if isinstance(instruction, SmaliAssemblyInstructions._S_INSTRUCTION) and loc_to_add != "REMOVE CURRENT":
                 uses_list = grep_instances(instruction.get_instance_variable(), tracingManager)
 
                 for use in uses_list:
@@ -344,8 +344,12 @@ def analyze_line(filename, location, line, tracingManager):
                     file = use[0]
                     line = use[1].strip() # https://www.geeksforgeeks.org/python-remove-spaces-from-a-string/
 
-                    if file != filename and file in tracingManager.smali_files:
+                    line = SmaliAssemblyInstructions.from_line(line)
+
+                    if file in tracingManager.smali_files and isinstance(line, SmaliAssemblyInstructions._S_INSTRUCTION):
                         tracingManager.add_file(file, line)
+                        print(line)
+                #input("")
 
             break
 
