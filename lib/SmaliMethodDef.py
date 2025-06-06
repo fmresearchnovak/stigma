@@ -284,6 +284,10 @@ class SmaliMethodDef:
 		Grows the .locals in the method to allow for more local registers to be used for new instructions. The code ensures that existing registers
 		moved to new ones (due to the .locals increasing) refer to the correct locations and existing low-number registers are not moved to high-number
 		registers.
+		Why use grow_locals?  The purpose of this method is to make it easier (possible) to add new instructions
+		interleaved into existing smali instructions.  The existing method smali code will have registers, but those
+		registers likely contain data the program needs to run.  Calling grow_locals creates some new registers that are not
+		users by the existing smali code and can be used freely to store data for the new instructions to be inserted / interleaved.
 
 		Parameters:
 		n: the number of new local registers to add to the method
