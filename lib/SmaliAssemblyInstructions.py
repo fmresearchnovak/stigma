@@ -252,8 +252,11 @@ class _MethodCallInstruction():
         parts = self.types_spec.split("->")
         name_only = parts[1].split("(")[0]
         return name_only
-        
-        
+
+# this is currently untested, can't test until fully implemented
+class Label_Instruction():
+    def get_label(self):
+        return self.split(":")[1]
         
 class _ThirtyTwoBit_Parameters():
     # instruction classes that extend this type
@@ -303,13 +306,13 @@ class _SixtyFourBit_Dest():
 
 # if tracking the first register, the tracked register is removed. If any other register is tracked, nothing happens.
 class First_Reg_Dead_End():
-    def get_slicing_action(tracked):
+    def get_slicing_action(self, tracked):
         if tracked == self.get_registers[0]:
             return ["REMOVE", tracked]
 
 # if tracking the first register, the tracked register is removed. If the second register is tracked, add the first register.
 class Second_Reg_To_First_Reg():
-    def get_slicing_action(tracked):
+    def get_slicing_action(self, tracked):
         if tracked == self.get_registers[1]:
             return ["ADD", self.get_registers[0]]
         elif tracked == self.get_registers[0]:
@@ -318,7 +321,7 @@ class Second_Reg_To_First_Reg():
 # if tracking the first register, the tracked register is removed. If tracking a different register, return that some of its data is in
 # the first register.
 class Second_Reg_To_First_Reg_Arith():
-    def get_slicing_action(tracked):
+    def get_slicing_action(self, tracked):
         if tracked == self.get_registers[1]:
             return ["CAN GET DATA FROM", self.get_registers[0], "WITH", self.get_registers[2]]
         elif tracked == self.get_registers[0]:
@@ -327,7 +330,7 @@ class Second_Reg_To_First_Reg_Arith():
 # if tracking the first register, the tracked register is removed. If tracking the second register, nothing happens. If tracking the instance variable,
 # add the first register.
 class Third_Var_To_First_Reg():
-    def get_slicing_action(tracked):
+    def get_slicing_action(self, tracked):
         if tracked == self.get_instance_variable():
             return ["ADD", self.get_registers[0]]
         elif tracked == self.get_registers[0]:
@@ -336,7 +339,7 @@ class Third_Var_To_First_Reg():
 # if tracking the instance variable, the tracked variable is removed. If tracking the second register, nothing happens. If tracking the first register
 # add the instance variable.
 class First_Reg_To_Third_Var():
-    def get_slicing_action(tracked):
+    def get_slicing_action(self, tracked):
         if tracked == self.get_registers[0]:
             return ["ADD", self.get_instance_variable()]
         elif tracked == self.get_instance_variable():
@@ -345,7 +348,7 @@ class First_Reg_To_Third_Var():
 # if tracking the first register, the tracked register is removed. If tracking the second register, nothing happens. If tracking the third register,
 # add the first register.
 class Third_Reg_To_First_Reg():
-    def get_slicing_action(tracked):
+    def get_slicing_action(self, tracked):
         if tracked == self.get_registers()[2]:
             return ["ADD", self.get_registers[0]]
         elif tracked == self.get_registers[0]:
@@ -354,7 +357,7 @@ class Third_Reg_To_First_Reg():
 # if tracking the third register, the tracked variable is removed. If tracking the second register, nothing happens. If tracking the first register
 # add the third register.
 class First_Reg_To_Third_Reg():
-    def get_slicing_action(tracked):
+    def get_slicing_action(self, tracked):
         if tracked == self.get_registers[0]:
             return ["ADD", self.get_registers()[2]]
         elif tracked == self.get_registers()[2]:
@@ -362,23 +365,23 @@ class First_Reg_To_Third_Reg():
 
 # invoke instructions
 class Invoke_Instruction():
-    def get_slicing_action(tracked):
+    def get_slicing_action(self, tracked):
         return ["JUMP", self.get_method_name(), self.get_registers.index(tracked)]
 
 # jump instructions
-class Jump_Instruction():
-    def get_slicing_action(tracked):
-        return ["JUMP", "replace this with destination"]
+class Jump_Instruction(Label_Instruction):
+    def get_slicing_action(self, tracked):
+        return ["JUMP", self.get_label()]
 
 # result instructions
 class Result_Instruction():
-    def get_slicing_action(tracked):
+    def get_slicing_action(self, tracked):
         # not finished
         return ["RESULT", tracked]
 
 # has the tracking location but nothing happens with it
 class No_Slicing_Actions():
-    def get_slicing_action(tracked):
+    def get_slicing_action(self, tracked):
         return ["NO ACTIONS"]
         
 #class _NoType_OR_NoParameters():
@@ -421,7 +424,7 @@ class COMMENT(SmaliAssemblyInstruction):
         return "# " + self.l
 
 
-class MOVE(_ThirtyTwoBit_Parameters, SmaliAssemblyInstruction):
+class MOVE(_ThirtyTwoBit_Parameters, SmaliAssemblyInstruction, Second_Reg_To_First_Reg):
     def __init__(self, reg1, reg2):
         self.reg1 = SmaliRegister(reg1)
         self.reg2 = SmaliRegister(reg2)
@@ -552,7 +555,7 @@ class RETURN_OBJECT(_Object_Parameters, _SINGLE_REGISTER_INSTRUCTION):
 
 
 
-class CONST(_ThirtyTwoBit_Parameters, _SINGLE_DEST_REGISTER_INSTRUCTION):
+class CONST(_ThirtyTwoBit_Parameters, _SINGLE_DEST_REGISTER_INSTRUCTION, First_Reg_Dead_End):
         
     def opcode(self):
         return "const"
@@ -587,7 +590,7 @@ class CONST_WIDE_HIGH16(CONST_WIDE):
         return "const-wide/high16"
 
 
-class CONST_STRING(SmaliAssemblyInstruction):
+class CONST_STRING(SmaliAssemblyInstruction, First_Reg_Dead_End):
     # const-string v3, "this ain\'t it!"
     # const-string v5, "AudioTrack failed to initialize (status "
     # 
@@ -672,7 +675,7 @@ class CHECK_CAST( _Object_Parameters, _SINGLE_DEST_REGISTER_INSTRUCTION):
         return {self.rd: SmaliTypes.from_string(self.value_arg)}
          
         
-class INSTANCE_OF(SmaliAssemblyInstruction):
+class INSTANCE_OF(SmaliAssemblyInstruction, First_Reg_Dead_End):
     def __init__(self, reg_res, reg_arg, type_id):
         self.rr = SmaliRegister(reg_res)
         self.ra = SmaliRegister(reg_arg)
@@ -693,7 +696,7 @@ class INSTANCE_OF(SmaliAssemblyInstruction):
         return res
         
 
-class NEW_INSTANCE(SmaliAssemblyInstruction):
+class NEW_INSTANCE(SmaliAssemblyInstruction, First_Reg_Dead_End):
     def __init__(self, reg_dest, type_id):
         self.rd = SmaliRegister(reg_dest)
         self.type_id = type_id
@@ -712,7 +715,7 @@ class NEW_INSTANCE(SmaliAssemblyInstruction):
         
 
 
-class ARRAY_LENGTH(SmaliAssemblyInstruction):
+class ARRAY_LENGTH(SmaliAssemblyInstruction, First_Reg_Dead_End):
     # e.g., array-length v0, p2
     def __init__(self, reg_dest, reg_array_ref):
         self.rd = SmaliRegister(reg_dest)
@@ -733,7 +736,7 @@ class ARRAY_LENGTH(SmaliAssemblyInstruction):
         return ans
     
         
-class NEW_ARRAY(SmaliAssemblyInstruction):
+class NEW_ARRAY(SmaliAssemblyInstruction, First_Reg_Dead_End):
     # e.g., new-array v3, v5, [Ljava/lang/String;
     def __init__(self, reg_dest, reg_size, type_id):
         self.rd = SmaliRegister(reg_dest)
