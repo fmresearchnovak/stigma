@@ -308,6 +308,7 @@ class _SixtyFourBit_Dest():
 
 
 class NOP(SmaliAssemblyInstruction):
+    ''' nop '''
     def __repr__(self):
         return self.opcode()
         
@@ -332,6 +333,7 @@ class BLANK_LINE(SmaliAssemblyInstruction):
 
 
 class COMMENT(SmaliAssemblyInstruction):
+    '''# A comment'''
     def __init__(self, line):
         self.l = line
 
@@ -340,6 +342,7 @@ class COMMENT(SmaliAssemblyInstruction):
 
 
 class MOVE(_ThirtyTwoBit_Parameters, SmaliAssemblyInstruction):
+    ''' move v6, p2 '''
     def __init__(self, reg1, reg2):
         self.reg1 = SmaliRegister(reg1)
         self.reg2 = SmaliRegister(reg2)
@@ -359,6 +362,7 @@ class MOVE(_ThirtyTwoBit_Parameters, SmaliAssemblyInstruction):
 
 
 class MOVE_16(MOVE):
+    ''' move/16 v20, p2 '''
     # this might not exist
     # I couldn't find any occurrences in the smali of leaks
     
@@ -373,7 +377,7 @@ class MOVE_16(MOVE):
 # I need the class name to be MOVE/FROM16
 # but "/" is not a valid character in a class name
 class MOVE_FROM16(MOVE):
-    
+    '''move/from16 v3, v17'''
     def opcode(self):
         return "move/from16"
     
@@ -384,26 +388,32 @@ class MOVE_FROM16(MOVE):
 # I need the class name to be MOVE-WIDE
 # but "-" is not a valid character in a class name
 class MOVE_WIDE(_SixtyFourBit_Dest, _ImplicitRegistersInstruction, MOVE):
+    '''move-wide v2, v4'''
     def opcode(self):
         return "move-wide"
     
 class MOVE_WIDE_FROM16(MOVE_WIDE):
+    '''move-wide/from16 v2, v40'''
     def opcode(self):
         return "move-wide/from16"
 
 class MOVE_WIDE_16(MOVE_WIDE):
+    '''move-wide/16 v8, v4'''
     def opcode(self):
         return "move-wide/16"
 
 class MOVE_OBJECT(_Object_Parameters, MOVE):
+    '''move-object v3, v5'''
     def opcode(self):
         return "move-object"
         
 class MOVE_OBJECT_FROM16(MOVE_OBJECT):
+    '''move-object/from16 v3, v25'''
     def opcode(self):
         return "move-object/from16"
 
 class MOVE_OBJECT_16(MOVE_OBJECT):
+    '''move-object/16 v3, p0'''
     def opcode(self):
         return "move-object/16"
 
