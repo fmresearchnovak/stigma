@@ -78,7 +78,7 @@ class TracingManager:
             self.line_directory[file] = [line]
     
     def remove_file(self, file):
-        if len(self.line_directory[file]) == 0:
+        if file in self.line_directory:
             self.files_to_search.remove(file)
 
     def get_files(self):
@@ -156,10 +156,29 @@ def generate_directed_graph(graph):
 
             print(entry)
 
-def test_instance(instruction, location, original_line):
+def test_instance(instruction, location, tracingManager):
     first = False
+    original_line = tracingManager.target_line
     if original_line == str(instruction).replace("\n", ""):
         first = True
+
+    full_action = instruction.get_slicing_action(location)
+
+    match full_action[0]:
+        case "ADD":
+            print("ADDING NEW LOCATION " + str(full_action[1]))
+            tracingManager.add_location(full_action[1])
+        case "REMOVE":
+            if not first:
+                print("REMOVING LOCATION " + str(full_action[1]))
+                tracingManager.remove_location(full_action[1])
+            else:
+                print("FIRST LINE, DON'T REMOVE")
+
+
+        
+
+    '''
 
     # registers for each instruction
     instruction_regs = instruction.get_registers()
@@ -271,6 +290,7 @@ def test_instance(instruction, location, original_line):
     else:
         print("No new locations added.")
         return location # nothing happens
+    '''
 
 def find_path(folder, filename):
     #Source: Gemini
@@ -287,7 +307,7 @@ def get_lines_from_file(filename, tmp_file_name):
     return lines, file_path
 
 def fix_line(line):
-    return "".join(line).replace("\n", "")
+    return line[0].replace("\n", "")
 
 def location_in_string_exact(location, line):
     pattern = rf"{re.escape(location)}(?!\d)"
@@ -313,7 +333,7 @@ def analyze_line(filename, location, line, tracingManager):
             print("DETERMINING NEW LOCATIONS...")
 
             instruction = SmaliAssemblyInstructions.SmaliAssemblyInstruction().from_line(line)
-            loc_to_add = str(test_instance(instruction, location, tracingManager.target_line))
+            loc_to_add = str(test_instance(instruction, location, tracingManager))
             print("loc to add = " + str(loc_to_add))
 
             # SPECIAL INSTRUCTIONS DEPENDING ON LOC_TO_ADD RESULT
