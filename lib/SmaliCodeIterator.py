@@ -9,6 +9,9 @@ class SmaliCodeIterator():
 	''' This class is used to iterate over smali assembly instructions in logical units.
 	Most lines of code are exactly one line in semantics, but some instructions can span multiple lines.
 	For example, the invoke-* instructions can have a move-result-* instruction on the next line which stores the value.
+	
+	invoke-*
+	filled-new-array
 
 	This class will iterate over the code returning a list of lines.  
 	Usually the list is one line, but for some instructions the list will contain multiple lines.
@@ -65,10 +68,12 @@ class SmaliCodeIterator():
 		
 		
 	def __iter__(self):
+		'''Estbalishes the iterator's index'''
 		self.iter_idx = 0
 		return self
 		
 	def __next__(self):
+		'''Returns the next code unit in the iterator.'''
 		# the goal of this iterator is
 		# only to sometimes combine invoke-*
 		# and filled-new-array
@@ -89,7 +94,7 @@ class SmaliCodeIterator():
 		# such a situation means that line_index-2 is not a safe assumption
 		
 		if(self.iter_idx >= len(self.raw_text)):
-			 raise StopIteration
+			raise StopIteration
 		
 		# might be a string
 		# might be a SmaliAssemblyInstruction.py Object
