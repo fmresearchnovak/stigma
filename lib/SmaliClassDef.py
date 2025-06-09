@@ -1,11 +1,17 @@
 import os.path
 import re
+import sys
 
 import SmaliTypes
 import StigmaStringParsingLib
-import Instrumenter
 import SmaliMethodDef
 import SmaliAssemblyInstructions
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+other_dir = os.path.join(current_dir, "..", 'stigma')
+sys.path.insert(0, other_dir)
+
+import Instrumenter
 
 
 class SmaliClassDef:
@@ -300,7 +306,7 @@ class SmaliClassDef:
         Returns:
             The number of field declarations in this class, an integer 
         '''
-        return self.get_num_static_fields() + self.get_num_instance_fields()
+        return len(self.static_fields) + len(self.instance_fields)
         
         
     def get_num_method_declarations(self):
@@ -479,6 +485,7 @@ def tests():
     print("ALL SmaliClassDef TESTS PASSED")
 
     # TODO: Write more tests!  One for each method in SmaliClassDef
+    
 
 if __name__ == "__main__":
     tests()

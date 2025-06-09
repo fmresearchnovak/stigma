@@ -1,8 +1,13 @@
+import sys
 import re
 import argparse
 import subprocess
 import time
 import os
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+other_dir = os.path.join(current_dir, 'lib')
+sys.path.insert(0, other_dir)
 
 import SmaliRegister
 import SmaliClassDef
@@ -12,18 +17,72 @@ import SmaliCodeIterator
 import SmaliCodeBase
 import StigmaState
 
-#edges = {}
-#locations_to_check = []
-#files_to_search = []
-#line_directory = {}
-
-current_line_number = 0
-
 class TracingManager:
 
     def __init__(self):
         self.temp_APK = StigmaState.Environment().get_temp_file()
         self.tmp_file_name = StigmaState.Environment().get_temp_file().name
+
+        # edges for the directed graph
+        self.edges = {}
+
+        # locations (registers/variables) tracked
+        self.locations_to_check = []
+
+        # files found containing a tracked location
+        self.files_to_search = []
+
+        # filename -> instances of a tracked location for that file
+        self.line_directory = {}
+
+        # smali files
+        self.smali_files = []
+
+        self.target_line = ""
+        self.current_line_number = 0
+
+    def add_edge(self, location, destination, line_number):
+        if location in self.edges:
+            duplicate = False
+            for pair in self.edges[location]:
+                if pair[0] == destination:
+                    duplicate = True
+                    break
+            if not duplicate:
+                self.edges[location].append([destination, line_number])
+
+        else:
+            self.edges[location] = [[destination, line_number]]
+
+    def get_edges(self):
+        return self.edges
+
+    def add_location(self, location):
+        if location not in self.locations_to_check:
+            self.locations_to_check.append(location)
+
+    def remove_location(self, location):
+        if location in self.locations_to_check:
+            self.locations_to_check.remove(location)
+
+    def get_locations(self):
+        return self.locations_to_check
+
+    def add_file(self, file, line):
+        if file not in self.files_to_search:
+            self.files_to_search.append(file)
+        
+        if file in self.line_directory:
+            self.line_directory[file].append(line)
+        else:
+            self.line_directory[file] = [line]
+    
+    def remove_file(self, file):
+        if len(self.line_directory[file]) == 0:
+            self.files_to_search.remove(file)
+
+    def get_files(self):
+        return self.files_to_search
 
 
 def findAPK(apk):
@@ -234,10 +293,19 @@ def location_in_string_exact(location, line):
     pattern = rf"{re.escape(location)}(?!\d)"
     return bool(re.search(pattern, line))
 
-def analyze_line(location, line, target_line):
-    current_line_number += 1
+def grep_instances(variable, tracingManager):
+    cmd = ["grep", str(variable).replace("\n", ""), "-r", tracingManager.tmp_file_name]
+    grep_result = subprocess.run(cmd, stdout = subprocess.PIPE)
 
-    for location in locations_to_check:
+    # result is a list of uses of the instance variable
+    uses_list = str(grep_result.stdout)[2:].split("\\n")
+    uses_list.pop()
+    return uses_list
+
+def analyze_line(filename, location, line, tracingManager):
+    tracingManager.current_line_number += 1
+
+    for location in tracingManager.locations_to_check:
         if location_in_string_exact(location, line):
             print("----------------------------------------------------")
             print("LOCATION = " + location)
@@ -245,13 +313,13 @@ def analyze_line(location, line, target_line):
             print("DETERMINING NEW LOCATIONS...")
 
             instruction = SmaliAssemblyInstructions.SmaliAssemblyInstruction().from_line(line)
-            loc_to_add = str(test_instance(instruction, location, target_line))
+            loc_to_add = str(test_instance(instruction, location, tracingManager.target_line))
             print("loc to add = " + str(loc_to_add))
 
             # SPECIAL INSTRUCTIONS DEPENDING ON LOC_TO_ADD RESULT
             match loc_to_add:
                 case "REMOVE CURRENT":
-                    locations_to_check.remove(location)
+                    tracingManager.remove_location(location)
                 case "INVOKE FUNCTION":
                     full_line = str(instruction)
                     # this function travels to different files
@@ -260,33 +328,15 @@ def analyze_line(location, line, target_line):
                 case "RETURN":
                     return (new_files_to_search, new_line_directory, value_being_returned)
                 case _:
-                    if loc_to_add not in locations_to_check:
-                        locations_to_check.append(loc_to_add)
+                    if loc_to_add not in tracingManager.get_locations():
+                        tracingManager.add_location(loc_to_add)
                         print("Added to locations")
             
             if loc_to_add != "REMOVE CURRENT" and loc_to_add != location:
-                if location in edges:
-                    duplicate = False
-                    for pair in edges[location]:
-                        if pair[0] == loc_to_add:
-                            duplicate = True
-                            break
-                    if not duplicate:
-                        edges[location].append([loc_to_add, current_line_number])
-
-                else:
-                    edges[location] = [[loc_to_add, current_line_number]]
+                tracingManager.add_edge(location, loc_to_add, tracingManager.current_line_number)
             
-            if isinstance(instruction, SmaliAssemblyInstructions._I_INSTRUCTION) and loc_to_add != "REMOVE CURRENT":
-                print(str(instruction) + " is I_INSTRUCTION, find instance variables throughout files...")
-
-                cmd = ["grep", str(instruction.get_instance_variable()).replace("\n", ""), "-r", tmp_file_name]
-                #cmd = ["grep", str(instruction.get_instance_variable()).replace("\n", ""), "-r"] for testing
-                grep_result = subprocess.run(cmd, stdout = subprocess.PIPE)
-
-                # result is a list of uses of the instance variable
-                uses_list = str(grep_result.stdout)[2:].split("\\n")
-                uses_list.pop()
+            if isinstance(instruction, SmaliAssemblyInstructions._S_INSTRUCTION) and loc_to_add != "REMOVE CURRENT":
+                uses_list = grep_instances(instruction.get_instance_variable(), tracingManager)
 
                 for use in uses_list:
                     use = use.split(":", 1)
@@ -294,27 +344,61 @@ def analyze_line(location, line, target_line):
                     file = use[0]
                     line = use[1].strip() # https://www.geeksforgeeks.org/python-remove-spaces-from-a-string/
 
-                    if file != filename:
-                        if file not in files_to_search:
-                            files_to_search.append(file)
-                        
-                        if file in line_directory:
-                            line_directory[file].append(line)
-                        else:
-                            line_directory[file] = [line]
+                    line = SmaliAssemblyInstructions.from_line(line)
+
+                    if file in tracingManager.smali_files and isinstance(line, SmaliAssemblyInstructions._S_INSTRUCTION):
+                        tracingManager.add_file(file, line)
+                        print(line)
+                #input("")
 
             break
 
+def next_iteration(tracingManager):
+    if len(tracingManager.get_files()) > 0:
+        new_file = tracingManager.files_to_search[0]
+        new_instance_to_check = tracingManager.line_directory[new_file][0]
+        
+        tracingManager.line_directory[new_file].pop(0)
+
+        if len(tracingManager.line_directory[new_file]) == 0:
+            tracingManager.remove_file(new_file)
+
+        fh = open(new_file, "r")
+
+        # get the location name not the line name
+        new_location = new_instance_to_check.split(" ", 3)[3]
+        new_location = new_location[:len(new_location) - 1]
+
+        # loop through to get line
+        new_line_number = 0
+        tracingManager.target_line = new_location
+        curr_line = ""
+        while tracingManager.target_line not in curr_line:
+            new_line_number += 1
+            curr_line = fh.readline()
+
+        fh.close()
+
+        # STEP 9: Repeat all of the steps for the new file and its locations to check
+        print("NEW ITERATION WITH " + new_file + " " + str(new_line_number) + " " + new_location)
+        #return forward_tracing(new_file, new_line_number, new_location, files_to_search, line_directory, tmp_file_name)
+        return
+
+    else:
+        # return activity_log
+        return
+
 # REWRITTEN VERSION OF FUNCTION BELOW
-def forward_tracing(filename, line_number, location, files_to_search, line_directory, tmp_file_name):
+def forward_tracing(filename, line_number, location, tracingManager):
     print("=================================")
     print(filename)
     print("=================================")
 
-    edges = {}
-    # STEP 1: Create list of registers (and instance variables) to check for
-    locations_to_check = []
-    locations_to_check.append(location)
+    tmp_file_name = tracingManager.tmp_file_name
+
+    # STEP 1: Add first location to locations_to_check
+    print(location)
+    tracingManager.add_location(location)
 
     # STEP 2: Open input file
     print(tmp_file_name)
@@ -330,137 +414,32 @@ def forward_tracing(filename, line_number, location, files_to_search, line_direc
     full_text = SmaliCodeIterator.SmaliCodeIterator(smali_method_def_obj.raw_text)
 
     # STEP 4: Find the text of the target line
-    target_line = lines[line_number].replace("\n", "")
+    tracingManager.target_line = lines[line_number].replace("\n", "")
     target_line_found = False
 
-    current_line_number = line_number
+    tracingManager.current_line_number = line_number
 
     # STEP 5: Loop through the method and get the target line
     for line in SmaliCodeIterator.SmaliCodeIterator(smali_method_def_obj.raw_text):
         if len(line) > 1:
-            current_line_number += len(line) - 1
+            tracingManager.current_line_number += len(line) - 1
 
         line = fix_line(line)
 
-        if target_line in line:
+        if tracingManager.target_line in line:
             target_line_found = True
 
         # STEP 6: Once the target line is found, send every line containing a location in locations_to_track to the test_instance function
         if target_line_found:
-            #analyze_line(location, line, target_line)
-        
-            current_line_number += 1
+            analyze_line(filename, location, line, tracingManager)
 
-            for location in locations_to_check:
-                
-                if location_in_string_exact(location, line):
-                    print("----------------------------------------------------")
-                    print("LOCATION = " + location)
-                    print("LINE = " + line)
-                    print("DETERMINING NEW LOCATIONS...")
-
-                    instruction = SmaliAssemblyInstructions.SmaliAssemblyInstruction().from_line(line)
-                    loc_to_add = str(test_instance(instruction, location, target_line))
-                    print("loc to add = " + str(loc_to_add))
-
-                    # SPECIAL INSTRUCTIONS DEPENDING ON LOC_TO_ADD RESULT
-                    match loc_to_add:
-                        case "REMOVE CURRENT":
-                            locations_to_check.remove(location)
-                        case "INVOKE FUNCTION":
-                            full_line = str(instruction)
-                            # this function travels to different files
-                        case "IF INSTRUCTION":
-                            return # jump to a different line in the file, keep the current line in a variable
-                        case "RETURN":
-                            return (new_files_to_search, new_line_directory, value_being_returned)
-                        case _:
-                            if loc_to_add not in locations_to_check:
-                                locations_to_check.append(loc_to_add)
-                                print("Added to locations")
-
-                    if loc_to_add != "REMOVE CURRENT" and loc_to_add != location:
-                        if location in edges:
-                            duplicate = False
-                            for pair in edges[location]:
-                                if pair[0] == loc_to_add:
-                                    duplicate = True
-                                    break
-                            if not duplicate:
-                                edges[location].append([loc_to_add, current_line_number])
-
-                        else:
-                            edges[location] = [[loc_to_add, current_line_number]]   
-
-                    print(locations_to_check)
-
-                    # STEP 7: For every instance variable added to tracking that is not in the current file, add the file name and lines to line_directory
-                    if isinstance(instruction, SmaliAssemblyInstructions._I_INSTRUCTION) and loc_to_add != "REMOVE CURRENT":
-                        print(str(instruction) + " is I_INSTRUCTION, find instance variables throughout files...")
-
-                        cmd = ["grep", str(instruction.get_instance_variable()).replace("\n", ""), "-r", tmp_file_name]
-                        #cmd = ["grep", str(instruction.get_instance_variable()).replace("\n", ""), "-r"] for testing
-                        grep_result = subprocess.run(cmd, stdout = subprocess.PIPE)
-
-                        # result is a list of uses of the instance variable
-                        uses_list = str(grep_result.stdout)[2:].split("\\n")
-                        uses_list.pop()
-
-                        for use in uses_list:
-                            use = use.split(":", 1)
-
-                            file = use[0]
-                            line = use[1].strip() # https://www.geeksforgeeks.org/python-remove-spaces-from-a-string/
-
-                            if file != filename:
-                                if file not in files_to_search:
-                                    files_to_search.append(file)
-                                
-                                if file in line_directory:
-                                    line_directory[file].append(line)
-                                else:
-                                    line_directory[file] = [line]
-
-                    break
-    
-    generate_directed_graph(edges)
+    generate_directed_graph(tracingManager.edges)
 
     # STEP 8: Choose the next file to open, and add the first value to the locations to check, and find line number
-    if len(files_to_search) > 0:
-        new_file = files_to_search[0]
-        new_instance_to_check = line_directory[new_file][0]
-        
-        line_directory[new_file].pop(0)
-
-        if len(line_directory[new_file]) == 0:
-            files_to_search.remove(new_file)
-
-        fh = open(new_file, "r")
-
-        # get the location name not the line name
-        new_location = new_instance_to_check.split(" ", 3)[3]
-        new_location = new_location[:len(new_location) - 1]
-
-        # loop through to get line
-        new_line_number = 0
-        target_line = new_location
-        curr_line = ""
-        while target_line not in curr_line:
-            new_line_number += 1
-            curr_line = fh.readline()
-
-        fh.close()
-
-        # STEP 9: Repeat all of the steps for the new file and its locations to check
-        print("NEW ITERATION WITH " + new_file + " " + str(new_line_number) + " " + new_location)
-        #return forward_tracing(new_file, new_line_number, new_location, files_to_search, line_directory, tmp_file_name)
-        return
-
-    else:
-        # return activity_log
-        return
+    return next_iteration(tracingManager)
 
 def main():
+    # ARGPARSE FORMAT
     parser = argparse.ArgumentParser(description = "Given a line of code and a register to track, traces the contents of the register throughout the process.")
 
     parser.add_argument("APK", help="The path to the APK file that the target file is located in.")
@@ -471,14 +450,16 @@ def main():
     args = parser.parse_args()
     apk_path = findAPK(args.APK)
 
-    temp_APK = StigmaState.Environment().get_temp_file()
-    tmp_file_name = StigmaState.Environment().get_temp_file().name
+    #temp_APK = StigmaState.Environment().get_temp_file()
+    #tmp_file_name = StigmaState.Environment().get_temp_file().name
+
+    tracingManager = TracingManager()
 
     # https://stackoverflow.com/questions/69981912/why-i-am-getting-this-error-typeerror-namespace-object-is-not-subscriptable
-    args = parser.parse_args()
     
+    # dumping the APK file
     start_time = time.time()
-    cmd = ["java", "-jar", "pre-builts/apktool.jar", "d", apk_path, "-o", tmp_file_name, "-f"]
+    cmd = ["java", "-jar", "pre-builts/apktool.jar", "d", apk_path, "-o", tracingManager.tmp_file_name, "-f"]
     if (os.name == "nt"):
         completed_process = subprocess.run(cmd, shell=True)
     elif (os.name == "posix"):
@@ -486,11 +467,11 @@ def main():
     completed_process.check_returncode()
     print("Apk unpacked in %.1f seconds" % (time.time() - start_time))
 
-    app_smali_files = SmaliCodeBase.SmaliCodeBase.findSmaliFiles(tmp_file_name)
+    # getting the smali files
+    tracingManager.smali_files = SmaliCodeBase.SmaliCodeBase.findSmaliFiles(tracingManager.tmp_file_name)
     #print(app_smali_files)
-    
-    print(tmp_file_name)
-    forward_tracing(args.filename, int(args.line_number), args.register, [], {}, tmp_file_name)
+        
+    forward_tracing(args.filename, int(args.line_number), args.register, tracingManager)
 
     #the following code tests it without the APK file so that lines can be easily edited
     #forward_tracing(args.filename, int(args.line_number), args.register, [], {}, tmp_file_name)

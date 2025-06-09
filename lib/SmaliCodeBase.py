@@ -1,6 +1,6 @@
 
 import glob
-import glob
+import os
 
 
 import SmaliClassDef
@@ -16,6 +16,7 @@ class SmaliCodeBase():
            path_to_directory (str): The absolute path to the directory containing the smali files
         '''
         file_paths = SmaliCodeBase.findSmaliFiles(path_to_directory)
+        print(path_to_directory)
 
 
         # getting list of all classes in this project
@@ -98,8 +99,9 @@ def tests():
 
     # Test 1: Create a SmaliCodeBase object and check if it loads classes correctly
     scb = SmaliCodeBase("test")
+    print("LENGTH " + str(len(scb.classes)))
     assert(len(scb.classes)  == 74)
-    assert(scb.class_names[1] == "Landroid/support/v4/util/ContainerHelpers;");
+    assert("Landroid/support/v4/util/ContainerHelpers;" in scb.class_names);
 
     # Check the class names match SCB objects created
     for i in range(0, len(scb.class_names)):

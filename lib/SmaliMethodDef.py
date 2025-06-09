@@ -1,17 +1,24 @@
 import re
+import sys
+import os
 
 import SmaliTypes
 import SmaliAssemblyInstructions as smali
 import StigmaStringParsingLib
-import Instrumenter
 
 from SmaliRegister import SmaliRegister
-from ControlFlowGraph import ControlFlowGraph
 from TypeSafetyChecker import TypeSafetyChecker
 from SafeRegisterCollection import SafeRegisterCollection
 from SmaliCodeIterator import SmaliCodeIterator
 
 import inspect
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+other_dir = os.path.join(current_dir, "..")
+sys.path.insert(0, other_dir)
+
+import Instrumenter
+from ControlFlowGraph import ControlFlowGraph
 		
 class SmaliMethodSignature:
 
@@ -144,6 +151,17 @@ class SmaliMethodSignature:
 
 	@staticmethod
 	def fast_forward_to_semicolon(idx, string):
+		''' 
+		Returns the index of the first semicolon in a string.
+		
+		Parameters:
+		idx: current index
+		string: String representation of a Smali method parameter
+
+		Returns:
+		idx: the index of the semicolon
+		'''
+
 		while(string[idx] != ";"):
 			idx+=1
 			#print("this one")
@@ -151,6 +169,17 @@ class SmaliMethodSignature:
 		
 	@staticmethod
 	def fast_forward_to_not_bracket(idx, string):
+		''' 
+		Returns the index of the first non-start bracket in a string.
+		
+		Parameters:
+		idx: current index
+		string: String representation of a Smali method parameter
+
+		Returns:
+		idx: the index of the non-start bracket
+		'''
+
 		while(string[idx] == "["):
 			#print("that one")
 			idx+=1
@@ -164,7 +193,13 @@ class SmaliMethodSignature:
 		return str(self.get_fully_qualified_name()) == str(other.get_fully_qualified_name())
 	
 	def get_fully_qualified_name(self):
-		# returns the fully qualified name of the method
+		'''
+		Returns the fully qualified name of the method (how it appears in Smali code)
+
+		Returns:
+		self.class_name -> self.name_with_data_types
+		'''
+
 		# e.g., Lcom/example/MyClass;->myMethod(Ljava/lang/String;)V
 		return self.class_name + "->" + self.name_with_data_types
 		
@@ -214,6 +249,14 @@ class SmaliMethodDef:
 		
 		
 	def get_register_meta_data(self):
+		'''
+		Returns a string representation of SmaliMethodDef metadata, with each local register used by the function and the
+		parameter register they correspond to, if applicable.
+
+		Returns:
+		str(l): the output string, formatted like this: v0, v1, v2/p0, v3/p1...
+		'''
+
 		num_locals = self.get_locals_directive_num()
 		num_params = self.signature.num_of_parameter_registers
 		num_regs = self.get_num_registers()
@@ -237,6 +280,15 @@ class SmaliMethodDef:
 		
 
 	def grow_locals(self, n):
+		'''
+		Grows the .locals in the method to allow for more local registers to be used for new instructions. The code ensures that existing registers
+		moved to new ones (due to the .locals increasing) refer to the correct locations and existing low-number registers are not moved to high-number
+		registers.
+
+		Parameters:
+		n: the number of new local registers to add to the method
+		'''
+
 		# grows the .locals from the current value such that there are
 		# n new registers in the method
 		# moves the parameters so that they don't incur maximum register 
@@ -358,6 +410,16 @@ class SmaliMethodDef:
 
 
 	def dereference_p_to_v_number(self, p_register):
+		'''
+		Return the local register representation of a parameter register.
+
+		Parameters:
+		p_register: the register being dereferenced
+
+		Returns:
+		v_num: the register's corresponding local register number
+		'''
+
 		# e.g., _get_v_frl(p2, 2) -> v4
 		locals_num = self.get_locals_directive_num()
 		p_num = int(p_register[1:])
@@ -369,6 +431,17 @@ class SmaliMethodDef:
 
 
 	def dereference_p_to_v_numbers(self, line):
+		'''
+		Returns the dereferenced (all parameter registers represented as local registers) version of a
+		full line of smali code.
+
+		Parameters:
+		line: The line of smali code to dereference registers in.
+
+		Returns:
+		line: The original line of smali code with all the parameter registers replaced by their local counterpart.
+		'''
+
 		# de-reference p registers
 		# Replace all instances of pX with corresponding vY
 		# For example...
@@ -413,6 +486,13 @@ class SmaliMethodDef:
 
 						
 	def find_first_valid_instruction(self):
+		'''
+		Returns the first valid instruction in the smali method.
+
+		Returns:
+		i: the line number of the first valid instruction
+		'''
+
 		for i in range(len(self.raw_text)):
 			cur_line = str(self.raw_text[i])
 			if(StigmaStringParsingLib.is_valid_instruction(cur_line) or cur_line.startswith("    :")):
@@ -439,6 +519,13 @@ class SmaliMethodDef:
 
 
 	def get_num_registers(self):
+		'''
+		Returns the number of registers used by the Smali method.
+
+		Returns:
+		ans: the number of local registers plus the number of parameter registers
+		'''
+
 		# the total number of registers used by this function
 		ans = self.get_locals_directive_num() + self.signature.num_of_parameter_registers
 		#if(not self.signature.is_static):
@@ -450,6 +537,15 @@ class SmaliMethodDef:
 		
 
 	def get_num_comparison_instructions(self):
+		'''
+		Returns the number of smali instructions that compare two registers (or one register and the integer 0) which can be either
+		if instructions (jump to a line if a condition is met) or a cmp instruction (store the result of a comparison in a different
+		register)
+
+		Returns:
+		count: Number of smali instructions that either start with if or cmp
+		'''
+
 		count = 0
 		
 		# this could be improved in two ways
@@ -511,6 +607,11 @@ class SmaliMethodDef:
 
 				
 	def instrument(self):
+		'''
+		Inserts line into a smali file. Code can be placed in the first line of every method or in the first line of
+		the first method in the file. Creates a graph to store the blocks of if statements and other conditionals.
+		'''
+
 		if(self.has_grown == 0 and self.warnings_on):
 			print("Warning!  The locals for this method were not grown / expanded: " + str(self))
 			raise Exception("The locals for this method were not grown / expanded: " + str(self))
@@ -761,6 +862,21 @@ class SmaliMethodDef:
 		return regs_list
 	
 	def _move_reg_conditions(self, dest_reg, reg, safe_regs, code_unit_regs, type_map):
+		'''
+		Determines whether the conditions are correct for a register to be moved to a different one.
+
+		Parameters:
+		dest_reg: destination register
+		reg: current register
+		safe_regs: list of registers marked as safe (registers with low numbers, not used for the data of another register, not containing original program data, and not used in the code_unit).
+		These cannot be moved.
+		code_unit_regs: list of registers used in the code_unit. These also cannot be moved.
+		type_map: a HashMap of registers and their appropriate types
+
+		Returns:
+		A boolean
+		'''
+
 		#print("num regs: " + str(self.get_num_registers()))
 		#print("_move_reg_conditions(" + str(reg) + ")")
 		#print("code unit regs: " + str(code_unit_regs))
@@ -796,6 +912,18 @@ class SmaliMethodDef:
 			
 			
 	def is_relevant(self, line, containing_node):     
+		'''
+		Determnines whether code should be inserted into a smali method.
+
+		Parameters:
+		line: the existing line of code where we want to put our new code
+		containing_node: the node (segment of code created by the control flow graph) that the line of code is in
+
+		Returns:
+		A boolean
+		'''
+
+
 		#print("checking relevance: ", line)
 		#print("type:", str(type(line)))
 		

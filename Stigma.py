@@ -1,4 +1,5 @@
 
+import sys
 import time
 import os
 import subprocess
@@ -6,6 +7,10 @@ import importlib
 import xml
 import argparse
 import tempfile
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+other_dir = os.path.join(current_dir, 'lib')
+sys.path.insert(0, other_dir)
 
 import SmaliClassDef
 import Instrumenter
