@@ -360,6 +360,8 @@ class First_Reg_Dead_End():
     def get_slicing_action(self, tracked):
         if tracked == self.get_registers()[0]:
             return ["REMOVE", tracked]
+        else:
+            return ["NO ACTIONS"]
 
 # if tracking the first register, the tracked register is removed. If the second register is tracked, add the first register.
 class Second_Reg_To_First_Reg():
@@ -392,6 +394,8 @@ class Second_Reg_To_First_Reg_Arith_2addr():
             return ["PART OF DATA IN", self.get_registers()[0]]
         elif tracked == self.get_registers()[0]:
             return ["REMOVE", tracked]
+        else:
+            return ["NO ACTIONS"]
 
 # if tracking the first register, the tracked register is removed. If tracking the second register, nothing happens. If tracking the instance variable,
 # add the first register.
@@ -401,6 +405,8 @@ class Third_Var_To_First_Reg():
             return ["ADD", self.get_registers()[0]]
         elif tracked == self.get_registers()[0]:
             return ["REMOVE", tracked]
+        else:
+            return ["NO ACTIONS"]
 
 # if tracking the instance variable, the tracked variable is removed. If tracking the second register, nothing happens. If tracking the first register
 # add the instance variable.
@@ -410,6 +416,8 @@ class First_Reg_To_Third_Var():
             return ["ADD", self.get_instance_variable()]
         elif tracked == self.get_instance_variable():
             return ["REMOVE", tracked]
+        else:
+            return ["NO ACTIONS"]
 
 # if tracking the first register, the tracked register is removed. If tracking the second register, nothing happens. If tracking the third register,
 # add the first register.
@@ -419,6 +427,8 @@ class Third_Reg_To_First_Reg():
             return ["ADD", self.get_registers()[0]]
         elif tracked == self.get_registers()[0]:
             return ["REMOVE", tracked]
+        else:
+            return ["NO ACTIONS"]
 
 # if tracking the third register, the tracked variable is removed. If tracking the second register, nothing happens. If tracking the first register
 # add the third register.
@@ -428,6 +438,8 @@ class First_Reg_To_Third_Reg():
             return ["ADD", self.get_registers()[2]]
         elif tracked == self.get_registers()[2]:
             return ["REMOVE", tracked]
+        else:
+            return ["NO ACTIONS"]
 
 # invoke instructions
 class Invoke_Instruction():
