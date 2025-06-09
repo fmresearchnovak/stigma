@@ -1,7 +1,7 @@
-
-
 '''
  SmaliAssemblyInstructions.py
+
+ This module contains many classes that represent various types of "Smali" / DEX instructions.
 
  Each of these classes is basically in thin wrapper around a string 
  They correspond to the instructions for smali bytecode as listed
@@ -21,7 +21,7 @@
 # Should the new class be a child of CONST?
 # Should the new class be a child of MOVE-RESULT?
 
-# Here are some of the "abstract" parent classes
+# Here are some of the "abstract" parent classes, which all being with a _
 # _SINGLE_REGISTER_INSTRUCTION
 # _SINGLE_DEST_REGISTER_INSTRUCTION
 # _PARAMETER_LIST_INSTRUCTION
@@ -32,7 +32,6 @@
 # _I_INSTRUCTION
 # _I_INSTRUCTION_QUICK
 # _S_INSTRUCTION
-# _INVOKE_INSTRUCTION
 # _TWO_REGISTER_UNARY_INSTRUCTION
 # _TWO_REGISTER_BINARY_INSTRUCTION
 # _TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION
@@ -142,18 +141,34 @@ class SmaliAssemblyInstruction():
 
     
     def __str__(self):
+        ''' Returns a string representation of the instruction including some preceeding spaces and \n newline character.
+        This method is primarily intended for writing instruction to a file.
+        Returns:
+              A string representation of the instruction with preceeding spaces and newline character
+        '''
         return "    " + repr(self) + "\n"
     
     @staticmethod
     def _build_const_string(opcode, whole_line):
-        # examples of const-string and const-string/jumbo
-        # const-string v3, "android.permission.READ_PHONE_STATE"
-        # const-string v4, "    hostName: "
-        # const-string v3, "this ain\'t it!"
-        # const-string v5, "AudioTrack failed to initialize (status "
-        # 
-        # const-string/jumbo v1, "unrated"\n'
-        # const-string/jumbo v2, "yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'"
+        '''
+        Helper method used by from_line().  
+        Builds a CONST_STRING or CONST_STRING_JUMBO object from a given single line (string) of smali assembly code.
+        Parsing the CONST_STRING and CONST_STRING_JUMBO instructions are difficult due to the presence of single and double quotes.
+        Parameters:
+           opcode (str): The opcode of the instruction, either "CONST_STRING" or "CONST_STRING_JUMBO"
+           whole_line (str): The entire line of smali assembly code as a string
+        Returns:
+            SmaliAssemblyInstruction: The corresponding CONST_STRING or CONST_STRING_JUMBO object
+
+        Examples of edge-case const-string and const-string/jumbo instructions
+        const-string v3, "android.permission.READ_PHONE_STATE"
+        const-string v4, "    hostName: "
+        const-string v3, "this ain\'t it!"
+        const-string v5, "AudioTrack failed to initialize (status "
+        
+        const-string/jumbo v1, "unrated"\n'
+        const-string/jumbo v2, "yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'"
+        '''
         
         s = whole_line.split(", ")[-1]
         #print("s:", s)
@@ -176,21 +191,48 @@ class SmaliAssemblyInstruction():
         
 
     def get_registers(self):
+        ''' Returns a list of all the registers (list of SmaliRegister objects) used in this instruction.'''
         return []
 
     def get_p_registers(self):
+        ''' Returns a list of all the "parameter" registers (list of SmaliRegister objects) used in this instruction.
+        Note: "parameter" registers are those that start with "p" such as p0, p1, etc.'''
         return list(filter(lambda x : x[0] == "p", self.get_registers()))
         
     def get_implicit_registers(self):
+        ''' Returns a list of all the implicit registers (list of SmaliRegister objects) used in this instruction.
+        Implicit registers are those that are not explicitly listed in the instruction but are used by the instruction.
+        For example, in a "move-wide" instruction, the implicit registers are the ones that are used to store the second half of the 64-bit values.
+        Example: move-wide v0, v2
+        v0 is a 'wide' 64-bit register containing the first half of a double or long value.  The other half of the value is stored implicitly in v1.
+        The value from v2 and v3 is copied into v0 and v1.
+        get_implicit_registers() would return [v1, v3].'''
         return []
 
     def __eq__(self, other):
+        '''Checks if a SmaliAssemblyInstruction object is equal to some other thing based on their repr() string representation.
+        Parameters:
+            other (object): The object (of any type) to compare with this SmaliAssemblyInstruction object
+        Returns:
+            bool: True if the two objects are equal, False otherwise
+        '''
         return repr(self) == repr(other)
     
     def get_move(self):
+        ''' Returns the MOVE instruction class that corresponds to this instruction.
+        MOVE_16 is used as the default instruction if no specific MOVE instruction variant is necessary.
+        Returns:
+            MOVE_16: The MOVE_16 class itself (not an instance).
+        '''
         return MOVE_16
 
     def get_unique_registers(self):
+        ''' Returns a list of unique registers used in this instruction.
+        For example in an instruction with duplicate registers such as "move v0, v0", this function returns just [v0]
+        Returns:
+           A list of unique SmaliRegister objects used in this instruction
+        '''
+        # could probably convert to a set and back to a list for conciseness and possibly speed
         ans = []
         for item in self.get_registers():
             if(item not in ans):
@@ -198,6 +240,15 @@ class SmaliAssemblyInstruction():
         return ans
         
     def get_register_type_implications(self):
+        ''' Returns a dictionary assigning a type (SmaliTypes object) to each register when possible based on the semantics of the instruction.
+        This method is used to infer the types of registers *AFTER* the instruction has executed.
+        Returns:
+            A hashmap (dictionary) where the keys are SmaliRegister objects and the values are SmaliTypes objects.
+        Example: add-int v3, v0, v5     This instruction takes two ints, adds them together, and stores the result in v3.  
+        get_register_type_implications() would return {v3: SmaliTypes.ThirtyTwoBit(), v0: SmaliTypes.ThirtyTwoBit(), v5: SmaliTypes.ThirtyTwoBit()}
+        Example: int-to-long v3, v3     This instruction takes an int (in v3 RHS) and converts it to a long stored in v3 (and v4 implicitly) on the LHS.
+        get_register_type_implications() would return {v3: SmaliTypes.SixtyFourBit(), v4: SmaliTypes.SixtyFourBit_2()}
+        '''
         # NOTE, for all implementations of this method
         # the result should be the types AFTER the instruction
         # has executed.  This has important / tricky complications
@@ -218,9 +269,8 @@ class SmaliAssemblyInstruction():
     
 
 class _IMPLICIT_REGISTER_INSTRUCTION():
-    # instructions that have implicit registers
-    # all such cases are "wide" instructions that 
-    # work with 64-bit types Long, or Double
+    ''' A parent "abstract" class that represents instructions that have implicit registers such as move-result-wide
+    It should not be instantiated directly.'''
     def get_implicit_registers(self):
         ans = []
         for reg in self.get_registers():
