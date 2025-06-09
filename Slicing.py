@@ -5,6 +5,10 @@ import subprocess
 import time
 import os
 
+# TO DO TOMORROW: HANDLE TWO ADDRESS INSTRUCTIONS
+# FIND A WAY TO SEARCH FOR THE SECONDARY LOCATION (AND KNOW THAT IT GOES WITH THE FIRST)
+# USE _IMPLICIT_REGISTER_INSTRUCTION
+
 current_dir = os.path.dirname(os.path.abspath(__file__))
 other_dir = os.path.join(current_dir, 'lib')
 sys.path.insert(0, other_dir)
@@ -40,6 +44,12 @@ class TracingManager:
 
         self.target_line = ""
         self.current_line_number = 0
+
+        # this list has three values in every entry:
+        # A: a location that holds part of the tracked data (like from arthimetic)
+        # B: a location that was part of an operation with the tracked data to get A
+        # the operation that was performed
+        self.locations_with_partial_tracked_data = []
 
     def add_edge(self, location, destination, line_number):
         if location in self.edges:
@@ -163,7 +173,7 @@ def test_instance(instruction, location, tracingManager):
         first = True
 
     full_action = instruction.get_slicing_action(location)
-    print("ACTION = " + str(full_action))
+    #print("ACTION = " + str(full_action))
     
     match full_action[0]:
         case "ADD":
@@ -185,13 +195,15 @@ def test_instance(instruction, location, tracingManager):
         case "REMOVE":
             if not first:
                 print("REMOVING LOCATION " + str(full_action[1]))
-                tracingManager.remove_location(full_action[1])
+                #tracingManager.remove_location(full_action[1])
             else:
                 print("FIRST LINE, DON'T REMOVE")
         case "PART OF DATA IN":
-            pass
+            tracingManager.locations_with_partial_tracked_data.append([str(full_action[1]), str(full_action[1]), str(type(instruction))])
+            print(tracingManager.locations_with_partial_tracked_data)
         case "CAN GET DATA FROM":
-            pass
+            tracingManager.locations_with_partial_tracked_data.append([str(full_action[1]), str(full_action[3]), str(type(instruction))])
+            print(tracingManager.locations_with_partial_tracked_data)
         case "JUMP":
             pass
         case "RETURN":

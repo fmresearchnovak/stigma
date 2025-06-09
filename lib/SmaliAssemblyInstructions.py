@@ -384,7 +384,7 @@ class Second_Reg_To_First_Reg_Arith():
                 return ["REMOVE", tracked]
         else: # len == 2 (NEG and NOT instructions)
             if tracked == self.get_registers()[1]:
-                return ["CAN GET DATA FROM", self.get_registers()[0]]
+                return ["PART OF DATA IN", self.get_registers()[0]]
             elif tracked == self.get_registers()[0]:
                 return ["REMOVE", tracked]
 
