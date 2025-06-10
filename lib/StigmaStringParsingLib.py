@@ -11,6 +11,8 @@ BLANK_LINE = r"^\s*$"
 BEGINS_WITH_DOT_METHOD = r"^\.method"  # directive to indicate start of a method
 BEGINS_WITH_DOT_END_METHOD = r"^\s*\.end method"  # directive to indicate end of method
 
+BEGINS_WITH_DOT_FIELD = r"^\.field"  # directive to indicate start of a field
+
 # one space and then a v and then some number of digits and then a comma
 FIELD_NAME = "->(.+):"
 CLASS_NAME = "(L.+)->"
