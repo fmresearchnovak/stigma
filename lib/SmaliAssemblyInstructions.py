@@ -305,7 +305,14 @@ class _MethodCallInstruction():
         return name_only
 
 # this is currently untested, can't test until fully implemented
-class Label_Instruction():
+class LABEL(SmaliAssemblyInstruction):
+    '''# A label instruction, e.g., ":label_1"'''
+    def __init__(self, line):
+        self.l = line
+
+    def __repr__(self):
+        return self.l
+
     def get_label(self):
         return self.split(":")[1]
         
@@ -447,9 +454,13 @@ class Invoke_Instruction():
         return ["JUMP", self.get_method_name(), self.get_registers().index(tracked)]
 
 # jump instructions
-class Jump_Instruction(Label_Instruction):
+class _JUMP_TO_LABEL_INSTRUCTION():
     def get_slicing_action(self, tracked):
         return ["JUMP", self.get_label()]
+    
+    def get_label(self):
+        return self.split(":")[1]
+    
 
 # result instructions
 class Result_Instruction():
@@ -929,7 +940,7 @@ class THROW(_SINGLE_REGISTER_INSTRUCTION):
         return {self.rd: SmaliTypes.NonSpecificObjectReference()}
 
 
-class GOTO(SmaliAssemblyInstruction):
+class GOTO(SmaliAssemblyInstruction, _JUMP_TO_LABEL_INSTRUCTION):
     def __init__(self, target):
         self.target = target
         
@@ -1053,7 +1064,7 @@ class CMP_LONG(_TRIPLE_REGISTER_INSTRUCTION, First_Reg_Dead_End):
         ans[self.rd] = SmaliTypes.ThirtyTwoBit()
         return ans
         
-class _TWO_REG_EQ(SmaliAssemblyInstruction, Jump_Instruction):
+class _TWO_REG_EQ(SmaliAssemblyInstruction, _JUMP_TO_LABEL_INSTRUCTION):
     # A parent class that should never be instantiated directly
     def __init__(self, reg_arg1, reg_arg2, target):
         self.ra1 = SmaliRegister(reg_arg1)
@@ -1091,7 +1102,7 @@ class IF_LE(_TWO_REG_EQ):
         return "if-le"
         
         
-class _ONE_REG_EQ_ZERO(SmaliAssemblyInstruction, Jump_Instruction):
+class _ONE_REG_EQ_ZERO(SmaliAssemblyInstruction, _JUMP_TO_LABEL_INSTRUCTION):
     # A parent class that should never be instantiated directly
     def __init__(self, reg_arg, target):
         self.ra = SmaliRegister(reg_arg)
@@ -2161,7 +2172,7 @@ class INVOKE_SUPER_QUICK(_PARAMETER_LIST_INSTRUCTION, Invoke_Instruction):
 # class INVOKE_VIRTUAL_QUICK_RANGE
 # class INVOKE_SUPER_QUICK_RANGE
         
-class LABEL(SmaliAssemblyInstruction):
+class STIGMA_LABEL(SmaliAssemblyInstruction):
     def __init__(self, num):
         self.n = num
 
@@ -2170,17 +2181,17 @@ class LABEL(SmaliAssemblyInstruction):
         # with instructions such as IF_EQZ that use a LABEL in-line
         return ":stigma_jump_label_" + str(self.n)
         
-class TRY_START_LABEL(LABEL):
+class TRY_START_LABEL(STIGMA_LABEL):
     # e.g., :try_start_stigma_0
     def __repr__(self):
         return ":try_start_stigma_" + str(self.n) 
         
-class TRY_END_LABEL(LABEL):
+class TRY_END_LABEL(STIGMA_LABEL):
     # e.g., :try_end_stigma_0
     def __repr__(self):
         return ":try_end_stigma_" + str(self.n)
         
-class CATCH_LABEL(LABEL):
+class CATCH_LABEL(STIGMA_LABEL):
     # e.g., :catch_stigma_0
     def __repr__(self):
         return ":catch_stigma_" + str(self.n)
