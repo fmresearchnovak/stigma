@@ -5,6 +5,10 @@ import subprocess
 import time
 import os
 
+# TO DO TOMORROW: HANDLE TWO ADDRESS INSTRUCTIONS
+# FIND A WAY TO SEARCH FOR THE SECONDARY LOCATION (AND KNOW THAT IT GOES WITH THE FIRST)
+# USE _IMPLICIT_REGISTER_INSTRUCTION
+
 current_dir = os.path.dirname(os.path.abspath(__file__))
 other_dir = os.path.join(current_dir, 'lib')
 sys.path.insert(0, other_dir)
@@ -40,6 +44,12 @@ class TracingManager:
 
         self.target_line = ""
         self.current_line_number = 0
+
+        # this list has three values in every entry:
+        # A: a location that holds part of the tracked data (like from arthimetic)
+        # B: a location that was part of an operation with the tracked data to get A
+        # the operation that was performed
+        self.locations_with_partial_tracked_data = []
 
     def add_edge(self, location, destination, line_number):
         if location in self.edges:
@@ -78,7 +88,7 @@ class TracingManager:
             self.line_directory[file] = [line]
     
     def remove_file(self, file):
-        if len(self.line_directory[file]) == 0:
+        if file in self.line_directory:
             self.files_to_search.remove(file)
 
     def get_files(self):
@@ -156,121 +166,52 @@ def generate_directed_graph(graph):
 
             print(entry)
 
-def test_instance(instruction, location, original_line):
+def test_instance(instruction, location, tracingManager):
     first = False
+    original_line = tracingManager.target_line
     if original_line == str(instruction).replace("\n", ""):
         first = True
 
-    # registers for each instruction
-    instruction_regs = instruction.get_registers()
-
-    # CONST/INSTANCE-OF instances: overwrite destination
-    if isinstance(instruction, SmaliAssemblyInstructions.CONST) or isinstance(instruction, SmaliAssemblyInstructions.INSTANCE_OF):
-        print("SINGLE REGISTER OVERWRITE")
-        if instruction_regs[0] == location:
-            if first:
-                print("TARGET IS DESTINATION, BUT THIS IS THE FIRST LINE SO THIS IS THE STARTING VALUE")
-                return location
-            else:
-                print("TARGET IS DESTINATION, OVERWRITTEN")
-                return "REMOVE CURRENT"
-
-    # TRIPLE REGISTER INSTRUCTIONS: overwrite destination register, with the exception of APUT
-    # This covers the arthimetic instructions and logic
-    if isinstance(instruction, SmaliAssemblyInstructions._TRIPLE_REGISTER_INSTRUCTION):
-        if not isinstance(instruction, SmaliAssemblyInstructions.APUT):
-            print("ARTHIMETIC/LOGIC INSTRUCTION")
-            if instruction_regs[1] == location or instruction_regs[2] == location:
-                print(str(instruction_regs[0]) + " HAS PART OF " + str(location) + "'S DATA")
-                print("THIS CANNOT BE TRACKED YET")
-                return location
-            else: # instruction_regs[0] == location
-                if first:
-                    print("TARGET IS DESTINATION, BUT THIS IS THE FIRST LINE SO THIS IS THE STARTING VALUE")
-                    return location
-                else:
-                    print("TARGET IS DESTINATION, OVERWRITTEN")
-                    return "REMOVE CURRENT"
-        else: # APUT INSTRUCTION
-            print("APUT INSTRUCTION")
-
-    # MOVE instances: first is destination, second is origin
-    # if target is origin, add destination, if target is destination, overwrite
-    if isinstance(instruction, SmaliAssemblyInstructions.MOVE):
-        print("MOVE")
-        # TO DO: account for move-result
-        if not isinstance(instruction, SmaliAssemblyInstructions._SINGLE_REGISTER_INSTRUCTION):
-            if instruction_regs[1] == location:
-                print("ADDING NEW LOCATION " + str(instruction_regs[0]))
-                return instruction_regs[0]
-            else: # instruction_regs[0] == location
-                if first:
-                    print("TARGET IS DESTINATION, BUT THIS IS THE FIRST LINE SO THIS IS THE STARTING VALUE")
-                    return location
-                else:
-                    print("TARGET IS DESTINATION, OVERWRITTEN")
-                    return "REMOVE CURRENT"
-
-    # IGET instances: first is destination, second is object, third is name of instance variable
-    # instance variable from object is put into destination
-    # if target is destination, overwrite
-    # if target is object, do nothing
-    # if target is instance variable, add destination
-    elif isinstance(instruction, SmaliAssemblyInstructions.IGET_OBJECT) or isinstance(instruction, SmaliAssemblyInstructions.IGET):
-        print("IGET")
-        instance_var = instruction.get_instance_variable()
-        if instance_var == location:
-            print("ADDING NEW LOCATION " + str(instruction_regs[0]))
-            return instruction_regs[0]
-        else: # instruction_regs[0] = location
-            if first:
-                print("TARGET IS DESTINATION, BUT THIS IS THE FIRST LINE SO THIS IS THE STARTING VALUE")
-                return location
-            else:
-                print("TARGET IS DESTINATION, OVERWRITTEN")
-                return "REMOVE CURRENT"
-
-    # IPUT instances: first is origin, second is object, third is name of instance variable
-    # origin is put into instance variable in object
-    # if target is origin, add instance variable
-    # if target is object, do nothing
-    # if target is instance variable, overwrite
-    elif isinstance(instruction, SmaliAssemblyInstructions.IPUT_OBJECT) or isinstance(instruction, SmaliAssemblyInstructions.IPUT):
-        print("IPUT")
-        instance_var = instruction.get_instance_variable()
-        if instruction_regs[0] == location:
-            print("ADDING NEW LOCATION " + instance_var)
-            return instance_var
-        else: # instance_var == location
-            if first:
-                print("TARGET IS DESTINATION, BUT THIS IS THE FIRST LINE SO THIS IS THE STARTING VALUE")
-                return location
-            else:
-                print("TARGET IS DESTINATION, OVERWRITTEN")
-                return "REMOVE CURRENT"
-
-    # INVOKE instances: jump to the appropriate function
-    elif isinstance(instruction, SmaliAssemblyInstructions.INVOKE_VIRTUAL):
-        result_register = str(instruction).split("}, ")[1].replace("\n", "")
-        return location
-        #return "INVOKE FUNCTION"
+    full_action = instruction.get_slicing_action(location)
+    #print("ACTION = " + str(full_action))
     
-    # TWO REG EQ (IF) instances: don't know what to do yet
-    elif isinstance(instruction, SmaliAssemblyInstructions._TWO_REG_EQ):
-        print("IF STATEMENT")
-        return location
-        #return instruction.target
+    match full_action[0]:
+        case "ADD":
+            print("ADDING NEW LOCATION " + str(full_action[1]))
+            tracingManager.add_location(str(full_action[1]))
+            tracingManager.add_edge(location, str(full_action[1]), tracingManager.current_line_number)
+            if isinstance(instruction, SmaliAssemblyInstructions._S_INSTRUCTION):
+                uses_list = grep_instances(instruction.get_instance_variable(), tracingManager)
+                for use in uses_list:
+                    use = use.split(":", 1)
 
-    # RETURN instances: tell forward tracing function to end the current function here
-    # if return is location, keep track of where that goes
-    elif isinstance(instruction, SmaliAssemblyInstructions.RETURN):
-        print("RETURN STATEMENT")
-        return location
-        #return "RETURN"
-    
-    else:
-        print("No new locations added.")
-        return location # nothing happens
+                    file = use[0]
+                    line = use[1].strip() # https://www.geeksforgeeks.org/python-remove-spaces-from-a-string/
+
+                    line = SmaliAssemblyInstructions.from_line(line)
+
+                    if file in tracingManager.smali_files:
+                        tracingManager.add_file(file, line)
+        case "REMOVE":
+            if not first:
+                print("REMOVING LOCATION " + str(full_action[1]))
+                #tracingManager.remove_location(full_action[1])
+            else:
+                print("FIRST LINE, DON'T REMOVE")
+        case "PART OF DATA IN":
+            tracingManager.locations_with_partial_tracked_data.append([str(full_action[1]), str(full_action[1]), str(type(instruction))])
+            print(tracingManager.locations_with_partial_tracked_data)
+        case "CAN GET DATA FROM":
+            tracingManager.locations_with_partial_tracked_data.append([str(full_action[1]), str(full_action[3]), str(type(instruction))])
+            print(tracingManager.locations_with_partial_tracked_data)
+        case "JUMP":
+            pass
+        case "RETURN":
+            pass
+        case "RESULT":
+            pass
+        case _:
+            pass
 
 def find_path(folder, filename):
     #Source: Gemini
@@ -287,7 +228,7 @@ def get_lines_from_file(filename, tmp_file_name):
     return lines, file_path
 
 def fix_line(line):
-    return "".join(line).replace("\n", "")
+    return line[0].replace("\n", "")
 
 def location_in_string_exact(location, line):
     pattern = rf"{re.escape(location)}(?!\d)"
@@ -313,43 +254,8 @@ def analyze_line(filename, location, line, tracingManager):
             print("DETERMINING NEW LOCATIONS...")
 
             instruction = SmaliAssemblyInstructions.SmaliAssemblyInstruction().from_line(line)
-            loc_to_add = str(test_instance(instruction, location, tracingManager.target_line))
-            print("loc to add = " + str(loc_to_add))
 
-            # SPECIAL INSTRUCTIONS DEPENDING ON LOC_TO_ADD RESULT
-            match loc_to_add:
-                case "REMOVE CURRENT":
-                    tracingManager.remove_location(location)
-                case "INVOKE FUNCTION":
-                    full_line = str(instruction)
-                    # this function travels to different files
-                case "IF INSTRUCTION":
-                    return # jump to a different line in the file, keep the current line in a variable
-                case "RETURN":
-                    return (new_files_to_search, new_line_directory, value_being_returned)
-                case _:
-                    if loc_to_add not in tracingManager.get_locations():
-                        tracingManager.add_location(loc_to_add)
-                        print("Added to locations")
-            
-            if loc_to_add != "REMOVE CURRENT" and loc_to_add != location:
-                tracingManager.add_edge(location, loc_to_add, tracingManager.current_line_number)
-            
-            if isinstance(instruction, SmaliAssemblyInstructions._S_INSTRUCTION) and loc_to_add != "REMOVE CURRENT":
-                uses_list = grep_instances(instruction.get_instance_variable(), tracingManager)
-
-                for use in uses_list:
-                    use = use.split(":", 1)
-
-                    file = use[0]
-                    line = use[1].strip() # https://www.geeksforgeeks.org/python-remove-spaces-from-a-string/
-
-                    line = SmaliAssemblyInstructions.from_line(line)
-
-                    if file in tracingManager.smali_files and isinstance(line, SmaliAssemblyInstructions._S_INSTRUCTION):
-                        tracingManager.add_file(file, line)
-                        print(line)
-                #input("")
+            test_instance(instruction, location, tracingManager)
 
             break
 

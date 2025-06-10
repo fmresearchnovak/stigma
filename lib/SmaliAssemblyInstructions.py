@@ -26,6 +26,7 @@
 # _SINGLE_DEST_REGISTER_INSTRUCTION
 # _PARAMETER_LIST_INSTRUCTION
 # _TRIPLE_REGISTER_INSTRUCTION
+# _IMPLICIT_REGISTER_INSTRUCTION
 # _TWO_REG_EQ
 # _ONE_REG_EQ_ZERO
 # _I_INSTRUCTION
@@ -357,15 +358,17 @@ class _SixtyFourBit_Dest():
 # if tracking the first register, the tracked register is removed. If any other register is tracked, nothing happens.
 class First_Reg_Dead_End():
     def get_slicing_action(self, tracked):
-        if tracked == self.get_registers[0]:
+        if tracked == self.get_registers()[0]:
             return ["REMOVE", tracked]
+        else:
+            return ["NO ACTIONS"]
 
 # if tracking the first register, the tracked register is removed. If the second register is tracked, add the first register.
 class Second_Reg_To_First_Reg():
     def get_slicing_action(self, tracked):
-        if tracked == self.get_registers[1]:
-            return ["ADD", self.get_registers[0]]
-        elif tracked == self.get_registers[0]:
+        if tracked == self.get_registers()[1]:
+            return ["ADD", self.get_registers()[0]]
+        elif tracked == self.get_registers()[0]:
             return ["REMOVE", tracked]
 
 # if tracking the first register, the tracked register is removed. If tracking a different register, return that some of its data is in
@@ -373,65 +376,75 @@ class Second_Reg_To_First_Reg():
 class Second_Reg_To_First_Reg_Arith():
     def get_slicing_action(self, tracked):
         if len(self.get_registers()) == 3:
-            if tracked == self.get_registers[1]:
-                return ["CAN GET DATA FROM", self.get_registers[0], "WITH", self.get_registers[2]]
-            elif tracked == self.get_registers[2]:
-                return ["CAN GET DATA FROM", self.get_registers[0], "WITH", self.get_registers[1]]
-            elif tracked == self.get_registers[0]:
+            if tracked == self.get_registers()[1]:
+                return ["CAN GET DATA FROM", self.get_registers()[0], "WITH", self.get_registers()[2]]
+            elif tracked == self.get_registers()[2]:
+                return ["CAN GET DATA FROM", self.get_registers()[0], "WITH", self.get_registers()[1]]
+            elif tracked == self.get_registers()[0]:
                 return ["REMOVE", tracked]
         else: # len == 2 (NEG and NOT instructions)
-            if tracked == self.get_registers[1]:
-                return ["CAN GET DATA FROM", self.get_registers[0]]
-            elif tracked == self.get_registers[0]:
+            if tracked == self.get_registers()[1]:
+                return ["PART OF DATA IN", self.get_registers()[0]]
+            elif tracked == self.get_registers()[0]:
                 return ["REMOVE", tracked]
 
 class Second_Reg_To_First_Reg_Arith_2addr():
     def get_slicing_action(self, tracked):
-        if tracked == self.get_registers[1]:
-            return ["PART OF DATA IN", self.get_registers[0]]
-        elif tracked == self.get_registers[0]:
+        if tracked == self.get_registers()[1]:
+            return ["PART OF DATA IN", self.get_registers()[0]]
+        elif tracked == self.get_registers()[0]:
             return ["REMOVE", tracked]
+        else:
+            return ["NO ACTIONS"]
 
 # if tracking the first register, the tracked register is removed. If tracking the second register, nothing happens. If tracking the instance variable,
 # add the first register.
 class Third_Var_To_First_Reg():
     def get_slicing_action(self, tracked):
         if tracked == self.get_instance_variable():
-            return ["ADD", self.get_registers[0]]
-        elif tracked == self.get_registers[0]:
+            return ["ADD", self.get_registers()[0]]
+        elif tracked == self.get_registers()[0]:
             return ["REMOVE", tracked]
+        else:
+            return ["NO ACTIONS"]
 
 # if tracking the instance variable, the tracked variable is removed. If tracking the second register, nothing happens. If tracking the first register
 # add the instance variable.
 class First_Reg_To_Third_Var():
     def get_slicing_action(self, tracked):
-        if tracked == self.get_registers[0]:
+        if tracked == self.get_registers()[0]:
             return ["ADD", self.get_instance_variable()]
         elif tracked == self.get_instance_variable():
             return ["REMOVE", tracked]
+        else:
+            return ["NO ACTIONS"]
 
 # if tracking the first register, the tracked register is removed. If tracking the second register, nothing happens. If tracking the third register,
 # add the first register.
 class Third_Reg_To_First_Reg():
     def get_slicing_action(self, tracked):
         if tracked == self.get_registers()[2]:
-            return ["ADD", self.get_registers[0]]
-        elif tracked == self.get_registers[0]:
+            return ["ADD", self.get_registers()[0]]
+        elif tracked == self.get_registers()[0]:
             return ["REMOVE", tracked]
+        else:
+            return ["NO ACTIONS"]
 
 # if tracking the third register, the tracked variable is removed. If tracking the second register, nothing happens. If tracking the first register
 # add the third register.
 class First_Reg_To_Third_Reg():
     def get_slicing_action(self, tracked):
-        if tracked == self.get_registers[0]:
+        if tracked == self.get_registers()[0]:
             return ["ADD", self.get_registers()[2]]
         elif tracked == self.get_registers()[2]:
             return ["REMOVE", tracked]
+        else:
+            return ["NO ACTIONS"]
 
 # invoke instructions
 class Invoke_Instruction():
     def get_slicing_action(self, tracked):
-        return ["JUMP", self.get_method_name(), self.get_registers.index(tracked)]
+        return ["JUMP", self.get_method_name(), self.get_registers().index(tracked)]
 
 # jump instructions
 class Jump_Instruction(Label_Instruction):
@@ -458,6 +471,7 @@ class No_Slicing_Actions():
 
 
 class NOP(SmaliAssemblyInstruction):
+    ''' nop '''
     def __repr__(self):
         return self.opcode()
         
@@ -482,6 +496,7 @@ class BLANK_LINE(SmaliAssemblyInstruction):
 
 
 class COMMENT(SmaliAssemblyInstruction):
+    '''# A comment'''
     def __init__(self, line):
         self.l = line
 
@@ -490,6 +505,7 @@ class COMMENT(SmaliAssemblyInstruction):
 
 
 class MOVE(_ThirtyTwoBit_Parameters, SmaliAssemblyInstruction, Second_Reg_To_First_Reg):
+    ''' move v6, p2 '''
     def __init__(self, reg1, reg2):
         self.reg1 = SmaliRegister(reg1)
         self.reg2 = SmaliRegister(reg2)
@@ -509,6 +525,7 @@ class MOVE(_ThirtyTwoBit_Parameters, SmaliAssemblyInstruction, Second_Reg_To_Fir
 
 
 class MOVE_16(MOVE):
+    ''' move/16 v20, p2 '''
     # this might not exist
     # I couldn't find any occurrences in the smali of leaks
     
@@ -523,7 +540,7 @@ class MOVE_16(MOVE):
 # I need the class name to be MOVE/FROM16
 # but "/" is not a valid character in a class name
 class MOVE_FROM16(MOVE):
-    
+    '''move/from16 v3, v17'''
     def opcode(self):
         return "move/from16"
     
@@ -534,26 +551,32 @@ class MOVE_FROM16(MOVE):
 # I need the class name to be MOVE-WIDE
 # but "-" is not a valid character in a class name
 class MOVE_WIDE(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, MOVE):
+    '''move-wide v2, v4'''
     def opcode(self):
         return "move-wide"
     
 class MOVE_WIDE_FROM16(MOVE_WIDE):
+    '''move-wide/from16 v2, v40'''
     def opcode(self):
         return "move-wide/from16"
 
 class MOVE_WIDE_16(MOVE_WIDE):
+    '''move-wide/16 v8, v4'''
     def opcode(self):
         return "move-wide/16"
 
 class MOVE_OBJECT(_Object_Parameters, MOVE):
+    '''move-object v3, v5'''
     def opcode(self):
         return "move-object"
         
 class MOVE_OBJECT_FROM16(MOVE_OBJECT):
+    '''move-object/from16 v3, v25'''
     def opcode(self):
         return "move-object/from16"
 
 class MOVE_OBJECT_16(MOVE_OBJECT):
+    '''move-object/16 v3, p0'''
     def opcode(self):
         return "move-object/16"
 
@@ -732,7 +755,7 @@ class MONITOR_EXIT(_SINGLE_REGISTER_INSTRUCTION):
         return "monitor-exit"
     
     
-class CHECK_CAST( _Object_Parameters, _SINGLE_DEST_REGISTER_INSTRUCTION): 
+class CHECK_CAST( _Object_Parameters, _SINGLE_DEST_REGISTER_INSTRUCTION, No_Slicing_Actions): 
     def opcode(self):
         return "check-cast"
         
@@ -1030,7 +1053,7 @@ class CMP_LONG(_TRIPLE_REGISTER_INSTRUCTION, First_Reg_Dead_End):
         ans[self.rd] = SmaliTypes.ThirtyTwoBit()
         return ans
         
-class _TWO_REG_EQ(SmaliAssemblyInstruction):
+class _TWO_REG_EQ(SmaliAssemblyInstruction, Jump_Instruction):
     # A parent class that should never be instantiated directly
     def __init__(self, reg_arg1, reg_arg2, target):
         self.ra1 = SmaliRegister(reg_arg1)
@@ -1068,7 +1091,7 @@ class IF_LE(_TWO_REG_EQ):
         return "if-le"
         
         
-class _ONE_REG_EQ_ZERO(SmaliAssemblyInstruction):
+class _ONE_REG_EQ_ZERO(SmaliAssemblyInstruction, Jump_Instruction):
     # A parent class that should never be instantiated directly
     def __init__(self, reg_arg, target):
         self.ra = SmaliRegister(reg_arg)
@@ -1194,7 +1217,7 @@ class AGET_SHORT(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION):
         self.ans[self.rd] = SmaliTypes.Short()
 
 
-class APUT(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION):
+class APUT(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_To_Third_Reg):
     # aput vX, vY, vZ
     # vX is a value to be put into the array
     # vY is an array reference
@@ -1205,7 +1228,7 @@ class APUT(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION):
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.Int()
 
-class APUT_WIDE(_Array_Parameters_Type_Pattern, _ImplicitFirstRegisterInstruction, _TRIPLE_REGISTER_INSTRUCTION):
+class APUT_WIDE(_Array_Parameters_Type_Pattern, _ImplicitFirstRegisterInstruction, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_To_Third_Reg):
     def opcode(self):
         return "aput-wide"
         
@@ -1213,35 +1236,35 @@ class APUT_WIDE(_Array_Parameters_Type_Pattern, _ImplicitFirstRegisterInstructio
         self.ans[self.rd] = SmaliTypes.SixtyFourBit()
         self.ans[self.rd + 1] = SmaliTypes.SixtyFourBit_2()
 
-class APUT_OBJECT(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION):
+class APUT_OBJECT(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_To_Third_Reg):
     def opcode(self):
         return "aput-object"
 
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.NonSpecificObjectReference()
 
-class APUT_BOOLEAN(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION):
+class APUT_BOOLEAN(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_To_Third_Reg):
     def opcode(self):
         return "aput-boolean"
         
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.Boolean()
 
-class APUT_BYTE(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION):
+class APUT_BYTE(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_To_Third_Reg):
     def opcode(self):
         return "aput-byte"
 
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.Byte()
 
-class APUT_CHAR(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION):
+class APUT_CHAR(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_To_Third_Reg):
     def opcode(self):
         return "aput-char"
 
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.Char()
 
-class APUT_SHORT(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION):
+class APUT_SHORT(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_To_Third_Reg):
     def opcode(self):
         return "aput-short"
         

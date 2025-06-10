@@ -6,12 +6,48 @@ from SmaliRegister import SmaliRegister
 
 
 class SmaliCodeIterator():
+	''' This class is used to iterate over smali assembly instructions in logical units.
+	Most lines of code are exactly one line in semantics, but some instructions can span multiple lines.
+	For example, the invoke-* instructions can have a move-result-* instruction on the next line which stores the value.
+	
+	invoke-*
+	filled-new-array
+
+	This class will iterate over the code returning a list of lines.  
+	Usually the list is one line, but for some instructions the list will contain multiple lines.
+	
+	Example:
+		SCI1 = SmaliCodeIterator(some_code)
+		for unit in SCI1:
+			print(unit)
+
+		# unit may be: ["const v0, 0x7f070050"]
+		# or it may be:	['invoke-virtual {v0, v1}, Lcom/example/Class;->method()V', '\n', 'move-result v2']
+		
+		This class is used to help parse smali code and extract registers used in the code.
+	'''
 	def __init__(self, raw_text):
+		'''Constructor for SmaliCodeIterator.
+		Parameters:
+		raw_text: a list of strings, each string is a line of smali assembly code.
+		'''
 		self.raw_text = raw_text
 		
 		
 	@staticmethod
 	def get_regs_from_code_unit(code_unit):
+		'''Extracts all registers used in a code unit.  Note a code unit may be multiple lines of smali code.
+		Parameters:
+			code_unit: a list of strings, each string is a line of smali assembly code.
+		Returns:
+			A set of SmaliRegister objects representing the registers used in the code unit.
+
+		Example:
+			code_unit = ['invoke-virtual {v0, v1}, Lcom/example/Class;->method()V', '\n', 'move-result v2']
+			regs = SmaliCodeIterator.get_regs_from_code_unit(code_unit)
+			# regs will be a set containing SmaliRegister('v0'), SmaliRegister('v1'), SmaliRegister('v2')
+			# {v0, v1, v2}
+		'''
 		code_unit_regs = set([])
 		for line in code_unit:
 			line = str(line)
@@ -32,10 +68,12 @@ class SmaliCodeIterator():
 		
 		
 	def __iter__(self):
+		'''Estbalishes the iterator's index'''
 		self.iter_idx = 0
 		return self
 		
 	def __next__(self):
+		'''Returns the next code unit in the iterator.'''
 		# the goal of this iterator is
 		# only to sometimes combine invoke-*
 		# and filled-new-array
@@ -56,7 +94,7 @@ class SmaliCodeIterator():
 		# such a situation means that line_index-2 is not a safe assumption
 		
 		if(self.iter_idx >= len(self.raw_text)):
-			 raise StopIteration
+			raise StopIteration
 		
 		# might be a string
 		# might be a SmaliAssemblyInstruction.py Object
