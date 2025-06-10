@@ -118,10 +118,10 @@ class SmaliClassDef:
 
 
         for f in self.static_fields:
-            if(f != "# static fields\n" and f != "\n"):
+            if(f.startswith(".field")):
                 self.fields.append(SmaliClassField(self.class_name, f))
         for f in self.instance_fields:
-            if(f != "# instance fields\n" and f != "\n"):
+            if(f.startswith(".field")):
                 self.fields.append(SmaliClassField(self.class_name, f))
             
         
