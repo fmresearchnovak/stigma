@@ -5,9 +5,7 @@ import subprocess
 import time
 import os
 
-# TO DO TOMORROW: HANDLE TWO ADDRESS INSTRUCTIONS
-# FIND A WAY TO SEARCH FOR THE SECONDARY LOCATION (AND KNOW THAT IT GOES WITH THE FIRST)
-# USE _IMPLICIT_REGISTER_INSTRUCTION
+# SOMETHING TO REMEMBER: IMPLICIT REGISTERS GETTING OVERWRITTEN BY THEMSELVES
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 other_dir = os.path.join(current_dir, 'lib')
@@ -49,6 +47,7 @@ class TracingManager:
         # A: a location that holds part of the tracked data (like from arthimetic)
         # B: a location that was part of an operation with the tracked data to get A
         # the operation that was performed
+        # TO DO: STORE LITERALS
         self.locations_with_partial_tracked_data = []
 
     def add_edge(self, location, destination, line_number):
@@ -243,7 +242,7 @@ def grep_instances(variable, tracingManager):
     uses_list.pop()
     return uses_list
 
-def analyze_line(filename, location, line, tracingManager):
+def analyze_line(filename, line, tracingManager):
     tracingManager.current_line_number += 1
 
     for location in tracingManager.locations_to_check:
@@ -295,7 +294,7 @@ def next_iteration(tracingManager):
         return
 
 # REWRITTEN VERSION OF FUNCTION BELOW
-def forward_tracing(filename, line_number, location, tracingManager):
+def forward_tracing(filename, target_line_number, target_location, tracingManager):
     print("=================================")
     print(filename)
     print("=================================")
@@ -303,8 +302,8 @@ def forward_tracing(filename, line_number, location, tracingManager):
     tmp_file_name = tracingManager.tmp_file_name
 
     # STEP 1: Add first location to locations_to_check
-    print(location)
-    tracingManager.add_location(location)
+    print(target_location)
+    tracingManager.add_location(target_location)
 
     # STEP 2: Open input file
     print(tmp_file_name)
@@ -314,16 +313,16 @@ def forward_tracing(filename, line_number, location, tracingManager):
     #smali_reg = SmaliRegister.SmaliRegister(reg)
     smali_class = SmaliClassDef.SmaliClassDef(file_path)
 
-    line_number -= 1
-    method_signature_str = get_function_name(file_path, line_number, lines)
+    target_line_number -= 1
+    method_signature_str = get_function_name(file_path, target_line_number, lines)
     smali_method_def_obj = find_smali_method_def_obj(method_signature_str, smali_class)
-    full_text = SmaliCodeIterator.SmaliCodeIterator(smali_method_def_obj.raw_text)
+    #full_text = SmaliCodeIterator.SmaliCodeIterator(smali_method_def_obj.raw_text)
 
     # STEP 4: Find the text of the target line
-    tracingManager.target_line = lines[line_number].replace("\n", "")
+    tracingManager.target_line = lines[target_line_number].replace("\n", "")
     target_line_found = False
 
-    tracingManager.current_line_number = line_number
+    tracingManager.current_line_number = target_line_number
 
     # STEP 5: Loop through the method and get the target line
     for line in SmaliCodeIterator.SmaliCodeIterator(smali_method_def_obj.raw_text):
@@ -337,7 +336,7 @@ def forward_tracing(filename, line_number, location, tracingManager):
 
         # STEP 6: Once the target line is found, send every line containing a location in locations_to_track to the test_instance function
         if target_line_found:
-            analyze_line(filename, location, line, tracingManager)
+            analyze_line(filename, line, tracingManager)
 
     generate_directed_graph(tracingManager.edges)
 

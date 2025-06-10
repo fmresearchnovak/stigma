@@ -1415,6 +1415,9 @@ class _S_INSTRUCTION(SmaliAssemblyInstruction):
         self.ans[self.rd] = first_reg_type
         return self.ans
 
+    def get_instance_variable(self):
+        return str(self).split(",")[1][1:].replace("\n", "")
+
     def __repr__(self):
         if self.field_fqn == "":
             return self.opcode() + " " + str(self.rd) + ", " + self.class_and_field_name
@@ -1534,7 +1537,7 @@ class INVOKE_INTERFACE_RANGE(_MethodCallInstruction, _PARAMETER_RANGE_INSTRUCTIO
         return "invoke-interface/range"
 
 
-class _TWO_REGISTER_UNARY_INSTRUCTION(SmaliAssemblyInstruction):
+class _TWO_REGISTER_UNARY_INSTRUCTION(SmaliAssemblyInstruction, Second_Reg_To_First_Reg_Arith):
     # A parent class that should never be instantiated directly
     def __init__(self, reg_dest, reg_arg):
         super().__init__()
@@ -2181,6 +2184,7 @@ class CATCH_LABEL(LABEL):
     # e.g., :catch_stigma_0
     def __repr__(self):
         return ":catch_stigma_" + str(self.n)
+        
         
         
 class CATCH_DIRECTIVE(SmaliAssemblyInstruction):
