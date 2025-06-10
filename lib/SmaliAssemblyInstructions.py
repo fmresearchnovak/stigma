@@ -75,6 +75,9 @@ class SmaliAssemblyInstruction():
         line = raw_line_string.strip("\n")
         if(StigmaStringParsingLib.is_comment(line)):
             return COMMENT(line)
+        
+        if(StigmaStringParsingLib.is_jump_target_label(line)):
+            return LABEL(line)
 
         hash_pos = line.find("#")
         if hash_pos != -1:
@@ -311,7 +314,7 @@ class LABEL(SmaliAssemblyInstruction):
         self.l = line
 
     def __repr__(self):
-        return self.l
+        return self.l.strip()
 
     def get_label(self):
         return self.split(":")[1]
@@ -2577,6 +2580,17 @@ def main():
     assert(asm_obj.get_method_name_only() == "<init>")
     assert(asm_obj.register_list == ["v1"])
     
+
+
+    asm_obj = SmaliAssemblyInstruction.from_line("    :some_label_2\n")
+    assert(str(asm_obj) == "    :some_label_2\n")
+    assert(repr(asm_obj) == ":some_label_2")
+    assert(asm_obj.get_label() == "some_label_2")
+
+    asm_obj = SmaliAssemblyInstruction.from_line("    goto/32 :some_label_2\n")
+    assert(str(asm_obj) == "    goto/32 :some_label_2\n")
+    assert(repr(asm_obj) == "goto/32 :some_label_2")
+    assert(asm_obj.get_label() == "some_label_2")
     
     
     print("ALL SmaliAssemblyInstructions TESTS PASSED!")

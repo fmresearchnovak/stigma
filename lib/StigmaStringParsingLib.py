@@ -200,6 +200,9 @@ def is_valid_instruction(line):
     
 def is_comment(line):
     return line.strip().startswith("#")
+
+def is_jump_target_label(line):
+    return line.strip().startswith(":")
     
 def is_field_instruction(line):
     search_object = re.search(BEGINS_WITH_SPUT, line)
