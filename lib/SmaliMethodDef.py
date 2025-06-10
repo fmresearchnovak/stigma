@@ -590,16 +590,14 @@ class SmaliMethodDef:
 	def get_name(self):
 		# kinda hacky!  Sorry 'bout that!
 		s = str(self)
-		s = s.split("(")
-		#print("name: " + str(s))
-		s = s[0].split(" ")
-		name = s[-1]
-		#print("name: " + str(name))
-		return name
+		start = s.index("->")
+		end = s.index("(")
+		short_name = s[start+2:end]
+		return short_name
 
 
 	def make_new_jump_label(self):
-		res = smali.LABEL(self.num_jumps)
+		res = smali.STIGMA_LABEL(self.num_jumps)
 		self.num_jumps += 1
 		return res
 		
@@ -1128,7 +1126,7 @@ def tests():
 	smd.cfg = ControlFlowGraph(smd.raw_text)
 	smd.tsc = TypeSafetyChecker(smd.signature, smd.cfg)  
 	assert(smd.find_first_valid_instruction() == 8)
-	#print(smd.get_name())
+	assert(smd.get_name() == "leakPasswd")
 	
 	
 	
