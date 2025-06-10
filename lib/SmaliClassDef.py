@@ -30,6 +30,9 @@ class SmaliClassDef:
         example: ['.field public static final ANIMATION_DURATION:I']
     self.instance_fields: a list of strings, the instance fields in this class
         example: ['.field private mInterpolator:Landroid/animation/TimeInterpolator;']
+    self.fields: a list of SmaliClassField objects, each representing a field in this class.  Contains static and regular instance fields
+        example: [SmaliClassField('.field public static ANIMATION_DURATION:I'), ...]
+        Note: .field public static ANIMATION_DURATION:I IS EQUAL to Lcom/google/android/material/animation/AnimationUtils;->ANIMATION_DURATION:I assuming the former is in the AnimationUtils class.
     self.internal_class_names: a list of strings, the of all the classes defined in the entire smali code base
         example: ['Lcom/google/android/material/animation/AnimationUtils$1;',
                   'Lcom/google/android/material/animation/AnimationUtils$2;']
@@ -49,8 +52,10 @@ class SmaliClassDef:
         # These are just lists of strings
         # Should be filled in before instrument
         self.header = []
-        self.static_fields = []
-        self.instance_fields = []
+        self.static_fields = [] #TODO: replace this throughout code base with self.field_objects
+        self.instance_fields = [] #TODO: replace this throughout code base with self.field_objects
+
+        self.fields = [] # SmaliClassField objects
 
         # list of the class names (strings) of all internal classes
         self.internal_class_names = [] # TODO: Properly initialize this with a value here in the constructor
@@ -59,7 +64,7 @@ class SmaliClassDef:
         self.methods = []
         
         self.file_name = file_name
-        self.class_name = SmaliClassDef.extract_class_name(file_name)
+        self.class_name = SmaliClassDef.extract_class_name_from_file(file_name)
         
         fh = open(file_name, "r")
         lines = fh.readlines()
@@ -110,10 +115,18 @@ class SmaliClassDef:
             #
             #print("idx: " + str(idx))
             idx = idx + 1
+
+
+        for f in self.static_fields:
+            if(f != "# static fields\n" and f != "\n"):
+                self.fields.append(SmaliClassField(self.class_name, f))
+        for f in self.instance_fields:
+            if(f != "# instance fields\n" and f != "\n"):
+                self.fields.append(SmaliClassField(self.class_name, f))
             
         
     @staticmethod
-    def extract_class_name(filename):
+    def extract_class_name_from_file(filename):
         ''' Returns the "fully qualified name of the class contained in the file given by filename
         For example if the file name is "./edu/enovak/MainActivity.smali"" this function returns "Ledu/enovak/MainActivity;"
         Parameters:
@@ -143,6 +156,13 @@ class SmaliClassDef:
         # check this line is a method (begins with "invoke-*")
         match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_INVOKE, str(line))
         return match_object is not None
+
+
+    def get_fully_qualified_name(self):
+        ''' Returns the "fully qualified" name of this class, a string.
+        Example: "Ledu/fandm/enovak/leaks/Main;"
+        '''
+        return self.class_name
 
 
     def get_super_class(self):
@@ -409,14 +429,106 @@ class SmaliClassDef:
         '''
         #print("checking equality on " + str(self) + " and " + str(other))
         if isinstance(other, SmaliClassDef):
-            return self.class_name == other.class_name
+            return self.get_fully_qualified_name() == other.get_fully_qualified_name()
         
-        if isinstance(other, SmaliTypes.ObjectReference):
+        elif isinstance(other, SmaliTypes.ObjectReference):
             #print(self.class_name, "  ==  ", other.raw_type_string, "=>", self.class_name == other.raw_type_string)
-            return self.class_name == other.raw_type_string
+            return self.get_fully_qualified_name() == other.raw_type_string
         
-        if isinstance(other, str):
-            return str(self.class_name) == other
+        elif isinstance(other, str):
+            return self.get_fully_qualified_name() == other
+        
+        return False
+    
+
+    def contains_method(self, method):
+        ''' Checks if this class contains the given method.
+        Parameters:
+            method: A SmaliMethodDef object, a SmaliMethodSignature object, or a "fully qualified name" string such as Ledu/fandm/enovak/SomeApp/Main;->onCreate()V
+        Returns:
+            True if the class contains the method, False otherwise
+        '''
+        if isinstance(method, SmaliMethodDef.SmaliMethodDef) or \
+        isinstance(method, SmaliMethodDef.SmaliMethodSignature) or \
+        isinstance(method, str):
+            return method in self.methods
+        
+        return False
+    
+
+    def contains_field(self, field):
+        ''' Checks if this class contains the given field.
+        Parameters:
+            field: A SmaliClassField object or a "fully qualified name" string such as Ledu/fandm/enovak/SomeApp/Main;->balance:D
+        Returns:
+            True if the class contains the field, False otherwise
+        '''
+        if isinstance(field, SmaliClassField) or isinstance(field, str):
+            return field in self.fields
+        
+        return False
+
+
+    def __contains__(self, other):
+        ''' Checks if this class contains a method or field with the given name.
+        Parameters:
+            other: A SmaliMethodDef object or a SmaliMethodSignature object or a SmaliClassField objects or "fully qualified name" string such as Ledu/fandm/enovak/SomeApp/Main;->onCreate()V
+            Note: fully qualified name string may be that of a method or a field
+        Returns:
+            True if the class contains the method or field, False otherwise
+        '''
+        return self.contains_method(other) or self.contains_field(other)
+
+
+class SmaliClassField:
+    ''' A class to represent a field in a Smali class.
+    This is used for instrumentation and analysis of smali code.
+    Example: double balance = 0.0; or .field private Lorg/fandm/MyBank;->balance:D
+    '''
+
+    def __init__(self, class_name, field_line):
+        ''' Constructor for SmaliClassField
+        Parameters:
+            class_name: a string representing the fully qualified name of the class this field belongs to
+            Example: "Lcom/google/android/material/animation/AnimationUtils;"
+            field_line: a string representing the field line from a smali file
+            Example: ".field private Landroid/support/v7/app/AppCompatActivity;->TAG:Ljava/lang/String; = "Compat Tag 1""
+            Example: ".field private static final MY_PERMISSIONS_REQUEST:I = 0x1"
+            Example: ".field private static final PERMS:[Ljava/lang/String;"
+
+        TODO: Implement is_static, is_private, is_public, is_protected, is_final, get_modifiers, etc.
+        '''
+        match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_FIELD, field_line)
+        if match_object is not None:  # This is the start of a method defintion
+            self.field_line = field_line
+            self.class_name = class_name
+        else:
+            raise Exception("Invalid field line: " + field_line)
+        
+    def get_fully_qualified_name(self):
+        ''' Returns the fully qualified name of this field.
+        This is the class name and field name combined, e.g. "Lcom/example/MyClass;->myField:I"
+        Returns:
+            A string representing the fully qualified name of this field
+        '''
+        parts = self.field_line.split()
+        if "=" in parts:
+            location = parts.index("=")
+            parts = parts[:location]
+        return self.class_name + "->" + parts[-1]
+
+    def __str__(self):
+        return self.field_line
+    
+    def __repr__(self):
+        str(self)
+
+    def __eq__(self, other):
+        if(isinstance(other, str)):
+            return self.get_fully_qualified_name() == other
+        
+        elif(isinstance(other, SmaliClassField)):
+            return self.get_fully_qualified_name() == other.get_fully_qualified_name()  
         
         return False
 
@@ -447,15 +559,22 @@ class MockSmaliClassDef(SmaliClassDef):
 def tests():
     print("Testing SmaliClassDef")
 
-    print("\tTesting Constructor and class name extraction...")
-    ts = SmaliClassDef(os.path.join("test", "Main.smali"))
+    print("\tConstructor and class name extraction...")
+    SCD = SmaliClassDef(os.path.join("test", "Main.smali"))
+    scd_same = SmaliClassDef(os.path.join("test", "Main.smali"))
     #print(type(ts.get_super_class()))
-    assert (ts.get_super_class() == "Landroid/support/v7/app/AppCompatActivity;")
-    assert (ts.class_name == "Ledu/fandm/enovak/leaks/Main;");
-    assert(SmaliClassDef.extract_class_name("./test/Main.smali") == "Ledu/fandm/enovak/leaks/Main;")
+    assert (SCD.get_super_class() == "Landroid/support/v7/app/AppCompatActivity;")
+    assert (SCD.class_name == "Ledu/fandm/enovak/leaks/Main;");
+    assert(SmaliClassDef.extract_class_name_from_file("./test/Main.smali") == "Ledu/fandm/enovak/leaks/Main;")
+
+    tsdifferent = SmaliClassDef(os.path.join("test", "investigation_class.smali"))
+    assert(SCD == scd_same)
+    assert(SCD != tsdifferent)
+    assert(SCD == "Ledu/fandm/enovak/leaks/Main;")
 
 
-    print("\tTesting is_function stuff...")
+
+    print("\tis_function variants...")
     #print([str(x) for x in ts.methods]) 
 
     extra_class_function_call_line = "invoke-virtual {p0}, Landroid/support/v7/app/AppCompatActivity;->getSupportActionBar()Landroid/support/v7/app/ActionBar;"
@@ -467,19 +586,68 @@ def tests():
 
     #print([str(x) for x in ts.methods])
     #print(ts.methods[8])
-    inter_class_function_call_line = ts.methods[8].raw_text[135].strip('\n')
+    inter_class_function_call_line = SCD.methods[8].raw_text[135].strip('\n')
     inter_class_function_call_instruction = SmaliAssemblyInstructions.from_line(inter_class_function_call_line)
     #print("inter_class_function_call_line: " + str(inter_class_function_call_line))
 
-    assert(ts.is_inter_class_function_call(extra_class_function_call_line) == False)
-    assert(ts.is_inter_class_function_call(extra_class_function_call_instruction) == False)
-    assert(ts.is_inter_class_function_call(inter_class_function_call_line) == True)
-    assert(ts.is_inter_class_function_call(inter_class_function_call_instruction) == True)
+    assert(SCD.is_inter_class_function_call(extra_class_function_call_line) == False)
+    assert(SCD.is_inter_class_function_call(extra_class_function_call_instruction) == False)
+    assert(SCD.is_inter_class_function_call(inter_class_function_call_line) == True)
+    assert(SCD.is_inter_class_function_call(inter_class_function_call_instruction) == True)
 
-    assert(ts.is_extra_class_function_call(extra_class_function_call_line) == True)
-    assert(ts.is_extra_class_function_call(extra_class_function_call_instruction) == True)
-    assert(ts.is_extra_class_function_call(inter_class_function_call_line) == False)
-    assert(ts.is_extra_class_function_call(inter_class_function_call_instruction) == False)
+    assert(SCD.is_extra_class_function_call(extra_class_function_call_line) == True)
+    assert(SCD.is_extra_class_function_call(extra_class_function_call_instruction) == True)
+    assert(SCD.is_extra_class_function_call(inter_class_function_call_line) == False)
+    assert(SCD.is_extra_class_function_call(inter_class_function_call_instruction) == False)
+
+
+    print("\tSmaliClassField tests...")
+    field_line = ".field private TAG:Ljava/lang/String;"
+    field_line2 = ".field public static final ANIMATION_DURATION:I"
+    scf = SmaliClassField("Lmy/class;", field_line)
+    scfsame = SmaliClassField("Lmy/class;", field_line)
+    assert(scf.get_fully_qualified_name() == "Lmy/class;->TAG:Ljava/lang/String;")
+    scf2 = SmaliClassField("Lmy/class;", field_line2)
+    scf3 = SmaliClassField("Lmy/other/class;", field_line2)
+
+
+    assert(scf == scf)
+    assert(scf == scfsame)
+    assert(scf == "Lmy/class;->TAG:Ljava/lang/String;")
+    assert(scf != scf2)
+    assert(scf != scf3)
+    assert(scf2 != scf3)
+
+
+    print("\tcontains...")
+    scf_present = SmaliClassField("Ledu/fandm/enovak/leaks/Main;", ".field private TAG:Ljava/lang/String;")
+    smd_present = SCD.methods[2] # random method
+    assert(SCD.contains_method("Ledu/fandm/enovak/leaks/Main;->onCreate(Landroid/os/Bundle;)V"))
+    assert(SCD.contains_field("Ledu/fandm/enovak/leaks/Main;->MY_PERMISSIONS_REQUEST:I"))
+    assert(SCD.contains_method("Ledu/fandm/enovak/leaks/Main;->foo(Landroid/os/Bundle;)V") == False)
+    assert(SCD.contains_field("Ledu/fandm/enovak/leaks/Main;->bar:D") == False)
+    assert(SCD.contains_method("Ledu/fandm/enovak/leaks/MadeUpClass;->onCreate(Landroid/os/Bundle;)V") == False)
+
+
+    assert(SCD.contains_field(scf_present))
+    assert(SCD.contains_field(scf_present))
+
+    assert(SCD.contains_method(smd_present))
+    assert(SCD.contains_method(scd_same.methods[3])) # random method
+
+    SCD2 = SmaliClassDef(os.path.join("test", "investigation_class.smali"))
+    smd_not_present = SCD2.methods[1] # random method
+    field_not_present = SCD2.fields[2] # random field
+
+
+    assert("Ledu/fandm/enovak/leaks/Main;->MY_PERMISSIONS_REQUEST:I" in SCD)
+    assert(smd_present in SCD)
+    assert(scf_present in SCD)
+    assert(smd_not_present not in SCD)
+    assert(field_not_present not in SCD)
+    assert(smd_present.signature in SCD)
+    assert(smd_not_present.signature not in SCD)
+
 
 
     print("ALL SmaliClassDef TESTS PASSED")

@@ -60,7 +60,7 @@ def NEW_METHOD_handler(scd, smd):
     # will be given a value later in the method or (b) was used to store p0
     # which is technically not possible since we have used grow()
     
-    s = "\"location from parameter in " + scd.extract_class_name(scd.file_name) + "\""
+    s = "\"location from parameter in " + scd.extract_class_name_from_file(scd.file_name) + "\""
 
     block = Instrumenter.make_comment_block("for method with location parameter")
     target = SmaliTypes.from_string("Landroid/location/Location;")
@@ -105,7 +105,7 @@ def INVOKE_handler(scd, smd, code_unit, free_regs):
         move_result_line = code_unit[-1] 
         reg_containing_loc = StigmaStringParsingLib.get_v_and_p_numbers(move_result_line)[0]
         
-        s = "\"location from return value in " + scd.extract_class_name(scd.file_name) + "\""
+        s = "\"location from return value in " + scd.extract_class_name_from_file(scd.file_name) + "\""
         chunk = _make_markedlocaiton_instance_chunk(free_regs[0], free_regs[1], reg_containing_loc, smd, s)
         
         block.extend(chunk)

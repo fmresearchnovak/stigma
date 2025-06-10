@@ -185,19 +185,25 @@ class SmaliMethodSignature:
 			idx+=1
 		return idx
 	  
-	  
 	def __str__(self):
-		return str(self.sig_line.strip()) # + " " + str(self.parameter_type_map)
+		#return str(self.sig_line.strip()) # + " " + str(self.parameter_type_map)
+		return self.get_fully_qualified_name()
 
 	def __eq__(self, other):
-		return str(self.get_fully_qualified_name()) == str(other.get_fully_qualified_name())
+		if(isinstance(other, SmaliMethodSignature)):
+			return self.get_fully_qualified_name() == other.get_fully_qualified_name()
+		elif(isinstance(other, str)):
+			return self.get_fully_qualified_name() == other
+		
+		return False
 	
 	def get_fully_qualified_name(self):
 		'''
 		Returns the fully qualified name of the method (how it appears in Smali code)
-
 		Returns:
-		self.class_name -> self.name_with_data_types
+		self.class_name -> self.name_with_data_types, (a string)
+
+		Example: Lcom/example/MyClass;->myMethod(Ljava/lang/String;)V
 		'''
 
 		# e.g., Lcom/example/MyClass;->myMethod(Ljava/lang/String;)V
@@ -246,6 +252,13 @@ class SmaliMethodDef:
 		self.first_new_free_reg_num = 0  
 		
 		self.warnings_on = False
+
+
+	def get_fully_qualified_name(self):
+		'''Returns the fully qualified name of this method, a string
+		Example: Lcom/example/MyClass;->myMethod(Ljava/lang/String;)V
+		Wrapper function for the get_fully_qualified_name of this method's SmaliMethodSignature object'''
+		return self.signature.get_fully_qualified_name()
 		
 		
 	def get_register_meta_data(self):
@@ -1049,22 +1062,19 @@ class SmaliMethodDef:
 					
 	
 	def __repr__(self):
-		return self.get_signature()
+		return self.get_signature().sig_line
 
 
 	def __str__(self):
-		return str(self.signature)
+		return self.get_fully_qualified_name()
 
 
 	def __eq__(self, other):
 		if isinstance(other, str):
-			return self.get_signature().get_fully_qualified_name() == other
+			return self.get_fully_qualified_name() == other
 
-		elif isinstance(other, SmaliMethodDef):
-			return self.get_signature() ==  other.get_signature()
-		
-		elif isinstance(other, SmaliMethodSignature):
-			return self.get_signature() == other
+		elif isinstance(other, SmaliMethodDef) or isinstance(other, SmaliMethodSignature):
+			return self.get_fully_qualified_name() ==  other.get_fully_qualified_name()
 
 		else:
 			return False
@@ -1152,6 +1162,35 @@ def tests():
 	
 	print("\t_move_reg_conditions...")
 	assert(smd._move_reg_conditions("v3", "v0", [], ["v0", "v3", "v13"], {"v0": "32-bit"}) == False)
+
+
+	print("\t __eq__ tests...")
+	smdsame = SmaliMethodDef(text, None)
+	sigsame = smdsame.signature
+
+	textdifferent = open("./test/control_flow_test.smali").readlines()[1:]
+	smddifferent = SmaliMethodDef(textdifferent, None)
+
+	assert(smd == smd)
+	assert(smd == smdsame)
+	assert(smd != smddifferent)
+	assert(smd == "Lunknownclass;->leakPasswd(Landroid/view/View;)V")
+	assert(smd.get_fully_qualified_name() == "Lunknownclass;->leakPasswd(Landroid/view/View;)V")
+	assert(smd == sigsame)
+	assert(smd != sig)
+
+	assert(smd.signature == smdsame.signature)
+	assert(smd.signature != smddifferent.signature)
+	#print(smd.signature)
+	assert(smd.signature == "Lunknownclass;->leakPasswd(Landroid/view/View;)V")
+	assert(smd != 5)
+	assert(smd != "blah")
+	assert(smd.signature != 5)
+	assert(smd.signature != "blah")
+	#print(sig)
+	assert(sig == "Lmy/package/MyClass;->reverseTransit(I)I")
+
+
 	
 	
 	

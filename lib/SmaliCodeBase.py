@@ -22,7 +22,7 @@ class SmaliCodeBase():
         # getting list of all classes in this project
         self.class_names = []
         for path in file_paths:
-            self.class_names.append(SmaliClassDef.SmaliClassDef.extract_class_name(path))
+            self.class_names.append(SmaliClassDef.SmaliClassDef.extract_class_name_from_file(path))
 
 
         # for analytics
