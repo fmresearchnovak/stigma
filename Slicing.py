@@ -96,7 +96,7 @@ class TracingManager:
 
 def findAPK(apk):
     if (not os.path.exists(apk)):
-        print("Input file (" + apk + ") was not found or was not readable.")
+        print("ERROR: Could not find APK file.")
         exit(1)
     return apk
 
@@ -320,6 +320,9 @@ def forward_tracing(filename, target_line_number, target_location, tracingManage
 
     # STEP 4: Find the text of the target line
     tracingManager.target_line = lines[target_line_number].replace("\n", "")
+    if target_location not in tracingManager.target_line:
+        print("ERROR: Target register not found at the given line number.")
+        exit(1)
     target_line_found = False
 
     tracingManager.current_line_number = target_line_number
@@ -345,6 +348,10 @@ def forward_tracing(filename, target_line_number, target_location, tracingManage
 
 def main():
     # ARGPARSE FORMAT
+    if len(sys.argv) != 5:
+        print("ERROR: Five arguments required.")
+        exit(1)
+    
     parser = argparse.ArgumentParser(description = "Given a line of code and a register to track, traces the contents of the register throughout the process.")
 
     parser.add_argument("APK", help="The path to the APK file that the target file is located in.")
@@ -374,7 +381,15 @@ def main():
 
     # getting the smali files
     tracingManager.smali_files = SmaliCodeBase.SmaliCodeBase.findSmaliFiles(tracingManager.tmp_file_name)
-    #print(app_smali_files)
+ 
+    if find_path(tracingManager.tmp_file_name, args.filename) not in tracingManager.smali_files:
+        print("ERROR: Smali file not found in APK.")
+        exit(1)
+
+    if (args.register[0] != "v" and args.register[0] != "p") or not args.register[1:].isdigit():
+        print("ERROR: Register input is not a valid register.")
+        exit(1)
+
         
     forward_tracing(args.filename, int(args.line_number), args.register, tracingManager)
 
