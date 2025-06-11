@@ -113,7 +113,7 @@ def find_smali_method_def_obj(method_signature_str, smali_class):
     method_index = 0
     curr_method = smali_class.methods[method_index]
 
-    while(str(curr_method) != method_signature_str):
+    while(str(curr_method).split("->")[1] != method_signature_str.split(" ")[2]):
         method_index += 1
         curr_method = smali_class.methods[method_index]
 
