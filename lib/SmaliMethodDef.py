@@ -208,6 +208,17 @@ class SmaliMethodSignature:
 
 		# e.g., Lcom/example/MyClass;->myMethod(Ljava/lang/String;)V
 		return self.class_name + "->" + self.name_with_data_types
+	
+	def get_name(self):
+		'''Returns the name of this method and nothing else
+		Example: if the function is Lcom/example/MyClass;->myMethod(Ljava/lang/String;)V this method returns "myMethod" a string
+		'''
+		# kinda hacky implementation!  Sorry 'bout that!
+		s = str(self)
+		start = s.index("->")
+		end = s.index("(")
+		short_name = s[start+2:end]
+		return short_name
 		
 
 class SmaliMethodDef:
@@ -259,6 +270,10 @@ class SmaliMethodDef:
 		Example: Lcom/example/MyClass;->myMethod(Ljava/lang/String;)V
 		Wrapper function for the get_fully_qualified_name of this method's SmaliMethodSignature object'''
 		return self.signature.get_fully_qualified_name()
+	
+
+	def get_name(self):
+		return self.signature.get_name()
 		
 		
 	def get_register_meta_data(self):
@@ -582,18 +597,6 @@ class SmaliMethodDef:
 				# of course the line can't be both an if and a cmp
 				count = count + 1
 		return count
-
-	
-
-
-
-	def get_name(self):
-		# kinda hacky!  Sorry 'bout that!
-		s = str(self)
-		start = s.index("->")
-		end = s.index("(")
-		short_name = s[start+2:end]
-		return short_name
 
 
 	def make_new_jump_label(self):
@@ -1127,6 +1130,7 @@ def tests():
 	smd.tsc = TypeSafetyChecker(smd.signature, smd.cfg)  
 	assert(smd.find_first_valid_instruction() == 8)
 	assert(smd.get_name() == "leakPasswd")
+	assert(smd.signature.get_name() == "leakPasswd")
 	
 	
 	
