@@ -129,51 +129,51 @@ def grep_test(target, path):
     for use in uses_list:
         print(use)
 
+def format_for_html_graph(item):
+    if item[0] == "L":
+        new_item = ""
+        if "->" in item:
+            split_by_arrow = item.split("->")
+            first = split_by_arrow[0]
+            second = split_by_arrow[1]
+        split = first.split("/")
+        new_item = split[len(split) - 1] + "-"
+        new_item += second
+        new_item = new_item.replace(";", "").replace("[", "arrayof:")
+        return new_item
+    else:
+        return item
+
 def generate_directed_graph(graph):
     html_graph = ""
 
     first = True
     #print(graph)
+    
     for key in graph:
         for index in range(0, len(graph[key])):
+            #print(key)
             value = graph[key][index][0]
             number = graph[key][index][1]
 
             # key = split by "->", take the second half, then split the first half by "/" and get the last index, then combine first half and second half
-
-            if key[0] == "L":
-                if "->" in key:
-                    split_by_arrow = key.split("->")
-                    first = split_by_arrow[0]
-                    second = split_by_arrow[1]
-                split = first.split("/")
-                key = split[len(split) - 1] + "-"
-                key += second
-                key = key.replace(";", "").replace("[", "arrayof:")
-            if value[0] == "L":
-                if "->" in value:
-                    split_by_arrow = value.split("->")
-                    first = split_by_arrow[0]
-                    second = split_by_arrow[1]
-                split = first.split("/")
-                value = split[len(split) - 1] + "-"
-                value += second
-                value = value.replace(";", "").replace("[", "arrayof:")
+            new_key = format_for_html_graph(key)
+            new_value = format_for_html_graph(value)
 
             entry = ""
 
             if first == True:
-                entry += str(key) + "[" + str(key) + "]"
+                entry += str(new_key) + "[" + str(new_key) + "]"
                 first = False
             else:
-                entry += str(key)
+                entry += str(new_key)
             
             entry += " --> "
 
             if value in graph and len(graph[value]) > 1:
-                entry += str(value) + "{" + str(value) + "};"
+                entry += str(new_value) + "{" + str(new_value) + "};"
             else:
-                entry += str(value) + "[" + str(value) + "];"
+                entry += str(new_value) + "[" + str(new_value) + "];"
             
             #entry += " <!-- Line number: " + str(number) + " -->"
 
@@ -265,7 +265,7 @@ def write_html_file(html_graph):
     lines = inFile.readlines()
     for line in lines:
         outFile.write(line)
-        if line == "graph LR":
+        if line == "graph LR\n":
             outFile.write(html_graph)
 
     inFile.close()
