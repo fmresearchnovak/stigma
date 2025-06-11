@@ -130,8 +130,10 @@ def grep_test(target, path):
         print(use)
 
 def generate_directed_graph(graph):
+    html_graph = ""
+
     first = True
-    print(graph)
+    #print(graph)
     for key in graph:
         for index in range(0, len(graph[key])):
             value = graph[key][index][0]
@@ -175,7 +177,9 @@ def generate_directed_graph(graph):
             
             #entry += " <!-- Line number: " + str(number) + " -->"
 
-            print(entry)
+            html_graph += entry + "\n"
+    
+    return html_graph
 
 def test_instance(instruction, location, tracingManager):
     first = False
@@ -253,6 +257,19 @@ def grep_instances(variable, tracingManager):
     uses_list = str(grep_result.stdout)[2:].split("\\n")
     uses_list.pop()
     return uses_list
+
+def write_html_file(html_graph):
+    inFile = open("example-graphs.html", "r")
+    outFile = open("tracing-graph.html", "w")
+
+    lines = inFile.readlines()
+    for line in lines:
+        outFile.write(line)
+        if line == "graph LR":
+            outFile.write(html_graph)
+
+    inFile.close()
+    outFile.close()
 
 def analyze_line(filename, line, tracingManager):
     tracingManager.current_line_number += 1
@@ -353,7 +370,8 @@ def forward_tracing(filename, target_line_number, target_location, tracingManage
         if target_line_found:
             analyze_line(filename, line, tracingManager)
 
-    generate_directed_graph(tracingManager.edges)
+    html_graph = generate_directed_graph(tracingManager.edges)
+    write_html_file(html_graph)
 
     # STEP 8: Choose the next file to open, and add the first value to the locations to check, and find line number
     return next_iteration(tracingManager)
