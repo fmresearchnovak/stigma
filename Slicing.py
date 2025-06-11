@@ -130,6 +130,7 @@ def grep_test(target, path):
         print(use)
 
 def format_for_html_graph(item):
+    # key = split by "->", take the second half, then split the first half by "/" and get the last index, then combine first half and second half
     if item[0] == "L":
         new_item = ""
         if "->" in item:
@@ -156,7 +157,6 @@ def generate_directed_graph(graph):
             value = graph[key][index][0]
             number = graph[key][index][1]
 
-            # key = split by "->", take the second half, then split the first half by "/" and get the last index, then combine first half and second half
             new_key = format_for_html_graph(key)
             new_value = format_for_html_graph(value)
 
