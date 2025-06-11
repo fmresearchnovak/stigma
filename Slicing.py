@@ -54,6 +54,7 @@ class TracingManager:
         if location in self.edges:
             duplicate = False
             for pair in self.edges[location]:
+                print(pair[0])
                 if pair[0] == destination:
                     duplicate = True
                     break
@@ -111,6 +112,7 @@ def get_function_name(filename, line_number, lines):
 
 def find_smali_method_def_obj(method_signature_str, smali_class):
     method_index = 0
+    #figure out how to use curr_Method.get_name
     curr_method = smali_class.methods[method_index]
 
     while(str(curr_method).split("->")[1] != method_signature_str.split(" ")[2]):
@@ -135,16 +137,26 @@ def generate_directed_graph(graph):
             value = graph[key][index][0]
             number = graph[key][index][1]
 
+            # key = split by "->", take the second half, then split the first half by "/" and get the last index, then combine first half and second half
+
             if key[0] == "L":
                 if "->" in key:
-                    key = key.split("->")[0]
-                split = key.split("/")
-                key = split[len(split) - 1].replace(";", "")
+                    split_by_arrow = key.split("->")
+                    first = split_by_arrow[0]
+                    second = split_by_arrow[1]
+                split = first.split("/")
+                key = split[len(split) - 1] + "-"
+                key += second
+                key = key.replace(";", "").replace("[", "arrayof:")
             if value[0] == "L":
                 if "->" in value:
-                    value = value.split("->")[0]
-                split = value.split("/")
-                value = split[len(split) - 1].replace(";", "")
+                    split_by_arrow = value.split("->")
+                    first = split_by_arrow[0]
+                    second = split_by_arrow[1]
+                split = first.split("/")
+                value = split[len(split) - 1] + "-"
+                value += second
+                value = value.replace(";", "").replace("[", "arrayof:")
 
             entry = ""
 
@@ -161,7 +173,7 @@ def generate_directed_graph(graph):
             else:
                 entry += str(value) + "[" + str(value) + "];"
             
-            entry += " <!-- Line number: " + str(number) + " -->"
+            #entry += " <!-- Line number: " + str(number) + " -->"
 
             print(entry)
 

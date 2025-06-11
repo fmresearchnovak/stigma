@@ -1174,14 +1174,14 @@ class _ARRAY_PARAMETERS_TYPE_PATTERN():
         return self.ans
         
         
-class AGET(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION):
+class AGET(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, Third_Reg_To_First_Reg):
     def opcode(self):
         return "aget"
         
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.ThirtyTwoBit()
 
-class AGET_WIDE(_ARRAY_PARAMETERS_TYPE_PATTERN, _IMPLICIT_FIRST_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION):
+class AGET_WIDE(_ARRAY_PARAMETERS_TYPE_PATTERN, _IMPLICIT_FIRST_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, Third_Reg_To_First_Reg):
     def opcode(self):
         return "aget-wide"
         
@@ -1189,7 +1189,7 @@ class AGET_WIDE(_ARRAY_PARAMETERS_TYPE_PATTERN, _IMPLICIT_FIRST_REGISTER_INSTRUC
         self.ans[self.rd] = SmaliTypes.SixtyFourBit()
         self.ans[self.rd + 1] = SmaliTypes.SixtyFourBit_2()
 
-class AGET_OBJECT(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION):
+class AGET_OBJECT(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, Third_Reg_To_First_Reg):
     def opcode(self):
         return "aget-object"
         
@@ -1202,28 +1202,28 @@ class AGET_OBJECT(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION):
         # NonSpecificObjectReference as a very low specificity level
         self.ans[self.rd] = SmaliTypes.NonSpecificObjectReference()
 
-class AGET_BOOLEAN(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION):
+class AGET_BOOLEAN(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, Third_Reg_To_First_Reg):
     def opcode(self):
         return "aget-boolean"
         
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.Boolean()
 
-class AGET_BYTE(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION):
+class AGET_BYTE(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, Third_Reg_To_First_Reg):
     def opcode(self):
         return "aget-byte"
         
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.Byte()
 
-class AGET_CHAR(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION):
+class AGET_CHAR(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, Third_Reg_To_First_Reg):
     def opcode(self):
         return "aget-char"
         
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.Char()
 
-class AGET_SHORT(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION):
+class AGET_SHORT(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, Third_Reg_To_First_Reg):
     def opcode(self):
         return "aget-short"
         
