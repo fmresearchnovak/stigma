@@ -77,17 +77,25 @@ class SmaliCodeBase():
         '''
 
         SCDs = []
+
         for path in list_of_paths:
-            scd = SmaliClassDef.SmaliClassDef(path)
+            try:
+                scd = SmaliClassDef.SmaliClassDef(path)
 
-            scd.internal_class_names = self.class_names
+                scd.internal_class_names = self.class_names
+                # analytics stuff
+                self.comparison_instruction_count = self.comparison_instruction_count + scd.get_num_comparison_instructions()
+                for every_method in scd.methods:
+                    self.not_enough_registers_count += every_method.not_enough_free_registers_count
 
-            # analytics stuff
-            self.comparison_instruction_count = self.comparison_instruction_count + scd.get_num_comparison_instructions()
-            for every_method in scd.methods:
-                self.not_enough_registers_count += every_method.not_enough_free_registers_count
+                SCDs.append(scd)
 
-            SCDs.append(scd)
+            except Exception as e:
+                print("Error loading smali class from path: " + path)
+                print("Error message: " + str(e))
+                raise e
+
+
 
 
         return SCDs
