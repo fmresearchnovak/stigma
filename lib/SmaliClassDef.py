@@ -186,7 +186,7 @@ class SmaliClassDef:
         if not self.is_function(line):
             return False
         
-        if( isinstance(line, SmaliAssemblyInstructions._MethodCallInstruction) ):
+        if( isinstance(line, SmaliAssemblyInstructions._METHOD_CALL_INSTRUCTION) ):
             return line.get_fully_qualified_call() in self.methods
         
         func_name = line.split(" ")[-1]
@@ -439,6 +439,31 @@ class SmaliClassDef:
             return self.get_fully_qualified_name() == other
         
         return False
+
+
+    def get_method_by_fully_qualified_name(self, name):
+        '''Returns a SmaliMethodDef object matching the given fully qualified name (a string)
+        Parameters:
+            name: A fully qualified name of a method (e.g., "Ledu/fandm/enovak/leaks/Main;->foo(Landroid/os/Bundle;)V"), a string
+        Returns:
+            A SmaliMethodDef object matching the given name or None if no such method is found.
+        '''
+        #TODO: make this faster by checking the class in the given name first
+        for m in self.methods:
+            if (m == name):
+                return m
+
+
+    def get_method_by_name(self, name):
+        '''Returns a SmaliMethodDef object matching the given base name (a string)
+        Parameters:
+            name: The basic name of a method (e.g., "foo"), a string
+        Returns:
+            A SmaliMethodDef object matching the given name or None if no such method is not found.
+        '''
+        for m in self.methods:
+            if(m.get_name() == name):
+                return m
     
 
     def contains_method(self, method):
@@ -647,6 +672,14 @@ def tests():
     assert(field_not_present not in SCD)
     assert(smd_present.signature in SCD)
     assert(smd_not_present.signature not in SCD)
+
+
+    print("\tget method functions...")
+    fqmn = "Ledu/fandm/enovak/MockClass;->OtherMethod(I)I"
+    mn = "OtherMethod"
+    assert(SCD2.get_method_by_fully_qualified_name(fqmn) == SCD2.methods[1])
+    assert(SCD2.get_method_by_name(mn) == SCD2.methods[1])
+    assert(SCD2.get_method_by_name("foo") == None)
 
 
 
