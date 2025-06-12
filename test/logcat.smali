@@ -1,5 +1,15 @@
-const-string vA, "STIGMA"
+.class Ledu/fandm/enovak/leakPasswdClass;
 
-const-string vB, "Ed Novak"
+# methods
+.method public LogIt()V
+    .locals 2
 
-invoke-static {vA, vB}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+    const-string v0, "STIGMA"
+
+    const-string v1, "Ed Novak"
+
+    invoke-static {v0, v1}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+
+    return-void
+
+.end method
