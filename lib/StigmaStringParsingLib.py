@@ -1,6 +1,6 @@
 import re
 
-import ValidSmaliInstructions
+from lib import ValidSmaliInstructions
 
 
 BEGINS_WITH_DOT = r"^\s*\."  # oat "assembler" directives begin with a .dot

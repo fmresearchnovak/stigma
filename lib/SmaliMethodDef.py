@@ -2,14 +2,14 @@ import re
 import sys
 import os
 
-import SmaliTypes
-import SmaliAssemblyInstructions as smali
-import StigmaStringParsingLib
+from lib import SmaliTypes
+from lib import SmaliAssemblyInstructions as smali
+from lib import StigmaStringParsingLib
 
-from SmaliRegister import SmaliRegister
-from TypeSafetyChecker import TypeSafetyChecker
-from SafeRegisterCollection import SafeRegisterCollection
-from SmaliCodeIterator import SmaliCodeIterator
+from lib.SmaliRegister import SmaliRegister
+from lib.TypeSafetyChecker import TypeSafetyChecker
+from lib.SafeRegisterCollection import SafeRegisterCollection
+from lib.SmaliCodeIterator import SmaliCodeIterator
 
 import inspect
 

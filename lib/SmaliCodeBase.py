@@ -3,7 +3,7 @@ import glob
 import os
 
 
-import SmaliClassDef
+from lib import SmaliClassDef
 
 
 

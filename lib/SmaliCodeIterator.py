@@ -1,8 +1,8 @@
 import re
 
-import StigmaStringParsingLib
+from lib import StigmaStringParsingLib
 
-from SmaliRegister import SmaliRegister
+from lib.SmaliRegister import SmaliRegister
 
 
 class SmaliCodeIterator():

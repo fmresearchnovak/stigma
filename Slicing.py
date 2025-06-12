@@ -7,16 +7,17 @@ import os
 
 # SOMETHING TO REMEMBER: IMPLICIT REGISTERS GETTING OVERWRITTEN BY THEMSELVES
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-other_dir = os.path.join(current_dir, 'lib')
-sys.path.insert(0, other_dir)
+#current_dir = os.path.dirname(os.path.abspath(__file__))
+#other_dir = os.path.join(current_dir, 'lib')
+#sys.path.insert(0, other_dir)
+# rewrite using __init___.py
 
-import SmaliRegister
-import SmaliClassDef
-import SmaliAssemblyInstructions
-import StigmaStringParsingLib
-import SmaliCodeIterator
-import SmaliCodeBase
+from lib import SmaliRegister
+from lib import SmaliClassDef
+from lib import SmaliAssemblyInstructions
+from lib import StigmaStringParsingLib
+from lib import SmaliCodeIterator
+from lib import SmaliCodeBase
 import StigmaState
 
 class TracingManager:
@@ -50,6 +51,7 @@ class TracingManager:
         # TO DO: STORE LITERALS
         self.locations_with_partial_tracked_data = []
 
+    # add edge object? add graph object?
     def add_edge(self, location, destination, line_number):
         if location in self.edges:
             duplicate = False
@@ -197,6 +199,7 @@ def test_instance(instruction, location, tracingManager):
     #print("ACTION = " + str(full_action))
     
     match full_action[0]:
+    # change to enum
         case "ADD":
             print("ADDING NEW LOCATION " + str(full_action[1]))
             tracingManager.add_location(str(full_action[1]))
@@ -265,7 +268,7 @@ def grep_instances(variable, tracingManager):
     return uses_list
 
 def write_html_file(html_graph):
-    inFile = open("example-graphs.html", "r")
+    inFile = open("templates/example-graphs.html", "r")
     outFile = open("tracing-graph.html", "w")
 
     lines = inFile.readlines()
