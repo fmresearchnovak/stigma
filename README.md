@@ -58,7 +58,7 @@ Running the example plugin on the popular app [F-Droid](https://f-droid.org/) (*
 `Success`  
 `$ adb logcat | grep --line-buffered STIGMA`  
 *Launch the App on the Device*  
-<img src="exemplary_use.png" width=100%>
+<img src="doc/exemplary_use.png" width=100%>
 
 Done!
 ---
