@@ -13,10 +13,6 @@ from lib.SmaliCodeIterator import SmaliCodeIterator
 
 import inspect
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-other_dir = os.path.join(current_dir, "..")
-sys.path.insert(0, other_dir)
-
 import Instrumenter
 from ControlFlowGraph import ControlFlowGraph
 		

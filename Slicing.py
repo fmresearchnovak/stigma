@@ -74,7 +74,7 @@ class TracingManager:
             self.locations_to_check.append(location)
             return
         
-        raise Exception("Cannot add duplicate location: " + str(location))
+        #raise Exception("Cannot add duplicate location: " + str(location))
 
     def remove_location(self, location):
         if location in self.locations_to_check:

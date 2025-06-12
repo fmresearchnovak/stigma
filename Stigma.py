@@ -8,17 +8,13 @@ import xml
 import argparse
 import tempfile
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-other_dir = os.path.join(current_dir, 'lib')
-sys.path.insert(0, other_dir)
-
 from lib import SmaliClassDef
 import Instrumenter
 import TaintStorageHandler
-import SmaliTypes
+from lib import SmaliTypes
 import Instrumenter
 import StigmaState
-import SmaliCodeBase
+from lib import SmaliCodeBase
 
 
 

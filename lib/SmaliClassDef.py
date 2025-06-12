@@ -11,7 +11,7 @@ from lib import SmaliAssemblyInstructions
 #other_dir = os.path.join(current_dir, "..", 'stigma')
 #sys.path.insert(0, other_dir)
 
-from .. import Instrumenter
+import Instrumenter
 
 
 class SmaliClassDef:
