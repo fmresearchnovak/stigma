@@ -7,18 +7,23 @@ import os
 
 # SOMETHING TO REMEMBER: IMPLICIT REGISTERS GETTING OVERWRITTEN BY THEMSELVES
 
-#current_dir = os.path.dirname(os.path.abspath(__file__))
-#other_dir = os.path.join(current_dir, 'lib')
-#sys.path.insert(0, other_dir)
-# rewrite using __init___.py
-
 from lib import SmaliRegister
 from lib import SmaliClassDef
 from lib import SmaliAssemblyInstructions
 from lib import StigmaStringParsingLib
 from lib import SmaliCodeIterator
 from lib import SmaliCodeBase
+from lib.SmaliMethodDef import SmaliMethodSignature
 import StigmaState
+
+class Action(Enum):
+    ADD = 1
+    REMOVE = 2
+    PART_OF_DATA_IN = 3
+    CAN_GET_DATA_FROM = 4
+    JUMP = 5
+    RETURN = 6
+    RESULT = 7
 
 class TracingManager:
 
@@ -118,12 +123,13 @@ def get_function_name(filename, line_number, lines):
     method_signature_str = lines[line_number].replace("\n", "")
     return method_signature_str
 
-def find_smali_method_def_obj(method_signature_str, smali_class):
+def find_smali_method_def_obj(method_signature_str, smali_class, file_path):
     method_index = 0
     #figure out how to use curr_Method.get_name
     curr_method = smali_class.methods[method_index]
+    signature = SmaliMethodSignature(method_signature_str, "Lorg/telegram/messenger/SendMessagesHelper;")
 
-    while(str(curr_method).split("->")[1] != method_signature_str.split(" ")[2]):
+    while(curr_method != signature):
         method_index += 1
         curr_method = smali_class.methods[method_index]
 
@@ -134,8 +140,6 @@ def grep_test(target, path):
     cmd = ["grep", target, "-r", path]
     grep_result = subprocess.run(cmd, stdout = subprocess.PIPE)
     uses_list = str(grep_result.stdout)[2:].split("\\n")
-    for use in uses_list:
-        print(use)
 
 def format_for_html_graph(item):
     # key = split by "->", take the second half, then split the first half by "/" and get the last index, then combine first half and second half
@@ -219,15 +223,15 @@ def test_instance(instruction, location, tracingManager):
         case "REMOVE":
             if not first:
                 print("REMOVING LOCATION " + str(full_action[1]))
-                #tracingManager.remove_location(full_action[1])
+                tracingManager.remove_location(full_action[1])
             else:
                 print("FIRST LINE, DON'T REMOVE")
         case "PART OF DATA IN":
             tracingManager.locations_with_partial_tracked_data.append([str(full_action[1]), str(full_action[1]), str(type(instruction))])
-            print(tracingManager.locations_with_partial_tracked_data)
+            #print(tracingManager.locations_with_partial_tracked_data)
         case "CAN GET DATA FROM":
             tracingManager.locations_with_partial_tracked_data.append([str(full_action[1]), str(full_action[3]), str(type(instruction))])
-            print(tracingManager.locations_with_partial_tracked_data)
+            #print(tracingManager.locations_with_partial_tracked_data)
         case "JUMP":
             pass
         case "RETURN":
@@ -353,8 +357,8 @@ def forward_tracing(filename, target_line_number, target_location, tracingManage
 
     target_line_number -= 1
     method_signature_str = get_function_name(file_path, target_line_number, lines)
-    smali_method_def_obj = find_smali_method_def_obj(method_signature_str, smali_class)
-    #full_text = SmaliCodeIterator.SmaliCodeIterator(smali_method_def_obj.raw_text)
+    smali_method_def_obj = find_smali_method_def_obj(method_signature_str, smali_class, file_path)
+    print(smali_method_def_obj)
 
     # STEP 4: Find the text of the target line
     tracingManager.target_line = lines[target_line_number].replace("\n", "")
@@ -400,9 +404,6 @@ def main():
 
     args = parser.parse_args()
     apk_path = findAPK(args.APK)
-
-    #temp_APK = StigmaState.Environment().get_temp_file()
-    #tmp_file_name = StigmaState.Environment().get_temp_file().name
 
     tracingManager = TracingManager()
 
