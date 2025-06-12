@@ -1,6 +1,6 @@
 
-import SmaliAssemblyInstructions
-import SmaliClassDef
+from lib import SmaliAssemblyInstructions
+from lib import SmaliClassDef
 
 
 

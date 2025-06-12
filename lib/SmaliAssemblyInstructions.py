@@ -36,10 +36,10 @@
 # _TWO_REGISTER_BINARY_INSTRUCTION
 # _TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION
 
-import StigmaStringParsingLib
-import SmaliTypes
+from lib import StigmaStringParsingLib
+from lib import SmaliTypes
 
-from SmaliRegister import SmaliRegister
+from lib.SmaliRegister import SmaliRegister
 
 
 def from_line(raw_line_string):

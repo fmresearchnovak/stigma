@@ -1,8 +1,8 @@
 
-import StigmaStringParsingLib
+from lib import StigmaStringParsingLib
 
-from SmaliRegister import SmaliRegister
-from SmaliCodeIterator import SmaliCodeIterator
+from lib.SmaliRegister import SmaliRegister
+from lib.SmaliCodeIterator import SmaliCodeIterator
 
 
 

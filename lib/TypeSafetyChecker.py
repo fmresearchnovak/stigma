@@ -6,11 +6,11 @@ hashmap -> key: string (register name)
         -> value: string, (type stored in the register)(32bit-64bit-object)
 '''
 
-import StigmaStringParsingLib 
-import SmaliAssemblyInstructions as smali
-import SmaliTypes
+from lib import StigmaStringParsingLib 
+from lib import SmaliAssemblyInstructions as smali
+from lib import SmaliTypes
 
-from SmaliRegister import SmaliRegister
+from lib.SmaliRegister import SmaliRegister
 
 import re
 
