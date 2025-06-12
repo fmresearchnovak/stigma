@@ -12,7 +12,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 other_dir = os.path.join(current_dir, 'lib')
 sys.path.insert(0, other_dir)
 
-import SmaliClassDef
+from lib import SmaliClassDef
 import Instrumenter
 import TaintStorageHandler
 import SmaliTypes

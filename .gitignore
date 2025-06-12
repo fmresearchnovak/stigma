@@ -17,6 +17,9 @@ __pycache__/
 SendMessagesHelper.smali
 #*.smali
 
+# Graph output
+tracing-graph.html
+
 # Distribution / packaging
 .Python
 build/

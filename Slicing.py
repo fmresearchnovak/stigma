@@ -54,6 +54,7 @@ class TracingManager:
         if location in self.edges:
             duplicate = False
             for pair in self.edges[location]:
+                print(pair[0])
                 if pair[0] == destination:
                     duplicate = True
                     break
@@ -69,10 +70,16 @@ class TracingManager:
     def add_location(self, location):
         if location not in self.locations_to_check:
             self.locations_to_check.append(location)
+            return
+        
+        raise Exception("Cannot add duplicate location: " + str(location))
 
     def remove_location(self, location):
         if location in self.locations_to_check:
             self.locations_to_check.remove(location)
+            return
+
+        raise Exception("Cannot remove location: " + str(location) + " it is not currently being tracked.")
 
     def get_locations(self):
         return self.locations_to_check
@@ -96,7 +103,7 @@ class TracingManager:
 
 def findAPK(apk):
     if (not os.path.exists(apk)):
-        print("Input file (" + apk + ") was not found or was not readable.")
+        print("ERROR: Could not find APK file.")
         exit(1)
     return apk
 
@@ -111,9 +118,10 @@ def get_function_name(filename, line_number, lines):
 
 def find_smali_method_def_obj(method_signature_str, smali_class):
     method_index = 0
+    #figure out how to use curr_Method.get_name
     curr_method = smali_class.methods[method_index]
 
-    while(str(curr_method) != method_signature_str):
+    while(str(curr_method).split("->")[1] != method_signature_str.split(" ")[2]):
         method_index += 1
         curr_method = smali_class.methods[method_index]
 
@@ -127,43 +135,57 @@ def grep_test(target, path):
     for use in uses_list:
         print(use)
 
+def format_for_html_graph(item):
+    # key = split by "->", take the second half, then split the first half by "/" and get the last index, then combine first half and second half
+    if item[0] == "L":
+        new_item = ""
+        if "->" in item:
+            split_by_arrow = item.split("->")
+            first = split_by_arrow[0]
+            second = split_by_arrow[1]
+        split = first.split("/")
+        new_item = split[len(split) - 1] + "-"
+        new_item += second
+        new_item = new_item.replace(";", "").replace("[", "arrayof:")
+        return new_item
+    else:
+        return item
+
 def generate_directed_graph(graph):
+    html_graph = ""
+
     first = True
-    print(graph)
+    #print(graph)
+    
     for key in graph:
         for index in range(0, len(graph[key])):
+            #print(key)
             value = graph[key][index][0]
             number = graph[key][index][1]
 
-            if key[0] == "L":
-                if "->" in key:
-                    key = key.split("->")[0]
-                split = key.split("/")
-                key = split[len(split) - 1].replace(";", "")
-            if value[0] == "L":
-                if "->" in value:
-                    value = value.split("->")[0]
-                split = value.split("/")
-                value = split[len(split) - 1].replace(";", "")
+            new_key = format_for_html_graph(key)
+            new_value = format_for_html_graph(value)
 
             entry = ""
 
             if first == True:
-                entry += str(key) + "[" + str(key) + "]"
+                entry += str(new_key) + "[" + str(new_key) + "]"
                 first = False
             else:
-                entry += str(key)
+                entry += str(new_key)
             
             entry += " --> "
 
             if value in graph and len(graph[value]) > 1:
-                entry += str(value) + "{" + str(value) + "};"
+                entry += str(new_value) + "{" + str(new_value) + "};"
             else:
-                entry += str(value) + "[" + str(value) + "];"
+                entry += str(new_value) + "[" + str(new_value) + "];"
             
-            entry += " <!-- Line number: " + str(number) + " -->"
+            #entry += " <!-- Line number: " + str(number) + " -->"
 
-            print(entry)
+            html_graph += entry + "\n"
+    
+    return html_graph
 
 def test_instance(instruction, location, tracingManager):
     first = False
@@ -241,6 +263,19 @@ def grep_instances(variable, tracingManager):
     uses_list = str(grep_result.stdout)[2:].split("\\n")
     uses_list.pop()
     return uses_list
+
+def write_html_file(html_graph):
+    inFile = open("example-graphs.html", "r")
+    outFile = open("tracing-graph.html", "w")
+
+    lines = inFile.readlines()
+    for line in lines:
+        outFile.write(line)
+        if line == "graph LR\n":
+            outFile.write(html_graph)
+
+    inFile.close()
+    outFile.close()
 
 def analyze_line(filename, line, tracingManager):
     tracingManager.current_line_number += 1
@@ -320,6 +355,9 @@ def forward_tracing(filename, target_line_number, target_location, tracingManage
 
     # STEP 4: Find the text of the target line
     tracingManager.target_line = lines[target_line_number].replace("\n", "")
+    if target_location not in tracingManager.target_line:
+        print("ERROR: Target register not found at the given line number.")
+        exit(1)
     target_line_found = False
 
     tracingManager.current_line_number = target_line_number
@@ -338,13 +376,18 @@ def forward_tracing(filename, target_line_number, target_location, tracingManage
         if target_line_found:
             analyze_line(filename, line, tracingManager)
 
-    generate_directed_graph(tracingManager.edges)
+    html_graph = generate_directed_graph(tracingManager.edges)
+    write_html_file(html_graph)
 
     # STEP 8: Choose the next file to open, and add the first value to the locations to check, and find line number
     return next_iteration(tracingManager)
 
 def main():
     # ARGPARSE FORMAT
+    if len(sys.argv) != 5:
+        print("ERROR: Five arguments required.")
+        exit(1)
+    
     parser = argparse.ArgumentParser(description = "Given a line of code and a register to track, traces the contents of the register throughout the process.")
 
     parser.add_argument("APK", help="The path to the APK file that the target file is located in.")
@@ -374,7 +417,15 @@ def main():
 
     # getting the smali files
     tracingManager.smali_files = SmaliCodeBase.SmaliCodeBase.findSmaliFiles(tracingManager.tmp_file_name)
-    #print(app_smali_files)
+ 
+    if find_path(tracingManager.tmp_file_name, args.filename) not in tracingManager.smali_files:
+        print("ERROR: Smali file not found in APK.")
+        exit(1)
+
+    if (args.register[0] != "v" and args.register[0] != "p") or not args.register[1:].isdigit():
+        print("ERROR: Register input is not a valid register.")
+        exit(1)
+
         
     forward_tracing(args.filename, int(args.line_number), args.register, tracingManager)
 

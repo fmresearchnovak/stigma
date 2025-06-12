@@ -281,7 +281,7 @@ class _IMPLICIT_REGISTER_INSTRUCTION():
             ans.append(implicit_reg)
         return ans
         
-class _ImplicitFirstRegisterInstruction():
+class _IMPLICIT_FIRST_REGISTER_INSTRUCTION():
     # the first register (and only that register)
     # specifies a "wide" type such as Long or Double
     def get_implicit_registers(self):
@@ -289,7 +289,7 @@ class _ImplicitFirstRegisterInstruction():
         return [regs[0] + 1]
         
 
-class _MethodCallInstruction():
+class _METHOD_CALL_INSTRUCTION():
     
     def get_fully_qualified_call(self):
         return self.types_spec
@@ -1155,7 +1155,7 @@ class IF_LEZ(_ONE_REG_EQ_ZERO):
         return "if-lez"     
 
         
-class _Array_Parameters_Type_Pattern():
+class _ARRAY_PARAMETERS_TYPE_PATTERN():
     def get_register_type_implications(self):
         # aget vX, vY, vZ
         # vX dest (or src for aput-* instructions)
@@ -1174,14 +1174,14 @@ class _Array_Parameters_Type_Pattern():
         return self.ans
         
         
-class AGET(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION):
+class AGET(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, Third_Reg_To_First_Reg):
     def opcode(self):
         return "aget"
         
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.ThirtyTwoBit()
 
-class AGET_WIDE(_Array_Parameters_Type_Pattern, _ImplicitFirstRegisterInstruction, _TRIPLE_REGISTER_INSTRUCTION):
+class AGET_WIDE(_ARRAY_PARAMETERS_TYPE_PATTERN, _IMPLICIT_FIRST_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, Third_Reg_To_First_Reg):
     def opcode(self):
         return "aget-wide"
         
@@ -1189,7 +1189,7 @@ class AGET_WIDE(_Array_Parameters_Type_Pattern, _ImplicitFirstRegisterInstructio
         self.ans[self.rd] = SmaliTypes.SixtyFourBit()
         self.ans[self.rd + 1] = SmaliTypes.SixtyFourBit_2()
 
-class AGET_OBJECT(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION):
+class AGET_OBJECT(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, Third_Reg_To_First_Reg):
     def opcode(self):
         return "aget-object"
         
@@ -1202,28 +1202,28 @@ class AGET_OBJECT(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION):
         # NonSpecificObjectReference as a very low specificity level
         self.ans[self.rd] = SmaliTypes.NonSpecificObjectReference()
 
-class AGET_BOOLEAN(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION):
+class AGET_BOOLEAN(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, Third_Reg_To_First_Reg):
     def opcode(self):
         return "aget-boolean"
         
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.Boolean()
 
-class AGET_BYTE(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION):
+class AGET_BYTE(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, Third_Reg_To_First_Reg):
     def opcode(self):
         return "aget-byte"
         
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.Byte()
 
-class AGET_CHAR(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION):
+class AGET_CHAR(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, Third_Reg_To_First_Reg):
     def opcode(self):
         return "aget-char"
         
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.Char()
 
-class AGET_SHORT(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION):
+class AGET_SHORT(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, Third_Reg_To_First_Reg):
     def opcode(self):
         return "aget-short"
         
@@ -1231,7 +1231,7 @@ class AGET_SHORT(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION):
         self.ans[self.rd] = SmaliTypes.Short()
 
 
-class APUT(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_To_Third_Reg):
+class APUT(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_To_Third_Reg):
     # aput vX, vY, vZ
     # vX is a value to be put into the array
     # vY is an array reference
@@ -1242,7 +1242,7 @@ class APUT(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION, First_R
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.Int()
 
-class APUT_WIDE(_Array_Parameters_Type_Pattern, _ImplicitFirstRegisterInstruction, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_To_Third_Reg):
+class APUT_WIDE(_ARRAY_PARAMETERS_TYPE_PATTERN, _IMPLICIT_FIRST_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_To_Third_Reg):
     def opcode(self):
         return "aput-wide"
         
@@ -1250,35 +1250,35 @@ class APUT_WIDE(_Array_Parameters_Type_Pattern, _ImplicitFirstRegisterInstructio
         self.ans[self.rd] = SmaliTypes.SixtyFourBit()
         self.ans[self.rd + 1] = SmaliTypes.SixtyFourBit_2()
 
-class APUT_OBJECT(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_To_Third_Reg):
+class APUT_OBJECT(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_To_Third_Reg):
     def opcode(self):
         return "aput-object"
 
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.NonSpecificObjectReference()
 
-class APUT_BOOLEAN(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_To_Third_Reg):
+class APUT_BOOLEAN(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_To_Third_Reg):
     def opcode(self):
         return "aput-boolean"
         
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.Boolean()
 
-class APUT_BYTE(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_To_Third_Reg):
+class APUT_BYTE(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_To_Third_Reg):
     def opcode(self):
         return "aput-byte"
 
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.Byte()
 
-class APUT_CHAR(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_To_Third_Reg):
+class APUT_CHAR(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_To_Third_Reg):
     def opcode(self):
         return "aput-char"
 
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.Char()
 
-class APUT_SHORT(_Array_Parameters_Type_Pattern, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_To_Third_Reg):
+class APUT_SHORT(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_To_Third_Reg):
     def opcode(self):
         return "aput-short"
         
@@ -1335,7 +1335,7 @@ class IGET(_I_INSTRUCTION, Third_Var_To_First_Reg):
         return "iget"
 
         
-class IGET_WIDE(_ImplicitFirstRegisterInstruction, _I_INSTRUCTION, Third_Var_To_First_Reg):
+class IGET_WIDE(_IMPLICIT_FIRST_REGISTER_INSTRUCTION, _I_INSTRUCTION, Third_Var_To_First_Reg):
     def opcode(self):
         return "iget-wide"
         
@@ -1369,7 +1369,7 @@ class IPUT(_I_INSTRUCTION, First_Reg_To_Third_Var):
     def opcode(self):
         return "iput"
 
-class IPUT_WIDE(_ImplicitFirstRegisterInstruction, _I_INSTRUCTION, First_Reg_To_Third_Var):
+class IPUT_WIDE(_IMPLICIT_FIRST_REGISTER_INSTRUCTION, _I_INSTRUCTION, First_Reg_To_Third_Var):
     def opcode(self):
         return "iput-wide"
         
@@ -1505,48 +1505,48 @@ class SPUT_SHORT(_S_INSTRUCTION, First_Reg_To_Third_Var):
         return "sput-short"
         
 
-class INVOKE_VIRTUAL(_MethodCallInstruction, _PARAMETER_LIST_INSTRUCTION, Invoke_Instruction):
+class INVOKE_VIRTUAL(_METHOD_CALL_INSTRUCTION, _PARAMETER_LIST_INSTRUCTION, Invoke_Instruction):
     # I was too lazy to implement the get_register_type_implications
     # function for the below instructions
     # It could be done with the SmaliSignature class from SmaliMethodDef.py
     def opcode(self):
         return "invoke-virtual"
 
-class INVOKE_SUPER(_MethodCallInstruction, _PARAMETER_LIST_INSTRUCTION, Invoke_Instruction):
+class INVOKE_SUPER(_METHOD_CALL_INSTRUCTION, _PARAMETER_LIST_INSTRUCTION, Invoke_Instruction):
     def opcode(self):
         return "invoke-super"
 
-class INVOKE_DIRECT(_MethodCallInstruction, _PARAMETER_LIST_INSTRUCTION, Invoke_Instruction):
+class INVOKE_DIRECT(_METHOD_CALL_INSTRUCTION, _PARAMETER_LIST_INSTRUCTION, Invoke_Instruction):
     def opcode(self):
         return "invoke-direct"
 
-class INVOKE_STATIC(_MethodCallInstruction, _PARAMETER_LIST_INSTRUCTION, Invoke_Instruction):
+class INVOKE_STATIC(_METHOD_CALL_INSTRUCTION, _PARAMETER_LIST_INSTRUCTION, Invoke_Instruction):
     # e.g., invoke-static {v2}, Lcom/google/ads/interactivemedia/pal/NonceLoader;->zza(Ljava/lang/String;)Ljava/lang/String;
     def opcode(self):
         return "invoke-static"
 
-class INVOKE_INTERFACE(_MethodCallInstruction, _PARAMETER_LIST_INSTRUCTION, Invoke_Instruction):
+class INVOKE_INTERFACE(_METHOD_CALL_INSTRUCTION, _PARAMETER_LIST_INSTRUCTION, Invoke_Instruction):
     # e.g., invoke-interface {v0}, Ljava/util/concurrent/locks/Lock;->lock()V
     def opcode(self):
         return "invoke-interface"
 
-class INVOKE_VIRTUAL_RANGE(_MethodCallInstruction, _PARAMETER_RANGE_INSTRUCTION, Invoke_Instruction):
+class INVOKE_VIRTUAL_RANGE(_METHOD_CALL_INSTRUCTION, _PARAMETER_RANGE_INSTRUCTION, Invoke_Instruction):
     def opcode(self):
         return "invoke-virtual/range"
 
-class INVOKE_SUPER_RANGE(_MethodCallInstruction, _PARAMETER_RANGE_INSTRUCTION, Invoke_Instruction):
+class INVOKE_SUPER_RANGE(_METHOD_CALL_INSTRUCTION, _PARAMETER_RANGE_INSTRUCTION, Invoke_Instruction):
     def opcode(self):
         return "invoke-virtual/range"
 
-class INVOKE_DIRECT_RANGE(_MethodCallInstruction, _PARAMETER_RANGE_INSTRUCTION, Invoke_Instruction):
+class INVOKE_DIRECT_RANGE(_METHOD_CALL_INSTRUCTION, _PARAMETER_RANGE_INSTRUCTION, Invoke_Instruction):
     def opcode(self):
         return "invoke-direct/range"
 
-class INVOKE_STATIC_RANGE(_MethodCallInstruction, _PARAMETER_RANGE_INSTRUCTION, Invoke_Instruction):
+class INVOKE_STATIC_RANGE(_METHOD_CALL_INSTRUCTION, _PARAMETER_RANGE_INSTRUCTION, Invoke_Instruction):
     def opcode(self):
         return "invoke-static/range"
 
-class INVOKE_INTERFACE_RANGE(_MethodCallInstruction, _PARAMETER_RANGE_INSTRUCTION, Invoke_Instruction):
+class INVOKE_INTERFACE_RANGE(_METHOD_CALL_INSTRUCTION, _PARAMETER_RANGE_INSTRUCTION, Invoke_Instruction):
     def opcode(self):
         return "invoke-interface/range"
 
@@ -1589,7 +1589,7 @@ class NEG_DOUBLE(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TWO_REGIST
     def opcode(self):
         return "neg-double"
 
-class INT_TO_LONG(_ImplicitFirstRegisterInstruction, _TWO_REGISTER_UNARY_INSTRUCTION):
+class INT_TO_LONG(_IMPLICIT_FIRST_REGISTER_INSTRUCTION, _TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "int-to-long"
         
@@ -1605,7 +1605,7 @@ class INT_TO_FLOAT(_ThirtyTwoBit_Parameters, _TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "int-to-float"
 
-class INT_TO_DOUBLE(_ImplicitFirstRegisterInstruction, _TWO_REGISTER_UNARY_INSTRUCTION):
+class INT_TO_DOUBLE(_IMPLICIT_FIRST_REGISTER_INSTRUCTION, _TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "int-to-double"
         
@@ -1652,7 +1652,7 @@ class FLOAT_TO_INT(_ThirtyTwoBit_Parameters, _TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "float-to-int"
 
-class FLOAT_TO_LONG(_ImplicitFirstRegisterInstruction, _TWO_REGISTER_UNARY_INSTRUCTION):
+class FLOAT_TO_LONG(_IMPLICIT_FIRST_REGISTER_INSTRUCTION, _TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "float-to-long"
         
@@ -1662,7 +1662,7 @@ class FLOAT_TO_LONG(_ImplicitFirstRegisterInstruction, _TWO_REGISTER_UNARY_INSTR
         ans[adj_reg] = SmaliTypes.Long_2()
         return ans
 
-class FLOAT_TO_DOUBLE(_ImplicitFirstRegisterInstruction, _TWO_REGISTER_UNARY_INSTRUCTION):
+class FLOAT_TO_DOUBLE(_IMPLICIT_FIRST_REGISTER_INSTRUCTION, _TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "float-to-double"
         
@@ -2122,7 +2122,7 @@ class IGET_QUICK(_I_INSTRUCTION_QUICK, Third_Var_To_First_Reg):
     def opcode(self):
         return "iget-quick"
 
-class IGET_WIDE_QUICK(_SixtyFourBit_Dest, _ImplicitFirstRegisterInstruction, _I_INSTRUCTION_QUICK, Third_Var_To_First_Reg):
+class IGET_WIDE_QUICK(_SixtyFourBit_Dest, _IMPLICIT_FIRST_REGISTER_INSTRUCTION, _I_INSTRUCTION_QUICK, Third_Var_To_First_Reg):
     def opcode(self):
         return "iget-wide-quick"
         
@@ -2134,7 +2134,7 @@ class IPUT_QUICK(_I_INSTRUCTION_QUICK, First_Reg_To_Third_Var):
     def opcode(self):
         return "iput-quick"
         
-class IPUT_WIDE_QUICK(_SixtyFourBit_Dest, _ImplicitFirstRegisterInstruction, _I_INSTRUCTION_QUICK, First_Reg_To_Third_Var):
+class IPUT_WIDE_QUICK(_SixtyFourBit_Dest, _IMPLICIT_FIRST_REGISTER_INSTRUCTION, _I_INSTRUCTION_QUICK, First_Reg_To_Third_Var):
     def opcode(self):
         return "iput-wide-quick"
         
