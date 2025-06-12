@@ -8,12 +8,15 @@ pyfiles=("lib/SmaliAssemblyInstructions.py"
 "lib/SmaliMethodDef.py" 
 "lib/SmaliCodeIterator.py")
 
-echo $(realpath $pyfiles)
+
 # loop through the list of files and call pydoc on each one
 for pyfile in ${pyfiles[@]}; do
-    filename=$(realpath "$pyfile")
-    echo $filename
+    filename=$(realpath "$pyfile") # get absname just for completeness
+    
     pydoc3 -w "$filename"
+
     # move the generated HTML file to the docs directory
-    mv "$filename.html" "doc/"
+    HTMLfilename=$(basename $filename)
+    HTMLfilename="${HTMLfilename%.py}.html"
+    mv $HTMLfilename "doc/"
 done
