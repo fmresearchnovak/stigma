@@ -1,19 +1,14 @@
-
-
 import sys
 import subprocess
-import os
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-other_dir = os.path.join(current_dir, 'lib')
-sys.path.insert(0, other_dir)
+from lib import SmaliClassDef
+from lib import SmaliMethodDef
+from lib import TypeSafetyChecker
 
-import SmaliMethodDef
-import SmaliClassDef
 import ControlFlowGraph
-import TypeSafetyChecker
 import plugin.TaintTrackingInstrumentationPlugin as TaintTrackingInstrumentationPlugin
 import Instrumenter
+
 
 
 
@@ -787,15 +782,15 @@ def internal_tests():
 	
 	print("--Running Internal Tests--")
 	
-	src_code_with_internal_tests = ["lib/StigmaStringParsingLib.py", 
-		"lib/SmaliMethodDef.py", "lib/SmaliTypes.py", "lib/SafeRegisterCollection.py",
-		"lib/SmaliRegister.py", "lib/SmaliAssemblyInstructions.py",
-		"Instrumenter.py", "TaintStorageHandler.py", "lib/SmaliCodeIterator.py", "lib/SmaliClassDef.py", 
-		"lib/SmaliCodeBase.py"]
+	src_code_with_internal_tests = ["lib.StigmaStringParsingLib", 
+		"lib.SmaliMethodDef", "lib.SmaliTypes", "lib.SafeRegisterCollection",
+		"lib.SmaliRegister", "lib.SmaliAssemblyInstructions",
+		"Instrumenter", "TaintStorageHandler", "lib.SmaliCodeIterator", "lib.SmaliClassDef", 
+		"lib.SmaliCodeBase"]
 	
 	
 	for src in src_code_with_internal_tests:
-		cmd = ["python3", src]
+		cmd = ["python3", "-m", src]
 		finished_proc = subprocess.run(cmd)
 		finished_proc.check_returncode()
 		print()
