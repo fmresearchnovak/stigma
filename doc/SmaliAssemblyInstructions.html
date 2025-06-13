@@ -8,7 +8,7 @@
 <table class="heading">
 <tr class="heading-text decor">
 <td class="title">&nbsp;<br><strong class="title">SmaliAssemblyInstructions</strong></td>
-<td class="extra"><a href=".">index</a><br><a href="file:/home/ed/research/android_sec/stigma/lib/SmaliAssemblyInstructions.py">/home/ed/research/android_sec/stigma/lib/SmaliAssemblyInstructions.py</a></td></tr></table>
+<td class="extra"><a href=".">index</a><br><a href="file:/home/ed/stigma/lib/SmaliAssemblyInstructions.py">/home/ed/stigma/lib/SmaliAssemblyInstructions.py</a></td></tr></table>
     <p><span class="code">SmaliAssemblyInstructions.py<br>
 &nbsp;<br>
 This&nbsp;module&nbsp;contains&nbsp;many&nbsp;classes&nbsp;that&nbsp;represent&nbsp;various&nbsp;types&nbsp;of&nbsp;"Smali"&nbsp;/&nbsp;DEX&nbsp;instructions.<br>
@@ -109,7 +109,7 @@ here:&nbsp;<a href="http://pallergabor.uw.hu/androidblog/dalvik_opcodes.html">ht
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#REM_DOUBLE_2ADDR">REM_DOUBLE_2ADDR</a>(<a href="SmaliAssemblyInstructions.html#_SixtyFourBit_Dest">_SixtyFourBit_Dest</a>, <a href="SmaliAssemblyInstructions.html#_IMPLICIT_REGISTER_INSTRUCTION">_IMPLICIT_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_TWO_REGISTER_BINARY_INSTRUCTION">_TWO_REGISTER_BINARY_INSTRUCTION</a>)
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#REM_LONG">REM_LONG</a>(<a href="SmaliAssemblyInstructions.html#_SixtyFourBit_Dest">_SixtyFourBit_Dest</a>, <a href="SmaliAssemblyInstructions.html#_IMPLICIT_REGISTER_INSTRUCTION">_IMPLICIT_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_TRIPLE_REGISTER_INSTRUCTION">_TRIPLE_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Second_Reg_To_First_Reg_Arith">Second_Reg_To_First_Reg_Arith</a>)
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#REM_LONG_2ADDR">REM_LONG_2ADDR</a>(<a href="SmaliAssemblyInstructions.html#_SixtyFourBit_Dest">_SixtyFourBit_Dest</a>, <a href="SmaliAssemblyInstructions.html#_IMPLICIT_REGISTER_INSTRUCTION">_IMPLICIT_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_TWO_REGISTER_BINARY_INSTRUCTION">_TWO_REGISTER_BINARY_INSTRUCTION</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#RETURN_WIDE">RETURN_WIDE</a>(<a href="SmaliAssemblyInstructions.html#_SixtyFourBit_Dest">_SixtyFourBit_Dest</a>, <a href="SmaliAssemblyInstructions.html#_IMPLICIT_REGISTER_INSTRUCTION">_IMPLICIT_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#RETURN_WIDE">RETURN_WIDE</a>(<a href="SmaliAssemblyInstructions.html#_SixtyFourBit_Dest">_SixtyFourBit_Dest</a>, <a href="SmaliAssemblyInstructions.html#_IMPLICIT_REGISTER_INSTRUCTION">_IMPLICIT_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a>)
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#SGET_WIDE">SGET_WIDE</a>(<a href="SmaliAssemblyInstructions.html#_IMPLICIT_REGISTER_INSTRUCTION">_IMPLICIT_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_S_INSTRUCTION">_S_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Third_Var_To_First_Reg">Third_Var_To_First_Reg</a>)
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#SHL_LONG">SHL_LONG</a>(<a href="SmaliAssemblyInstructions.html#_SixtyFourBit_Dest">_SixtyFourBit_Dest</a>, <a href="SmaliAssemblyInstructions.html#_IMPLICIT_REGISTER_INSTRUCTION">_IMPLICIT_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_TRIPLE_REGISTER_INSTRUCTION">_TRIPLE_REGISTER_INSTRUCTION</a>)
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#SHL_LONG_2ADDR">SHL_LONG_2ADDR</a>(<a href="SmaliAssemblyInstructions.html#_SixtyFourBit_Dest">_SixtyFourBit_Dest</a>, <a href="SmaliAssemblyInstructions.html#_IMPLICIT_REGISTER_INSTRUCTION">_IMPLICIT_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_TWO_REGISTER_BINARY_INSTRUCTION">_TWO_REGISTER_BINARY_INSTRUCTION</a>)
@@ -124,6 +124,28 @@ here:&nbsp;<a href="http://pallergabor.uw.hu/androidblog/dalvik_opcodes.html">ht
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#USHR_LONG_2ADDR">USHR_LONG_2ADDR</a>(<a href="SmaliAssemblyInstructions.html#_SixtyFourBit_Dest">_SixtyFourBit_Dest</a>, <a href="SmaliAssemblyInstructions.html#_IMPLICIT_REGISTER_INSTRUCTION">_IMPLICIT_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_TWO_REGISTER_BINARY_INSTRUCTION">_TWO_REGISTER_BINARY_INSTRUCTION</a>)
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#XOR_LONG">XOR_LONG</a>(<a href="SmaliAssemblyInstructions.html#_SixtyFourBit_Dest">_SixtyFourBit_Dest</a>, <a href="SmaliAssemblyInstructions.html#_IMPLICIT_REGISTER_INSTRUCTION">_IMPLICIT_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_TRIPLE_REGISTER_INSTRUCTION">_TRIPLE_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Second_Reg_To_First_Reg_Arith">Second_Reg_To_First_Reg_Arith</a>)
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#XOR_LONG_2ADDR">XOR_LONG_2ADDR</a>(<a href="SmaliAssemblyInstructions.html#_SixtyFourBit_Dest">_SixtyFourBit_Dest</a>, <a href="SmaliAssemblyInstructions.html#_IMPLICIT_REGISTER_INSTRUCTION">_IMPLICIT_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_TWO_REGISTER_BINARY_INSTRUCTION">_TWO_REGISTER_BINARY_INSTRUCTION</a>)
+</dt></dl>
+</dd>
+<dt class="heading-text"><a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>(<a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>, <a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a>)
+</dt><dd>
+<dl>
+<dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_DIRECT">INVOKE_DIRECT</a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_DIRECT_RANGE">INVOKE_DIRECT_RANGE</a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_INTERFACE">INVOKE_INTERFACE</a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_INTERFACE_RANGE">INVOKE_INTERFACE_RANGE</a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_STATIC">INVOKE_STATIC</a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)
+</dt><dd>
+<dl>
+<dt class="heading-text"><a href="SmaliAssemblyInstructions.html#LOG_D">LOG_D</a>
+</dt></dl>
+</dd>
+<dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_STATIC_RANGE">INVOKE_STATIC_RANGE</a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_SUPER">INVOKE_SUPER</a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_SUPER_QUICK">INVOKE_SUPER_QUICK</a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_SUPER_RANGE">INVOKE_SUPER_RANGE</a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_VIRTUAL">INVOKE_VIRTUAL</a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_VIRTUAL_QUICK">INVOKE_VIRTUAL_QUICK</a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_VIRTUAL_RANGE">INVOKE_VIRTUAL_RANGE</a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)
 </dt></dl>
 </dd>
 <dt class="heading-text"><a href="SmaliAssemblyInstructions.html#_I_INSTRUCTION">_I_INSTRUCTION</a>(<a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>)
@@ -156,24 +178,12 @@ here:&nbsp;<a href="http://pallergabor.uw.hu/androidblog/dalvik_opcodes.html">ht
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#IPUT_WIDE_QUICK">IPUT_WIDE_QUICK</a>(<a href="SmaliAssemblyInstructions.html#_SixtyFourBit_Dest">_SixtyFourBit_Dest</a>, <a href="SmaliAssemblyInstructions.html#_IMPLICIT_FIRST_REGISTER_INSTRUCTION">_IMPLICIT_FIRST_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_I_INSTRUCTION_QUICK">_I_INSTRUCTION_QUICK</a>, <a href="SmaliAssemblyInstructions.html#First_Reg_To_Third_Var">First_Reg_To_Third_Var</a>)
 </dt></dl>
 </dd>
-<dt class="heading-text"><a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>(<a href="builtins.html#object">builtins.object</a>)
+<dt class="heading-text"><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a>(<a href="builtins.html#object">builtins.object</a>)
 </dt><dd>
 <dl>
-<dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_DIRECT">INVOKE_DIRECT</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_DIRECT_RANGE">INVOKE_DIRECT_RANGE</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_INTERFACE">INVOKE_INTERFACE</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_INTERFACE_RANGE">INVOKE_INTERFACE_RANGE</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_STATIC">INVOKE_STATIC</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dd>
-<dl>
-<dt class="heading-text"><a href="SmaliAssemblyInstructions.html#LOG_D">LOG_D</a>
-</dt></dl>
-</dd>
-<dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_STATIC_RANGE">INVOKE_STATIC_RANGE</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_SUPER">INVOKE_SUPER</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_SUPER_RANGE">INVOKE_SUPER_RANGE</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_VIRTUAL">INVOKE_VIRTUAL</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_VIRTUAL_RANGE">INVOKE_VIRTUAL_RANGE</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
+<dt class="heading-text"><a href="SmaliAssemblyInstructions.html#RETURN">RETURN</a>(<a href="SmaliAssemblyInstructions.html#_ThirtyTwoBit_Parameters">_ThirtyTwoBit_Parameters</a>, <a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#RETURN_OBJECT">RETURN_OBJECT</a>(<a href="SmaliAssemblyInstructions.html#_Object_Parameters">_Object_Parameters</a>, <a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#RETURN_WIDE">RETURN_WIDE</a>(<a href="SmaliAssemblyInstructions.html#_SixtyFourBit_Dest">_SixtyFourBit_Dest</a>, <a href="SmaliAssemblyInstructions.html#_IMPLICIT_REGISTER_INSTRUCTION">_IMPLICIT_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a>)
 </dt></dl>
 </dd>
 <dt class="heading-text"><a href="SmaliAssemblyInstructions.html#_ONE_REG_EQ_ZERO">_ONE_REG_EQ_ZERO</a>(<a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>, <a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_INSTRUCTION">_JUMP_TO_LABEL_INSTRUCTION</a>)
@@ -203,36 +213,36 @@ here:&nbsp;<a href="http://pallergabor.uw.hu/androidblog/dalvik_opcodes.html">ht
 </dt></dl>
 </dd>
 <dt class="heading-text"><a href="SmaliAssemblyInstructions.html#MOVE_RESULT_OBJECT">MOVE_RESULT_OBJECT</a>(<a href="SmaliAssemblyInstructions.html#_Object_Parameters">_Object_Parameters</a>, <a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#RETURN_OBJECT">RETURN_OBJECT</a>(<a href="SmaliAssemblyInstructions.html#_Object_Parameters">_Object_Parameters</a>, <a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#RETURN_OBJECT">RETURN_OBJECT</a>(<a href="SmaliAssemblyInstructions.html#_Object_Parameters">_Object_Parameters</a>, <a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a>)
 </dt></dl>
 </dd>
 <dt class="heading-text"><a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>(<a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>)
 </dt><dd>
 <dl>
 <dt class="heading-text"><a href="SmaliAssemblyInstructions.html#FILLED_NEW_ARRAY">FILLED_NEW_ARRAY</a>
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_DIRECT">INVOKE_DIRECT</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_INTERFACE">INVOKE_INTERFACE</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_STATIC">INVOKE_STATIC</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_DIRECT">INVOKE_DIRECT</a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_INTERFACE">INVOKE_INTERFACE</a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_STATIC">INVOKE_STATIC</a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)
 </dt><dd>
 <dl>
 <dt class="heading-text"><a href="SmaliAssemblyInstructions.html#LOG_D">LOG_D</a>
 </dt></dl>
 </dd>
-<dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_SUPER">INVOKE_SUPER</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_SUPER_QUICK">INVOKE_SUPER_QUICK</a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_VIRTUAL">INVOKE_VIRTUAL</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_VIRTUAL_QUICK">INVOKE_VIRTUAL_QUICK</a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
+<dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_SUPER">INVOKE_SUPER</a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_SUPER_QUICK">INVOKE_SUPER_QUICK</a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_VIRTUAL">INVOKE_VIRTUAL</a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_VIRTUAL_QUICK">INVOKE_VIRTUAL_QUICK</a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)
 </dt></dl>
 </dd>
 <dt class="heading-text"><a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>(<a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>)
 </dt><dd>
 <dl>
 <dt class="heading-text"><a href="SmaliAssemblyInstructions.html#FILLED_NEW_ARRAY_RANGE">FILLED_NEW_ARRAY_RANGE</a>
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_DIRECT_RANGE">INVOKE_DIRECT_RANGE</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_INTERFACE_RANGE">INVOKE_INTERFACE_RANGE</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_STATIC_RANGE">INVOKE_STATIC_RANGE</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_SUPER_RANGE">INVOKE_SUPER_RANGE</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_VIRTUAL_RANGE">INVOKE_VIRTUAL_RANGE</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_DIRECT_RANGE">INVOKE_DIRECT_RANGE</a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_INTERFACE_RANGE">INVOKE_INTERFACE_RANGE</a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_STATIC_RANGE">INVOKE_STATIC_RANGE</a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_SUPER_RANGE">INVOKE_SUPER_RANGE</a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_VIRTUAL_RANGE">INVOKE_VIRTUAL_RANGE</a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)
 </dt></dl>
 </dd>
 <dt class="heading-text"><a href="SmaliAssemblyInstructions.html#_SINGLE_DEST_REGISTER_INSTRUCTION">_SINGLE_DEST_REGISTER_INSTRUCTION</a>(<a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>)
@@ -270,9 +280,9 @@ here:&nbsp;<a href="http://pallergabor.uw.hu/androidblog/dalvik_opcodes.html">ht
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#MOVE_RESULT">MOVE_RESULT</a>(<a href="SmaliAssemblyInstructions.html#_ThirtyTwoBit_Parameters">_ThirtyTwoBit_Parameters</a>, <a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a>)
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#MOVE_RESULT_OBJECT">MOVE_RESULT_OBJECT</a>(<a href="SmaliAssemblyInstructions.html#_Object_Parameters">_Object_Parameters</a>, <a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a>)
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#MOVE_RESULT_WIDE">MOVE_RESULT_WIDE</a>(<a href="SmaliAssemblyInstructions.html#_SixtyFourBit_Dest">_SixtyFourBit_Dest</a>, <a href="SmaliAssemblyInstructions.html#_IMPLICIT_REGISTER_INSTRUCTION">_IMPLICIT_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#RETURN">RETURN</a>(<a href="SmaliAssemblyInstructions.html#_ThirtyTwoBit_Parameters">_ThirtyTwoBit_Parameters</a>, <a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#RETURN_OBJECT">RETURN_OBJECT</a>(<a href="SmaliAssemblyInstructions.html#_Object_Parameters">_Object_Parameters</a>, <a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#RETURN_WIDE">RETURN_WIDE</a>(<a href="SmaliAssemblyInstructions.html#_SixtyFourBit_Dest">_SixtyFourBit_Dest</a>, <a href="SmaliAssemblyInstructions.html#_IMPLICIT_REGISTER_INSTRUCTION">_IMPLICIT_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#RETURN">RETURN</a>(<a href="SmaliAssemblyInstructions.html#_ThirtyTwoBit_Parameters">_ThirtyTwoBit_Parameters</a>, <a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#RETURN_OBJECT">RETURN_OBJECT</a>(<a href="SmaliAssemblyInstructions.html#_Object_Parameters">_Object_Parameters</a>, <a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#RETURN_WIDE">RETURN_WIDE</a>(<a href="SmaliAssemblyInstructions.html#_SixtyFourBit_Dest">_SixtyFourBit_Dest</a>, <a href="SmaliAssemblyInstructions.html#_IMPLICIT_REGISTER_INSTRUCTION">_IMPLICIT_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a>)
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#THROW">THROW</a>
 </dt></dl>
 </dd>
@@ -341,7 +351,7 @@ here:&nbsp;<a href="http://pallergabor.uw.hu/androidblog/dalvik_opcodes.html">ht
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#REM_DOUBLE_2ADDR">REM_DOUBLE_2ADDR</a>(<a href="SmaliAssemblyInstructions.html#_SixtyFourBit_Dest">_SixtyFourBit_Dest</a>, <a href="SmaliAssemblyInstructions.html#_IMPLICIT_REGISTER_INSTRUCTION">_IMPLICIT_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_TWO_REGISTER_BINARY_INSTRUCTION">_TWO_REGISTER_BINARY_INSTRUCTION</a>)
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#REM_LONG">REM_LONG</a>(<a href="SmaliAssemblyInstructions.html#_SixtyFourBit_Dest">_SixtyFourBit_Dest</a>, <a href="SmaliAssemblyInstructions.html#_IMPLICIT_REGISTER_INSTRUCTION">_IMPLICIT_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_TRIPLE_REGISTER_INSTRUCTION">_TRIPLE_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Second_Reg_To_First_Reg_Arith">Second_Reg_To_First_Reg_Arith</a>)
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#REM_LONG_2ADDR">REM_LONG_2ADDR</a>(<a href="SmaliAssemblyInstructions.html#_SixtyFourBit_Dest">_SixtyFourBit_Dest</a>, <a href="SmaliAssemblyInstructions.html#_IMPLICIT_REGISTER_INSTRUCTION">_IMPLICIT_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_TWO_REGISTER_BINARY_INSTRUCTION">_TWO_REGISTER_BINARY_INSTRUCTION</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#RETURN_WIDE">RETURN_WIDE</a>(<a href="SmaliAssemblyInstructions.html#_SixtyFourBit_Dest">_SixtyFourBit_Dest</a>, <a href="SmaliAssemblyInstructions.html#_IMPLICIT_REGISTER_INSTRUCTION">_IMPLICIT_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#RETURN_WIDE">RETURN_WIDE</a>(<a href="SmaliAssemblyInstructions.html#_SixtyFourBit_Dest">_SixtyFourBit_Dest</a>, <a href="SmaliAssemblyInstructions.html#_IMPLICIT_REGISTER_INSTRUCTION">_IMPLICIT_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a>)
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#SHL_LONG">SHL_LONG</a>(<a href="SmaliAssemblyInstructions.html#_SixtyFourBit_Dest">_SixtyFourBit_Dest</a>, <a href="SmaliAssemblyInstructions.html#_IMPLICIT_REGISTER_INSTRUCTION">_IMPLICIT_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_TRIPLE_REGISTER_INSTRUCTION">_TRIPLE_REGISTER_INSTRUCTION</a>)
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#SHL_LONG_2ADDR">SHL_LONG_2ADDR</a>(<a href="SmaliAssemblyInstructions.html#_SixtyFourBit_Dest">_SixtyFourBit_Dest</a>, <a href="SmaliAssemblyInstructions.html#_IMPLICIT_REGISTER_INSTRUCTION">_IMPLICIT_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_TWO_REGISTER_BINARY_INSTRUCTION">_TWO_REGISTER_BINARY_INSTRUCTION</a>)
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#SHR_LONG">SHR_LONG</a>(<a href="SmaliAssemblyInstructions.html#_SixtyFourBit_Dest">_SixtyFourBit_Dest</a>, <a href="SmaliAssemblyInstructions.html#_IMPLICIT_REGISTER_INSTRUCTION">_IMPLICIT_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_TRIPLE_REGISTER_INSTRUCTION">_TRIPLE_REGISTER_INSTRUCTION</a>)
@@ -595,7 +605,7 @@ here:&nbsp;<a href="http://pallergabor.uw.hu/androidblog/dalvik_opcodes.html">ht
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#REM_INT_2ADDR">REM_INT_2ADDR</a>(<a href="SmaliAssemblyInstructions.html#_ThirtyTwoBit_Parameters">_ThirtyTwoBit_Parameters</a>, <a href="SmaliAssemblyInstructions.html#_TWO_REGISTER_BINARY_INSTRUCTION">_TWO_REGISTER_BINARY_INSTRUCTION</a>)
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#REM_INT_LIT16">REM_INT_LIT16</a>(<a href="SmaliAssemblyInstructions.html#_ThirtyTwoBit_Parameters">_ThirtyTwoBit_Parameters</a>, <a href="SmaliAssemblyInstructions.html#_TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION">_TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION</a>)
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#REM_INT_LIT8">REM_INT_LIT8</a>(<a href="SmaliAssemblyInstructions.html#_ThirtyTwoBit_Parameters">_ThirtyTwoBit_Parameters</a>, <a href="SmaliAssemblyInstructions.html#_TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION">_TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#RETURN">RETURN</a>(<a href="SmaliAssemblyInstructions.html#_ThirtyTwoBit_Parameters">_ThirtyTwoBit_Parameters</a>, <a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a>)
+</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#RETURN">RETURN</a>(<a href="SmaliAssemblyInstructions.html#_ThirtyTwoBit_Parameters">_ThirtyTwoBit_Parameters</a>, <a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a>)
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#RSUB_INT">RSUB_INT</a>(<a href="SmaliAssemblyInstructions.html#_ThirtyTwoBit_Parameters">_ThirtyTwoBit_Parameters</a>, <a href="SmaliAssemblyInstructions.html#_TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION">_TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION</a>)
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#RSUB_INT_LIT8">RSUB_INT_LIT8</a>(<a href="SmaliAssemblyInstructions.html#_ThirtyTwoBit_Parameters">_ThirtyTwoBit_Parameters</a>, <a href="SmaliAssemblyInstructions.html#_TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION">_TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION</a>)
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#SHL_INT">SHL_INT</a>(<a href="SmaliAssemblyInstructions.html#_ThirtyTwoBit_Parameters">_ThirtyTwoBit_Parameters</a>, <a href="SmaliAssemblyInstructions.html#_TRIPLE_REGISTER_INSTRUCTION">_TRIPLE_REGISTER_INSTRUCTION</a>)
@@ -680,28 +690,6 @@ here:&nbsp;<a href="http://pallergabor.uw.hu/androidblog/dalvik_opcodes.html">ht
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#SPUT_OBJECT">SPUT_OBJECT</a>(<a href="SmaliAssemblyInstructions.html#_S_INSTRUCTION">_S_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#First_Reg_To_Third_Var">First_Reg_To_Third_Var</a>)
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#SPUT_SHORT">SPUT_SHORT</a>(<a href="SmaliAssemblyInstructions.html#_S_INSTRUCTION">_S_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#First_Reg_To_Third_Var">First_Reg_To_Third_Var</a>)
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#SPUT_WIDE">SPUT_WIDE</a>(<a href="SmaliAssemblyInstructions.html#_IMPLICIT_REGISTER_INSTRUCTION">_IMPLICIT_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_S_INSTRUCTION">_S_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#First_Reg_To_Third_Var">First_Reg_To_Third_Var</a>)
-</dt></dl>
-</dd>
-<dt class="heading-text"><a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>
-</dt><dd>
-<dl>
-<dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_DIRECT">INVOKE_DIRECT</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_DIRECT_RANGE">INVOKE_DIRECT_RANGE</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_INTERFACE">INVOKE_INTERFACE</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_INTERFACE_RANGE">INVOKE_INTERFACE_RANGE</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_STATIC">INVOKE_STATIC</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dd>
-<dl>
-<dt class="heading-text"><a href="SmaliAssemblyInstructions.html#LOG_D">LOG_D</a>
-</dt></dl>
-</dd>
-<dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_STATIC_RANGE">INVOKE_STATIC_RANGE</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_SUPER">INVOKE_SUPER</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_SUPER_QUICK">INVOKE_SUPER_QUICK</a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_SUPER_RANGE">INVOKE_SUPER_RANGE</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_VIRTUAL">INVOKE_VIRTUAL</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_VIRTUAL_QUICK">INVOKE_VIRTUAL_QUICK</a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
-</dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_VIRTUAL_RANGE">INVOKE_VIRTUAL_RANGE</a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)
 </dt></dl>
 </dd>
 <dt class="heading-text"><a href="SmaliAssemblyInstructions.html#No_Slicing_Actions">No_Slicing_Actions</a>
@@ -801,7 +789,7 @@ here:&nbsp;<a href="http://pallergabor.uw.hu/androidblog/dalvik_opcodes.html">ht
 <dt class="heading-text"><a href="SmaliAssemblyInstructions.html#INVOKE_DIRECT_EMPTY">INVOKE_DIRECT_EMPTY</a>
 </dt></dl>
 </dd>
-<dt class="heading-text"><a href="SmaliAssemblyInstructions.html#RETURN_VOID">RETURN_VOID</a>
+<dt class="heading-text"><a href="SmaliAssemblyInstructions.html#RETURN_VOID">RETURN_VOID</a>(<a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>, <a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a>)
 </dt><dt class="heading-text"><a href="SmaliAssemblyInstructions.html#STIGMA_LABEL">STIGMA_LABEL</a>
 </dt><dd>
 <dl>
@@ -8147,6 +8135,7 @@ Data descriptors defined here:<br>
 <dd><a href="SmaliAssemblyInstructions.html#GOTO">GOTO</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_INSTRUCTION">_JUMP_TO_LABEL_INSTRUCTION</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -8252,6 +8241,7 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_IN
 <dd><a href="SmaliAssemblyInstructions.html#GOTO">GOTO</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_INSTRUCTION">_JUMP_TO_LABEL_INSTRUCTION</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -8359,6 +8349,7 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_IN
 <dd><a href="SmaliAssemblyInstructions.html#GOTO">GOTO</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_INSTRUCTION">_JUMP_TO_LABEL_INSTRUCTION</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -8466,6 +8457,7 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_IN
 <dd><a href="SmaliAssemblyInstructions.html#_TWO_REG_EQ">_TWO_REG_EQ</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_INSTRUCTION">_JUMP_TO_LABEL_INSTRUCTION</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -8573,6 +8565,7 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_IN
 <dd><a href="SmaliAssemblyInstructions.html#_ONE_REG_EQ_ZERO">_ONE_REG_EQ_ZERO</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_INSTRUCTION">_JUMP_TO_LABEL_INSTRUCTION</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -8680,6 +8673,7 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_IN
 <dd><a href="SmaliAssemblyInstructions.html#_TWO_REG_EQ">_TWO_REG_EQ</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_INSTRUCTION">_JUMP_TO_LABEL_INSTRUCTION</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -8787,6 +8781,7 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_IN
 <dd><a href="SmaliAssemblyInstructions.html#_ONE_REG_EQ_ZERO">_ONE_REG_EQ_ZERO</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_INSTRUCTION">_JUMP_TO_LABEL_INSTRUCTION</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -8894,6 +8889,7 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_IN
 <dd><a href="SmaliAssemblyInstructions.html#_TWO_REG_EQ">_TWO_REG_EQ</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_INSTRUCTION">_JUMP_TO_LABEL_INSTRUCTION</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -9001,6 +8997,7 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_IN
 <dd><a href="SmaliAssemblyInstructions.html#_ONE_REG_EQ_ZERO">_ONE_REG_EQ_ZERO</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_INSTRUCTION">_JUMP_TO_LABEL_INSTRUCTION</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -9108,6 +9105,7 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_IN
 <dd><a href="SmaliAssemblyInstructions.html#_TWO_REG_EQ">_TWO_REG_EQ</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_INSTRUCTION">_JUMP_TO_LABEL_INSTRUCTION</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -9215,6 +9213,7 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_IN
 <dd><a href="SmaliAssemblyInstructions.html#_ONE_REG_EQ_ZERO">_ONE_REG_EQ_ZERO</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_INSTRUCTION">_JUMP_TO_LABEL_INSTRUCTION</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -9322,6 +9321,7 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_IN
 <dd><a href="SmaliAssemblyInstructions.html#_TWO_REG_EQ">_TWO_REG_EQ</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_INSTRUCTION">_JUMP_TO_LABEL_INSTRUCTION</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -9429,6 +9429,7 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_IN
 <dd><a href="SmaliAssemblyInstructions.html#_ONE_REG_EQ_ZERO">_ONE_REG_EQ_ZERO</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_INSTRUCTION">_JUMP_TO_LABEL_INSTRUCTION</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -9536,6 +9537,7 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_IN
 <dd><a href="SmaliAssemblyInstructions.html#_TWO_REG_EQ">_TWO_REG_EQ</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_INSTRUCTION">_JUMP_TO_LABEL_INSTRUCTION</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -9643,6 +9645,7 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_IN
 <dd><a href="SmaliAssemblyInstructions.html#_ONE_REG_EQ_ZERO">_ONE_REG_EQ_ZERO</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_JUMP_TO_LABEL_INSTRUCTION">_JUMP_TO_LABEL_INSTRUCTION</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -11514,7 +11517,7 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#Second_Reg_To_Fir
 </td></tr></table> <p>
 <table class="section">
 <tr class="decor title-decor heading-text">
-<td class="section-title" colspan=3>&nbsp;<br><a name="INVOKE_DIRECT">class <strong>INVOKE_DIRECT</strong></a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)</td></tr>
+<td class="section-title" colspan=3>&nbsp;<br><a name="INVOKE_DIRECT">class <strong>INVOKE_DIRECT</strong></a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)</td></tr>
     
 <tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
 <td class="decor title-decor" colspan=2><span class="code"><a href="#INVOKE_DIRECT">INVOKE_DIRECT</a>(element_list,&nbsp;types_spec)<br>
@@ -11523,10 +11526,10 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#Second_Reg_To_Fir
 <tr><td>&nbsp;</td>
 <td class="singlecolumn"><dl><dt>Method resolution order:</dt>
 <dd><a href="SmaliAssemblyInstructions.html#INVOKE_DIRECT">INVOKE_DIRECT</a></dd>
-<dd><a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
-<dd><a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -11534,7 +11537,15 @@ Methods defined here:<br>
 <dl><dt><a name="INVOKE_DIRECT-opcode"><strong>opcode</strong></a>(self)</dt></dl>
 
 <hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>:<br>
+Methods inherited from <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>:<br>
+<dl><dt><a name="INVOKE_DIRECT-__init__"><strong>__init__</strong></a>(self, element_list, types_spec)</dt><dd><span class="code">Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</span></dd></dl>
+
+<dl><dt><a name="INVOKE_DIRECT-__repr__"><strong>__repr__</strong></a>(self)</dt><dd><span class="code">Return&nbsp;repr(self).</span></dd></dl>
+
+<dl><dt><a name="INVOKE_DIRECT-get_registers"><strong>get_registers</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;the&nbsp;registers&nbsp;(list&nbsp;of&nbsp;SmaliRegister&nbsp;objects)&nbsp;used&nbsp;in&nbsp;this&nbsp;instruction.</span></dd></dl>
+
+<hr>
+Methods inherited from <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>:<br>
 <dl><dt><a name="INVOKE_DIRECT-get_fully_qualified_call"><strong>get_fully_qualified_call</strong></a>(self)</dt></dl>
 
 <dl><dt><a name="INVOKE_DIRECT-get_method_name"><strong>get_method_name</strong></a>(self)</dt></dl>
@@ -11543,21 +11554,7 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INST
 
 <dl><dt><a name="INVOKE_DIRECT-get_owning_class_name"><strong>get_owning_class_name</strong></a>(self)</dt></dl>
 
-<hr>
-Data descriptors inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>:<br>
-<dl><dt><strong>__dict__</strong></dt>
-<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
-</dl>
-<dl><dt><strong>__weakref__</strong></dt>
-<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
-</dl>
-<hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>:<br>
-<dl><dt><a name="INVOKE_DIRECT-__init__"><strong>__init__</strong></a>(self, element_list, types_spec)</dt><dd><span class="code">Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</span></dd></dl>
-
-<dl><dt><a name="INVOKE_DIRECT-__repr__"><strong>__repr__</strong></a>(self)</dt><dd><span class="code">Return&nbsp;repr(self).</span></dd></dl>
-
-<dl><dt><a name="INVOKE_DIRECT-get_registers"><strong>get_registers</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;the&nbsp;registers&nbsp;(list&nbsp;of&nbsp;SmaliRegister&nbsp;objects)&nbsp;used&nbsp;in&nbsp;this&nbsp;instruction.</span></dd></dl>
+<dl><dt><a name="INVOKE_DIRECT-get_slicing_action"><strong>get_slicing_action</strong></a>(self, tracked)</dt></dl>
 
 <hr>
 Methods inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
@@ -11620,12 +11617,16 @@ Returns:<br>
 &nbsp;&nbsp;&nbsp;<a href="#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:&nbsp;The&nbsp;corresponding&nbsp;<a href="#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>&nbsp;<a href="builtins.html#object">object</a></span></dd></dl>
 
 <hr>
+Data descriptors inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
+</dl>
+<hr>
 Data and other attributes inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
 <dl><dt><strong>__hash__</strong> = None</dl>
-
-<hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>:<br>
-<dl><dt><a name="INVOKE_DIRECT-get_slicing_action"><strong>get_slicing_action</strong></a>(self, tracked)</dt></dl>
 
 </td></tr></table> <p>
 <table class="section">
@@ -11729,7 +11730,7 @@ Data and other attributes inherited from <a href="SmaliAssemblyInstructions.html
 </td></tr></table> <p>
 <table class="section">
 <tr class="decor title-decor heading-text">
-<td class="section-title" colspan=3>&nbsp;<br><a name="INVOKE_DIRECT_RANGE">class <strong>INVOKE_DIRECT_RANGE</strong></a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)</td></tr>
+<td class="section-title" colspan=3>&nbsp;<br><a name="INVOKE_DIRECT_RANGE">class <strong>INVOKE_DIRECT_RANGE</strong></a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)</td></tr>
     
 <tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
 <td class="decor title-decor" colspan=2><span class="code"><a href="#INVOKE_DIRECT_RANGE">INVOKE_DIRECT_RANGE</a>(element_list,&nbsp;types_spec)<br>
@@ -11738,10 +11739,10 @@ Data and other attributes inherited from <a href="SmaliAssemblyInstructions.html
 <tr><td>&nbsp;</td>
 <td class="singlecolumn"><dl><dt>Method resolution order:</dt>
 <dd><a href="SmaliAssemblyInstructions.html#INVOKE_DIRECT_RANGE">INVOKE_DIRECT_RANGE</a></dd>
-<dd><a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
-<dd><a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -11749,7 +11750,15 @@ Methods defined here:<br>
 <dl><dt><a name="INVOKE_DIRECT_RANGE-opcode"><strong>opcode</strong></a>(self)</dt></dl>
 
 <hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>:<br>
+Methods inherited from <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>:<br>
+<dl><dt><a name="INVOKE_DIRECT_RANGE-__init__"><strong>__init__</strong></a>(self, element_list, types_spec)</dt><dd><span class="code">Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</span></dd></dl>
+
+<dl><dt><a name="INVOKE_DIRECT_RANGE-__repr__"><strong>__repr__</strong></a>(self)</dt><dd><span class="code">Return&nbsp;repr(self).</span></dd></dl>
+
+<dl><dt><a name="INVOKE_DIRECT_RANGE-get_registers"><strong>get_registers</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;the&nbsp;registers&nbsp;(list&nbsp;of&nbsp;SmaliRegister&nbsp;objects)&nbsp;used&nbsp;in&nbsp;this&nbsp;instruction.</span></dd></dl>
+
+<hr>
+Methods inherited from <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>:<br>
 <dl><dt><a name="INVOKE_DIRECT_RANGE-get_fully_qualified_call"><strong>get_fully_qualified_call</strong></a>(self)</dt></dl>
 
 <dl><dt><a name="INVOKE_DIRECT_RANGE-get_method_name"><strong>get_method_name</strong></a>(self)</dt></dl>
@@ -11758,21 +11767,7 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INST
 
 <dl><dt><a name="INVOKE_DIRECT_RANGE-get_owning_class_name"><strong>get_owning_class_name</strong></a>(self)</dt></dl>
 
-<hr>
-Data descriptors inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>:<br>
-<dl><dt><strong>__dict__</strong></dt>
-<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
-</dl>
-<dl><dt><strong>__weakref__</strong></dt>
-<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
-</dl>
-<hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>:<br>
-<dl><dt><a name="INVOKE_DIRECT_RANGE-__init__"><strong>__init__</strong></a>(self, element_list, types_spec)</dt><dd><span class="code">Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</span></dd></dl>
-
-<dl><dt><a name="INVOKE_DIRECT_RANGE-__repr__"><strong>__repr__</strong></a>(self)</dt><dd><span class="code">Return&nbsp;repr(self).</span></dd></dl>
-
-<dl><dt><a name="INVOKE_DIRECT_RANGE-get_registers"><strong>get_registers</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;the&nbsp;registers&nbsp;(list&nbsp;of&nbsp;SmaliRegister&nbsp;objects)&nbsp;used&nbsp;in&nbsp;this&nbsp;instruction.</span></dd></dl>
+<dl><dt><a name="INVOKE_DIRECT_RANGE-get_slicing_action"><strong>get_slicing_action</strong></a>(self, tracked)</dt></dl>
 
 <hr>
 Methods inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
@@ -11835,17 +11830,21 @@ Returns:<br>
 &nbsp;&nbsp;&nbsp;<a href="#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:&nbsp;The&nbsp;corresponding&nbsp;<a href="#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>&nbsp;<a href="builtins.html#object">object</a></span></dd></dl>
 
 <hr>
+Data descriptors inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
+</dl>
+<hr>
 Data and other attributes inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
 <dl><dt><strong>__hash__</strong> = None</dl>
-
-<hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>:<br>
-<dl><dt><a name="INVOKE_DIRECT_RANGE-get_slicing_action"><strong>get_slicing_action</strong></a>(self, tracked)</dt></dl>
 
 </td></tr></table> <p>
 <table class="section">
 <tr class="decor title-decor heading-text">
-<td class="section-title" colspan=3>&nbsp;<br><a name="INVOKE_INTERFACE">class <strong>INVOKE_INTERFACE</strong></a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)</td></tr>
+<td class="section-title" colspan=3>&nbsp;<br><a name="INVOKE_INTERFACE">class <strong>INVOKE_INTERFACE</strong></a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)</td></tr>
     
 <tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
 <td class="decor title-decor" colspan=2><span class="code"><a href="#INVOKE_INTERFACE">INVOKE_INTERFACE</a>(element_list,&nbsp;types_spec)<br>
@@ -11854,10 +11853,10 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#Invoke_Instructio
 <tr><td>&nbsp;</td>
 <td class="singlecolumn"><dl><dt>Method resolution order:</dt>
 <dd><a href="SmaliAssemblyInstructions.html#INVOKE_INTERFACE">INVOKE_INTERFACE</a></dd>
-<dd><a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
-<dd><a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -11865,7 +11864,15 @@ Methods defined here:<br>
 <dl><dt><a name="INVOKE_INTERFACE-opcode"><strong>opcode</strong></a>(self)</dt><dd><span class="code">#&nbsp;e.g.,&nbsp;invoke-interface&nbsp;{v0},&nbsp;Ljava/util/concurrent/locks/Lock;-&gt;lock()V</span></dd></dl>
 
 <hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>:<br>
+Methods inherited from <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>:<br>
+<dl><dt><a name="INVOKE_INTERFACE-__init__"><strong>__init__</strong></a>(self, element_list, types_spec)</dt><dd><span class="code">Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</span></dd></dl>
+
+<dl><dt><a name="INVOKE_INTERFACE-__repr__"><strong>__repr__</strong></a>(self)</dt><dd><span class="code">Return&nbsp;repr(self).</span></dd></dl>
+
+<dl><dt><a name="INVOKE_INTERFACE-get_registers"><strong>get_registers</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;the&nbsp;registers&nbsp;(list&nbsp;of&nbsp;SmaliRegister&nbsp;objects)&nbsp;used&nbsp;in&nbsp;this&nbsp;instruction.</span></dd></dl>
+
+<hr>
+Methods inherited from <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>:<br>
 <dl><dt><a name="INVOKE_INTERFACE-get_fully_qualified_call"><strong>get_fully_qualified_call</strong></a>(self)</dt></dl>
 
 <dl><dt><a name="INVOKE_INTERFACE-get_method_name"><strong>get_method_name</strong></a>(self)</dt></dl>
@@ -11874,21 +11881,7 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INST
 
 <dl><dt><a name="INVOKE_INTERFACE-get_owning_class_name"><strong>get_owning_class_name</strong></a>(self)</dt></dl>
 
-<hr>
-Data descriptors inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>:<br>
-<dl><dt><strong>__dict__</strong></dt>
-<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
-</dl>
-<dl><dt><strong>__weakref__</strong></dt>
-<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
-</dl>
-<hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>:<br>
-<dl><dt><a name="INVOKE_INTERFACE-__init__"><strong>__init__</strong></a>(self, element_list, types_spec)</dt><dd><span class="code">Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</span></dd></dl>
-
-<dl><dt><a name="INVOKE_INTERFACE-__repr__"><strong>__repr__</strong></a>(self)</dt><dd><span class="code">Return&nbsp;repr(self).</span></dd></dl>
-
-<dl><dt><a name="INVOKE_INTERFACE-get_registers"><strong>get_registers</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;the&nbsp;registers&nbsp;(list&nbsp;of&nbsp;SmaliRegister&nbsp;objects)&nbsp;used&nbsp;in&nbsp;this&nbsp;instruction.</span></dd></dl>
+<dl><dt><a name="INVOKE_INTERFACE-get_slicing_action"><strong>get_slicing_action</strong></a>(self, tracked)</dt></dl>
 
 <hr>
 Methods inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
@@ -11951,17 +11944,21 @@ Returns:<br>
 &nbsp;&nbsp;&nbsp;<a href="#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:&nbsp;The&nbsp;corresponding&nbsp;<a href="#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>&nbsp;<a href="builtins.html#object">object</a></span></dd></dl>
 
 <hr>
+Data descriptors inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
+</dl>
+<hr>
 Data and other attributes inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
 <dl><dt><strong>__hash__</strong> = None</dl>
-
-<hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>:<br>
-<dl><dt><a name="INVOKE_INTERFACE-get_slicing_action"><strong>get_slicing_action</strong></a>(self, tracked)</dt></dl>
 
 </td></tr></table> <p>
 <table class="section">
 <tr class="decor title-decor heading-text">
-<td class="section-title" colspan=3>&nbsp;<br><a name="INVOKE_INTERFACE_RANGE">class <strong>INVOKE_INTERFACE_RANGE</strong></a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)</td></tr>
+<td class="section-title" colspan=3>&nbsp;<br><a name="INVOKE_INTERFACE_RANGE">class <strong>INVOKE_INTERFACE_RANGE</strong></a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)</td></tr>
     
 <tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
 <td class="decor title-decor" colspan=2><span class="code"><a href="#INVOKE_INTERFACE_RANGE">INVOKE_INTERFACE_RANGE</a>(element_list,&nbsp;types_spec)<br>
@@ -11970,10 +11967,10 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#Invoke_Instructio
 <tr><td>&nbsp;</td>
 <td class="singlecolumn"><dl><dt>Method resolution order:</dt>
 <dd><a href="SmaliAssemblyInstructions.html#INVOKE_INTERFACE_RANGE">INVOKE_INTERFACE_RANGE</a></dd>
-<dd><a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
-<dd><a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -11981,7 +11978,15 @@ Methods defined here:<br>
 <dl><dt><a name="INVOKE_INTERFACE_RANGE-opcode"><strong>opcode</strong></a>(self)</dt></dl>
 
 <hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>:<br>
+Methods inherited from <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>:<br>
+<dl><dt><a name="INVOKE_INTERFACE_RANGE-__init__"><strong>__init__</strong></a>(self, element_list, types_spec)</dt><dd><span class="code">Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</span></dd></dl>
+
+<dl><dt><a name="INVOKE_INTERFACE_RANGE-__repr__"><strong>__repr__</strong></a>(self)</dt><dd><span class="code">Return&nbsp;repr(self).</span></dd></dl>
+
+<dl><dt><a name="INVOKE_INTERFACE_RANGE-get_registers"><strong>get_registers</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;the&nbsp;registers&nbsp;(list&nbsp;of&nbsp;SmaliRegister&nbsp;objects)&nbsp;used&nbsp;in&nbsp;this&nbsp;instruction.</span></dd></dl>
+
+<hr>
+Methods inherited from <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>:<br>
 <dl><dt><a name="INVOKE_INTERFACE_RANGE-get_fully_qualified_call"><strong>get_fully_qualified_call</strong></a>(self)</dt></dl>
 
 <dl><dt><a name="INVOKE_INTERFACE_RANGE-get_method_name"><strong>get_method_name</strong></a>(self)</dt></dl>
@@ -11990,21 +11995,7 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INST
 
 <dl><dt><a name="INVOKE_INTERFACE_RANGE-get_owning_class_name"><strong>get_owning_class_name</strong></a>(self)</dt></dl>
 
-<hr>
-Data descriptors inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>:<br>
-<dl><dt><strong>__dict__</strong></dt>
-<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
-</dl>
-<dl><dt><strong>__weakref__</strong></dt>
-<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
-</dl>
-<hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>:<br>
-<dl><dt><a name="INVOKE_INTERFACE_RANGE-__init__"><strong>__init__</strong></a>(self, element_list, types_spec)</dt><dd><span class="code">Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</span></dd></dl>
-
-<dl><dt><a name="INVOKE_INTERFACE_RANGE-__repr__"><strong>__repr__</strong></a>(self)</dt><dd><span class="code">Return&nbsp;repr(self).</span></dd></dl>
-
-<dl><dt><a name="INVOKE_INTERFACE_RANGE-get_registers"><strong>get_registers</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;the&nbsp;registers&nbsp;(list&nbsp;of&nbsp;SmaliRegister&nbsp;objects)&nbsp;used&nbsp;in&nbsp;this&nbsp;instruction.</span></dd></dl>
+<dl><dt><a name="INVOKE_INTERFACE_RANGE-get_slicing_action"><strong>get_slicing_action</strong></a>(self, tracked)</dt></dl>
 
 <hr>
 Methods inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
@@ -12067,17 +12058,21 @@ Returns:<br>
 &nbsp;&nbsp;&nbsp;<a href="#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:&nbsp;The&nbsp;corresponding&nbsp;<a href="#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>&nbsp;<a href="builtins.html#object">object</a></span></dd></dl>
 
 <hr>
+Data descriptors inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
+</dl>
+<hr>
 Data and other attributes inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
 <dl><dt><strong>__hash__</strong> = None</dl>
-
-<hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>:<br>
-<dl><dt><a name="INVOKE_INTERFACE_RANGE-get_slicing_action"><strong>get_slicing_action</strong></a>(self, tracked)</dt></dl>
 
 </td></tr></table> <p>
 <table class="section">
 <tr class="decor title-decor heading-text">
-<td class="section-title" colspan=3>&nbsp;<br><a name="INVOKE_STATIC">class <strong>INVOKE_STATIC</strong></a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)</td></tr>
+<td class="section-title" colspan=3>&nbsp;<br><a name="INVOKE_STATIC">class <strong>INVOKE_STATIC</strong></a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)</td></tr>
     
 <tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
 <td class="decor title-decor" colspan=2><span class="code"><a href="#INVOKE_STATIC">INVOKE_STATIC</a>(element_list,&nbsp;types_spec)<br>
@@ -12086,10 +12081,10 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#Invoke_Instructio
 <tr><td>&nbsp;</td>
 <td class="singlecolumn"><dl><dt>Method resolution order:</dt>
 <dd><a href="SmaliAssemblyInstructions.html#INVOKE_STATIC">INVOKE_STATIC</a></dd>
-<dd><a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
-<dd><a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -12097,7 +12092,15 @@ Methods defined here:<br>
 <dl><dt><a name="INVOKE_STATIC-opcode"><strong>opcode</strong></a>(self)</dt><dd><span class="code">#&nbsp;e.g.,&nbsp;invoke-static&nbsp;{v2},&nbsp;Lcom/google/ads/interactivemedia/pal/NonceLoader;-&gt;zza(Ljava/lang/String;)Ljava/lang/String;</span></dd></dl>
 
 <hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>:<br>
+Methods inherited from <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>:<br>
+<dl><dt><a name="INVOKE_STATIC-__init__"><strong>__init__</strong></a>(self, element_list, types_spec)</dt><dd><span class="code">Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</span></dd></dl>
+
+<dl><dt><a name="INVOKE_STATIC-__repr__"><strong>__repr__</strong></a>(self)</dt><dd><span class="code">Return&nbsp;repr(self).</span></dd></dl>
+
+<dl><dt><a name="INVOKE_STATIC-get_registers"><strong>get_registers</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;the&nbsp;registers&nbsp;(list&nbsp;of&nbsp;SmaliRegister&nbsp;objects)&nbsp;used&nbsp;in&nbsp;this&nbsp;instruction.</span></dd></dl>
+
+<hr>
+Methods inherited from <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>:<br>
 <dl><dt><a name="INVOKE_STATIC-get_fully_qualified_call"><strong>get_fully_qualified_call</strong></a>(self)</dt></dl>
 
 <dl><dt><a name="INVOKE_STATIC-get_method_name"><strong>get_method_name</strong></a>(self)</dt></dl>
@@ -12106,21 +12109,7 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INST
 
 <dl><dt><a name="INVOKE_STATIC-get_owning_class_name"><strong>get_owning_class_name</strong></a>(self)</dt></dl>
 
-<hr>
-Data descriptors inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>:<br>
-<dl><dt><strong>__dict__</strong></dt>
-<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
-</dl>
-<dl><dt><strong>__weakref__</strong></dt>
-<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
-</dl>
-<hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>:<br>
-<dl><dt><a name="INVOKE_STATIC-__init__"><strong>__init__</strong></a>(self, element_list, types_spec)</dt><dd><span class="code">Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</span></dd></dl>
-
-<dl><dt><a name="INVOKE_STATIC-__repr__"><strong>__repr__</strong></a>(self)</dt><dd><span class="code">Return&nbsp;repr(self).</span></dd></dl>
-
-<dl><dt><a name="INVOKE_STATIC-get_registers"><strong>get_registers</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;the&nbsp;registers&nbsp;(list&nbsp;of&nbsp;SmaliRegister&nbsp;objects)&nbsp;used&nbsp;in&nbsp;this&nbsp;instruction.</span></dd></dl>
+<dl><dt><a name="INVOKE_STATIC-get_slicing_action"><strong>get_slicing_action</strong></a>(self, tracked)</dt></dl>
 
 <hr>
 Methods inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
@@ -12183,17 +12172,21 @@ Returns:<br>
 &nbsp;&nbsp;&nbsp;<a href="#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:&nbsp;The&nbsp;corresponding&nbsp;<a href="#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>&nbsp;<a href="builtins.html#object">object</a></span></dd></dl>
 
 <hr>
+Data descriptors inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
+</dl>
+<hr>
 Data and other attributes inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
 <dl><dt><strong>__hash__</strong> = None</dl>
-
-<hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>:<br>
-<dl><dt><a name="INVOKE_STATIC-get_slicing_action"><strong>get_slicing_action</strong></a>(self, tracked)</dt></dl>
 
 </td></tr></table> <p>
 <table class="section">
 <tr class="decor title-decor heading-text">
-<td class="section-title" colspan=3>&nbsp;<br><a name="INVOKE_STATIC_RANGE">class <strong>INVOKE_STATIC_RANGE</strong></a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)</td></tr>
+<td class="section-title" colspan=3>&nbsp;<br><a name="INVOKE_STATIC_RANGE">class <strong>INVOKE_STATIC_RANGE</strong></a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)</td></tr>
     
 <tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
 <td class="decor title-decor" colspan=2><span class="code"><a href="#INVOKE_STATIC_RANGE">INVOKE_STATIC_RANGE</a>(element_list,&nbsp;types_spec)<br>
@@ -12202,10 +12195,10 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#Invoke_Instructio
 <tr><td>&nbsp;</td>
 <td class="singlecolumn"><dl><dt>Method resolution order:</dt>
 <dd><a href="SmaliAssemblyInstructions.html#INVOKE_STATIC_RANGE">INVOKE_STATIC_RANGE</a></dd>
-<dd><a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
-<dd><a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -12213,7 +12206,15 @@ Methods defined here:<br>
 <dl><dt><a name="INVOKE_STATIC_RANGE-opcode"><strong>opcode</strong></a>(self)</dt></dl>
 
 <hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>:<br>
+Methods inherited from <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>:<br>
+<dl><dt><a name="INVOKE_STATIC_RANGE-__init__"><strong>__init__</strong></a>(self, element_list, types_spec)</dt><dd><span class="code">Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</span></dd></dl>
+
+<dl><dt><a name="INVOKE_STATIC_RANGE-__repr__"><strong>__repr__</strong></a>(self)</dt><dd><span class="code">Return&nbsp;repr(self).</span></dd></dl>
+
+<dl><dt><a name="INVOKE_STATIC_RANGE-get_registers"><strong>get_registers</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;the&nbsp;registers&nbsp;(list&nbsp;of&nbsp;SmaliRegister&nbsp;objects)&nbsp;used&nbsp;in&nbsp;this&nbsp;instruction.</span></dd></dl>
+
+<hr>
+Methods inherited from <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>:<br>
 <dl><dt><a name="INVOKE_STATIC_RANGE-get_fully_qualified_call"><strong>get_fully_qualified_call</strong></a>(self)</dt></dl>
 
 <dl><dt><a name="INVOKE_STATIC_RANGE-get_method_name"><strong>get_method_name</strong></a>(self)</dt></dl>
@@ -12222,21 +12223,7 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INST
 
 <dl><dt><a name="INVOKE_STATIC_RANGE-get_owning_class_name"><strong>get_owning_class_name</strong></a>(self)</dt></dl>
 
-<hr>
-Data descriptors inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>:<br>
-<dl><dt><strong>__dict__</strong></dt>
-<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
-</dl>
-<dl><dt><strong>__weakref__</strong></dt>
-<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
-</dl>
-<hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>:<br>
-<dl><dt><a name="INVOKE_STATIC_RANGE-__init__"><strong>__init__</strong></a>(self, element_list, types_spec)</dt><dd><span class="code">Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</span></dd></dl>
-
-<dl><dt><a name="INVOKE_STATIC_RANGE-__repr__"><strong>__repr__</strong></a>(self)</dt><dd><span class="code">Return&nbsp;repr(self).</span></dd></dl>
-
-<dl><dt><a name="INVOKE_STATIC_RANGE-get_registers"><strong>get_registers</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;the&nbsp;registers&nbsp;(list&nbsp;of&nbsp;SmaliRegister&nbsp;objects)&nbsp;used&nbsp;in&nbsp;this&nbsp;instruction.</span></dd></dl>
+<dl><dt><a name="INVOKE_STATIC_RANGE-get_slicing_action"><strong>get_slicing_action</strong></a>(self, tracked)</dt></dl>
 
 <hr>
 Methods inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
@@ -12299,17 +12286,21 @@ Returns:<br>
 &nbsp;&nbsp;&nbsp;<a href="#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:&nbsp;The&nbsp;corresponding&nbsp;<a href="#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>&nbsp;<a href="builtins.html#object">object</a></span></dd></dl>
 
 <hr>
+Data descriptors inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
+</dl>
+<hr>
 Data and other attributes inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
 <dl><dt><strong>__hash__</strong> = None</dl>
-
-<hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>:<br>
-<dl><dt><a name="INVOKE_STATIC_RANGE-get_slicing_action"><strong>get_slicing_action</strong></a>(self, tracked)</dt></dl>
 
 </td></tr></table> <p>
 <table class="section">
 <tr class="decor title-decor heading-text">
-<td class="section-title" colspan=3>&nbsp;<br><a name="INVOKE_SUPER">class <strong>INVOKE_SUPER</strong></a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)</td></tr>
+<td class="section-title" colspan=3>&nbsp;<br><a name="INVOKE_SUPER">class <strong>INVOKE_SUPER</strong></a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)</td></tr>
     
 <tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
 <td class="decor title-decor" colspan=2><span class="code"><a href="#INVOKE_SUPER">INVOKE_SUPER</a>(element_list,&nbsp;types_spec)<br>
@@ -12318,10 +12309,10 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#Invoke_Instructio
 <tr><td>&nbsp;</td>
 <td class="singlecolumn"><dl><dt>Method resolution order:</dt>
 <dd><a href="SmaliAssemblyInstructions.html#INVOKE_SUPER">INVOKE_SUPER</a></dd>
-<dd><a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
-<dd><a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -12329,7 +12320,15 @@ Methods defined here:<br>
 <dl><dt><a name="INVOKE_SUPER-opcode"><strong>opcode</strong></a>(self)</dt></dl>
 
 <hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>:<br>
+Methods inherited from <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>:<br>
+<dl><dt><a name="INVOKE_SUPER-__init__"><strong>__init__</strong></a>(self, element_list, types_spec)</dt><dd><span class="code">Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</span></dd></dl>
+
+<dl><dt><a name="INVOKE_SUPER-__repr__"><strong>__repr__</strong></a>(self)</dt><dd><span class="code">Return&nbsp;repr(self).</span></dd></dl>
+
+<dl><dt><a name="INVOKE_SUPER-get_registers"><strong>get_registers</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;the&nbsp;registers&nbsp;(list&nbsp;of&nbsp;SmaliRegister&nbsp;objects)&nbsp;used&nbsp;in&nbsp;this&nbsp;instruction.</span></dd></dl>
+
+<hr>
+Methods inherited from <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>:<br>
 <dl><dt><a name="INVOKE_SUPER-get_fully_qualified_call"><strong>get_fully_qualified_call</strong></a>(self)</dt></dl>
 
 <dl><dt><a name="INVOKE_SUPER-get_method_name"><strong>get_method_name</strong></a>(self)</dt></dl>
@@ -12338,21 +12337,7 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INST
 
 <dl><dt><a name="INVOKE_SUPER-get_owning_class_name"><strong>get_owning_class_name</strong></a>(self)</dt></dl>
 
-<hr>
-Data descriptors inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>:<br>
-<dl><dt><strong>__dict__</strong></dt>
-<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
-</dl>
-<dl><dt><strong>__weakref__</strong></dt>
-<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
-</dl>
-<hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>:<br>
-<dl><dt><a name="INVOKE_SUPER-__init__"><strong>__init__</strong></a>(self, element_list, types_spec)</dt><dd><span class="code">Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</span></dd></dl>
-
-<dl><dt><a name="INVOKE_SUPER-__repr__"><strong>__repr__</strong></a>(self)</dt><dd><span class="code">Return&nbsp;repr(self).</span></dd></dl>
-
-<dl><dt><a name="INVOKE_SUPER-get_registers"><strong>get_registers</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;the&nbsp;registers&nbsp;(list&nbsp;of&nbsp;SmaliRegister&nbsp;objects)&nbsp;used&nbsp;in&nbsp;this&nbsp;instruction.</span></dd></dl>
+<dl><dt><a name="INVOKE_SUPER-get_slicing_action"><strong>get_slicing_action</strong></a>(self, tracked)</dt></dl>
 
 <hr>
 Methods inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
@@ -12415,17 +12400,21 @@ Returns:<br>
 &nbsp;&nbsp;&nbsp;<a href="#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:&nbsp;The&nbsp;corresponding&nbsp;<a href="#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>&nbsp;<a href="builtins.html#object">object</a></span></dd></dl>
 
 <hr>
+Data descriptors inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
+</dl>
+<hr>
 Data and other attributes inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
 <dl><dt><strong>__hash__</strong> = None</dl>
-
-<hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>:<br>
-<dl><dt><a name="INVOKE_SUPER-get_slicing_action"><strong>get_slicing_action</strong></a>(self, tracked)</dt></dl>
 
 </td></tr></table> <p>
 <table class="section">
 <tr class="decor title-decor heading-text">
-<td class="section-title" colspan=3>&nbsp;<br><a name="INVOKE_SUPER_QUICK">class <strong>INVOKE_SUPER_QUICK</strong></a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)</td></tr>
+<td class="section-title" colspan=3>&nbsp;<br><a name="INVOKE_SUPER_QUICK">class <strong>INVOKE_SUPER_QUICK</strong></a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)</td></tr>
     
 <tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
 <td class="decor title-decor" colspan=2><span class="code"><a href="#INVOKE_SUPER_QUICK">INVOKE_SUPER_QUICK</a>(element_list,&nbsp;vtable)<br>
@@ -12435,8 +12424,9 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#Invoke_Instructio
 <td class="singlecolumn"><dl><dt>Method resolution order:</dt>
 <dd><a href="SmaliAssemblyInstructions.html#INVOKE_SUPER_QUICK">INVOKE_SUPER_QUICK</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
-<dd><a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -12450,6 +12440,18 @@ Methods defined here:<br>
 <hr>
 Methods inherited from <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>:<br>
 <dl><dt><a name="INVOKE_SUPER_QUICK-get_registers"><strong>get_registers</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;the&nbsp;registers&nbsp;(list&nbsp;of&nbsp;SmaliRegister&nbsp;objects)&nbsp;used&nbsp;in&nbsp;this&nbsp;instruction.</span></dd></dl>
+
+<hr>
+Methods inherited from <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>:<br>
+<dl><dt><a name="INVOKE_SUPER_QUICK-get_fully_qualified_call"><strong>get_fully_qualified_call</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="INVOKE_SUPER_QUICK-get_method_name"><strong>get_method_name</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="INVOKE_SUPER_QUICK-get_method_name_only"><strong>get_method_name_only</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="INVOKE_SUPER_QUICK-get_owning_class_name"><strong>get_owning_class_name</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="INVOKE_SUPER_QUICK-get_slicing_action"><strong>get_slicing_action</strong></a>(self, tracked)</dt></dl>
 
 <hr>
 Methods inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
@@ -12523,14 +12525,10 @@ Data descriptors inherited from <a href="SmaliAssemblyInstructions.html#SmaliAss
 Data and other attributes inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
 <dl><dt><strong>__hash__</strong> = None</dl>
 
-<hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>:<br>
-<dl><dt><a name="INVOKE_SUPER_QUICK-get_slicing_action"><strong>get_slicing_action</strong></a>(self, tracked)</dt></dl>
-
 </td></tr></table> <p>
 <table class="section">
 <tr class="decor title-decor heading-text">
-<td class="section-title" colspan=3>&nbsp;<br><a name="INVOKE_SUPER_RANGE">class <strong>INVOKE_SUPER_RANGE</strong></a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)</td></tr>
+<td class="section-title" colspan=3>&nbsp;<br><a name="INVOKE_SUPER_RANGE">class <strong>INVOKE_SUPER_RANGE</strong></a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)</td></tr>
     
 <tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
 <td class="decor title-decor" colspan=2><span class="code"><a href="#INVOKE_SUPER_RANGE">INVOKE_SUPER_RANGE</a>(element_list,&nbsp;types_spec)<br>
@@ -12539,10 +12537,10 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#Invoke_Instructio
 <tr><td>&nbsp;</td>
 <td class="singlecolumn"><dl><dt>Method resolution order:</dt>
 <dd><a href="SmaliAssemblyInstructions.html#INVOKE_SUPER_RANGE">INVOKE_SUPER_RANGE</a></dd>
-<dd><a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
-<dd><a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -12550,7 +12548,15 @@ Methods defined here:<br>
 <dl><dt><a name="INVOKE_SUPER_RANGE-opcode"><strong>opcode</strong></a>(self)</dt></dl>
 
 <hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>:<br>
+Methods inherited from <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>:<br>
+<dl><dt><a name="INVOKE_SUPER_RANGE-__init__"><strong>__init__</strong></a>(self, element_list, types_spec)</dt><dd><span class="code">Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</span></dd></dl>
+
+<dl><dt><a name="INVOKE_SUPER_RANGE-__repr__"><strong>__repr__</strong></a>(self)</dt><dd><span class="code">Return&nbsp;repr(self).</span></dd></dl>
+
+<dl><dt><a name="INVOKE_SUPER_RANGE-get_registers"><strong>get_registers</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;the&nbsp;registers&nbsp;(list&nbsp;of&nbsp;SmaliRegister&nbsp;objects)&nbsp;used&nbsp;in&nbsp;this&nbsp;instruction.</span></dd></dl>
+
+<hr>
+Methods inherited from <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>:<br>
 <dl><dt><a name="INVOKE_SUPER_RANGE-get_fully_qualified_call"><strong>get_fully_qualified_call</strong></a>(self)</dt></dl>
 
 <dl><dt><a name="INVOKE_SUPER_RANGE-get_method_name"><strong>get_method_name</strong></a>(self)</dt></dl>
@@ -12559,21 +12565,7 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INST
 
 <dl><dt><a name="INVOKE_SUPER_RANGE-get_owning_class_name"><strong>get_owning_class_name</strong></a>(self)</dt></dl>
 
-<hr>
-Data descriptors inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>:<br>
-<dl><dt><strong>__dict__</strong></dt>
-<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
-</dl>
-<dl><dt><strong>__weakref__</strong></dt>
-<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
-</dl>
-<hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>:<br>
-<dl><dt><a name="INVOKE_SUPER_RANGE-__init__"><strong>__init__</strong></a>(self, element_list, types_spec)</dt><dd><span class="code">Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</span></dd></dl>
-
-<dl><dt><a name="INVOKE_SUPER_RANGE-__repr__"><strong>__repr__</strong></a>(self)</dt><dd><span class="code">Return&nbsp;repr(self).</span></dd></dl>
-
-<dl><dt><a name="INVOKE_SUPER_RANGE-get_registers"><strong>get_registers</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;the&nbsp;registers&nbsp;(list&nbsp;of&nbsp;SmaliRegister&nbsp;objects)&nbsp;used&nbsp;in&nbsp;this&nbsp;instruction.</span></dd></dl>
+<dl><dt><a name="INVOKE_SUPER_RANGE-get_slicing_action"><strong>get_slicing_action</strong></a>(self, tracked)</dt></dl>
 
 <hr>
 Methods inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
@@ -12636,17 +12628,21 @@ Returns:<br>
 &nbsp;&nbsp;&nbsp;<a href="#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:&nbsp;The&nbsp;corresponding&nbsp;<a href="#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>&nbsp;<a href="builtins.html#object">object</a></span></dd></dl>
 
 <hr>
+Data descriptors inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
+</dl>
+<hr>
 Data and other attributes inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
 <dl><dt><strong>__hash__</strong> = None</dl>
-
-<hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>:<br>
-<dl><dt><a name="INVOKE_SUPER_RANGE-get_slicing_action"><strong>get_slicing_action</strong></a>(self, tracked)</dt></dl>
 
 </td></tr></table> <p>
 <table class="section">
 <tr class="decor title-decor heading-text">
-<td class="section-title" colspan=3>&nbsp;<br><a name="INVOKE_VIRTUAL">class <strong>INVOKE_VIRTUAL</strong></a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)</td></tr>
+<td class="section-title" colspan=3>&nbsp;<br><a name="INVOKE_VIRTUAL">class <strong>INVOKE_VIRTUAL</strong></a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)</td></tr>
     
 <tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
 <td class="decor title-decor" colspan=2><span class="code"><a href="#INVOKE_VIRTUAL">INVOKE_VIRTUAL</a>(element_list,&nbsp;types_spec)<br>
@@ -12655,10 +12651,10 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#Invoke_Instructio
 <tr><td>&nbsp;</td>
 <td class="singlecolumn"><dl><dt>Method resolution order:</dt>
 <dd><a href="SmaliAssemblyInstructions.html#INVOKE_VIRTUAL">INVOKE_VIRTUAL</a></dd>
-<dd><a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
-<dd><a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -12668,7 +12664,15 @@ Methods defined here:<br>
 #&nbsp;It&nbsp;could&nbsp;be&nbsp;done&nbsp;with&nbsp;the&nbsp;SmaliSignature&nbsp;class&nbsp;from&nbsp;SmaliMethodDef.py</span></dd></dl>
 
 <hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>:<br>
+Methods inherited from <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>:<br>
+<dl><dt><a name="INVOKE_VIRTUAL-__init__"><strong>__init__</strong></a>(self, element_list, types_spec)</dt><dd><span class="code">Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</span></dd></dl>
+
+<dl><dt><a name="INVOKE_VIRTUAL-__repr__"><strong>__repr__</strong></a>(self)</dt><dd><span class="code">Return&nbsp;repr(self).</span></dd></dl>
+
+<dl><dt><a name="INVOKE_VIRTUAL-get_registers"><strong>get_registers</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;the&nbsp;registers&nbsp;(list&nbsp;of&nbsp;SmaliRegister&nbsp;objects)&nbsp;used&nbsp;in&nbsp;this&nbsp;instruction.</span></dd></dl>
+
+<hr>
+Methods inherited from <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>:<br>
 <dl><dt><a name="INVOKE_VIRTUAL-get_fully_qualified_call"><strong>get_fully_qualified_call</strong></a>(self)</dt></dl>
 
 <dl><dt><a name="INVOKE_VIRTUAL-get_method_name"><strong>get_method_name</strong></a>(self)</dt></dl>
@@ -12677,21 +12681,7 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INST
 
 <dl><dt><a name="INVOKE_VIRTUAL-get_owning_class_name"><strong>get_owning_class_name</strong></a>(self)</dt></dl>
 
-<hr>
-Data descriptors inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>:<br>
-<dl><dt><strong>__dict__</strong></dt>
-<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
-</dl>
-<dl><dt><strong>__weakref__</strong></dt>
-<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
-</dl>
-<hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>:<br>
-<dl><dt><a name="INVOKE_VIRTUAL-__init__"><strong>__init__</strong></a>(self, element_list, types_spec)</dt><dd><span class="code">Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</span></dd></dl>
-
-<dl><dt><a name="INVOKE_VIRTUAL-__repr__"><strong>__repr__</strong></a>(self)</dt><dd><span class="code">Return&nbsp;repr(self).</span></dd></dl>
-
-<dl><dt><a name="INVOKE_VIRTUAL-get_registers"><strong>get_registers</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;the&nbsp;registers&nbsp;(list&nbsp;of&nbsp;SmaliRegister&nbsp;objects)&nbsp;used&nbsp;in&nbsp;this&nbsp;instruction.</span></dd></dl>
+<dl><dt><a name="INVOKE_VIRTUAL-get_slicing_action"><strong>get_slicing_action</strong></a>(self, tracked)</dt></dl>
 
 <hr>
 Methods inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
@@ -12754,17 +12744,21 @@ Returns:<br>
 &nbsp;&nbsp;&nbsp;<a href="#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:&nbsp;The&nbsp;corresponding&nbsp;<a href="#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>&nbsp;<a href="builtins.html#object">object</a></span></dd></dl>
 
 <hr>
+Data descriptors inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
+</dl>
+<hr>
 Data and other attributes inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
 <dl><dt><strong>__hash__</strong> = None</dl>
-
-<hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>:<br>
-<dl><dt><a name="INVOKE_VIRTUAL-get_slicing_action"><strong>get_slicing_action</strong></a>(self, tracked)</dt></dl>
 
 </td></tr></table> <p>
 <table class="section">
 <tr class="decor title-decor heading-text">
-<td class="section-title" colspan=3>&nbsp;<br><a name="INVOKE_VIRTUAL_QUICK">class <strong>INVOKE_VIRTUAL_QUICK</strong></a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)</td></tr>
+<td class="section-title" colspan=3>&nbsp;<br><a name="INVOKE_VIRTUAL_QUICK">class <strong>INVOKE_VIRTUAL_QUICK</strong></a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)</td></tr>
     
 <tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
 <td class="decor title-decor" colspan=2><span class="code"><a href="#INVOKE_VIRTUAL_QUICK">INVOKE_VIRTUAL_QUICK</a>(element_list,&nbsp;vtable)<br>
@@ -12774,8 +12768,9 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#Invoke_Instructio
 <td class="singlecolumn"><dl><dt>Method resolution order:</dt>
 <dd><a href="SmaliAssemblyInstructions.html#INVOKE_VIRTUAL_QUICK">INVOKE_VIRTUAL_QUICK</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
-<dd><a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -12789,6 +12784,18 @@ Methods defined here:<br>
 <hr>
 Methods inherited from <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>:<br>
 <dl><dt><a name="INVOKE_VIRTUAL_QUICK-get_registers"><strong>get_registers</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;the&nbsp;registers&nbsp;(list&nbsp;of&nbsp;SmaliRegister&nbsp;objects)&nbsp;used&nbsp;in&nbsp;this&nbsp;instruction.</span></dd></dl>
+
+<hr>
+Methods inherited from <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>:<br>
+<dl><dt><a name="INVOKE_VIRTUAL_QUICK-get_fully_qualified_call"><strong>get_fully_qualified_call</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="INVOKE_VIRTUAL_QUICK-get_method_name"><strong>get_method_name</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="INVOKE_VIRTUAL_QUICK-get_method_name_only"><strong>get_method_name_only</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="INVOKE_VIRTUAL_QUICK-get_owning_class_name"><strong>get_owning_class_name</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="INVOKE_VIRTUAL_QUICK-get_slicing_action"><strong>get_slicing_action</strong></a>(self, tracked)</dt></dl>
 
 <hr>
 Methods inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
@@ -12862,14 +12869,10 @@ Data descriptors inherited from <a href="SmaliAssemblyInstructions.html#SmaliAss
 Data and other attributes inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
 <dl><dt><strong>__hash__</strong> = None</dl>
 
-<hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>:<br>
-<dl><dt><a name="INVOKE_VIRTUAL_QUICK-get_slicing_action"><strong>get_slicing_action</strong></a>(self, tracked)</dt></dl>
-
 </td></tr></table> <p>
 <table class="section">
 <tr class="decor title-decor heading-text">
-<td class="section-title" colspan=3>&nbsp;<br><a name="INVOKE_VIRTUAL_RANGE">class <strong>INVOKE_VIRTUAL_RANGE</strong></a>(<a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>)</td></tr>
+<td class="section-title" colspan=3>&nbsp;<br><a name="INVOKE_VIRTUAL_RANGE">class <strong>INVOKE_VIRTUAL_RANGE</strong></a>(<a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>)</td></tr>
     
 <tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
 <td class="decor title-decor" colspan=2><span class="code"><a href="#INVOKE_VIRTUAL_RANGE">INVOKE_VIRTUAL_RANGE</a>(element_list,&nbsp;types_spec)<br>
@@ -12878,10 +12881,10 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#Invoke_Instructio
 <tr><td>&nbsp;</td>
 <td class="singlecolumn"><dl><dt>Method resolution order:</dt>
 <dd><a href="SmaliAssemblyInstructions.html#INVOKE_VIRTUAL_RANGE">INVOKE_VIRTUAL_RANGE</a></dd>
-<dd><a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
-<dd><a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -12889,7 +12892,15 @@ Methods defined here:<br>
 <dl><dt><a name="INVOKE_VIRTUAL_RANGE-opcode"><strong>opcode</strong></a>(self)</dt></dl>
 
 <hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>:<br>
+Methods inherited from <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>:<br>
+<dl><dt><a name="INVOKE_VIRTUAL_RANGE-__init__"><strong>__init__</strong></a>(self, element_list, types_spec)</dt><dd><span class="code">Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</span></dd></dl>
+
+<dl><dt><a name="INVOKE_VIRTUAL_RANGE-__repr__"><strong>__repr__</strong></a>(self)</dt><dd><span class="code">Return&nbsp;repr(self).</span></dd></dl>
+
+<dl><dt><a name="INVOKE_VIRTUAL_RANGE-get_registers"><strong>get_registers</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;the&nbsp;registers&nbsp;(list&nbsp;of&nbsp;SmaliRegister&nbsp;objects)&nbsp;used&nbsp;in&nbsp;this&nbsp;instruction.</span></dd></dl>
+
+<hr>
+Methods inherited from <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>:<br>
 <dl><dt><a name="INVOKE_VIRTUAL_RANGE-get_fully_qualified_call"><strong>get_fully_qualified_call</strong></a>(self)</dt></dl>
 
 <dl><dt><a name="INVOKE_VIRTUAL_RANGE-get_method_name"><strong>get_method_name</strong></a>(self)</dt></dl>
@@ -12898,21 +12909,7 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INST
 
 <dl><dt><a name="INVOKE_VIRTUAL_RANGE-get_owning_class_name"><strong>get_owning_class_name</strong></a>(self)</dt></dl>
 
-<hr>
-Data descriptors inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>:<br>
-<dl><dt><strong>__dict__</strong></dt>
-<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
-</dl>
-<dl><dt><strong>__weakref__</strong></dt>
-<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
-</dl>
-<hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#_PARAMETER_RANGE_INSTRUCTION">_PARAMETER_RANGE_INSTRUCTION</a>:<br>
-<dl><dt><a name="INVOKE_VIRTUAL_RANGE-__init__"><strong>__init__</strong></a>(self, element_list, types_spec)</dt><dd><span class="code">Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</span></dd></dl>
-
-<dl><dt><a name="INVOKE_VIRTUAL_RANGE-__repr__"><strong>__repr__</strong></a>(self)</dt><dd><span class="code">Return&nbsp;repr(self).</span></dd></dl>
-
-<dl><dt><a name="INVOKE_VIRTUAL_RANGE-get_registers"><strong>get_registers</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;the&nbsp;registers&nbsp;(list&nbsp;of&nbsp;SmaliRegister&nbsp;objects)&nbsp;used&nbsp;in&nbsp;this&nbsp;instruction.</span></dd></dl>
+<dl><dt><a name="INVOKE_VIRTUAL_RANGE-get_slicing_action"><strong>get_slicing_action</strong></a>(self, tracked)</dt></dl>
 
 <hr>
 Methods inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
@@ -12975,12 +12972,16 @@ Returns:<br>
 &nbsp;&nbsp;&nbsp;<a href="#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:&nbsp;The&nbsp;corresponding&nbsp;<a href="#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>&nbsp;<a href="builtins.html#object">object</a></span></dd></dl>
 
 <hr>
+Data descriptors inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
+</dl>
+<hr>
 Data and other attributes inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
 <dl><dt><strong>__hash__</strong> = None</dl>
-
-<hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>:<br>
-<dl><dt><a name="INVOKE_VIRTUAL_RANGE-get_slicing_action"><strong>get_slicing_action</strong></a>(self, tracked)</dt></dl>
 
 </td></tr></table> <p>
 <table class="section">
@@ -14041,25 +14042,6 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#First_Reg_To_Thir
 </td></tr></table> <p>
 <table class="section">
 <tr class="decor title-decor heading-text">
-<td class="section-title" colspan=3>&nbsp;<br><a name="Invoke_Instruction">class <strong>Invoke_Instruction</strong></a>(<a href="builtins.html#object">builtins.object</a>)</td></tr>
-    
-<tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
-<td class="decor title-decor" colspan=2><span class="code">#&nbsp;invoke&nbsp;instructions<br>&nbsp;</span></td></tr>
-<tr><td>&nbsp;</td>
-<td class="singlecolumn">Methods defined here:<br>
-<dl><dt><a name="Invoke_Instruction-get_slicing_action"><strong>get_slicing_action</strong></a>(self, tracked)</dt></dl>
-
-<hr>
-Data descriptors defined here:<br>
-<dl><dt><strong>__dict__</strong></dt>
-<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
-</dl>
-<dl><dt><strong>__weakref__</strong></dt>
-<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
-</dl>
-</td></tr></table> <p>
-<table class="section">
-<tr class="decor title-decor heading-text">
 <td class="section-title" colspan=3>&nbsp;<br><a name="LABEL">class <strong>LABEL</strong></a>(<a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>)</td></tr>
     
 <tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
@@ -14167,10 +14149,10 @@ Data and other attributes inherited from <a href="SmaliAssemblyInstructions.html
 <td class="singlecolumn"><dl><dt>Method resolution order:</dt>
 <dd><a href="SmaliAssemblyInstructions.html#LOG_D">LOG_D</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#INVOKE_STATIC">INVOKE_STATIC</a></dd>
-<dd><a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
-<dd><a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -14184,7 +14166,11 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#INVOKE_STATIC">IN
 <dl><dt><a name="LOG_D-opcode"><strong>opcode</strong></a>(self)</dt><dd><span class="code">#&nbsp;e.g.,&nbsp;invoke-static&nbsp;{v2},&nbsp;Lcom/google/ads/interactivemedia/pal/NonceLoader;-&gt;zza(Ljava/lang/String;)Ljava/lang/String;</span></dd></dl>
 
 <hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>:<br>
+Methods inherited from <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>:<br>
+<dl><dt><a name="LOG_D-get_registers"><strong>get_registers</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;the&nbsp;registers&nbsp;(list&nbsp;of&nbsp;SmaliRegister&nbsp;objects)&nbsp;used&nbsp;in&nbsp;this&nbsp;instruction.</span></dd></dl>
+
+<hr>
+Methods inherited from <a href="SmaliAssemblyInstructions.html#_INVOKE_INSTRUCTION">_INVOKE_INSTRUCTION</a>:<br>
 <dl><dt><a name="LOG_D-get_fully_qualified_call"><strong>get_fully_qualified_call</strong></a>(self)</dt></dl>
 
 <dl><dt><a name="LOG_D-get_method_name"><strong>get_method_name</strong></a>(self)</dt></dl>
@@ -14193,17 +14179,7 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INST
 
 <dl><dt><a name="LOG_D-get_owning_class_name"><strong>get_owning_class_name</strong></a>(self)</dt></dl>
 
-<hr>
-Data descriptors inherited from <a href="SmaliAssemblyInstructions.html#_METHOD_CALL_INSTRUCTION">_METHOD_CALL_INSTRUCTION</a>:<br>
-<dl><dt><strong>__dict__</strong></dt>
-<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
-</dl>
-<dl><dt><strong>__weakref__</strong></dt>
-<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
-</dl>
-<hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#_PARAMETER_LIST_INSTRUCTION">_PARAMETER_LIST_INSTRUCTION</a>:<br>
-<dl><dt><a name="LOG_D-get_registers"><strong>get_registers</strong></a>(self)</dt><dd><span class="code">Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;the&nbsp;registers&nbsp;(list&nbsp;of&nbsp;SmaliRegister&nbsp;objects)&nbsp;used&nbsp;in&nbsp;this&nbsp;instruction.</span></dd></dl>
+<dl><dt><a name="LOG_D-get_slicing_action"><strong>get_slicing_action</strong></a>(self, tracked)</dt></dl>
 
 <hr>
 Methods inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
@@ -14266,12 +14242,16 @@ Returns:<br>
 &nbsp;&nbsp;&nbsp;<a href="#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:&nbsp;The&nbsp;corresponding&nbsp;<a href="#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>&nbsp;<a href="builtins.html#object">object</a></span></dd></dl>
 
 <hr>
+Data descriptors inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
+</dl>
+<hr>
 Data and other attributes inherited from <a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>:<br>
 <dl><dt><strong>__hash__</strong> = None</dl>
-
-<hr>
-Methods inherited from <a href="SmaliAssemblyInstructions.html#Invoke_Instruction">Invoke_Instruction</a>:<br>
-<dl><dt><a name="LOG_D-get_slicing_action"><strong>get_slicing_action</strong></a>(self, tracked)</dt></dl>
 
 </td></tr></table> <p>
 <table class="section">
@@ -19777,7 +19757,7 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#Second_Reg_To_Fir
 </td></tr></table> <p>
 <table class="section">
 <tr class="decor title-decor heading-text">
-<td class="section-title" colspan=3>&nbsp;<br><a name="RETURN">class <strong>RETURN</strong></a>(<a href="SmaliAssemblyInstructions.html#_ThirtyTwoBit_Parameters">_ThirtyTwoBit_Parameters</a>, <a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a>)</td></tr>
+<td class="section-title" colspan=3>&nbsp;<br><a name="RETURN">class <strong>RETURN</strong></a>(<a href="SmaliAssemblyInstructions.html#_ThirtyTwoBit_Parameters">_ThirtyTwoBit_Parameters</a>, <a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a>)</td></tr>
     
 <tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
 <td class="decor title-decor" colspan=2><span class="code"><a href="#RETURN">RETURN</a>(reg_dest)<br>
@@ -19789,6 +19769,7 @@ Methods inherited from <a href="SmaliAssemblyInstructions.html#Second_Reg_To_Fir
 <dd><a href="SmaliAssemblyInstructions.html#_ThirtyTwoBit_Parameters">_ThirtyTwoBit_Parameters</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -19875,7 +19856,7 @@ Data and other attributes inherited from <a href="SmaliAssemblyInstructions.html
 </td></tr></table> <p>
 <table class="section">
 <tr class="decor title-decor heading-text">
-<td class="section-title" colspan=3>&nbsp;<br><a name="RETURN_OBJECT">class <strong>RETURN_OBJECT</strong></a>(<a href="SmaliAssemblyInstructions.html#_Object_Parameters">_Object_Parameters</a>, <a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a>)</td></tr>
+<td class="section-title" colspan=3>&nbsp;<br><a name="RETURN_OBJECT">class <strong>RETURN_OBJECT</strong></a>(<a href="SmaliAssemblyInstructions.html#_Object_Parameters">_Object_Parameters</a>, <a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a>)</td></tr>
     
 <tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
 <td class="decor title-decor" colspan=2><span class="code"><a href="#RETURN_OBJECT">RETURN_OBJECT</a>(reg_dest)<br>
@@ -19887,6 +19868,7 @@ Data and other attributes inherited from <a href="SmaliAssemblyInstructions.html
 <dd><a href="SmaliAssemblyInstructions.html#_Object_Parameters">_Object_Parameters</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -19973,12 +19955,13 @@ Data and other attributes inherited from <a href="SmaliAssemblyInstructions.html
 </td></tr></table> <p>
 <table class="section">
 <tr class="decor title-decor heading-text">
-<td class="section-title" colspan=3>&nbsp;<br><a name="RETURN_VOID">class <strong>RETURN_VOID</strong></a>(<a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>)</td></tr>
+<td class="section-title" colspan=3>&nbsp;<br><a name="RETURN_VOID">class <strong>RETURN_VOID</strong></a>(<a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a>, <a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a>)</td></tr>
     
 <tr><td class="decor title-decor"><span class="code">&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
 <td class="singlecolumn"><dl><dt>Method resolution order:</dt>
 <dd><a href="SmaliAssemblyInstructions.html#RETURN_VOID">RETURN_VOID</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
@@ -20064,7 +20047,7 @@ Data and other attributes inherited from <a href="SmaliAssemblyInstructions.html
 </td></tr></table> <p>
 <table class="section">
 <tr class="decor title-decor heading-text">
-<td class="section-title" colspan=3>&nbsp;<br><a name="RETURN_WIDE">class <strong>RETURN_WIDE</strong></a>(<a href="SmaliAssemblyInstructions.html#_SixtyFourBit_Dest">_SixtyFourBit_Dest</a>, <a href="SmaliAssemblyInstructions.html#_IMPLICIT_REGISTER_INSTRUCTION">_IMPLICIT_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a>)</td></tr>
+<td class="section-title" colspan=3>&nbsp;<br><a name="RETURN_WIDE">class <strong>RETURN_WIDE</strong></a>(<a href="SmaliAssemblyInstructions.html#_SixtyFourBit_Dest">_SixtyFourBit_Dest</a>, <a href="SmaliAssemblyInstructions.html#_IMPLICIT_REGISTER_INSTRUCTION">_IMPLICIT_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a>, <a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a>)</td></tr>
     
 <tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
 <td class="decor title-decor" colspan=2><span class="code"><a href="#RETURN_WIDE">RETURN_WIDE</a>(reg_dest)<br>
@@ -20077,6 +20060,7 @@ Data and other attributes inherited from <a href="SmaliAssemblyInstructions.html
 <dd><a href="SmaliAssemblyInstructions.html#_IMPLICIT_REGISTER_INSTRUCTION">_IMPLICIT_REGISTER_INSTRUCTION</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#_SINGLE_REGISTER_INSTRUCTION">_SINGLE_REGISTER_INSTRUCTION</a></dd>
 <dd><a href="SmaliAssemblyInstructions.html#SmaliAssemblyInstruction">SmaliAssemblyInstruction</a></dd>
+<dd><a href="SmaliAssemblyInstructions.html#_JUMP_INSTRUCTION">_JUMP_INSTRUCTION</a></dd>
 <dd><a href="builtins.html#object">builtins.object</a></dd>
 </dl>
 <hr>
