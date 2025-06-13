@@ -365,8 +365,8 @@ class First_Reg_Dead_End():
         return self.get_registers()[0]
 
     def get_slicing_action(self, tracked):
-        if tracked == self.get_registers()[0]:
-            return [Action.REMOVE, self.get_registers()[0]]
+        if tracked == self.get_destination():
+            return [Action.REMOVE, self.get_destination()]
         else:
             return Action.NO_ACTIONS
 
@@ -377,8 +377,8 @@ class Second_Reg_To_First_Reg():
 
     def get_slicing_action(self, tracked):
         if tracked == self.get_registers()[1]:
-            return [Action.ADD, self.get_registers()[0]]
-        elif tracked == self.get_registers()[0]:
+            return [Action.ADD, self.get_destination()]
+        elif tracked == self.get_destination():
             return [Action.REMOVE, tracked]
 
 # if tracking the first register, the tracked register is removed. If tracking a different register, return that some of its data is in
@@ -390,15 +390,15 @@ class Second_Reg_To_First_Reg_Arith():
     def get_slicing_action(self, tracked):
         if len(self.get_registers()) == 3:
             if tracked == self.get_registers()[1]:
-                return [Action.CAN_GET_DATA_FROM, self.get_registers()[0], "WITH", self.get_registers()[2]]
+                return [Action.CAN_GET_DATA_FROM, self.get_destination(), "WITH", self.get_registers()[2]]
             elif tracked == self.get_registers()[2]:
-                return [Action.CAN_GET_DATA_FROM, self.get_registers()[0], "WITH", self.get_registers()[1]]
-            elif tracked == self.get_registers()[0]:
+                return [Action.CAN_GET_DATA_FROM, self.get_destination(), "WITH", self.get_registers()[1]]
+            elif tracked == self.get_destination():
                 return [Action.REMOVE, tracked]
         else: # len == 2 (NEG and NOT instructions)
             if tracked == self.get_registers()[1]:
-                return [Action.PART_OF_DATA_IN, self.get_registers()[0]]
-            elif tracked == self.get_registers()[0]:
+                return [Action.PART_OF_DATA_IN, self.get_destination()]
+            elif tracked == self.get_destination():
                 return [Action.REMOVE, tracked]
 
 class Second_Reg_To_First_Reg_Arith_2addr():
@@ -407,8 +407,8 @@ class Second_Reg_To_First_Reg_Arith_2addr():
 
     def get_slicing_action(self, tracked):
         if tracked == self.get_registers()[1]:
-            return [Action.PART_OF_DATA_IN, self.get_registers()[0]]
-        elif tracked == self.get_registers()[0]:
+            return [Action.PART_OF_DATA_IN, self.get_destination()]
+        elif tracked == self.get_destination():
             return [Action.REMOVE, tracked]
         else:
             return ["NO ACTIONS"]
@@ -421,8 +421,8 @@ class Third_Var_To_First_Reg():
 
     def get_slicing_action(self, tracked):
         if tracked == self.get_instance_variable():
-            return [Action.ADD, self.get_registers()[0]]
-        elif tracked == self.get_registers()[0]:
+            return [Action.ADD, self.get_destination()]
+        elif tracked == self.get_destination():
             return [Action.REMOVE, tracked]
         else:
             return [Action.NO_ACTIONS]
@@ -435,8 +435,8 @@ class First_Reg_To_Third_Var():
 
     def get_slicing_action(self, tracked):
         if tracked == self.get_registers()[0]:
-            return [Action.ADD, self.get_instance_variable()]
-        elif tracked == self.get_instance_variable():
+            return [Action.ADD, self.get_destination()]
+        elif tracked == self.get_destination():
             return [Action.REMOVE, tracked]
         else:
             return [Action.NO_ACTIONS]
@@ -449,8 +449,8 @@ class Third_Reg_To_First_Reg():
 
     def get_slicing_action(self, tracked):
         if tracked == self.get_registers()[2]:
-            return ["ADD", self.get_registers()[0]]
-        elif tracked == self.get_registers()[0]:
+            return ["ADD", self.get_destination()]
+        elif tracked == self.get_destination():
             return ["REMOVE", tracked]
         else:
             return ["NO ACTIONS"]
@@ -463,8 +463,8 @@ class First_Reg_To_Third_Reg():
 
     def get_slicing_action(self, tracked):
         if tracked == self.get_registers()[0]:
-            return [Action.ADD, self.get_registers()[2]]
-        elif tracked == self.get_registers()[2]:
+            return [Action.ADD, self.get_destination()]
+        elif tracked == self.get_destination():
             return [Action.REMOVE, tracked]
         else:
             return [Action.NO_ACTIONS]
