@@ -361,6 +361,9 @@ class _SixtyFourBit_Dest():
 
 # if tracking the first register, the tracked register is removed. If any other register is tracked, nothing happens.
 class First_Reg_Dead_End():
+    def get_destination(self):
+        return self.get_registers()[0]
+
     def get_slicing_action(self, tracked):
         if tracked == self.get_registers()[0]:
             return [Action.REMOVE, self.get_registers()[0]]
@@ -369,6 +372,9 @@ class First_Reg_Dead_End():
 
 # if tracking the first register, the tracked register is removed. If the second register is tracked, add the first register.
 class Second_Reg_To_First_Reg():
+    def get_destination(self):
+        return self.get_registers()[0]
+
     def get_slicing_action(self, tracked):
         if tracked == self.get_registers()[1]:
             return [Action.ADD, self.get_registers()[0]]
@@ -378,6 +384,9 @@ class Second_Reg_To_First_Reg():
 # if tracking the first register, the tracked register is removed. If tracking a different register, return that some of its data is in
 # the first register.
 class Second_Reg_To_First_Reg_Arith():
+    def get_destination(self):
+        return self.get_registers()[0]
+
     def get_slicing_action(self, tracked):
         if len(self.get_registers()) == 3:
             if tracked == self.get_registers()[1]:
@@ -393,6 +402,9 @@ class Second_Reg_To_First_Reg_Arith():
                 return [Action.REMOVE, tracked]
 
 class Second_Reg_To_First_Reg_Arith_2addr():
+    def get_destination(self):
+        return self.get_registers()[0]
+
     def get_slicing_action(self, tracked):
         if tracked == self.get_registers()[1]:
             return [Action.PART_OF_DATA_IN, self.get_registers()[0]]
@@ -404,6 +416,9 @@ class Second_Reg_To_First_Reg_Arith_2addr():
 # if tracking the first register, the tracked register is removed. If tracking the second register, nothing happens. If tracking the instance variable,
 # add the first register.
 class Third_Var_To_First_Reg():
+    def get_destination(self):
+        return self.get_registers()[0]
+
     def get_slicing_action(self, tracked):
         if tracked == self.get_instance_variable():
             return [Action.ADD, self.get_registers()[0]]
@@ -415,6 +430,9 @@ class Third_Var_To_First_Reg():
 # if tracking the instance variable, the tracked variable is removed. If tracking the second register, nothing happens. If tracking the first register
 # add the instance variable.
 class First_Reg_To_Third_Var():
+    def get_destination(self):
+        return self.get_instance_variable()
+
     def get_slicing_action(self, tracked):
         if tracked == self.get_registers()[0]:
             return [Action.ADD, self.get_instance_variable()]
@@ -426,6 +444,9 @@ class First_Reg_To_Third_Var():
 # if tracking the first register, the tracked register is removed. If tracking the second register, nothing happens. If tracking the third register,
 # add the first register.
 class Third_Reg_To_First_Reg():
+    def get_destination(self):
+        return self.get_registers()[0]
+
     def get_slicing_action(self, tracked):
         if tracked == self.get_registers()[2]:
             return ["ADD", self.get_registers()[0]]
@@ -437,6 +458,9 @@ class Third_Reg_To_First_Reg():
 # if tracking the third register, the tracked variable is removed. If tracking the second register, nothing happens. If tracking the first register
 # add the third register.
 class First_Reg_To_Third_Reg():
+    def get_destination(self):
+        return self.get_registers()[2]
+
     def get_slicing_action(self, tracked):
         if tracked == self.get_registers()[0]:
             return [Action.ADD, self.get_registers()[2]]
