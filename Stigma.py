@@ -68,12 +68,6 @@ def findPlugin(p):
         print("Plugin file \'" + str(p) + "\' was not found or was not readable.\nPre-existing plugins can be found in " + plugin_path)
         exit(1)
 
-def findAPK(apk):
-    if (not os.path.exists(apk)):
-        print("Input file (" + apk + ") was not found or was not readable.")
-        exit(1)
-    return apk
-
 def importPlugin(plugin_name):
     # https://mathieularose.com/plugin-architecture-in-python
     # https://docs.python.org/3/library/importlib.html
@@ -508,7 +502,7 @@ def main():
     args = parser.parse_args()
 
     args.plugin = findPlugin(args.plugin[0])
-    args.APK = findAPK(args.APK)
+    args.APK = SmaliCodeBase.SmaliCodeBase.findAPK(args.APK)
 
     stigmaMainWorkflow(args)
 

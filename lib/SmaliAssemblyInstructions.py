@@ -38,9 +38,19 @@
 
 from lib import StigmaStringParsingLib
 from lib import SmaliTypes
+from enum import Enum
 
 from lib.SmaliRegister import SmaliRegister
 
+class Action(Enum):
+    ADD = 1
+    REMOVE = 2
+    PART_OF_DATA_IN = 3
+    CAN_GET_DATA_FROM = 4
+    JUMP = 5
+    RETURN = 6
+    RESULT = 7
+    NO_ACTIONS = 8
 
 def from_line(raw_line_string):
     ''' 
@@ -369,17 +379,17 @@ class _SixtyFourBit_Dest():
 class First_Reg_Dead_End():
     def get_slicing_action(self, tracked):
         if tracked == self.get_registers()[0]:
-            return ["REMOVE", tracked]
+            return [Action.REMOVE, self.get_registers()[0]]
         else:
-            return ["NO ACTIONS"]
+            return Action.NO_ACTIONS
 
 # if tracking the first register, the tracked register is removed. If the second register is tracked, add the first register.
 class Second_Reg_To_First_Reg():
     def get_slicing_action(self, tracked):
         if tracked == self.get_registers()[1]:
-            return ["ADD", self.get_registers()[0]]
+            return [Action.ADD, self.get_registers()[0]]
         elif tracked == self.get_registers()[0]:
-            return ["REMOVE", tracked]
+            return [Action.REMOVE, tracked]
 
 # if tracking the first register, the tracked register is removed. If tracking a different register, return that some of its data is in
 # the first register.
@@ -387,23 +397,23 @@ class Second_Reg_To_First_Reg_Arith():
     def get_slicing_action(self, tracked):
         if len(self.get_registers()) == 3:
             if tracked == self.get_registers()[1]:
-                return ["CAN GET DATA FROM", self.get_registers()[0], "WITH", self.get_registers()[2]]
+                return [Action.CAN_GET_DATA_FROM, self.get_registers()[0], "WITH", self.get_registers()[2]]
             elif tracked == self.get_registers()[2]:
-                return ["CAN GET DATA FROM", self.get_registers()[0], "WITH", self.get_registers()[1]]
+                return [Action.CAN_GET_DATA_FROM, self.get_registers()[0], "WITH", self.get_registers()[1]]
             elif tracked == self.get_registers()[0]:
-                return ["REMOVE", tracked]
+                return [Action.REMOVE, tracked]
         else: # len == 2 (NEG and NOT instructions)
             if tracked == self.get_registers()[1]:
-                return ["PART OF DATA IN", self.get_registers()[0]]
+                return [Action.PART_OF_DATA_IN, self.get_registers()[0]]
             elif tracked == self.get_registers()[0]:
-                return ["REMOVE", tracked]
+                return [Action.REMOVE, tracked]
 
 class Second_Reg_To_First_Reg_Arith_2addr():
     def get_slicing_action(self, tracked):
         if tracked == self.get_registers()[1]:
-            return ["PART OF DATA IN", self.get_registers()[0]]
+            return [Action.PART_OF_DATA_IN, self.get_registers()[0]]
         elif tracked == self.get_registers()[0]:
-            return ["REMOVE", tracked]
+            return [Action.REMOVE, tracked]
         else:
             return ["NO ACTIONS"]
 
@@ -412,22 +422,22 @@ class Second_Reg_To_First_Reg_Arith_2addr():
 class Third_Var_To_First_Reg():
     def get_slicing_action(self, tracked):
         if tracked == self.get_instance_variable():
-            return ["ADD", self.get_registers()[0]]
+            return [Action.ADD, self.get_registers()[0]]
         elif tracked == self.get_registers()[0]:
-            return ["REMOVE", tracked]
+            return [Action.REMOVE, tracked]
         else:
-            return ["NO ACTIONS"]
+            return [Action.NO_ACTIONS]
 
 # if tracking the instance variable, the tracked variable is removed. If tracking the second register, nothing happens. If tracking the first register
 # add the instance variable.
 class First_Reg_To_Third_Var():
     def get_slicing_action(self, tracked):
         if tracked == self.get_registers()[0]:
-            return ["ADD", self.get_instance_variable()]
+            return [Action.ADD, self.get_instance_variable()]
         elif tracked == self.get_instance_variable():
-            return ["REMOVE", tracked]
+            return [Action.REMOVE, tracked]
         else:
-            return ["NO ACTIONS"]
+            return [Action.NO_ACTIONS]
 
 # if tracking the first register, the tracked register is removed. If tracking the second register, nothing happens. If tracking the third register,
 # add the first register.
@@ -445,21 +455,21 @@ class Third_Reg_To_First_Reg():
 class First_Reg_To_Third_Reg():
     def get_slicing_action(self, tracked):
         if tracked == self.get_registers()[0]:
-            return ["ADD", self.get_registers()[2]]
+            return [Action.ADD, self.get_registers()[2]]
         elif tracked == self.get_registers()[2]:
-            return ["REMOVE", tracked]
+            return [Action.REMOVE, tracked]
         else:
-            return ["NO ACTIONS"]
+            return [Action.NO_ACTIONS]
 
 # invoke instructions
 class Invoke_Instruction():
     def get_slicing_action(self, tracked):
-        return ["JUMP", self.get_method_name(), self.get_registers().index(tracked)]
+        return [Action.JUMP, self.get_method_name(), self.get_registers().index(tracked)]
 
 # jump instructions
 class _JUMP_TO_LABEL_INSTRUCTION():
     def get_slicing_action(self, tracked):
-        return ["JUMP", self.get_label()]
+        return [Action.JUMP, self.get_label()]
     
     def get_label(self):
         return self.split(":")[1]
@@ -469,12 +479,12 @@ class _JUMP_TO_LABEL_INSTRUCTION():
 class Result_Instruction():
     def get_slicing_action(self, tracked):
         # not finished
-        return ["RESULT", tracked]
+        return [Action.RESULT, tracked]
 
 # has the tracking location but nothing happens with it
 class No_Slicing_Actions():
     def get_slicing_action(self, tracked):
-        return ["NO ACTIONS"]
+        return [Action.NO_ACTIONS]
         
 #class _NoType_OR_NoParameters():
     # instruction classes that extend this type

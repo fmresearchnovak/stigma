@@ -10,20 +10,12 @@ import os
 from lib import SmaliRegister
 from lib import SmaliClassDef
 from lib import SmaliAssemblyInstructions
+from lib.SmaliAssemblyInstructions import Action
 from lib import StigmaStringParsingLib
 from lib import SmaliCodeIterator
 from lib import SmaliCodeBase
 from lib.SmaliMethodDef import SmaliMethodSignature
 import StigmaState
-
-class Action(Enum):
-    ADD = 1
-    REMOVE = 2
-    PART_OF_DATA_IN = 3
-    CAN_GET_DATA_FROM = 4
-    JUMP = 5
-    RETURN = 6
-    RESULT = 7
 
 class TracingManager:
 
@@ -107,13 +99,6 @@ class TracingManager:
     def get_files(self):
         return self.files_to_search
 
-
-def findAPK(apk):
-    if (not os.path.exists(apk)):
-        print("ERROR: Could not find APK file.")
-        exit(1)
-    return apk
-
 def get_function_name(filename, line_number, lines):
     match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_METHOD, lines[line_number])
     while(match_object == None):
@@ -196,7 +181,7 @@ def generate_directed_graph(graph):
 def test_instance(instruction, location, tracingManager):
     first = False
     original_line = tracingManager.target_line
-    if original_line == str(instruction).replace("\n", ""):
+    if original_line.lstrip() == repr(instruction):
         first = True
 
     full_action = instruction.get_slicing_action(location)
@@ -204,7 +189,7 @@ def test_instance(instruction, location, tracingManager):
     
     match full_action[0]:
     # change to enum
-        case "ADD":
+        case Action.ADD:
             print("ADDING NEW LOCATION " + str(full_action[1]))
             tracingManager.add_location(str(full_action[1]))
             tracingManager.add_edge(location, str(full_action[1]), tracingManager.current_line_number)
@@ -220,23 +205,23 @@ def test_instance(instruction, location, tracingManager):
 
                     if file in tracingManager.smali_files:
                         tracingManager.add_file(file, line)
-        case "REMOVE":
+        case Action.REMOVE:
             if not first:
                 print("REMOVING LOCATION " + str(full_action[1]))
                 tracingManager.remove_location(full_action[1])
             else:
                 print("FIRST LINE, DON'T REMOVE")
-        case "PART OF DATA IN":
+        case Action.PART_OF_DATA_IN:
             tracingManager.locations_with_partial_tracked_data.append([str(full_action[1]), str(full_action[1]), str(type(instruction))])
             #print(tracingManager.locations_with_partial_tracked_data)
-        case "CAN GET DATA FROM":
+        case Action.CAN_GET_DATA_FROM:
             tracingManager.locations_with_partial_tracked_data.append([str(full_action[1]), str(full_action[3]), str(type(instruction))])
             #print(tracingManager.locations_with_partial_tracked_data)
-        case "JUMP":
+        case Action.JUMP:
             pass
-        case "RETURN":
+        case Action.RETURN:
             pass
-        case "RESULT":
+        case Action.RESULT:
             pass
         case _:
             pass
@@ -403,7 +388,7 @@ def main():
     parser.add_argument("register", help="The register that you wish to trace the data of.")
 
     args = parser.parse_args()
-    apk_path = findAPK(args.APK)
+    apk_path = SmaliCodeBase.SmaliCodeBase.findAPK(args.APK)
 
     tracingManager = TracingManager()
 
