@@ -4,6 +4,7 @@ import argparse
 import subprocess
 import time
 import os
+import enum
 
 # SOMETHING TO REMEMBER: IMPLICIT REGISTERS GETTING OVERWRITTEN BY THEMSELVES
 
@@ -16,7 +17,7 @@ from lib import SmaliCodeBase
 from lib.SmaliMethodDef import SmaliMethodSignature
 import StigmaState
 
-class Action(Enum):
+class Action(enum.Enum):
     ADD = 1
     REMOVE = 2
     PART_OF_DATA_IN = 3
