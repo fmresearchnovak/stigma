@@ -163,7 +163,11 @@ class SmaliExecutionIterator():
 
 		self.function_call_stack = []
 
-		
+		# I made this an instance variable so that the correct line is stored
+		self.cur_line_to_return = None
+
+		# storing the return lines of nested jumps
+		self.return_address_stack = []
 		
 		
 	def __iter__(self):
@@ -185,7 +189,6 @@ class SmaliExecutionIterator():
 		# Step #1, store the "current" line to return to user
 		# might be a string, and it might be a SmaliAssemblyInstruction.py Object
 		cur_line_str = str(self.cur_text[self.iter_idx])
-		cur_line_to_return = SmaliAssemblyInstructions.from_line(cur_line_str) # will return this
 
 
 		# Step #1A, make this line as visited
@@ -201,7 +204,33 @@ class SmaliExecutionIterator():
 		if(isinstance(next_line, SmaliAssemblyInstructions._JUMP_INSTRUCTION)):
 			# ??? unfinished
 			# TODO: Write code here
-			pass
+
+			# get the destination of the jump from the instruction 
+			destination = next_line.get_destination()
+
+			# return to the line stored in line_to_return_to
+			if destination == "return":
+				if self.cur_line_to_return == None:
+					print("Error: Return statement has no target")
+					exit(1)
+				return_to = self.cur_line_to_return
+				if len(self.return_address_stack) != 0:
+					self.cur_line_to_return = self.return_address_stack.pop()
+				return return_to
+
+			# labels will be in the same file, so find where the label is and return the line
+			elif instance_of(next_line, _JUMP_TO_LABEL_INSTRUCTION):
+				 # adjusts the stack accordingly
+				 
+				# no idea why the identation is weird here but it prevents the code from running
+				 '''if self.cur_line_to_return != None:
+					self.return_address_stack.append(self.cur_line_to_return)
+					self.cur_line_to_return = SmaliAssemblyInstructions.from_line(cur_line_str) # will return this'''
+
+				 # finding the line
+
+			elif instance_of(next_line, _INVOKE_INSTRUCTION):
+				pass
 
 
 		return cur_line_to_return

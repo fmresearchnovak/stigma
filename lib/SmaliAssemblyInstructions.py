@@ -480,6 +480,9 @@ class _INVOKE_INSTRUCTION(SmaliAssemblyInstruction, _JUMP_INSTRUCTION):
     def get_slicing_action(self, tracked):
         return [Action.JUMP, self.get_method_name(), self.get_registers().index(tracked)]
     
+    def get_destination(self):
+        return self.get_method_name()
+    
     def get_fully_qualified_call(self):
         return self.types_spec
     
@@ -501,6 +504,9 @@ class _INVOKE_INSTRUCTION(SmaliAssemblyInstruction, _JUMP_INSTRUCTION):
 class _JUMP_TO_LABEL_INSTRUCTION(_JUMP_INSTRUCTION):
     def get_slicing_action(self, tracked):
         return [Action.JUMP, self.get_label()]
+
+    def get_destination(self):
+        return self.get_label()
     
     def get_label(self):
         return self.split(":")[1]
@@ -680,21 +686,33 @@ class MOVE_EXCEPTION(_Object_Parameters, _SINGLE_REGISTER_INSTRUCTION):
 class RETURN_VOID(SmaliAssemblyInstruction, _JUMP_INSTRUCTION):
     def opcode(self):
         return "return-void"
-        
+    
+    def get_destination(self):
+        return "return"
+
     def __repr__(self):
         return self.opcode()
 
 class RETURN(_ThirtyTwoBit_Parameters, _SINGLE_REGISTER_INSTRUCTION, _JUMP_INSTRUCTION):
     def opcode(self):
         return "return"
+    
+    def get_destination(self):
+        return "return"
 
 class RETURN_WIDE(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _SINGLE_REGISTER_INSTRUCTION, _JUMP_INSTRUCTION):
     def opcode(self):
         return "return-wide"
+    
+    def get_destination(self):
+        return "return"
 
 class RETURN_OBJECT(_Object_Parameters, _SINGLE_REGISTER_INSTRUCTION, _JUMP_INSTRUCTION):
     def opcode(self):
         return "return-object"
+    
+    def get_destination(self):
+        return "return"
 
 
 
