@@ -4,6 +4,7 @@ import argparse
 import subprocess
 import time
 import os
+import enum
 
 # SOMETHING TO REMEMBER: IMPLICIT REGISTERS GETTING OVERWRITTEN BY THEMSELVES
 

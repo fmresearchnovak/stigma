@@ -1,15 +1,11 @@
 import os.path
 import re
-import sys
 
 from lib import SmaliTypes
 from lib import StigmaStringParsingLib
 from lib import SmaliMethodDef
 from lib import SmaliAssemblyInstructions
 
-#current_dir = os.path.dirname(os.path.abspath(__file__))
-#other_dir = os.path.join(current_dir, "..", 'stigma')
-#sys.path.insert(0, other_dir)
 
 import Instrumenter
 
@@ -67,25 +63,25 @@ class SmaliClassDef:
         self.class_name = SmaliClassDef.extract_class_name_from_file(file_name)
         
         fh = open(file_name, "r")
-        lines = fh.readlines()
+        self.raw_text = fh.readlines()
         fh.close()
 
 
         cur_dest = self.header
         pre_methods = True
         idx = 0
-        while idx < len(lines):
+        while idx < len(self.raw_text):
             #print("processing line: " + str(lines[idx]))
-            match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_METHOD, lines[idx])
+            match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_METHOD, self.raw_text[idx])
             if match_object is not None:  # This is the start of a method defintion
                 #print(str(match_object) + " in line: " + lines[idx])
                 method_code = []
 
-                match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_END_METHOD, lines[idx])
+                match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_END_METHOD, self.raw_text[idx])
                 while match_object is None:
                     #print(str(idx))
-                    method_code.append(lines[idx])
-                    match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_END_METHOD, lines[idx])
+                    method_code.append(self.raw_text[idx])
+                    match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_END_METHOD, self.raw_text[idx])
                     idx += 1
 
                 #print(str(match_object) + " in line: " + lines[idx])
@@ -93,21 +89,21 @@ class SmaliClassDef:
                 self.methods.append(smd)
             
             #if all file is eaten up (eating last method)
-            if idx >= len(lines):
+            if idx >= len(self.raw_text):
                 #print("stopping!")
                 break
                 
-            if "# static fields\n" == lines[idx]:
+            if "# static fields\n" == self.raw_text[idx]:
                 cur_dest = self.static_fields
 
-            if "# instance fields\n" == lines[idx]:
+            if "# instance fields\n" == self.raw_text[idx]:
                 cur_dest = self.instance_fields
 
-            if "# direct methods\n" == lines[idx]:
+            if "# direct methods\n" == self.raw_text[idx]:
                 pre_methods = False
 
             if pre_methods:
-                cur_dest.append(lines[idx])
+                cur_dest.append(self.raw_text[idx])
             #debugging left in
             #print("\n")
             #print(lines)
@@ -186,7 +182,7 @@ class SmaliClassDef:
         if not self.is_function(line):
             return False
         
-        if( isinstance(line, SmaliAssemblyInstructions._METHOD_CALL_INSTRUCTION) ):
+        if( isinstance(line, SmaliAssemblyInstructions._INVOKE_INSTRUCTION) ):
             return line.get_fully_qualified_call() in self.methods
         
         func_name = line.split(" ")[-1]

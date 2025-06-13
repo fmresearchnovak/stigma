@@ -299,23 +299,7 @@ class _IMPLICIT_FIRST_REGISTER_INSTRUCTION():
         return [regs[0] + 1]
         
 
-class _METHOD_CALL_INSTRUCTION():
-    
-    def get_fully_qualified_call(self):
-        return self.types_spec
-    
-    def get_owning_class_name(self):
-        parts = self.types_spec.split("->")
-        return parts[0]
-        
-    def get_method_name(self):
-        parts = self.types_spec.split("->")
-        return parts[1]
-        
-    def get_method_name_only(self):
-        parts = self.types_spec.split("->")
-        name_only = parts[1].split("(")[0]
-        return name_only
+
 
 # this is currently untested, can't test until fully implemented
 class LABEL(SmaliAssemblyInstruction):
@@ -460,14 +444,37 @@ class First_Reg_To_Third_Reg():
             return [Action.REMOVE, tracked]
         else:
             return [Action.NO_ACTIONS]
+        
+class _JUMP_INSTRUCTION():
+    '''Classes that inherit this are those that move the execution flow
+    to a new location (if, invoke, and return)'''
+    pass
+
 
 # invoke instructions
-class Invoke_Instruction():
+class _INVOKE_INSTRUCTION(SmaliAssemblyInstruction, _JUMP_INSTRUCTION):
     def get_slicing_action(self, tracked):
         return [Action.JUMP, self.get_method_name(), self.get_registers().index(tracked)]
+    
+    def get_fully_qualified_call(self):
+        return self.types_spec
+    
+    def get_owning_class_name(self):
+        parts = self.types_spec.split("->")
+        return parts[0]
+        
+    def get_method_name(self):
+        parts = self.types_spec.split("->")
+        return parts[1]
+        
+    def get_method_name_only(self):
+        parts = self.types_spec.split("->")
+        name_only = parts[1].split("(")[0]
+        return name_only
+    
 
 # jump instructions
-class _JUMP_TO_LABEL_INSTRUCTION():
+class _JUMP_TO_LABEL_INSTRUCTION(_JUMP_INSTRUCTION):
     def get_slicing_action(self, tracked):
         return [Action.JUMP, self.get_label()]
     
@@ -646,22 +653,22 @@ class MOVE_EXCEPTION(_Object_Parameters, _SINGLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "move-exception"
 
-class RETURN_VOID(SmaliAssemblyInstruction):
+class RETURN_VOID(SmaliAssemblyInstruction, _JUMP_INSTRUCTION):
     def opcode(self):
         return "return-void"
         
     def __repr__(self):
         return self.opcode()
 
-class RETURN(_ThirtyTwoBit_Parameters, _SINGLE_REGISTER_INSTRUCTION):
+class RETURN(_ThirtyTwoBit_Parameters, _SINGLE_REGISTER_INSTRUCTION, _JUMP_INSTRUCTION):
     def opcode(self):
         return "return"
 
-class RETURN_WIDE(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _SINGLE_REGISTER_INSTRUCTION):
+class RETURN_WIDE(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _SINGLE_REGISTER_INSTRUCTION, _JUMP_INSTRUCTION):
     def opcode(self):
         return "return-wide"
 
-class RETURN_OBJECT(_Object_Parameters, _SINGLE_REGISTER_INSTRUCTION):
+class RETURN_OBJECT(_Object_Parameters, _SINGLE_REGISTER_INSTRUCTION, _JUMP_INSTRUCTION):
     def opcode(self):
         return "return-object"
 
@@ -1515,48 +1522,48 @@ class SPUT_SHORT(_S_INSTRUCTION, First_Reg_To_Third_Var):
         return "sput-short"
         
 
-class INVOKE_VIRTUAL(_METHOD_CALL_INSTRUCTION, _PARAMETER_LIST_INSTRUCTION, Invoke_Instruction):
+class INVOKE_VIRTUAL(_PARAMETER_LIST_INSTRUCTION, _INVOKE_INSTRUCTION):
     # I was too lazy to implement the get_register_type_implications
     # function for the below instructions
     # It could be done with the SmaliSignature class from SmaliMethodDef.py
     def opcode(self):
         return "invoke-virtual"
 
-class INVOKE_SUPER(_METHOD_CALL_INSTRUCTION, _PARAMETER_LIST_INSTRUCTION, Invoke_Instruction):
+class INVOKE_SUPER(_PARAMETER_LIST_INSTRUCTION, _INVOKE_INSTRUCTION):
     def opcode(self):
         return "invoke-super"
 
-class INVOKE_DIRECT(_METHOD_CALL_INSTRUCTION, _PARAMETER_LIST_INSTRUCTION, Invoke_Instruction):
+class INVOKE_DIRECT(_PARAMETER_LIST_INSTRUCTION, _INVOKE_INSTRUCTION):
     def opcode(self):
         return "invoke-direct"
 
-class INVOKE_STATIC(_METHOD_CALL_INSTRUCTION, _PARAMETER_LIST_INSTRUCTION, Invoke_Instruction):
+class INVOKE_STATIC(_PARAMETER_LIST_INSTRUCTION, _INVOKE_INSTRUCTION):
     # e.g., invoke-static {v2}, Lcom/google/ads/interactivemedia/pal/NonceLoader;->zza(Ljava/lang/String;)Ljava/lang/String;
     def opcode(self):
         return "invoke-static"
 
-class INVOKE_INTERFACE(_METHOD_CALL_INSTRUCTION, _PARAMETER_LIST_INSTRUCTION, Invoke_Instruction):
+class INVOKE_INTERFACE(_PARAMETER_LIST_INSTRUCTION, _INVOKE_INSTRUCTION):
     # e.g., invoke-interface {v0}, Ljava/util/concurrent/locks/Lock;->lock()V
     def opcode(self):
         return "invoke-interface"
 
-class INVOKE_VIRTUAL_RANGE(_METHOD_CALL_INSTRUCTION, _PARAMETER_RANGE_INSTRUCTION, Invoke_Instruction):
+class INVOKE_VIRTUAL_RANGE(_PARAMETER_RANGE_INSTRUCTION, _INVOKE_INSTRUCTION):
     def opcode(self):
         return "invoke-virtual/range"
 
-class INVOKE_SUPER_RANGE(_METHOD_CALL_INSTRUCTION, _PARAMETER_RANGE_INSTRUCTION, Invoke_Instruction):
+class INVOKE_SUPER_RANGE(_PARAMETER_RANGE_INSTRUCTION, _INVOKE_INSTRUCTION):
     def opcode(self):
         return "invoke-virtual/range"
 
-class INVOKE_DIRECT_RANGE(_METHOD_CALL_INSTRUCTION, _PARAMETER_RANGE_INSTRUCTION, Invoke_Instruction):
+class INVOKE_DIRECT_RANGE(_PARAMETER_RANGE_INSTRUCTION, _INVOKE_INSTRUCTION):
     def opcode(self):
         return "invoke-direct/range"
 
-class INVOKE_STATIC_RANGE(_METHOD_CALL_INSTRUCTION, _PARAMETER_RANGE_INSTRUCTION, Invoke_Instruction):
+class INVOKE_STATIC_RANGE(_PARAMETER_RANGE_INSTRUCTION, _INVOKE_INSTRUCTION):
     def opcode(self):
         return "invoke-static/range"
 
-class INVOKE_INTERFACE_RANGE(_METHOD_CALL_INSTRUCTION, _PARAMETER_RANGE_INSTRUCTION, Invoke_Instruction):
+class INVOKE_INTERFACE_RANGE(_PARAMETER_RANGE_INSTRUCTION, _INVOKE_INSTRUCTION):
     def opcode(self):
         return "invoke-interface/range"
 
@@ -2152,7 +2159,7 @@ class IPUT_OBJECT_QUICK(_Object_Parameters, _I_INSTRUCTION_QUICK, First_Reg_To_T
     def opcode(self):
         return "iput-object-quick"
 
-class INVOKE_VIRTUAL_QUICK(_PARAMETER_LIST_INSTRUCTION, Invoke_Instruction):
+class INVOKE_VIRTUAL_QUICK(_PARAMETER_LIST_INSTRUCTION, _INVOKE_INSTRUCTION):
     def __init__(self, element_list, vtable):
         super().__init__(element_list, None)
         self.vtable = vtable
@@ -2165,7 +2172,7 @@ class INVOKE_VIRTUAL_QUICK(_PARAMETER_LIST_INSTRUCTION, Invoke_Instruction):
         reg_string = ", ".join([str(r) for r in self.register_list])
         return self.opcode() + " {" + reg_string + "}, " + str(self.vtable)
 
-class INVOKE_SUPER_QUICK(_PARAMETER_LIST_INSTRUCTION, Invoke_Instruction):
+class INVOKE_SUPER_QUICK(_PARAMETER_LIST_INSTRUCTION, _INVOKE_INSTRUCTION):
     def __init__(self, element_list, vtable):
         super().__init__(element_list, None)
         self.vtable = vtable
