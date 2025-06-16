@@ -80,13 +80,7 @@ class SmaliCodeBase():
 			A SmaliClassDef for the given file or None
 		'''
 
-		print(self.classes)
 		for c in self.classes:
-			print("--------------------------------------")
-			print(c.file_name)
-			print(filename)
-			print("--------------------------------------")
-
 			basename = os.path.basename(c.file_name) 
 			if(basename == filename):
 				return c
@@ -171,9 +165,6 @@ class SmaliExecutionIterator():
 
 		# I made this an instance variable so that the correct line is stored
 		self.cur_line_to_return = None
-
-		# storing the return lines of nested jumps
-		self.return_address_stack = []
 		
 		
 	def __iter__(self):
@@ -195,19 +186,52 @@ class SmaliExecutionIterator():
 		
 		# Step #1, store the "current" line to return to user
 		# might be a string, and it might be a SmaliAssemblyInstruction.py Object
-		cur_line_str = str(self.cur_text[self.iter_idx])
+		cur_line = self.cur_text[self.iter_idx]
+		cur_line_str = str(cur_line)
 
 
 		# Step #1A, make this line as visited
-		if(cur_line_to_return in self.is_visited_map):
-			self.is_visited_map[cur_line_to_return]  += 1
+		if(cur_line_str in self.is_visited_map):
+			self.is_visited_map[cur_line_str]  += 1
 		else:
-			self.is_visited_map[cur_line_to_return] = 1
+			self.is_visited_map[cur_line_str] = 1
 
 
 		# Step #2, compute the next line
 		self.iter_idx += 1
-		next_line = SmaliAssemblyInstructions.from_line(self.cur_text[self.iter_idx])
+
+		# handle multiple instructions on one line
+		self.curr_line_to_return = [cur_line]
+		print(self.cur_text[self.iter_idx])
+		if(StigmaStringParsingLib.could_have_a_subsequent_move_result(cur_line_str)):
+			input("HERE")
+
+			self.iter_idx += 1
+
+			if(self.iter_idx >= len(self.cur_text)):
+				return self.curr_line_to_return
+
+			next_line = self.cur_text[self.iter_idx]
+			next_line_str = str(next_line)
+
+			while(not StigmaStringParsingLib.is_valid_instruction(next_line_str) \
+			and re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, next_line_str) is None):
+				self.curr_line_to_return.append(next_line)
+				self.iter_idx += 1
+
+				if(self.iter_idx >= len(self.cur_text)):
+					return self.curr_line_to_return
+
+				next_line = self.raw_text[self.iter_idx]
+				next_line_as_string = str(next_line)
+
+			if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, next_line_str) is not None):
+				self.curr_line_to_return.append(next_line)
+			else:
+				self.iter_idx -= 1
+
+		else:
+			next_line = SmaliAssemblyInstructions.from_line(cur_line_str)
 
 		'''JUMP INSTRUCTION
 		- Get the destination of the instruction, a new line
@@ -217,13 +241,15 @@ class SmaliExecutionIterator():
 		if(isinstance(next_line, SmaliAssemblyInstructions._JUMP_INSTRUCTION)):
 			# ??? unfinished
 			# TODO: Write code here
+			pass
+		else:
+			self.cur_line_to_return = next_line
 
 
 
 
 
-
-
+			'''
 
 			# get the destination of the jump from the instruction 
 			destination = next_line.get_destination()
@@ -252,8 +278,8 @@ class SmaliExecutionIterator():
 			elif instance_of(next_line, _INVOKE_INSTRUCTION):
 				pass
 
-
-		return cur_line_to_return
+		'''
+		return self.cur_line_to_return
 
 
 def tests():

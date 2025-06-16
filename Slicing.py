@@ -353,27 +353,28 @@ def forward_tracing(filename, target_line_number, target_location, tracingManage
     if target_location not in tracingManager.target_line:
         print("ERROR: Target register not found at the given line number.")
         exit(1)'''
-    target_line_found = False
+    #target_line_found = False
 
     tracingManager.current_line_number = target_line_number
 
     # STEP 5: Loop through the method and get the target line
     for line in SmaliCodeBase.SmaliExecutionIterator(codebase, filename, target_line_number):
-
+        #print(line)
 
 
     #for line in SmaliCodeIterator.SmaliCodeIterator(smali_method_def_obj.raw_text):
+        line = str(line)
         if len(line) > 1:
             tracingManager.current_line_number += len(line) - 1
 
         line = fix_line(line)
 
-        if tracingManager.target_line in line:
-            target_line_found = True
+        #if tracingManager.target_line in line:
+            #target_line_found = True
 
         # STEP 6: Once the target line is found, send every line containing a location in locations_to_track to the test_instance function
-        if target_line_found:
-            analyze_line(filename, line, tracingManager)
+        #if target_line_found:
+            #analyze_line(filename, line, tracingManager)
 
     html_graph = generate_directed_graph(tracingManager.edges)
     write_html_file(html_graph)
