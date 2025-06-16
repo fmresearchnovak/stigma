@@ -100,7 +100,7 @@ class TracingManager:
     def get_files(self):
         return self.files_to_search
 
-def get_function_name(filename, line_number, lines):
+def get_function_name(line_number, lines):
     match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_METHOD, lines[line_number])
     while(match_object == None):
         line_number -= 1
@@ -194,6 +194,7 @@ def test_instance(instruction, location, tracingManager):
             print("ADDING NEW LOCATION " + str(full_action[1]))
             tracingManager.add_location(str(full_action[1]))
             tracingManager.add_edge(location, str(full_action[1]), tracingManager.current_line_number)
+            # S-instructions globally change a type of object and this change is attached to all instances
             if isinstance(instruction, SmaliAssemblyInstructions._S_INSTRUCTION):
                 uses_list = grep_instances(instruction.get_instance_variable(), tracingManager)
                 for use in uses_list:
@@ -229,7 +230,7 @@ def test_instance(instruction, location, tracingManager):
 
 def find_path(folder, filename):
     #Source: Gemini
-    for root, _, files in os.walk(folder):
+    for root, dirs, files in os.walk(folder):
         if filename in files:
             return os.path.join(root, filename)
     return None
@@ -242,6 +243,7 @@ def get_lines_from_file(filename, tmp_file_name):
     return lines, file_path
 
 def fix_line(line):
+    # this function will handle when multiple instructions are on one line
     return line[0].replace("\n", "")
 
 def location_in_string_exact(location, line):
@@ -322,7 +324,7 @@ def next_iteration(tracingManager):
         return
 
 # REWRITTEN VERSION OF FUNCTION BELOW
-def forward_tracing(filename, target_line_number, target_location, tracingManager):
+def forward_tracing(filename, target_line_number, target_location, tracingManager, codebase):
     print("=================================")
     print(filename)
     print("=================================")
@@ -335,28 +337,32 @@ def forward_tracing(filename, target_line_number, target_location, tracingManage
 
     # STEP 2: Open input file
     print(tmp_file_name)
-    lines, file_path = get_lines_from_file(filename, tmp_file_name)
+    #lines, file_path = get_lines_from_file(filename, tmp_file_name)
 
     # STEP 3: Get the method that the target line is in as a SmaliClassDef object
     #smali_reg = SmaliRegister.SmaliRegister(reg)
-    smali_class = SmaliClassDef.SmaliClassDef(file_path)
+    #smali_class = SmaliClassDef.SmaliClassDef(file_path)
 
     target_line_number -= 1
-    method_signature_str = get_function_name(file_path, target_line_number, lines)
-    smali_method_def_obj = find_smali_method_def_obj(method_signature_str, smali_class, file_path)
-    print(smali_method_def_obj)
+    #method_signature_str = get_function_name(target_line_number, lines)
+    #smali_method_def_obj = find_smali_method_def_obj(method_signature_str, smali_class, file_path)
+    #print(smali_method_def_obj)
 
     # STEP 4: Find the text of the target line
-    tracingManager.target_line = lines[target_line_number].replace("\n", "")
+    '''tracingManager.target_line = lines[target_line_number].replace("\n", "")
     if target_location not in tracingManager.target_line:
         print("ERROR: Target register not found at the given line number.")
-        exit(1)
+        exit(1)'''
     target_line_found = False
 
     tracingManager.current_line_number = target_line_number
 
     # STEP 5: Loop through the method and get the target line
-    for line in SmaliCodeIterator.SmaliCodeIterator(smali_method_def_obj.raw_text):
+    for line in SmaliCodeBase.SmaliExecutionIterator(codebase, filename, target_line_number):
+
+
+
+    #for line in SmaliCodeIterator.SmaliCodeIterator(smali_method_def_obj.raw_text):
         if len(line) > 1:
             tracingManager.current_line_number += len(line) - 1
 
@@ -407,6 +413,7 @@ def main():
 
     # getting the smali files
     tracingManager.smali_files = SmaliCodeBase.SmaliCodeBase.findSmaliFiles(tracingManager.tmp_file_name)
+    codebase = SmaliCodeBase.SmaliCodeBase(tracingManager.tmp_file_name)
  
     if find_path(tracingManager.tmp_file_name, args.filename) not in tracingManager.smali_files:
         print("ERROR: Smali file not found in APK.")
@@ -417,7 +424,7 @@ def main():
         exit(1)
 
         
-    forward_tracing(args.filename, int(args.line_number), args.register, tracingManager)
+    forward_tracing(args.filename, int(args.line_number), args.register, tracingManager, codebase)
 
     #the following code tests it without the APK file so that lines can be easily edited
     #forward_tracing(args.filename, int(args.line_number), args.register, [], {}, tmp_file_name)

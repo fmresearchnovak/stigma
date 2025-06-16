@@ -9,7 +9,6 @@ from lib import StigmaStringParsingLib
 from lib import SmaliAssemblyInstructions
 
 
-
 class SmaliCodeBase():
 	''' This class represents the entire code base of a smali project. '''
 
@@ -19,6 +18,7 @@ class SmaliCodeBase():
 		   path_to_directory (str): The absolute path to the directory containing the smali files
 		'''
 		file_paths = SmaliCodeBase.findSmaliFiles(path_to_directory)
+		print("TEST")
 		#print(path_to_directory)
 
 
@@ -75,12 +75,18 @@ class SmaliCodeBase():
 		'''This function returns a SmaliClassDef for a given filename if it is found in this SmaliCodeBase
 		Parameters:
 			filename:The name of the desired file, a string
-			Example: "RandomClassName.smali
+			Example: "RandomClassName.smali"
 		Returns:
 			A SmaliClassDef for the given file or None
 		'''
 
+		print(self.classes)
 		for c in self.classes:
+			print("--------------------------------------")
+			print(c.file_name)
+			print(filename)
+			print("--------------------------------------")
+
 			basename = os.path.basename(c.file_name) 
 			if(basename == filename):
 				return c
@@ -141,7 +147,7 @@ class SmaliExecutionIterator():
 		Parameters:
 			SCB: The code base we wish to iterate through, a SmaliCodeBase object. 
 			starting_point_filename: The file in which we wish to start iterating in, a string.
-			starting_point_linenumber: The line number in the given file at which we want to start iterating from, an int.	
+			starting_point_linenumber: The line number in the given file at which we want to start iterating from, an int.
 		'''
 
 		# is_visited_map ({})
@@ -182,7 +188,8 @@ class SmaliExecutionIterator():
 			A SmaliAssemblyInstruction object representing the instruction.
 		'''
 
-		#
+		# upon an invoke statement, take a new iterator and call next on it and return its value
+
 		if(self.iter_idx >= len(self.cur_text)):
 			raise StopIteration
 		
@@ -201,9 +208,22 @@ class SmaliExecutionIterator():
 		# Step #2, compute the next line
 		self.iter_idx += 1
 		next_line = SmaliAssemblyInstructions.from_line(self.cur_text[self.iter_idx])
+
+		'''JUMP INSTRUCTION
+		- Get the destination of the instruction, a new line
+		- Make iter_idx the new line's index
+		- Find the instruction object version of the line and return it
+		'''
 		if(isinstance(next_line, SmaliAssemblyInstructions._JUMP_INSTRUCTION)):
 			# ??? unfinished
 			# TODO: Write code here
+
+
+
+
+
+
+
 
 			# get the destination of the jump from the instruction 
 			destination = next_line.get_destination()
@@ -220,14 +240,14 @@ class SmaliExecutionIterator():
 
 			# labels will be in the same file, so find where the label is and return the line
 			elif instance_of(next_line, _JUMP_TO_LABEL_INSTRUCTION):
-				 # adjusts the stack accordingly
-				 
-				# no idea why the identation is weird here but it prevents the code from running
-				 '''if self.cur_line_to_return != None:
+				if self.cur_line_to_return != None:
 					self.return_address_stack.append(self.cur_line_to_return)
-					self.cur_line_to_return = SmaliAssemblyInstructions.from_line(cur_line_str) # will return this'''
+					self.cur_line_to_return = SmaliAssemblyInstructions.from_line(cur_line_str) # will return this
 
-				 # finding the line
+				# finding the line
+				method_signature_str = get_function_name(file_path, target_line_number, lines)
+				smali_method_def_obj = find_smali_method_def_obj(method_signature_str, smali_class, file_path)
+
 
 			elif instance_of(next_line, _INVOKE_INSTRUCTION):
 				pass
