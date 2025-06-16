@@ -165,6 +165,8 @@ In the User variables, choose to "Edit" your "Path" variable:
 
 # Utilities and Auxiliary Programs
 
+* `build-docs.sh` - Bash script to generate developer documentation in doc/
+
 * `count_pools.sh` - Bash command line utility for counting the references to strings, types, fields, and methods.  Requires the installation of [the smali command line tool](https://github.com/JesusFreke/smali/).
 
 * `valid_smali_instructions.txt` and `ValidSmaliInstrunctions.py` comprehensive collection of all valid smali opcode names.
