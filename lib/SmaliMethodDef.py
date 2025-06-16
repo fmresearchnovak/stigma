@@ -17,20 +17,31 @@ import Instrumenter
 from ControlFlowGraph import ControlFlowGraph
 		
 class SmaliMethodSignature:
-
-	# This should maybe be an inner-class of SmaliMethodDef
+	'''A smali method signature represents the definition line of a method
+	Example: .method public static MyMethod(Ljava/lang/Long;J)Ljava/lang/Long;
 	
-	# self.sig_line
-	# self.name
+	The instance variables for such a signature would be
+	self.sig_line (a string) ".method public static MyMethod(Ljava/lang/Long;J)Ljava/lang/Long;\n"
+	self.name: (a string) "MyMethod"
+	self.is_static: (a boolean) True
+	self.is_abstract: (a boolean) False
 
-	# self.is_static
-	# self.is_abstract
-
-	# self.parameter_type_map
-	# self.num_of_parameters
-	# self.num_of_parameter_registers
+	self.parameter_type_map: (a dictionary) {p0: Ljava/lang/Long, p1:J, p2:J2}
+		Note: java/lang/Long is the object Long and as an object fits in one register
+		the J is a primitive Long and as such fits in two registers p1, and p2
+		This method is static so there is no "this" in p0
+	self.num_of_parameters: (an int) 2
+	self.num_of_parameter_registers: (an int) 3
+	'''
 	
 	def __init__(self, sig_line, class_name):
+		'''The Constructor for SmaliMethodSignature
+		Parameters:
+			sig_line: The signature line for this method from the smali file, a string.
+			Example .method public static MyMethod(Ljava/lang/Long;J)Ljava/lang/Long;\n
+			class_name: The class name this method belongs to
+			Example "Lorg/package/MyClass;"
+		'''
 		
 		self.sig_line = sig_line
 		self.class_name = class_name
@@ -186,6 +197,14 @@ class SmaliMethodSignature:
 		return self.get_fully_qualified_name()
 
 	def __eq__(self, other):
+		'''Supports the == and != operations in python between this SmaliMethodSignature
+		and another SmaliMethodSignature or a string.
+		The fully qualified name is used for the comparison.
+		Parameters:
+			other: Another SmaliMethodSignature or a fully qualified name string
+		Returns:
+			True if this and other are equal, False otherwise.
+		'''
 		if(isinstance(other, SmaliMethodSignature)):
 			return self.get_fully_qualified_name() == other.get_fully_qualified_name()
 		elif(isinstance(other, str)):
@@ -218,11 +237,16 @@ class SmaliMethodSignature:
 		
 
 class SmaliMethodDef:
+	'''This class represents a method definition in smali code
+	it includes the signature / definition line (represented with 
+	a SmaliMethodSignature object) and the body of the method.'''
 
 	def __init__(self, text, scd):
-		# text should be a list of strings (lines)
-		# starting from ".method..." and ending in "... .end method"
-		# scd should be a SmaliClassDef object
+		'''The Constructor
+		Parameters:
+			text: The code for this method (the body), a list of strings.  Usually every string is a valid SmaliAssemblyInstruction.  starting from ".method..." and ending in "... .end method"
+			scd: The Smali class that this method belongs to, a SmaliClassDef instance
+		'''
 		
 		if(text == []):
 			raise ValueError("Attempting to instantiate method with no code!")
@@ -1109,6 +1133,12 @@ def tests():
 	assert(str(sig.parameter_type_map) == "{p0: Lmy/package/MyOtherClass;, p1: Landroid/support/v7/widget/RecyclerView;, p2: J, p3: J2}")
 	assert(sig.num_of_parameters == 3)
 	assert(sig.num_of_parameter_registers == 4)
+
+
+	sig = SmaliMethodSignature(".method public static MyMethod(Ljava/lang/Long;J)Ljava/lang/Long;", "Lmy/package/Blah;")
+	assert(str(sig.parameter_type_map) == "{p0: Ljava/lang/Long;, p1: J, p2: J2}")
+	assert(sig.num_of_parameters == 2)
+	assert(sig.num_of_parameter_registers == 3)
 	
 	sig = SmaliMethodSignature(".method public static reverseTransit(I)I", "Lmy/package/MyClass;")
 	assert(sig.name == "reverseTransit")
