@@ -402,7 +402,8 @@ def wide_register_index_out_of_range_bug():
 	scd = SmaliClassDef.SmaliClassDef("./test/binarySearch_method.smali")
 	binarySearchMethod = scd.methods[0]
 	#print(binarySearchMethod.get_register_meta_data())
-	scd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
+	for m in scd.methods:
+		m.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
 	#print(binarySearchMethod.get_register_meta_data())
 	
 	scd.write_to_file("./test/binarySearch_method_result.smali")
@@ -427,16 +428,7 @@ def get_class_from_non_reference_register_bug():
 	
 	scd = SmaliClassDef.SmaliClassDef("./test/endAnimatingAwayFragments_method.smali")
 	endAnimatingMethod = scd.methods[0]
-	#print("before growth")
-	#print(endAnimatingMethod)
-	#print(endAnimatingMethod.get_register_meta_data())
-	#print("\n\n")
-	
-	scd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
-
-	#print("after growth")
-	#print(endAnimatingMethod)
-	#print(endAnimatingMethod.get_register_meta_data())
+	scd.internal_class_names.append(scd.get_fully_qualified_name())
 	
 	scd.instrument()
 	scd.write_to_file("./test/endAnimatingAwayFragments_method_result.smali")
@@ -831,8 +823,8 @@ def main():
 	# leaks smali tests
 	stigma_leaks_crash_SupportActivity()
 	double_move_result_bug()
-	#wide_register_index_out_of_range_bug()
-	#get_class_from_non_reference_register_bug()
+	wide_register_index_out_of_range_bug()
+	get_class_from_non_reference_register_bug()
 	#reversed_move_parameters_test()
 	#wide_register_index_out_of_range_bug_2()
 	#wide_register_has_type_long_string()

@@ -20,7 +20,7 @@
 
     .line 65
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     move-object/16 v6, p0
     
@@ -29,7 +29,7 @@
     move-wide/16 v8, p2
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     const/4 v0, 0x0
 
