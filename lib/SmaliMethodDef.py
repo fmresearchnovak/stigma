@@ -488,10 +488,10 @@ class SmaliMethodDef:
 		full line of smali code.
 
 		Parameters:
-		line: The line of smali code to dereference registers in.
+		line: The line of smali code to dereference registers in, a string.
 
 		Returns:
-		line: The original line of smali code with all the parameter registers replaced by their local counterpart.
+		line: The original line of smali code with all the parameter registers replaced by their local counterpart, a string.
 		'''
 
 		# de-reference p registers
@@ -508,6 +508,9 @@ class SmaliMethodDef:
 		# 
 		# For example...
 		# const-string vX, "bad string p0 v2"
+
+		if(StigmaStringParsingLib.is_valid_instruction(line) != True):
+			return line
 		
 		opcode = StigmaStringParsingLib.break_into_tokens(line)[0]    
 		
