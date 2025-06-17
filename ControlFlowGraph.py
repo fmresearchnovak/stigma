@@ -32,13 +32,13 @@ goto :goto_4
 # everything else
 
 '''
-
-import StigmaStringParsingLib
 import re
 import networkx as nx
 import matplotlib.pyplot as plt
 from networkx.drawing.nx_pydot import graphviz_layout
 import time
+
+from lib import StigmaStringParsingLib
 
 class ControlFlowGraph:
 

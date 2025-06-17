@@ -6,7 +6,7 @@ from lib import ValidSmaliInstructions
 BEGINS_WITH_DOT = r"^\s*\."  # oat "assembler" directives begin with a .dot
 BEGINS_WITH_HASHTAG = r"^\s*\#"
 BEGINS_WITH_COLON = r"^\s*:"  # code labels (locations for branches) begin with a colon
-BLANK_LINE = r"^\s*$"
+
 
 BEGINS_WITH_DOT_METHOD = r"^\.method"  # directive to indicate start of a method
 BEGINS_WITH_DOT_END_METHOD = r"^\s*\.end method"  # directive to indicate end of method
@@ -194,7 +194,7 @@ def extract_opcode(line):
         return ""
     return tokens[0]
     
-def is_valid_instruction(line):        
+def is_valid_instruction(line):     
     opcode = extract_opcode(line)
     return opcode in ValidSmaliInstructions.SET
     

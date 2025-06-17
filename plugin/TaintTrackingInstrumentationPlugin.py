@@ -1,7 +1,9 @@
-import Instrumenter 
+
 import re
-import StigmaStringParsingLib
-import SmaliAssemblyInstructions as smali
+
+import Instrumenter 
+from lib import StigmaStringParsingLib
+from lib import SmaliAssemblyInstructions as smali
 from TaintStorageHandler import TaintStorageHandler
 
 

@@ -2650,6 +2650,10 @@ def main():
     assert(str(asm_obj) == "    goto/32 :some_label_2\n")
     assert(repr(asm_obj) == "goto/32 :some_label_2")
     assert(asm_obj.get_label() == "some_label_2")
+
+
+    asm_obj = BLANK_LINE()
+    assert(isinstance(asm_obj, SmaliAssemblyInstruction))
     
     
     print("ALL SmaliAssemblyInstructions TESTS PASSED!")

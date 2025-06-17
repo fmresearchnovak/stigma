@@ -10,21 +10,10 @@ import plugin.TaintTrackingInstrumentationPlugin as TaintTrackingInstrumentation
 import Instrumenter
 
 
-
-
-
-
-
-
-
 def type_saftey_checker_test3():
 	
 	# there is a couple weird strings declared at the start of the A00 method
-	scd = SmaliClassDef.SmaliClassDef("./test/0wH.smali")
-	
-	
-	
-	
+	scd = SmaliClassDef.SmaliClassDef("./test/0wH.smali")	
 	
 	
 	
