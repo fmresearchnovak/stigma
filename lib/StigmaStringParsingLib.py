@@ -197,6 +197,9 @@ def extract_opcode(line):
 def is_valid_instruction(line):     
     opcode = extract_opcode(line)
     return opcode in ValidSmaliInstructions.SET
+
+def is_blank_line(line):
+    return line.strip() == ""
     
 def is_comment(line):
     return line.strip().startswith("#")
@@ -435,6 +438,12 @@ def main():
     
     instr = '    invoke-virtual {v8, v1}, Lorg/mozilla/javascript/ScriptableObject;->setPrototype(Lorg/mozilla/javascript/Scriptable;)V\n'
     assert(is_valid_instruction(instr))
+
+
+    instr = "    \n"
+    assert(is_blank_line(instr))
+    isntr = "\n"
+    assert(is_blank_line(instr))
     
     print("ALL StringParsingLib TESTS PASSED")
 

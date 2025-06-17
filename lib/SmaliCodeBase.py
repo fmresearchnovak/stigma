@@ -3,11 +3,31 @@ import glob
 import os
 import re
 
-
 from lib import SmaliClassDef
+from lib import SmaliMethodDef
 from lib import StigmaStringParsingLib
 from lib import SmaliAssemblyInstructions
 
+def get_function_name(line_number, lines):
+    match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_METHOD, lines[line_number])
+    while(match_object == None):
+        line_number -= 1
+        match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_METHOD, lines[line_number])
+    
+    method_signature_str = lines[line_number].replace("\n", "")
+    return method_signature_str
+
+def find_smali_method_def_obj(method_signature_str, smali_class, file_path):
+    method_index = 0
+    #figure out how to use curr_Method.get_name
+    curr_method = smali_class.methods[method_index]
+    signature = SmaliMethodDef.SmaliMethodSignature(method_signature_str, "Lorg/telegram/messenger/SendMessagesHelper;")
+
+    while(curr_method != signature):
+        method_index += 1
+        curr_method = smali_class.methods[method_index]
+
+    return curr_method
 
 class SmaliCodeBase():
 	''' This class represents the entire code base of a smali project. '''
@@ -151,6 +171,7 @@ class SmaliExecutionIterator():
 		# function_call_stack ([])
 		
 		self.is_visited_map = {}
+		self.filename = starting_point_filename
 		self.cur_class = SCB.get_class_from_base_filename(starting_point_filename)
 		if(self.cur_class == None):
 			raise Exception("Invalid filename: " + str(starting_point_filename))
@@ -206,7 +227,12 @@ class SmaliExecutionIterator():
 		print(cur_line_str)
 
 		# handle multiple instructions on one line
-		self.cur_line_to_return = [SmaliAssemblyInstructions.from_line(cur_line)]
+		function = get_function_name(self.iter_idx, self.cur_class_text)
+		method_def_obj = find_smali_method_def_obj(function, self.cur_class, self.filename)
+		print("cur line str: " + cur_line_str)
+		cur_line_str_global = method_def_obj.dereference_p_to_v_numbers(cur_line_str)
+		print("cur line str global: " + cur_line_str_global)
+		self.cur_line_to_return = [SmaliAssemblyInstructions.from_line(cur_line_str_global)]
 		
 		print(self.cur_class_text[self.iter_idx])
 
@@ -221,7 +247,9 @@ class SmaliExecutionIterator():
 
 			while(not StigmaStringParsingLib.is_valid_instruction(next_line_str) \
 			and re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, next_line_str) is None):
-				first = str(self.cur_line_to_return)
+				first = str(self.cur_line_to_return[0])
+				#print("first = $" + first + "$")
+				#print("next line str = $" + next_line_str + "$")
 				self.cur_line_to_return = [SmaliAssemblyInstructions.from_line(first), SmaliAssemblyInstructions.from_line(next_line_str)]
 				self.iter_idx += 1
 
@@ -230,6 +258,9 @@ class SmaliExecutionIterator():
 
 				next_line = self.cur_class_text[self.iter_idx]
 				next_line_as_string = str(next_line)
+
+				print(self.cur_line_to_return)
+				print(self.iter_idx)
 
 			if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, next_line_str) is not None):
 				self.cur_line_to_return.append(next_line)
@@ -254,13 +285,18 @@ class SmaliExecutionIterator():
 				line = ""
 				while ":" + destination != line.lstrip().replace("\n", ""):
 					new_idx += 1
-					line = cur_class_text[new_idx]
+					line = self.cur_class_text[new_idx]
 					print(line)
 				input("found")
 				self.cur_line_to_return = [SmaliAssemblyInstructions.from_line(line)]
 				self.iter_idx = new_idx
 			else:
-				self.cur_line_to_return = [SmaliAssemblyInstructions.from_line(next_line_str)]
+				function = get_function_name(self.iter_idx, self.cur_class_text)
+				method_def_obj = find_smali_method_def_obj(function, self.cur_class, self.filename)
+				print("next line str: " + next_line_str)
+				next_line_str_global = method_def_obj.dereference_p_to_v_numbers(next_line_str)
+				print("next line str global: " + next_line_str_global)
+				self.cur_line_to_return = [SmaliAssemblyInstructions.from_line(next_line_str_global)]
 
 		return self.cur_line_to_return
 
