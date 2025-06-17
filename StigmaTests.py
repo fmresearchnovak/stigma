@@ -830,7 +830,7 @@ def main():
 	
 	# leaks smali tests
 	stigma_leaks_crash_SupportActivity()
-	#double_move_result_bug()
+	double_move_result_bug()
 	#wide_register_index_out_of_range_bug()
 	#get_class_from_non_reference_register_bug()
 	#reversed_move_parameters_test()

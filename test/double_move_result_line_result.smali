@@ -9,10 +9,10 @@
 
     .line 69
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for METHOD START
+    # INSTRUCTIONS ADDED BY STIGMA for METHOD START
     
     sget v0, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_leaks_DoubleMoveResultTestClass_putExtraData_p0:F
     
@@ -23,28 +23,28 @@
     sput v0, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_leaks_DoubleMoveResultTestClass_putExtraData_v3:F
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for METHOD START
+    # INSTRUCTIONS ADDED BY STIGMA for METHOD START
     
     move-object/16 v2, p0
     
     move-object/16 v3, p1
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
+    # INSTRUCTIONS ADDED BY STIGMA for IGET
     
     sget v4, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_SupportActivity_v2_mExtraDataMap:F
     
     sput v4, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_leaks_DoubleMoveResultTestClass_putExtraData_v0:F
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for IGET
+    # INSTRUCTIONS ADDED BY STIGMA for IGET
     
     iget-object v0, v2, Landroid/support/v4/app/SupportActivity;->mExtraDataMap:Landroid/support/v4/util/SimpleArrayMap;
 
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
+    # INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
     const/16 v4, 0x0
     
@@ -54,7 +54,7 @@
     
     sput v4, Lnet/stigmastorage/StorageClass1;->edu_fandm_enovak_leaks_DoubleMoveResultTestClass_putExtraData_v1:F
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
+    # INSTRUCTIONS ADDED BY STIGMA for EXTERNAL METHOD
     
     invoke-virtual {v3}, Ljava/lang/Object;->getClass()Ljava/lang/Class;
     
