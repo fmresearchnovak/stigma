@@ -1,6 +1,4 @@
 import re
-import sys
-import os
 
 from lib import SmaliTypes
 from lib import SmaliAssemblyInstructions as smali
@@ -747,6 +745,7 @@ class SmaliMethodDef:
 		
 		first_line = code_unit[0]
 		#print("\t_do_instrumentation_plugins(" + str(first_line).lstrip().rstrip() + ")")
+		#print("code unit: (" + str(code_unit) + ")")
 		if not self.is_relevant(first_line, node):
 			self.instrumented_code.extend(code_unit)
 			return
@@ -985,7 +984,7 @@ class SmaliMethodDef:
 		# The lines of code that we add (instrument) will be instances of smali.SmaliAssemblyInstruction
 		# the lines of code that are existing already will be type string
 		# So, this check prevents us from instrumenting our new, additional code
-		#print("line: " + str(line) + "  type:" + str(type(line)) + "   isinstance smali.SmaliAssemblyInstruction:" + str(isinstance(line, smali.SmaliAssemblyInstruction)))
+		# print("line: '" + str(line) + "'  repr:'" + repr(line) + "'  type:" + str(type(line)) + "   isinstance smali.SmaliAssemblyInstruction:" + str(isinstance(line, smali.SmaliAssemblyInstruction)))
 		if isinstance(line, smali.SmaliAssemblyInstruction):
 			return False
 

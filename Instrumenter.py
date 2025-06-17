@@ -1,13 +1,8 @@
 import re
-import os
-import sys
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-other_dir = os.path.join(current_dir, 'lib')
-sys.path.insert(0, other_dir)
 
-import SmaliAssemblyInstructions as smali
-import StigmaStringParsingLib
+from lib import SmaliAssemblyInstructions as smali
+from lib import StigmaStringParsingLib
 from TaintStorageHandler import TaintStorageHandler
 
 
