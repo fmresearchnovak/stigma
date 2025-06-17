@@ -154,7 +154,7 @@ class SmaliExecutionIterator():
 		self.cur_class = SCB.get_class_from_base_filename(starting_point_filename)
 		if(self.cur_class == None):
 			raise Exception("Invalid filename: " + str(starting_point_filename))
-		self.cur_text = self.cur_class.raw_text
+		self.cur_class_text = self.cur_class.raw_text
 		
 		# Iterator's index based on starting_point_linenumber
 		if(starting_point_linenumber > len(self.cur_class.raw_text) or starting_point_linenumber < 1):
@@ -181,12 +181,12 @@ class SmaliExecutionIterator():
 
 		# upon an invoke statement, take a new iterator and call next on it and return its value
 
-		if(self.iter_idx >= len(self.cur_text)):
+		if(self.iter_idx >= len(self.cur_class_text)):
 			raise StopIteration
 		
 		# Step #1, store the "current" line to return to user
 		# might be a string, and it might be a SmaliAssemblyInstruction.py Object
-		cur_line = self.cur_text[self.iter_idx]
+		cur_line = self.cur_class_text[self.iter_idx]
 		cur_line_str = str(cur_line)
 
 
@@ -200,85 +200,68 @@ class SmaliExecutionIterator():
 		# Step #2, compute the next line
 		self.iter_idx += 1
 
-		# handle multiple instructions on one line
-		self.curr_line_to_return = [cur_line]
-		print(self.cur_text[self.iter_idx])
-		if(StigmaStringParsingLib.could_have_a_subsequent_move_result(cur_line_str)):
-			input("HERE")
+		next_line = self.cur_class_text[self.iter_idx]
+		next_line_str = str(next_line)
 
+		print(cur_line_str)
+
+		# handle multiple instructions on one line
+		self.cur_line_to_return = [SmaliAssemblyInstructions.from_line(cur_line)]
+		
+		print(self.cur_class_text[self.iter_idx])
+
+		if(StigmaStringParsingLib.could_have_a_subsequent_move_result(cur_line_str)):
 			self.iter_idx += 1
 
-			if(self.iter_idx >= len(self.cur_text)):
-				return self.curr_line_to_return
+			if(self.iter_idx >= len(self.cur_class_text)):
+				return self.cur_line_to_return
 
-			next_line = self.cur_text[self.iter_idx]
+			next_line = self.cur_class_text[self.iter_idx]
 			next_line_str = str(next_line)
 
 			while(not StigmaStringParsingLib.is_valid_instruction(next_line_str) \
 			and re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, next_line_str) is None):
-				self.curr_line_to_return.append(next_line)
+				first = str(self.cur_line_to_return)
+				self.cur_line_to_return = [SmaliAssemblyInstructions.from_line(first), SmaliAssemblyInstructions.from_line(next_line_str)]
 				self.iter_idx += 1
 
-				if(self.iter_idx >= len(self.cur_text)):
-					return self.curr_line_to_return
+				if(self.iter_idx >= len(self.cur_class_text)):
+					return self.cur_line_to_return
 
-				next_line = self.raw_text[self.iter_idx]
+				next_line = self.cur_class_text[self.iter_idx]
 				next_line_as_string = str(next_line)
 
 			if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, next_line_str) is not None):
-				self.curr_line_to_return.append(next_line)
+				self.cur_line_to_return.append(next_line)
 			else:
 				self.iter_idx -= 1
+			
+			print(self.cur_line_to_return)
 
 		else:
 			next_line = SmaliAssemblyInstructions.from_line(cur_line_str)
 
-		'''JUMP INSTRUCTION
-		- Get the destination of the instruction, a new line
-		- Make iter_idx the new line's index
-		- Find the instruction object version of the line and return it
-		'''
-		if(isinstance(next_line, SmaliAssemblyInstructions._JUMP_INSTRUCTION)):
-			# ??? unfinished
-			# TODO: Write code here
-			pass
-		else:
-			self.cur_line_to_return = next_line
-
-
-
-
-
+			'''JUMP INSTRUCTION
+			- Get the destination of the instruction, a new line
+			- Make iter_idx the new line's index
+			- Find the instruction object version of the line and return it
 			'''
+			if(isinstance(next_line, SmaliAssemblyInstructions.GOTO)):
+				destination = next_line.get_destination()
+				print("Destination: " + destination)
+				input("here")
+				new_idx = self.iter_idx
+				line = ""
+				while ":" + destination != line.lstrip().replace("\n", ""):
+					new_idx += 1
+					line = cur_class_text[new_idx]
+					print(line)
+				input("found")
+				self.cur_line_to_return = [SmaliAssemblyInstructions.from_line(line)]
+				self.iter_idx = new_idx
+			else:
+				self.cur_line_to_return = [SmaliAssemblyInstructions.from_line(next_line_str)]
 
-			# get the destination of the jump from the instruction 
-			destination = next_line.get_destination()
-
-			# return to the line stored in line_to_return_to
-			if destination == "return":
-				if self.cur_line_to_return == None:
-					print("Error: Return statement has no target")
-					exit(1)
-				return_to = self.cur_line_to_return
-				if len(self.return_address_stack) != 0:
-					self.cur_line_to_return = self.return_address_stack.pop()
-				return return_to
-
-			# labels will be in the same file, so find where the label is and return the line
-			elif instance_of(next_line, _JUMP_TO_LABEL_INSTRUCTION):
-				if self.cur_line_to_return != None:
-					self.return_address_stack.append(self.cur_line_to_return)
-					self.cur_line_to_return = SmaliAssemblyInstructions.from_line(cur_line_str) # will return this
-
-				# finding the line
-				method_signature_str = get_function_name(file_path, target_line_number, lines)
-				smali_method_def_obj = find_smali_method_def_obj(method_signature_str, smali_class, file_path)
-
-
-			elif instance_of(next_line, _INVOKE_INSTRUCTION):
-				pass
-
-		'''
 		return self.cur_line_to_return
 
 
