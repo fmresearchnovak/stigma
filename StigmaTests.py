@@ -543,11 +543,6 @@ def wide_register_has_type_long_string():
 	print("\ttest/checkArgumentInRange_method.smali")
 	
 	scd = SmaliClassDef.SmaliClassDef("./test/checkArgumentInRange_method.smali")
-	
-	check_arg_method = scd.methods[0]
-	#print("before growing: ", check_arg_method.get_register_meta_data())
-	scd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
-	#print("after growing: ", check_arg_method.get_register_meta_data())
 	scd.instrument()
 	scd.write_to_file("./test/checkArgumentInRange_method_result.smali")
 	
@@ -570,11 +565,6 @@ def on_nested_scrolling_parent_helper():
 	print("\ttest/onNestedScrollAccepted_method.smali")
 	
 	scd = SmaliClassDef.SmaliClassDef("./test/onNestedScrollAccepted_method.smali")
-	
-	check_arg_method = scd.methods[0]
-	#print("before growing: ", check_arg_method.get_register_meta_data())
-	scd.grow_locals(Instrumenter.MAX_DESIRED_NUM_REGISTERS)
-	#print("after growing: ", check_arg_method.get_register_meta_data())
 	scd.instrument()
 	scd.write_to_file("./test/onNestedScrollAccepted_method_result.smali")
 	
@@ -820,8 +810,8 @@ def main():
 	get_class_from_non_reference_register_bug()
 	reversed_move_parameters_test()
 	wide_register_index_out_of_range_bug_2()
-	#wide_register_has_type_long_string()
-	#on_nested_scrolling_parent_helper()
+	wide_register_has_type_long_string()
+	on_nested_scrolling_parent_helper()
 	#register_listeners()
 	#on_start_intent_sender_from_fragment()
 	#tried_to_get_class_from_non_reference_register_v0()
