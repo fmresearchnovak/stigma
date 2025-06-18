@@ -20,10 +20,10 @@
 
     .line 1138
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for METHOD START
+    # INSTRUCTIONS ADDED BY STIGMA for METHOD START
     
     sget v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_makeOpenCloseAnimation_p0:F
     
@@ -46,7 +46,7 @@
     sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_makeOpenCloseAnimation_v15:F
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for METHOD START
+    # INSTRUCTIONS ADDED BY STIGMA for METHOD START
     
     move-object/16 v11, p0
     
@@ -59,27 +59,27 @@
     move/16 v15, p4
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for NEW-INSTANCE
+    # INSTRUCTIONS ADDED BY STIGMA for NEW-INSTANCE
     
     const v1, 0x0
     
     sput v1, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_makeOpenCloseAnimation_v0:F
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for NEW-INSTANCE
+    # INSTRUCTIONS ADDED BY STIGMA for NEW-INSTANCE
     
     new-instance v0, Landroid/view/animation/AnimationSet;
 
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
+    # INSTRUCTIONS ADDED BY STIGMA for CONST
     
     const v10, 0x0
     
     sput v10, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_makeOpenCloseAnimation_v1:F
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
+    # INSTRUCTIONS ADDED BY STIGMA for CONST
     
     const/4 v1, 0x0
 
@@ -88,101 +88,101 @@
     .line 1139
     .local v0, "set":Landroid/view/animation/AnimationSet;
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for NEW-INSTANCE
+    # INSTRUCTIONS ADDED BY STIGMA for NEW-INSTANCE
     
     const v2, 0x0
     
     sput v2, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_makeOpenCloseAnimation_v10:F
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for NEW-INSTANCE
+    # INSTRUCTIONS ADDED BY STIGMA for NEW-INSTANCE
     
     new-instance v10, Landroid/view/animation/ScaleAnimation;
 
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
+    # INSTRUCTIONS ADDED BY STIGMA for CONST
     
     const v2, 0x0
     
     sput v2, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_makeOpenCloseAnimation_v6:F
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
+    # INSTRUCTIONS ADDED BY STIGMA for CONST
     
     const/4 v6, 0x1
 
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
+    # INSTRUCTIONS ADDED BY STIGMA for CONST
     
     const v2, 0x0
     
     sput v2, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_makeOpenCloseAnimation_v7:F
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
+    # INSTRUCTIONS ADDED BY STIGMA for CONST
     
     const/high16 v7, 0x3f000000    # 0.5f
 
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
+    # INSTRUCTIONS ADDED BY STIGMA for CONST
     
     const v2, 0x0
     
     sput v2, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_makeOpenCloseAnimation_v8:F
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
+    # INSTRUCTIONS ADDED BY STIGMA for CONST
     
     const/4 v8, 0x1
 
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
+    # INSTRUCTIONS ADDED BY STIGMA for CONST
     
     const v2, 0x0
     
     sput v2, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_makeOpenCloseAnimation_v9:F
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for CONST
+    # INSTRUCTIONS ADDED BY STIGMA for CONST
     
     const/high16 v9, 0x3f000000    # 0.5f
 
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    # INSTRUCTIONS ADDED BY STIGMA for MOVE
     
     sget v2, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_makeOpenCloseAnimation_v10:F
     
     sput v2, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_makeOpenCloseAnimation_v1:F
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    # INSTRUCTIONS ADDED BY STIGMA for MOVE
     
     move-object v1, v10
 
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    # INSTRUCTIONS ADDED BY STIGMA for MOVE
     
     sget v3, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_makeOpenCloseAnimation_v12:F
     
     sput v3, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_makeOpenCloseAnimation_v2:F
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    # INSTRUCTIONS ADDED BY STIGMA for MOVE
     
     move v2, v12
 
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    # INSTRUCTIONS ADDED BY STIGMA for MOVE
     
     sget v4, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_makeOpenCloseAnimation_v13:F
     
     sput v4, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_makeOpenCloseAnimation_v3:F
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    # INSTRUCTIONS ADDED BY STIGMA for MOVE
     
     move v3, v13
 
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    # INSTRUCTIONS ADDED BY STIGMA for MOVE
     
     sget v5, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_makeOpenCloseAnimation_v12:F
     
     sput v5, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_FragmentManagerImpl_makeOpenCloseAnimation_v4:F
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for MOVE
+    # INSTRUCTIONS ADDED BY STIGMA for MOVE
     
     move v4, v12
 
