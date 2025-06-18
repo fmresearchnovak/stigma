@@ -9,10 +9,10 @@
 
     .line 75
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for METHOD START
+    # INSTRUCTIONS ADDED BY STIGMA for METHOD START
     
     sget v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_SupportActivity_onCreate_p0:F
     
@@ -23,14 +23,14 @@
     sput v0, Lnet/stigmastorage/StorageClass1;->android_support_v4_app_SupportActivity_onCreate_v1:F
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for METHOD START
+    # INSTRUCTIONS ADDED BY STIGMA for METHOD START
     
     move-object/16 v0, p0
     
     move-object/16 v1, p1
     
     
-    # IFT INSTRUCTIONS ADDED BY STIGMA for moving parameters
+    # INSTRUCTIONS ADDED BY STIGMA for moving parameters
     
     invoke-super {v0, v1}, Landroid/app/Activity;->onCreate(Landroid/os/Bundle;)V
 
