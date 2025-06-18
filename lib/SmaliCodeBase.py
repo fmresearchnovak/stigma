@@ -195,7 +195,7 @@ class SmaliExecutionIterator():
 		
 
 	def __next__(self):
-		'''Returns the next instruction via the iterator.  Follows jumps like goto and invoke and return instructions
+		'''Returns the current line at self.idx as a SmaliAssemblyInstruction object. When faced with a jump instruction, such as goto or invoke, self.idx will move down to the destination.
 		Returns:
 			A SmaliAssemblyInstruction object representing the instruction.
 		'''
@@ -206,98 +206,83 @@ class SmaliExecutionIterator():
 			raise StopIteration
 		
 		# Step #1, store the "current" line to return to user
-		# might be a string, and it might be a SmaliAssemblyInstruction.py Object
+		# cur_line is a string, create a SmaliAssemblyInstructions object
 		cur_line = self.cur_class_text[self.iter_idx]
-		cur_line_str = str(cur_line)
-
-
-		# Step #1A, make this line as visited
-		if(cur_line_str in self.is_visited_map):
-			self.is_visited_map[cur_line_str]  += 1
-		else:
-			self.is_visited_map[cur_line_str] = 1
-
-
-		# Step #2, compute the next line
-		self.iter_idx += 1
-
-		next_line = self.cur_class_text[self.iter_idx]
-		next_line_str = str(next_line)
-
-		print(cur_line_str)
-
-		# handle multiple instructions on one line
+		print("LINE " + str(self.iter_idx + 1) + ": " + cur_line)
 		function = get_function_name(self.iter_idx, self.cur_class_text)
 		method_def_obj = find_smali_method_def_obj(function, self.cur_class, self.filename)
-		print("cur line str: " + cur_line_str)
-		cur_line_str_global = method_def_obj.dereference_p_to_v_numbers(cur_line_str)
-		print("cur line str global: " + cur_line_str_global)
-		self.cur_line_to_return = [SmaliAssemblyInstructions.from_line(cur_line_str_global)]
-		
-		print(self.cur_class_text[self.iter_idx])
+		cur_line_global = method_def_obj.dereference_p_to_v_numbers(cur_line)
 
-		if(StigmaStringParsingLib.could_have_a_subsequent_move_result(cur_line_str)):
-			self.iter_idx += 1
+		# WILL BE RETURNED, ARRAY OF INSTRUCTION OBJECTS
+		cur_line_obj = SmaliAssemblyInstructions.from_line(cur_line_global)
+		self.cur_line_to_return = [cur_line_obj]
 
+		# Step #2, make this line as visited
+		if(cur_line in self.is_visited_map):
+			self.is_visited_map[cur_line]  += 1
+		else:
+			self.is_visited_map[cur_line] = 1
+
+		# Step #3, determine whether the current line could have a move result (such as an invoke instruction)
+		if(StigmaStringParsingLib.could_have_a_subsequent_move_result(cur_line)):
+			# Move iter_idx down to the next line to check whether it is a move_result
+			# Skip the blank line
+			self.iter_idx += 2
+
+			# ...but not if it's the end of the class
 			if(self.iter_idx >= len(self.cur_class_text)):
 				return self.cur_line_to_return
 
+			# Get the text of this next line
 			next_line = self.cur_class_text[self.iter_idx]
-			next_line_str = str(next_line)
 
-			while(not StigmaStringParsingLib.is_valid_instruction(next_line_str) \
-			and re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, next_line_str) is None):
-				first = str(self.cur_line_to_return[0])
-				#print("first = $" + first + "$")
-				#print("next line str = $" + next_line_str + "$")
-				self.cur_line_to_return = [SmaliAssemblyInstructions.from_line(first), SmaliAssemblyInstructions.from_line(next_line_str)]
+			# Check if the line is 1. not a valid individual instruction by itself and 2. not a move_result
+			while(not StigmaStringParsingLib.is_valid_instruction(next_line) \
+			and re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, next_line) is None):
+				function = get_function_name(self.iter_idx, self.cur_class_text)
+				method_def_obj = find_smali_method_def_obj(function, self.cur_class, self.filename)
+				next_line_global = method_def_obj.dereference_p_to_v_numbers(next_line)
+				self.cur_line_to_return.append(SmaliAssemblyInstructions.from_line(next_line))
+
 				self.iter_idx += 1
 
 				if(self.iter_idx >= len(self.cur_class_text)):
 					return self.cur_line_to_return
 
 				next_line = self.cur_class_text[self.iter_idx]
-				next_line_as_string = str(next_line)
 
-				print(self.cur_line_to_return)
-				print(self.iter_idx)
-
-			if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, next_line_str) is not None):
-				self.cur_line_to_return.append(next_line)
-			else:
-				self.iter_idx -= 1
-			
-			print(self.cur_line_to_return)
-
-		else:
-			next_line = SmaliAssemblyInstructions.from_line(cur_line_str)
-
-			'''JUMP INSTRUCTION
-			- Get the destination of the instruction, a new line
-			- Make iter_idx the new line's index
-			- Find the instruction object version of the line and return it
-			'''
-			if(isinstance(next_line, SmaliAssemblyInstructions.GOTO)):
-				destination = next_line.get_destination()
-				print("Destination: " + destination)
-				input("here")
-				new_idx = self.iter_idx
-				line = ""
-				while ":" + destination != line.lstrip().replace("\n", ""):
-					new_idx += 1
-					line = self.cur_class_text[new_idx]
-					print(line)
-				input("found")
-				self.cur_line_to_return = [SmaliAssemblyInstructions.from_line(line)]
-				self.iter_idx = new_idx
-			else:
+			if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, next_line) is not None):
 				function = get_function_name(self.iter_idx, self.cur_class_text)
 				method_def_obj = find_smali_method_def_obj(function, self.cur_class, self.filename)
-				print("next line str: " + next_line_str)
-				next_line_str_global = method_def_obj.dereference_p_to_v_numbers(next_line_str)
-				print("next line str global: " + next_line_str_global)
-				self.cur_line_to_return = [SmaliAssemblyInstructions.from_line(next_line_str_global)]
+				next_line_global = method_def_obj.dereference_p_to_v_numbers(next_line)
+				self.cur_line_to_return.append(SmaliAssemblyInstructions.from_line(next_line))
+			else:
+				self.iter_idx -= 1
+		
+		'''
+		GOTO INSTRUCTION
+		- Get the destination of the instruction, a new line
+		- Make iter_idx the new line's index
+		'''
+		if(isinstance(cur_line_obj, SmaliAssemblyInstructions.GOTO)):
+			input("GOTO")
+			destination = cur_line_obj.get_destination()
+			print("Destination: " + destination)
+			input("")
 
+			new_idx = self.iter_idx
+
+			line = ""
+			while ":" + destination != line.lstrip().replace("\n", ""):
+				new_idx += 1
+				line = self.cur_class_text[new_idx]
+
+			print("NEXT LINE AT INDEX " + str(self.iter_idx) + ": " + str(line))
+			input("")
+
+		else: # no jumps, just move iter_idx down to the next immediate line
+			self.iter_idx += 1
+		
 		return self.cur_line_to_return
 
 
