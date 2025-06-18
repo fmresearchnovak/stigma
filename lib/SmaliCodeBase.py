@@ -186,6 +186,9 @@ class SmaliExecutionIterator():
 
 		# I made this an instance variable so that the correct line is stored
 		self.cur_line_to_return = None
+
+		# stores the previous self.iteridxs to implement the return instructions. stacks from left to right
+		self.previous_positions = []
 		
 		
 	def __iter__(self):
@@ -270,15 +273,42 @@ class SmaliExecutionIterator():
 			print("Destination: " + destination)
 			input("")
 
-			new_idx = self.iter_idx
-
 			line = ""
 			while ":" + destination != line.lstrip().replace("\n", ""):
-				new_idx += 1
-				line = self.cur_class_text[new_idx]
-
-			print("NEXT LINE AT INDEX " + str(self.iter_idx) + ": " + str(line))
+				print("LINE = " + line + " AT INDEX " + str(self.iter_idx + 1))
+				self.iter_idx += 1
+				line = self.cur_class_text[self.iter_idx]
+			print("FOUND LINE = " + line + " AT INDEX " + str(self.iter_idx + 1))
+			print("NEXT LINE AT INDEX " + str(self.iter_idx + 1) + ": " + str(line))
 			input("")
+
+		'''
+		INVOKE INSTRUCTION
+		- Find the smali file and line containing the method declaration
+		- Create a new SmaliExecutionIterator for that file
+		- Slicing.py will handle any register moves
+		'''
+		if(isinstance(cur_line_obj, SmaliAssemblyInstructions._INVOKE_INSTRUCTION)):
+			input("INVOKE")
+			self.iter_idx += 1
+
+		'''
+		RETURN INSTRUCTION
+		- Get the previous jump instruction
+		- Move self.iter_idx back there, the line being already visited will analyze the return result instead
+		- Slicing.py will determine if any register changes have occured
+		- If previous_positions is empty, exit the file completely
+		'''
+		if(isinstance(cur_line_obj, SmaliAssemblyInstructions.RETURN_INSTRUCTION)):
+			if len(self.previous_positions) > 0:
+				print("RETURNING TO " + str(self.previous_positions[len(self.previous_positions) - 1]))
+				self.iter_idx = self.previous_positions.pop()
+				input("")
+			else:
+				raise StopIteration
+
+			# currently figuring out return_void, just ignoring for now
+			self.iter_idx += 1
 
 		else: # no jumps, just move iter_idx down to the next immediate line
 			self.iter_idx += 1

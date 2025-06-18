@@ -683,7 +683,10 @@ class MOVE_EXCEPTION(_Object_Parameters, _SINGLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "move-exception"
 
-class RETURN_VOID(SmaliAssemblyInstruction, _JUMP_INSTRUCTION):
+class RETURN_INSTRUCTION(SmaliAssemblyInstruction, _JUMP_INSTRUCTION):
+    pass
+
+class RETURN_VOID(RETURN_INSTRUCTION):
     def opcode(self):
         return "return-void"
     
@@ -693,21 +696,21 @@ class RETURN_VOID(SmaliAssemblyInstruction, _JUMP_INSTRUCTION):
     def __repr__(self):
         return self.opcode()
 
-class RETURN(_ThirtyTwoBit_Parameters, _SINGLE_REGISTER_INSTRUCTION, _JUMP_INSTRUCTION):
+class RETURN(_ThirtyTwoBit_Parameters, _SINGLE_REGISTER_INSTRUCTION, RETURN_INSTRUCTION):
     def opcode(self):
         return "return"
     
     def get_destination(self):
         return "return"
 
-class RETURN_WIDE(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _SINGLE_REGISTER_INSTRUCTION, _JUMP_INSTRUCTION):
+class RETURN_WIDE(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _SINGLE_REGISTER_INSTRUCTION, RETURN_INSTRUCTION):
     def opcode(self):
         return "return-wide"
     
     def get_destination(self):
         return "return"
 
-class RETURN_OBJECT(_Object_Parameters, _SINGLE_REGISTER_INSTRUCTION, _JUMP_INSTRUCTION):
+class RETURN_OBJECT(_Object_Parameters, _SINGLE_REGISTER_INSTRUCTION, RETURN_INSTRUCTION):
     def opcode(self):
         return "return-object"
     
