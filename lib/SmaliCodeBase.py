@@ -316,6 +316,10 @@ class SmaliExecutionIterator():
             # TO FIGURE OUT: SOMETIMES THE INVOKE GOES TO AN EXTERNAL METHOD, NOT A SMALI FILE
 
             next_class = self.codebase.get_class_from_base_filename(file_name)
+            if next_class == None:
+                print("EXTERNAL METHOD, IGNORE FOR NOW")
+                input("")
+                return self.cur_line_to_return
             next_class_text = next_class.raw_text
 
             line_no = 0
@@ -340,6 +344,8 @@ class SmaliExecutionIterator():
         - If previous_positions is empty, exit the file completely
         '''
         if(isinstance(cur_line_obj, SmaliAssemblyInstructions.RETURN_INSTRUCTION)):
+            print("RETURNING FROM " + self.filename)
+            input("")
             raise StopIteration
 
             # currently figuring out return_void, just ignoring for now
