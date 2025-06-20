@@ -172,6 +172,7 @@ class SmaliExecutionIterator():
 		
 		self.is_visited_map = {}
 		self.filename = starting_point_filename
+		self.codebase = SCB
 		self.cur_class = SCB.get_class_from_base_filename(starting_point_filename)
 		if(self.cur_class == None):
 			raise Exception("Invalid filename: " + str(starting_point_filename))
@@ -228,9 +229,10 @@ class SmaliExecutionIterator():
 
 		# Step #3, determine whether the current line could have a move result (such as an invoke instruction)
 		if(StigmaStringParsingLib.could_have_a_subsequent_move_result(cur_line)):
+			print(cur_line + " COULD HAVE SUBSEQUENT MOVE RESULT")
 			# Move iter_idx down to the next line to check whether it is a move_result
 			# Skip the blank line
-			self.iter_idx += 2
+			self.iter_idx += 1
 
 			# ...but not if it's the end of the class
 			if(self.iter_idx >= len(self.cur_class_text)):
@@ -238,14 +240,16 @@ class SmaliExecutionIterator():
 
 			# Get the text of this next line
 			next_line = self.cur_class_text[self.iter_idx]
+			print("RESULT LINE " + str(self.iter_idx + 1) + ": " + next_line)
+			input("")
 
 			# Check if the line is 1. not a valid individual instruction by itself and 2. not a move_result
 			while(not StigmaStringParsingLib.is_valid_instruction(next_line) \
 			and re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, next_line) is None):
-				function = get_function_name(self.iter_idx, self.cur_class_text)
-				method_def_obj = find_smali_method_def_obj(function, self.cur_class, self.filename)
-				next_line_global = method_def_obj.dereference_p_to_v_numbers(next_line)
-				self.cur_line_to_return.append(SmaliAssemblyInstructions.from_line(next_line))
+				#function = get_function_name(self.iter_idx, self.cur_class_text)
+				#method_def_obj = find_smali_method_def_obj(function, self.cur_class, self.filename)
+				#next_line_global = method_def_obj.dereference_p_to_v_numbers(next_line)
+				#self.cur_line_to_return.append(SmaliAssemblyInstructions.from_line(next_line))
 
 				self.iter_idx += 1
 
@@ -253,6 +257,7 @@ class SmaliExecutionIterator():
 					return self.cur_line_to_return
 
 				next_line = self.cur_class_text[self.iter_idx]
+				print("RESULT LINE " + str(self.iter_idx + 1) + ": " + next_line)
 
 			if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, next_line) is not None):
 				function = get_function_name(self.iter_idx, self.cur_class_text)
@@ -260,7 +265,9 @@ class SmaliExecutionIterator():
 				next_line_global = method_def_obj.dereference_p_to_v_numbers(next_line)
 				self.cur_line_to_return.append(SmaliAssemblyInstructions.from_line(next_line))
 			else:
-				self.iter_idx -= 1
+				print("NO MOVE RESULT FOUND")
+				input("")
+				self.iter_idx -= 2
 		
 		'''
 		GOTO INSTRUCTION
@@ -291,6 +298,32 @@ class SmaliExecutionIterator():
 		if(isinstance(cur_line_obj, SmaliAssemblyInstructions._INVOKE_INSTRUCTION)):
 			input("INVOKE")
 			self.iter_idx += 1
+			
+			# get the destination of the invoke instruction (the method to look for)
+			method_name = cur_line_obj.get_destination()
+			print("METHOD NAME IS " + method_name)
+			input("")
+
+			# class filename of where the method is
+			file_path = cur_line_obj.get_owning_class_name()[1:-1] + ".smali" # remove the L and the ;
+			file_name = file_path.split("/")[-1]
+			print("FILE NAME IS " + file_name)
+			input("")
+			# TO FIGURE OUT: SOMETIMES THE INVOKE GOES TO AN EXTERNAL METHOD, NOT A SMALI FILE
+
+			next_class = self.codebase.get_class_from_base_filename(file_name)
+			next_class_text = next_class.raw_text
+
+			line_no = 0
+			for line in next_class_text:
+				line_no += 1
+				print(str(line_no) + ": " + line)
+				if method_name in line and ".method" in line:
+					input("FOUND METHOD")
+					break
+
+			new_iterator = SmaliExecutionIterator(self.codebase, file_name, line_no)
+			return new_iterator.__next__()
 
 		'''
 		RETURN INSTRUCTION
