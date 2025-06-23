@@ -154,7 +154,7 @@ class SmaliExecutionIterator():
     filled-new-array might span multiple lines, but it isn't a jump.  This is to be determined / not yet implemented.
 
     '''
-    def __init__(self, SCB, starting_point_filename, starting_point_linenumber):
+    def __init__(self, SCB, starting_point_filename, starting_point_linenumber, locations_visited):
         '''Constructor for SmaliExecutionIterator.
         Parameters:
             SCB: The code base we wish to iterate through, a SmaliCodeBase object. 
@@ -162,13 +162,15 @@ class SmaliExecutionIterator():
             starting_point_linenumber: The line number in the given file at which we want to start iterating from, an int.
         '''
 
-        # is_visited_map ({})
+        # lines_visited ({})
         # cur_class (SmaliClassDef object)
         # cur_text ([str])
         # iter_idx (int)
         # function_call_stack ([])
         
-        self.is_visited_map = {}
+        # already visited lines and methods in the recursion go here
+        self.locations_visited = locations_visited
+
         self.filename = starting_point_filename
         self.codebase = SCB
         self.cur_class = SCB.get_class_from_base_filename(starting_point_filename)
@@ -181,7 +183,7 @@ class SmaliExecutionIterator():
             raise Exception("Invalid starting point: " + str(starting_point_linenumber))
         self.iter_idx = starting_point_linenumber-1
 
-        self.function_call_stack = []
+        #self.function_call_stack = []
 
         # I made this an instance variable so that the correct line is stored
         self.cur_line_to_return = None
@@ -214,13 +216,17 @@ class SmaliExecutionIterator():
         # Step #1, store the "current" line to return to user
         # cur_line is a string, create a SmaliAssemblyInstructions object
         cur_line = self.cur_class_text[self.iter_idx]
+
+        if cur_line.lstrip().replace("\n", "") == ".end method":
+            raise StopIteration
+
+        self.locations_visited.append(cur_line)
         print("LINE " + str(self.iter_idx + 1) + ": " + cur_line)
         function, function_line_number = get_function_name(self.iter_idx, self.cur_class_text)
         method_def_obj = find_smali_method_def_obj(function, self.cur_class, self.filename)
         cur_line_global = method_def_obj.dereference_p_to_v_numbers(cur_line)
         #print(cur_line_global)
 
-        # WILL BE RETURNED, ARRAY OF INSTRUCTION OBJECTS
         cur_line_obj = None
         try:
             cur_line_obj = SmaliAssemblyInstructions.from_line(cur_line_global)
@@ -231,13 +237,7 @@ class SmaliExecutionIterator():
 
         self.cur_line_to_return = [cur_line_obj]
 
-        # Step #2, make this line as visited
-        if(cur_line in self.is_visited_map):
-            self.is_visited_map[cur_line]  += 1
-        else:
-            self.is_visited_map[cur_line] = 1
-
-        # Step #3, determine whether the current line could have a move result (such as an invoke instruction)
+        # Step #2, determine whether the current line could have a move result (such as an invoke instruction)
         if(StigmaStringParsingLib.could_have_a_subsequent_move_result(cur_line)):
             print(cur_line + " COULD HAVE SUBSEQUENT MOVE RESULT")
             # Move iter_idx down to the next line to check whether it is a move_result
@@ -291,12 +291,21 @@ class SmaliExecutionIterator():
             #input("")
 
             line = ""
+            line_no = function_line_number
             while ":" + destination != line.lstrip().replace("\n", ""):
-                print("LINE = " + line + " AT INDEX " + str(self.iter_idx + 1))
+                print("LINE = " + line + " AT INDEX " + str(line_no + 1))
+                line_no += 1
+                line = self.cur_class_text[line_no]
+            print("FOUND LINE = " + line + " AT INDEX " + str(line_no + 1))
+            print("NEXT LINE AT INDEX " + str(line_no + 1) + ": " + str(line))
+            if line + "at index " + str(line_no) + " in file " + self.filename in self.locations_visited:
+                #input("Line has been visited before in the current recursion. Ignoring to prevent infinite recursion.")
                 self.iter_idx += 1
-                line = self.cur_class_text[self.iter_idx]
-            print("FOUND LINE = " + line + " AT INDEX " + str(self.iter_idx + 1))
-            print("NEXT LINE AT INDEX " + str(self.iter_idx + 1) + ": " + str(line))
+                return self.cur_line_to_return
+            else:
+                self.locations_visited.append(line + "at index " + str(line_no) + " in file " + self.filename)
+
+            self.iter_idx = line_no
             #input("")
 
         '''
@@ -331,6 +340,7 @@ class SmaliExecutionIterator():
 
             line_no = 0
             found = False
+            new_line = ""
 
             for line in next_class_text:
                 line_no += 1
@@ -339,9 +349,17 @@ class SmaliExecutionIterator():
                     #input("FOUND METHOD")
                     found = True
                 if found and StigmaStringParsingLib.is_valid_instruction(line):
+                    new_line = line
                     break
 
-            self.smali_execution_iterator = SmaliExecutionIterator(self.codebase, file_name, line_no)
+            if new_line + "at index " + str(line_no) + " in file " + file_name in self.locations_visited:
+                #input("Line has been visited before in the current recursion. Ignoring to prevent infinite recursion.")
+                self.iter_idx += 1
+                return self.cur_line_to_return
+            else:
+                self.locations_visited.append(new_line + "at index " + str(line_no) + " in file " + file_name in self.locations_visited)
+
+            self.smali_execution_iterator = SmaliExecutionIterator(self.codebase, file_name, line_no, self.locations_visited)
 
         '''
         IF THEN JUMP INSTRUCTION
@@ -352,6 +370,7 @@ class SmaliExecutionIterator():
         '''
         if(isinstance(cur_line_obj, SmaliAssemblyInstructions._TWO_REG_EQ) or isinstance(cur_line_obj, SmaliAssemblyInstructions._ONE_REG_EQ_ZERO)):
             #input("IF INSTRUCTION")
+            self.locations_visited.append([str(cur_line_obj), self.filename, self.iter_idx])
             self.iter_idx += 1
             destination = cur_line_obj.get_destination()
             print("ASSUMING STATEMENT IS TRUE")
@@ -368,8 +387,14 @@ class SmaliExecutionIterator():
                 line = self.cur_class_text[line_no]
             print("FOUND LINE = " + line + " AT INDEX " + str(line_no + 1))
             print("NEXT LINE AT INDEX " + str(line_no + 1) + ": " + str(line))
+            if line + "at index " + str(line_no) + " in file " + self.filename in self.locations_visited:
+                #input("Line has been visited before in the current recursion. Ignoring to prevent infinite recursion.")
+                self.iter_idx += 1
+                return self.cur_line_to_return
+            else:
+                self.locations_visited.append(line + "at index " + str(line_no) + " in file " + self.filename)
 
-            self.smali_execution_iterator = SmaliExecutionIterator(self.codebase, self.filename, line_no)
+            self.smali_execution_iterator = SmaliExecutionIterator(self.codebase, self.filename, line_no, self.locations_visited)
 
         '''
         RETURN INSTRUCTION
