@@ -14,7 +14,7 @@ def get_function_name(line_number, lines):
         line_number -= 1
         match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_METHOD, lines[line_number])
     method_signature_str = lines[line_number].replace("\n", "")
-    return method_signature_str
+    return method_signature_str, line_number
 
 def find_smali_method_def_obj(method_signature_str, smali_class, file_path):
     method_index = 0
@@ -215,13 +215,20 @@ class SmaliExecutionIterator():
         # cur_line is a string, create a SmaliAssemblyInstructions object
         cur_line = self.cur_class_text[self.iter_idx]
         print("LINE " + str(self.iter_idx + 1) + ": " + cur_line)
-        function = get_function_name(self.iter_idx, self.cur_class_text)
+        function, function_line_number = get_function_name(self.iter_idx, self.cur_class_text)
         method_def_obj = find_smali_method_def_obj(function, self.cur_class, self.filename)
         cur_line_global = method_def_obj.dereference_p_to_v_numbers(cur_line)
         #print(cur_line_global)
 
         # WILL BE RETURNED, ARRAY OF INSTRUCTION OBJECTS
-        cur_line_obj = SmaliAssemblyInstructions.from_line(cur_line_global)
+        cur_line_obj = None
+        try:
+            cur_line_obj = SmaliAssemblyInstructions.from_line(cur_line_global)
+        except SyntaxError:
+            self.iter_idx += 1
+            input("Line cannot be parsed. Continuing on with no action.")
+            return self.cur_line_to_return
+
         self.cur_line_to_return = [cur_line_obj]
 
         # Step #2, make this line as visited
@@ -244,7 +251,7 @@ class SmaliExecutionIterator():
             # Get the text of this next line
             next_line = self.cur_class_text[self.iter_idx]
             print("RESULT LINE " + str(self.iter_idx + 1) + ": " + next_line)
-            input("")
+            #input("")
 
             # Check if the line is 1. not a valid individual instruction by itself and 2. not a move_result
             while(not StigmaStringParsingLib.is_valid_instruction(next_line) \
@@ -263,13 +270,13 @@ class SmaliExecutionIterator():
                 print("RESULT LINE " + str(self.iter_idx + 1) + ": " + next_line)
 
             if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, next_line) is not None):
-                function = get_function_name(self.iter_idx, self.cur_class_text)
+                function, function_line_number = get_function_name(self.iter_idx, self.cur_class_text)
                 method_def_obj = find_smali_method_def_obj(function, self.cur_class, self.filename)
                 next_line_global = method_def_obj.dereference_p_to_v_numbers(next_line)
                 self.cur_line_to_return.append(SmaliAssemblyInstructions.from_line(next_line))
             else:
                 print("NO MOVE RESULT FOUND")
-                input("")
+                #input("")
                 self.iter_idx -= 2
         
         '''
@@ -278,10 +285,10 @@ class SmaliExecutionIterator():
         - Make iter_idx the new line's index
         '''
         if(isinstance(cur_line_obj, SmaliAssemblyInstructions.GOTO)):
-            input("GOTO")
+            #input("GOTO")
             destination = cur_line_obj.get_destination()
             print("Destination: " + destination)
-            input("")
+            #input("")
 
             line = ""
             while ":" + destination != line.lstrip().replace("\n", ""):
@@ -290,7 +297,7 @@ class SmaliExecutionIterator():
                 line = self.cur_class_text[self.iter_idx]
             print("FOUND LINE = " + line + " AT INDEX " + str(self.iter_idx + 1))
             print("NEXT LINE AT INDEX " + str(self.iter_idx + 1) + ": " + str(line))
-            input("")
+            #input("")
 
         '''
         INVOKE INSTRUCTION
@@ -299,26 +306,26 @@ class SmaliExecutionIterator():
         - Slicing.py will handle any register moves
         '''
         if(isinstance(cur_line_obj, SmaliAssemblyInstructions._INVOKE_INSTRUCTION)):
-            input("INVOKE")
+            #input("INVOKE")
             self.iter_idx += 1
             
             # get the destination of the invoke instruction (the method to look for)
             method_name = cur_line_obj.get_destination()
             print("METHOD NAME IS " + method_name)
-            input("")
+            #input("")
 
             # class filename of where the method is
             # TO DO: EXTERNAL NON-SMALI FILES, CURRENTLY THE CODE DOESN'T KNOW WHAT TO DO
             file_path = cur_line_obj.get_owning_class_name()[1:-1] + ".smali" # remove the L and the ;
             file_name = file_path.split("/")[-1]
             print("FILE NAME IS " + file_name)
-            input("")
+            #input("")
             # TO FIGURE OUT: SOMETIMES THE INVOKE GOES TO AN EXTERNAL METHOD, NOT A SMALI FILE
 
             next_class = self.codebase.get_class_from_base_filename(file_name)
             if next_class == None:
                 print("EXTERNAL METHOD, IGNORE FOR NOW")
-                input("")
+                #input("")
                 return self.cur_line_to_return
             next_class_text = next_class.raw_text
 
@@ -329,7 +336,7 @@ class SmaliExecutionIterator():
                 line_no += 1
                 print(str(line_no) + ": " + line)
                 if method_name in line and ".method" in line:
-                    input("FOUND METHOD")
+                    #input("FOUND METHOD")
                     found = True
                 if found and StigmaStringParsingLib.is_valid_instruction(line):
                     break
@@ -337,19 +344,43 @@ class SmaliExecutionIterator():
             self.smali_execution_iterator = SmaliExecutionIterator(self.codebase, file_name, line_no)
 
         '''
+        IF THEN JUMP INSTRUCTION
+        - Get the destination of the if statement
+        - Create a SmaliExecutionIterator for the destination assuming that the if statement returns true
+        - The result of forward tracing through the if statement will be stored in a seperate list, will be different than assuming that the statement is false
+        - Handles possible infinite loops
+        '''
+        if(isinstance(cur_line_obj, SmaliAssemblyInstructions._TWO_REG_EQ) or isinstance(cur_line_obj, SmaliAssemblyInstructions._ONE_REG_EQ_ZERO)):
+            #input("IF INSTRUCTION")
+            self.iter_idx += 1
+            destination = cur_line_obj.get_destination()
+            print("ASSUMING STATEMENT IS TRUE")
+            print("Destination: " + destination)
+            #input("")
+
+            line_no = function_line_number
+            found = False
+
+            line = ""
+            while ":" + destination != line.lstrip().replace("\n", ""):
+                print("LINE = " + line + " AT INDEX " + str(line_no + 1))
+                line_no += 1
+                line = self.cur_class_text[line_no]
+            print("FOUND LINE = " + line + " AT INDEX " + str(line_no + 1))
+            print("NEXT LINE AT INDEX " + str(line_no + 1) + ": " + str(line))
+
+            self.smali_execution_iterator = SmaliExecutionIterator(self.codebase, self.filename, line_no)
+
+        '''
         RETURN INSTRUCTION
-        - Get the previous jump instruction
         - Move self.iter_idx back there, the line being already visited will analyze the return result instead
         - Slicing.py will determine if any register changes have occured
         - If previous_positions is empty, exit the file completely
         '''
         if(isinstance(cur_line_obj, SmaliAssemblyInstructions.RETURN_INSTRUCTION)):
             print("RETURNING FROM " + self.filename)
-            input("")
+            #input("")
             raise StopIteration
-
-            # currently figuring out return_void, just ignoring for now
-            self.iter_idx += 1
 
         else: # no jumps, just move iter_idx down to the next immediate line
             self.iter_idx += 1
