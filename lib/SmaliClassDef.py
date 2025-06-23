@@ -154,6 +154,11 @@ class SmaliClassDef:
         return match_object is not None
 
 
+    def get_original_file_path(self):
+        '''Returns the original path to the file that was given when constructing
+        this SmaliClassDef instance.  A string (e.g., "/tmp/apkOutput_blah/smali/class2.smali")'''
+        return self.file_name
+
     def get_fully_qualified_name(self):
         ''' Returns the "fully qualified" name of this class, a string.
         Example: "Ledu/fandm/enovak/leaks/Main;"
@@ -592,6 +597,7 @@ def tests():
     assert(SCD == scd_same)
     assert(SCD != tsdifferent)
     assert(SCD == "Ledu/fandm/enovak/leaks/Main;")
+    assert(SCD.get_original_file_path() == "test/Main.smali")
 
 
 
