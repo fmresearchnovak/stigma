@@ -214,7 +214,8 @@ class SmaliExecutionIterator():
         # cur_line is a string, create a SmaliAssemblyInstructions object
         cur_line = self.cur_class_text[self.iter_idx]
 
-        if cur_line.lstrip().replace("\n", "") == ".end method": # match with BEGINS_WITH_DOT_END_METHOD
+        match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_END_METHOD, cur_line)
+        if match_object != None:
             raise StopIteration
 
         self.locations_visited.append(cur_line)
@@ -222,7 +223,6 @@ class SmaliExecutionIterator():
         function, function_line_number = get_function_name(self.iter_idx, self.cur_class_text)
         method_def_obj = find_smali_method_def_obj(function, self.cur_class, self.filename)
         cur_line_global = method_def_obj.dereference_p_to_v_numbers(cur_line) # could just do this to every method in the whole class
-        #print(cur_line_global)
 
         cur_line_obj = None
         try:
@@ -253,11 +253,6 @@ class SmaliExecutionIterator():
             # Check if the line is 1. not a valid individual instruction by itself and 2. not a move_result
             while(not StigmaStringParsingLib.is_valid_instruction(next_line) \
             and re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, next_line) is None):
-                #function = get_function_name(self.iter_idx, self.cur_class_text)
-                #method_def_obj = find_smali_method_def_obj(function, self.cur_class, self.filename)
-                #next_line_global = method_def_obj.dereference_p_to_v_numbers(next_line)
-                #self.cur_line_to_return.append(SmaliAssemblyInstructions.from_line(next_line))
-
                 self.iter_idx += 1
 
                 if(self.iter_idx >= len(self.cur_class_text)):
@@ -312,13 +307,11 @@ class SmaliExecutionIterator():
         - Slicing.py will handle any register moves
         '''
         if(isinstance(cur_line_obj, SmaliAssemblyInstructions._INVOKE_INSTRUCTION)):
-            #input("INVOKE")
             self.iter_idx += 1
             
             # get the destination of the invoke instruction (the method to look for)
             method_name = cur_line_obj.get_destination()
             print("METHOD NAME IS " + method_name)
-            #input("")
 
             # class filename of where the method is
             # TO DO: EXTERNAL NON-SMALI FILES, CURRENTLY THE CODE DOESN'T KNOW WHAT TO DO
@@ -326,13 +319,10 @@ class SmaliExecutionIterator():
             # create a method in classdef and methoddef to do this part
             file_name = file_path.split("/")[-1]
             print("FILE NAME IS " + file_name)
-            #input("")
-            # TO FIGURE OUT: SOMETIMES THE INVOKE GOES TO AN EXTERNAL METHOD, NOT A SMALI FILE
 
             next_class = self.codebase.get_class_from_base_filename(file_name)
             if next_class == None:
                 print("EXTERNAL METHOD, IGNORE FOR NOW")
-                #input("")
                 return self.cur_line_to_return
             next_class_text = next_class.raw_text
 
@@ -344,7 +334,6 @@ class SmaliExecutionIterator():
                 line_no += 1
                 print(str(line_no) + ": " + line)
                 if method_name in line and ".method" in line:
-                    #input("FOUND METHOD")
                     found = True
                 if found and StigmaStringParsingLib.is_valid_instruction(line):
                     new_line = line

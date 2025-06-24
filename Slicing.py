@@ -215,10 +215,8 @@ def test_instance(instruction, location, tracingManager):
                 print("FIRST LINE, DON'T REMOVE")
         case Action.PART_OF_DATA_IN:
             tracingManager.locations_with_partial_tracked_data.append([str(full_action[1]), str(full_action[1]), str(type(instruction))])
-            #print(tracingManager.locations_with_partial_tracked_data)
         case Action.CAN_GET_DATA_FROM:
             tracingManager.locations_with_partial_tracked_data.append([str(full_action[1]), str(full_action[3]), str(type(instruction))])
-            #print(tracingManager.locations_with_partial_tracked_data)
         case Action.JUMP:
             pass
         case Action.RETURN:
