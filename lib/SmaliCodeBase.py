@@ -186,6 +186,8 @@ class SmaliExecutionIterator():
         self.cur_line_to_return = None
 
         self.smali_execution_iterator = None
+
+        self.current_try_start = "none"
         
         
     def __iter__(self):
@@ -219,7 +221,7 @@ class SmaliExecutionIterator():
             raise StopIteration
 
         self.locations_visited.append(cur_line)
-        print("LINE " + str(self.iter_idx + 1) + ": " + cur_line)
+        #print("LINE " + str(self.iter_idx + 1) + ": " + cur_line)
         function, function_line_number = get_function_name(self.iter_idx, self.cur_class_text)
         method_def_obj = find_smali_method_def_obj(function, self.cur_class, self.filename)
         cur_line_global = method_def_obj.dereference_p_to_v_numbers(cur_line) # could just do this to every method in the whole class
@@ -395,6 +397,50 @@ class SmaliExecutionIterator():
             #input("")
             raise StopIteration
 
+        '''
+        TRY START LABEL
+        - Sets self.current_try_start to the current line
+        '''
+        if(isinstance(cur_line_obj, SmaliAssemblyInstructions.TRY_START_LABEL)):
+            self.current_try_start = repr(cur_line)
+            self.iter_idx += 1
+            return self.cur_line_to_return
+
+        '''
+        TRY END LABEL
+        - Clears self.current_try_start
+        '''
+        if(isinstance(cur_line_obj, SmaliAssemblyInstructions.TRY_END_LABEL)):
+            self.current_try_start = "none"
+            self.iter_idx += 1
+            return self.cur_line_to_return
+
+        '''THROW INSTRUCTIONS
+        - If self.current_try_start is not "none", jump immediately to the closest catch/catchall with the try_start
+        '''
+        if(isinstance(cur_line_obj, SmaliAssemblyInstructions.THROW)):
+            match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_CATCH, cur_line)
+            if match_object != None or self.current_try_start not in cur_line:
+                self.iter_idx += 1
+                cur_line = self.cur_class_text[self.iter_idx]
+                match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_CATCH, cur_line)
+            self.current_try_start = "none"
+
+        '''CATCH AND CATCHALL INSTRUCTIONS
+        - Ignored if self.current_try_start is "none"
+        - If self.current_try_start is not "none" then this means that the code is testing what happens when an exception is thrown
+        - Jump to the destination of the .catch/.catchall
+        '''
+        if(isinstance(cur_line_obj, SmaliAssemblyInstructions._CATCH) or isinstance(cur_line_obj, SmaliAssemblyInstructions._CATCHALL)):
+            if self.current_try_start != "none" and self.current_try_start in cur_line:
+                self.iter_idx += 1
+
+        if self.current_try_start != "none":
+            '''OTHER INSTRUCTIONS WHILE INSIDE A TRY_START
+            - First, test if the instruction can throw an exception. If it cannot, do nothing and continue as usual.
+            - 
+            '''
+            self.iter_idx += 1
         else: # no jumps, just move iter_idx down to the next immediate line
             self.iter_idx += 1
         

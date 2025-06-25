@@ -10,6 +10,7 @@ BEGINS_WITH_COLON = r"^\s*:"  # code labels (locations for branches) begin with 
 
 BEGINS_WITH_DOT_METHOD = r"^\.method"  # directive to indicate start of a method
 BEGINS_WITH_DOT_END_METHOD = r"^\s*\.end method"  # directive to indicate end of method
+BEGINS_WITH_DOT_CATCH = r"^\s*\.catch"
 
 BEGINS_WITH_DOT_FIELD = r"^\.field"  # directive to indicate start of a field
 
