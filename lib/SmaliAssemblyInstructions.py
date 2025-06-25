@@ -93,8 +93,6 @@ class SmaliAssemblyInstruction():
         if hash_pos != -1:
             # for now, delete "in-line" comments since they're a pain to retain
             line = line[:hash_pos] 
-
-
         
         tokens = StigmaStringParsingLib.break_into_tokens(line)
         #tokens = list(filter(lambda x: x != "", tokens)) # removes ""
@@ -102,9 +100,7 @@ class SmaliAssemblyInstruction():
         if(len(tokens) == 0):
             return BLANK_LINE()
 
-
         opcode = tokens[0]
-
         if(opcode_has_parameter_list(opcode) or opcode_has_parameter_range(opcode)):
             start = line.index("{")
             end = line.index("}")
@@ -128,12 +124,10 @@ class SmaliAssemblyInstruction():
             args = list(map(lambda x : "\"" + str(x.strip(",")) + "\"", args))
             
         #print("args: " + str(args))
-
-
         opcode = opcode.upper()
         opcode = opcode.replace("/", "_")
         opcode = opcode.replace("-", "_")
-        
+        opcode = opcode.replace(".", "_")
         
         if(opcode == "CONST_STRING" or opcode == "CONST_STRING_JUMBO"):
             smali_assembly_instruction = SmaliAssemblyInstruction._build_const_string(opcode, line)
@@ -144,11 +138,13 @@ class SmaliAssemblyInstruction():
         # output eval_string: "MOVE_FROM16("v1", "v25")"    
         #print("eval_string: " + eval_string)
             
-            
         # this next part is very very technical and feels
         # pretty hacky
         # https://www.programiz.com/python-programming/methods/built-in/eval
         # https://stackoverflow.com/questions/3941517/converting-list-to-args-when-calling-function#3941529
+        if ".catch" in raw_line_string:
+            print(eval_string)
+            input("HERE")
         smali_assembly_instruction_obj = eval(eval_string)
         return smali_assembly_instruction_obj
 
@@ -2264,11 +2260,9 @@ class CATCH_LABEL(STIGMA_LABEL):
     def __repr__(self):
         return ":catch_stigma_" + str(self.n)
         
-        
-        
-class CATCH_DIRECTIVE(SmaliAssemblyInstruction):
+class _CATCH(SmaliAssemblyInstruction):
     #  # .catch Lcom/fasterxml/jackson/core/JsonProcessingException; {:try_start_0 .. :try_end_0} :catch_0
-    def __init__(self, exception_type_id, start_label, end_label, catch_label):
+    def __init__(self, exception_type_id, start_label, range_dots, end_label, catch_label):
         self.exception_type_id = exception_type_id
         self.start_label = start_label
         self.end_label = end_label
@@ -2278,11 +2272,18 @@ class CATCH_DIRECTIVE(SmaliAssemblyInstruction):
         # exception_type_id is cast with str() and not repr() because it
         # is a string and not another SmaliAssemblyInstruction (or subtype) object
         return ".catch " + str(self.exception_type_id) + " {" + repr(self.start_label) + " .. " + repr(self.end_label) + "} " + repr(self.catch_label)
-        
-        
-        
-        
     
+    def get_destination(self):
+        return self.catch_label
+        
+class _CATCHALL(SmaliAssemblyInstruction): 
+    def __init__(self, start_label, range_dots, end_label, catch_label):
+        self.start_label = start_label
+        self.end_label = end_label
+        self.catch_label = catch_label
+
+    def get_destination(self):
+        return self.catch_label
 
 
 class LOG_D(INVOKE_STATIC):
