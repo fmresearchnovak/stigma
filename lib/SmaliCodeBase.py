@@ -284,18 +284,20 @@ class SmaliExecutionIterator():
 
             line = ""
             line_no = function_line_number
-            while ":" + destination != line.lstrip().replace("\n", ""): # make smali label object and do an equal
+            while str(SmaliAssemblyInstructions.LABEL(":" + destination)) != line:
                 print("LINE = " + line + " AT INDEX " + str(line_no + 1))
                 line_no += 1
                 line = self.cur_class_text[line_no]
             print("FOUND LINE = " + line + " AT INDEX " + str(line_no + 1))
             print("NEXT LINE AT INDEX " + str(line_no + 1) + ": " + str(line))
-            if line + "at index " + str(line_no) + " in file " + self.filename in self.locations_visited: # make location object out of this
+            print("LINE NO: " + str(line_no + 1))
+            # handle the lines that have two instructions on them
+            if method_def_obj.get_full_location(line_no, self.cur_class_text) in self.locations_visited:
                 #input("Line has been visited before in the current recursion. Ignoring to prevent infinite recursion.")
                 self.iter_idx += 1
                 return self.cur_line_to_return
             else:
-                self.locations_visited.append(line + "at index " + str(line_no) + " in file " + self.filename)
+                self.locations_visited.append(method_def_obj.get_full_location(line_no, self.cur_class_text))
 
             self.iter_idx = line_no
             #input("")
@@ -315,8 +317,7 @@ class SmaliExecutionIterator():
 
             # class filename of where the method is
             # TO DO: EXTERNAL NON-SMALI FILES, CURRENTLY THE CODE DOESN'T KNOW WHAT TO DO
-            file_path = cur_line_obj.get_owning_class_name()[1:-1] + ".smali" # remove the L and the ;
-            # create a method in classdef and methoddef to do this part
+            file_path = cur_line_obj.get_owning_class_with_smali_type()
             file_name = file_path.split("/")[-1]
             print("FILE NAME IS " + file_name)
 
@@ -339,12 +340,12 @@ class SmaliExecutionIterator():
                     new_line = line
                     break
 
-            if new_line + "at index " + str(line_no) + " in file " + file_name in self.locations_visited:
+            if method_def_obj.get_full_location(line_no, next_class_text) in self.locations_visited:
                 #input("Line has been visited before in the current recursion. Ignoring to prevent infinite recursion.")
                 self.iter_idx += 1
                 return self.cur_line_to_return
             else:
-                self.locations_visited.append(new_line + "at index " + str(line_no) + " in file " + file_name in self.locations_visited)
+                self.locations_visited.append(method_def_obj.get_full_location(line_no, next_class_text))
 
             self.smali_execution_iterator = SmaliExecutionIterator(self.codebase, file_name, line_no, self.locations_visited)
 

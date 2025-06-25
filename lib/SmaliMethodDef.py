@@ -255,6 +255,7 @@ class SmaliMethodDef:
 		self.num_try_start_jumps = 0
 		
 		class_name = "Lunknownclass;"
+		self.scd = None
 		if(scd != None):
 			self.scd = scd # smali class definition
 			class_name = self.scd.class_name
@@ -282,6 +283,10 @@ class SmaliMethodDef:
 		
 		self.warnings_on = False
 
+	def get_full_location(self, line_number, class_text):
+		file_location = self.scd.get_fully_qualified_name()
+		line = class_text[line_number - 1]
+		return line + "at index " + str(line_number) + " in file " + file_location
 
 	def get_fully_qualified_name(self):
 		'''Returns the fully qualified name of this method, a string
