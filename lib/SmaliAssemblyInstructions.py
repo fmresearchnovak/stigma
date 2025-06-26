@@ -85,7 +85,10 @@ class SmaliAssemblyInstruction():
         line = raw_line_string.strip("\n")
         if(StigmaStringParsingLib.is_comment(line)):
             return COMMENT(line)
-        
+        if(StigmaStringParsingLib.is_try_start_label(line)):
+            return TRY_START_LABEL(line)
+        if(StigmaStringParsingLib.is_try_end_label(line)):
+            return TRY_END_LABEL(line)
         if(StigmaStringParsingLib.is_jump_target_label(line)):
             return LABEL(line)
 
@@ -2248,12 +2251,18 @@ class STIGMA_LABEL(SmaliAssemblyInstruction):
 class TRY_START_LABEL(STIGMA_LABEL):
     # e.g., :try_start_stigma_0
     def __repr__(self):
-        return ":try_start_stigma_" + str(self.n) 
+        return ":try_start_stigma_" + str(self.n)
+    
+    def get_num(self):
+        return self.n
         
 class TRY_END_LABEL(STIGMA_LABEL):
     # e.g., :try_end_stigma_0
     def __repr__(self):
         return ":try_end_stigma_" + str(self.n)
+
+    def get_num(self):
+        return self.n
         
 class CATCH_LABEL(STIGMA_LABEL):
     # e.g., :catch_stigma_0

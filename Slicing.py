@@ -357,7 +357,7 @@ def forward_tracing(filename, target_line_number, target_location, tracingManage
 
     # STEP 5: Loop through the method and get the target line
     for line in SmaliCodeBase.SmaliExecutionIterator(codebase, filename, target_line_number, []):
-        print(line)
+        #print(line)
 
 
     #for line in SmaliCodeIterator.SmaliCodeIterator(smali_method_def_obj.raw_text):
