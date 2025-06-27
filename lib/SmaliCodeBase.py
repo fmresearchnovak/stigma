@@ -95,16 +95,15 @@ class SmaliCodeBase():
             filename:The name of the desired file, a string
             Example: "RandomClassName.smali"
         Returns:
-            A SmaliClassDef for the given file or None
+            A list of SmaliClassDefs with the given name or an empty list
         '''
 
+        classes_with_base_name = []
         for c in self.classes:
             basename = os.path.basename(c.file_name) 
             if(basename == filename):
-                return c
-        return None
-    
-
+                classes_with_base_name.append(c)
+        return classes_with_base_name
         
 
     def _loadSCDs(self, list_of_paths):
@@ -173,7 +172,7 @@ class SmaliExecutionIterator():
 
         self.filename = starting_point_filename
         self.codebase = SCB
-        self.cur_class = SCB.get_class_from_base_filename(starting_point_filename)
+        self.cur_class = SCB.get_class_from_base_filename(starting_point_filename)[0]
         if(self.cur_class == None):
             raise Exception("Invalid filename: " + str(starting_point_filename))
         self.cur_class_text = self.cur_class.raw_text
@@ -188,6 +187,7 @@ class SmaliExecutionIterator():
         self.smali_execution_iterator = None
 
         self.try_start_stack = []
+        self.file_path = ""
         
         
     def __iter__(self):
@@ -215,6 +215,7 @@ class SmaliExecutionIterator():
         # Step #1, store the "current" line to return to user
         # cur_line is a string, create a SmaliAssemblyInstructions object
         cur_line = self.cur_class_text[self.iter_idx]
+        print("Line " + str(self.iter_idx + 1) + ": " + cur_line + "(" + self.file_path + ")")
 
         match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_END_METHOD, cur_line)
         if match_object != None:
@@ -238,7 +239,7 @@ class SmaliExecutionIterator():
 
         # Step #2, determine whether the current line could have a move result (such as an invoke instruction)
         if(StigmaStringParsingLib.could_have_a_subsequent_move_result(cur_line)):
-            print(cur_line + " COULD HAVE SUBSEQUENT MOVE RESULT")
+            #print(cur_line + " COULD HAVE SUBSEQUENT MOVE RESULT")
             # Move iter_idx down to the next line to check whether it is a move_result
             # Skip the blank line
             self.iter_idx += 1
@@ -249,7 +250,7 @@ class SmaliExecutionIterator():
 
             # Get the text of this next line
             next_line = self.cur_class_text[self.iter_idx]
-            print("RESULT LINE " + str(self.iter_idx + 1) + ": " + next_line)
+            #print("RESULT LINE " + str(self.iter_idx + 1) + ": " + next_line)
             #input("")
 
             # Check if the line is 1. not a valid individual instruction by itself and 2. not a move_result
@@ -261,7 +262,7 @@ class SmaliExecutionIterator():
                     return self.cur_line_to_return
 
                 next_line = self.cur_class_text[self.iter_idx]
-                print("RESULT LINE " + str(self.iter_idx + 1) + ": " + next_line)
+                #print("RESULT LINE " + str(self.iter_idx + 1) + ": " + next_line)
 
             if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, next_line) is not None):
                 function, function_line_number = get_function_name(self.iter_idx, self.cur_class_text)
@@ -269,7 +270,7 @@ class SmaliExecutionIterator():
                 next_line_global = method_def_obj.dereference_p_to_v_numbers(next_line)
                 self.cur_line_to_return.append(SmaliAssemblyInstructions.from_line(next_line))
             else:
-                print("NO MOVE RESULT FOUND")
+                #print("NO MOVE RESULT FOUND")
                 #input("")
                 self.iter_idx -= 2
         
@@ -287,13 +288,13 @@ class SmaliExecutionIterator():
             line = ""
             line_no = function_line_number
             while str(SmaliAssemblyInstructions.LABEL(":" + destination)) != line:
-                print("LINE = " + line + " AT INDEX " + str(line_no + 1))
+                #print("LINE = " + line + " AT INDEX " + str(line_no + 1))
                 # check if the line is a try_end here to update the try start stack in the middle of the goto
                 line_no += 1
                 line = self.cur_class_text[line_no]
             print("FOUND LINE = " + line + " AT INDEX " + str(line_no + 1))
-            print("NEXT LINE AT INDEX " + str(line_no + 1) + ": " + str(line))
-            print("LINE NO: " + str(line_no + 1))
+            #print("NEXT LINE AT INDEX " + str(line_no + 1) + ": " + str(line))
+            #print("LINE NO: " + str(line_no + 1))
             # handle the lines that have two instructions on them
             if method_def_obj.get_full_location(line_no, self.cur_class_text) in self.locations_visited:
                 #input("Line has been visited before in the current recursion. Ignoring to prevent infinite recursion.")
@@ -317,18 +318,39 @@ class SmaliExecutionIterator():
             
             # get the destination of the invoke instruction (the method to look for)
             method_name = cur_line_obj.get_destination()
-            print("METHOD NAME IS " + method_name)
+            #print("METHOD NAME IS " + method_name)
 
             # class filename of where the method is
             # TO DO: EXTERNAL NON-SMALI FILES, CURRENTLY THE CODE DOESN'T KNOW WHAT TO DO
             file_path = cur_line_obj.get_owning_class_with_smali_type()
             file_name = file_path.split("/")[-1]
-            print("FILE NAME IS " + file_name)
+            #print("FILE NAME IS " + file_name)
 
-            next_class = self.codebase.get_class_from_base_filename(file_name)
-            if next_class == None:
+            possible_next_classes = self.codebase.get_class_from_base_filename(file_name)
+
+            if possible_next_classes == []:
                 print("EXTERNAL METHOD, IGNORE FOR NOW")
                 return self.cur_line_to_return
+            
+            next_class = None
+            y = False # random variable just to see a certain feature work, remove later
+            
+            for some_class in possible_next_classes:
+                full_name = some_class.get_fully_qualified_name()[1:-1] + ".smali"
+
+                if file_path == full_name and y:
+                    input(full_name + " is the right smali file.")
+
+                if file_path == full_name:
+                    next_class = some_class
+                    break
+                else:
+                    print(full_name + " is not the right smali file.")
+                    y = True
+            
+            if next_class == None:
+                return self.cur_line_to_return
+                
             next_class_text = next_class.raw_text
 
             line_no = 0
@@ -353,6 +375,7 @@ class SmaliExecutionIterator():
 
             self.smali_execution_iterator = SmaliExecutionIterator(self.codebase, file_name, line_no, self.locations_visited)
             self.smali_execution_iterator.try_start_stack = self.try_start_stack
+            self.smali_execution_iterator.file_path = file_path
 
         '''
         IF THEN JUMP INSTRUCTION
@@ -366,8 +389,8 @@ class SmaliExecutionIterator():
             self.locations_visited.append([str(cur_line_obj), self.filename, self.iter_idx])
             self.iter_idx += 1
             destination = cur_line_obj.get_destination()
-            print("ASSUMING STATEMENT IS TRUE")
-            print("Destination: " + destination)
+            #("ASSUMING STATEMENT IS TRUE")
+            #print("Destination: " + destination)
             #input("")
 
             line_no = function_line_number
@@ -375,11 +398,11 @@ class SmaliExecutionIterator():
 
             line = ""
             while ":" + destination != line.lstrip().replace("\n", ""):
-                print("LINE = " + line + " AT INDEX " + str(line_no + 1))
+                #print("LINE = " + line + " AT INDEX " + str(line_no + 1))
                 line_no += 1
                 line = self.cur_class_text[line_no]
             print("FOUND LINE = " + line + " AT INDEX " + str(line_no + 1))
-            print("NEXT LINE AT INDEX " + str(line_no + 1) + ": " + str(line))
+            #print("NEXT LINE AT INDEX " + str(line_no + 1) + ": " + str(line))
             if line + "at index " + str(line_no) + " in file " + self.filename in self.locations_visited:
                 #input("Line has been visited before in the current recursion. Ignoring to prevent infinite recursion.")
                 self.iter_idx += 1
@@ -408,18 +431,20 @@ class SmaliExecutionIterator():
         '''
         if(isinstance(cur_line_obj, SmaliAssemblyInstructions.TRY_START_LABEL)):
             print(cur_line)
-            input("TRY START")
+            #input("TRY START")
             self.try_start_stack.append(cur_line_obj.get_num())
             self.iter_idx += 1
-            input(self.try_start_stack)
+            #input(self.try_start_stack)
             return self.cur_line_to_return
 
         '''
         TRY END LABEL
         - Clears self.try_start_stack
+        - doesn't work so just ignored for now
         '''
         if(isinstance(cur_line_obj, SmaliAssemblyInstructions.TRY_END_LABEL)):
-            print(cur_line)
+            self.iter_idx += 1
+            '''print(cur_line)
             print(self.try_start_stack)
             input("TRY END")
 
@@ -430,30 +455,38 @@ class SmaliExecutionIterator():
 
             self.iter_idx += 1
             input(self.try_start_stack)
-            return self.cur_line_to_return
+            '''
 
         '''THROW INSTRUCTIONS
         - If self.try_start_stack is not "none", jump immediately to the closest catch/catchall with the try_start
+        - doesn't work so the iteration just ends
         '''
         if(isinstance(cur_line_obj, SmaliAssemblyInstructions.THROW)):
+            raise StopIteration
+            '''
             input(str(self.iter_idx) + " THROW INSTRUCTION")
             input(cur_line)
-            '''match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_CATCH, cur_line)
-            if len(self.try_start_stack) == 0: # unhandled exception
-                input("END ITERATION")
-                raise StopIteration
-            if match_object != None or self.try_start_stack[-1] not in cur_line:
-                self.iter_idx += 1
-                cur_line = self.cur_class_text[self.iter_idx]
-                match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_CATCH, cur_line)
-            input("FOUND " + str(self.try_start_stack[-1]) + " at line " + str(self.iter_idx) + ": " + cur_line)'''
-            self.iter_idx += 1
+
+
             if len(self.try_start_stack) != 0:
                 self.try_start_stack.pop()
             else:
                 input("NO TRY STARTS FOUND")
                 raise StopIteration
 
+
+            match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_CATCH, cur_line)
+            if len(self.try_start_stack) == 0: # unhandled exception
+                input("END ITERATION")
+                raise StopIteration
+            
+            if match_object != None or self.try_start_stack[-1] not in cur_line:
+                self.iter_idx += 1
+                cur_line = self.cur_class_text[self.iter_idx]
+                match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_CATCH, cur_line)
+            input("FOUND " + str(self.try_start_stack[-1]) + " at line " + str(self.iter_idx) + ": " + cur_line)
+            self.iter_idx += 1'''
+            
         '''CATCH AND CATCHALL INSTRUCTIONS
         - Ignored if self.try_start_stack is "none"
         - If self.try_start_stack is not "none" then this means that the code is testing what happens when an exception is thrown

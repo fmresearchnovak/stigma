@@ -145,9 +145,7 @@ class SmaliAssemblyInstruction():
         # pretty hacky
         # https://www.programiz.com/python-programming/methods/built-in/eval
         # https://stackoverflow.com/questions/3941517/converting-list-to-args-when-calling-function#3941529
-        if ".catch" in raw_line_string:
-            print(eval_string)
-            input("HERE")
+
         smali_assembly_instruction_obj = eval(eval_string)
         return smali_assembly_instruction_obj
 
@@ -2290,6 +2288,10 @@ class _CATCHALL(SmaliAssemblyInstruction):
 
     def get_destination(self):
         return self.catch_label
+
+class _LINE(SmaliAssemblyInstruction):
+    def __init__(self, num):
+        self.n = num
 
 
 class LOG_D(INVOKE_STATIC):
