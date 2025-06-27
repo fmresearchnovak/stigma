@@ -489,7 +489,7 @@ def stigmaMainWorkflow(args):
 def main():
 
     parser = argparse.ArgumentParser(description='''Stigma: A tool for modifying the assembly code of closed source Android Apps.\n
-                                     Example usage: python3 Stigma.py SomeApp.apk -p ./DefaultSharedPreferencesPlugin.py''')
+                                     Example usage: python3 Stigma.py SomeApp.apk -p ./plugin/ExamplePlugin.py''')
 
     # required arguments
     parser.add_argument("APK", help="The path to the APK file to be modified")
