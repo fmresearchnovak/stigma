@@ -2240,34 +2240,31 @@ class INVOKE_SUPER_QUICK(_PARAMETER_LIST_INSTRUCTION, _INVOKE_INSTRUCTION):
 # class INVOKE_SUPER_QUICK_RANGE
         
 class STIGMA_LABEL(SmaliAssemblyInstruction):
-    def __init__(self, num):
-        self.n = num
+    def __init__(self, label):
+        self.label = label
 
     def __repr__(self):
         # LABELS are weird.  If you change this code be careful of compatibility 
         # with instructions such as IF_EQZ that use a LABEL in-line
-        return ":stigma_jump_label_" + str(self.n)
+        return ":stigma_jump_label_" + str(self.label)
+    
+    def get_num(self):
+        return str(self.label).split("_")[-1]
         
 class TRY_START_LABEL(STIGMA_LABEL):
     # e.g., :try_start_stigma_0
     def __repr__(self):
-        return ":try_start_stigma_" + str(self.n)
-    
-    def get_num(self):
-        return self.n
+        return ":try_start_stigma_" + str(self.label)
         
 class TRY_END_LABEL(STIGMA_LABEL):
     # e.g., :try_end_stigma_0
     def __repr__(self):
-        return ":try_end_stigma_" + str(self.n)
-
-    def get_num(self):
-        return self.n
+        return ":try_end_stigma_" + str(self.label)
         
 class CATCH_LABEL(STIGMA_LABEL):
     # e.g., :catch_stigma_0
     def __repr__(self):
-        return ":catch_stigma_" + str(self.n)
+        return ":catch_stigma_" + str(self.label)
         
 class _CATCH(SmaliAssemblyInstruction):
     #  # .catch Lcom/fasterxml/jackson/core/JsonProcessingException; {:try_start_0 .. :try_end_0} :catch_0

@@ -288,6 +288,7 @@ class SmaliExecutionIterator():
             line_no = function_line_number
             while str(SmaliAssemblyInstructions.LABEL(":" + destination)) != line:
                 print("LINE = " + line + " AT INDEX " + str(line_no + 1))
+                # check if the line is a try_end here to update the try start stack in the middle of the goto
                 line_no += 1
                 line = self.cur_class_text[line_no]
             print("FOUND LINE = " + line + " AT INDEX " + str(line_no + 1))
@@ -302,6 +303,7 @@ class SmaliExecutionIterator():
                 self.locations_visited.append(method_def_obj.get_full_location(line_no, self.cur_class_text))
 
             self.iter_idx = line_no
+            #self.try_start_stack = []
             #input("")
 
         '''
@@ -350,7 +352,7 @@ class SmaliExecutionIterator():
                 self.locations_visited.append(method_def_obj.get_full_location(line_no, next_class_text))
 
             self.smali_execution_iterator = SmaliExecutionIterator(self.codebase, file_name, line_no, self.locations_visited)
-            self.smali_execution_iterator.current_try_start = self.try_start_stack
+            self.smali_execution_iterator.try_start_stack = self.try_start_stack
 
         '''
         IF THEN JUMP INSTRUCTION
@@ -386,6 +388,7 @@ class SmaliExecutionIterator():
                 self.locations_visited.append(line + "at index " + str(line_no) + " in file " + self.filename)
 
             self.smali_execution_iterator = SmaliExecutionIterator(self.codebase, self.filename, line_no, self.locations_visited)
+            self.smali_execution_iterator.try_start_stack = self.try_start_stack
 
         '''
         RETURN INSTRUCTION
@@ -404,9 +407,11 @@ class SmaliExecutionIterator():
         - TO DO: multiple try starts, make sure that the try end ends the correct one
         '''
         if(isinstance(cur_line_obj, SmaliAssemblyInstructions.TRY_START_LABEL)):
+            print(cur_line)
             input("TRY START")
-            self.try_start_stack.append(cur_line.split("_")[-1])
+            self.try_start_stack.append(cur_line_obj.get_num())
             self.iter_idx += 1
+            input(self.try_start_stack)
             return self.cur_line_to_return
 
         '''
@@ -414,18 +419,26 @@ class SmaliExecutionIterator():
         - Clears self.try_start_stack
         '''
         if(isinstance(cur_line_obj, SmaliAssemblyInstructions.TRY_END_LABEL)):
+            print(cur_line)
+            print(self.try_start_stack)
             input("TRY END")
-            self.try_start_stack.remove(cur_line.split("_")[-1])
+
+            index = len(self.try_start_stack) - 1
+            while self.try_start_stack[index] != cur_line_obj.get_num():
+                index -= 1
+            self.try_start_stack.pop(index)
+
             self.iter_idx += 1
+            input(self.try_start_stack)
             return self.cur_line_to_return
 
         '''THROW INSTRUCTIONS
         - If self.try_start_stack is not "none", jump immediately to the closest catch/catchall with the try_start
         '''
         if(isinstance(cur_line_obj, SmaliAssemblyInstructions.THROW)):
-            input("THROW INSTRUCTION")
+            input(str(self.iter_idx) + " THROW INSTRUCTION")
             input(cur_line)
-            match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_CATCH, cur_line)
+            '''match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_CATCH, cur_line)
             if len(self.try_start_stack) == 0: # unhandled exception
                 input("END ITERATION")
                 raise StopIteration
@@ -433,8 +446,13 @@ class SmaliExecutionIterator():
                 self.iter_idx += 1
                 cur_line = self.cur_class_text[self.iter_idx]
                 match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_CATCH, cur_line)
-            input("FOUND " + str(self.try_start_stack[-1]) + " at line " + str(self.iter_idx) + ": " + cur_line)
-            self.try_start_stack = []
+            input("FOUND " + str(self.try_start_stack[-1]) + " at line " + str(self.iter_idx) + ": " + cur_line)'''
+            self.iter_idx += 1
+            if len(self.try_start_stack) != 0:
+                self.try_start_stack.pop()
+            else:
+                input("NO TRY STARTS FOUND")
+                raise StopIteration
 
         '''CATCH AND CATCHALL INSTRUCTIONS
         - Ignored if self.try_start_stack is "none"
