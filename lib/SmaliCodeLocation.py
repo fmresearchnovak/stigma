@@ -6,7 +6,7 @@ class SmaliCodeLocation():
     '''
 
 
-    def __init__(self, class_name, line_num):
+    def __init__(self, SCB, class_name, line_num):
         ''' The constructor for a location.  Invalid locations can be generated with this constructor.
         It is recommended to use SmaliCodeBase.get_location() to obtain valid locations.
         Parameters:
@@ -16,6 +16,12 @@ class SmaliCodeLocation():
         
         self.fqclass_name = class_name
         self.line_number = line_num
+
+        # Avoid allowing the user to create an invalid SmaliCodeLocation
+        if(self.is_valid_in(SCB) == False):
+            raise ValueError("Cannot construct invalid SmaliCodeLocation", str(self))
+
+
 
 
     def is_valid_in(self, SCB):
