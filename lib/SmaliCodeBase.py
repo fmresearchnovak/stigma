@@ -89,21 +89,21 @@ class SmaliCodeBase():
             exit(1)
         return apk
 
-    def get_class_from_base_filename(self, filename):
-        '''This function returns a SmaliClassDef for a given filename if it is found in this SmaliCodeBase
+    def get_class_from_fully_qualified_name(self, filename):
+        '''This function returns a SmaliClassDef for a given file path if it is found in this SmaliCodeBase
         Parameters:
             filename:The name of the desired file, a string
-            Example: "RandomClassName.smali"
+            Example: "Lorg/util/messenger/RandomClassName;"
         Returns:
-            A list of SmaliClassDefs with the given name or an empty list
+            A SmaliClassDef object with the given file path
         '''
 
-        classes_with_base_name = []
         for c in self.classes:
-            basename = os.path.basename(c.file_name) 
-            if(basename == filename):
-                classes_with_base_name.append(c)
-        return classes_with_base_name
+            #print(c.get_fully_qualified_name())
+            #print(filename)
+            if c == filename:
+                return c
+        return None
         
 
     def _loadSCDs(self, list_of_paths):
@@ -153,7 +153,7 @@ class SmaliExecutionIterator():
     filled-new-array might span multiple lines, but it isn't a jump.  This is to be determined / not yet implemented.
 
     '''
-    def __init__(self, SCB, starting_point_filename, starting_point_linenumber, locations_visited):
+    def __init__(self, SCB, starting_point_file_path, starting_point_linenumber, locations_visited):
         '''Constructor for SmaliExecutionIterator.
         Parameters:
             SCB: The code base we wish to iterate through, a SmaliCodeBase object. 
@@ -170,11 +170,13 @@ class SmaliExecutionIterator():
         # already visited lines and methods in the recursion go here
         self.locations_visited = locations_visited
 
-        self.filename = starting_point_filename
+        self.filename = starting_point_file_path.split("/")[-1][:-1] + ".smali"
         self.codebase = SCB
-        self.cur_class = SCB.get_class_from_base_filename(starting_point_filename)[0]
+        #print(starting_point_file_path)
+        self.cur_class = SCB.get_class_from_fully_qualified_name(starting_point_file_path)
+        
         if(self.cur_class == None):
-            raise Exception("Invalid filename: " + str(starting_point_filename))
+            raise Exception("Invalid filename: " + str(starting_point_file_path))
         self.cur_class_text = self.cur_class.raw_text
         
         # Iterator's index based on starting_point_linenumber
@@ -187,7 +189,7 @@ class SmaliExecutionIterator():
         self.smali_execution_iterator = None
 
         self.try_start_stack = []
-        self.file_path = ""
+        self.file_path = starting_point_file_path
         
         
     def __iter__(self):
@@ -215,7 +217,7 @@ class SmaliExecutionIterator():
         # Step #1, store the "current" line to return to user
         # cur_line is a string, create a SmaliAssemblyInstructions object
         cur_line = self.cur_class_text[self.iter_idx]
-        print("Line " + str(self.iter_idx + 1) + ": " + cur_line + "(" + self.file_path + ")")
+        #print("Line " + str(self.iter_idx + 1) + ": " + cur_line + "(" + self.file_path + ")")
 
         match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_END_METHOD, cur_line)
         if match_object != None:
@@ -282,7 +284,7 @@ class SmaliExecutionIterator():
         if(isinstance(cur_line_obj, SmaliAssemblyInstructions.GOTO)):
             #input("GOTO")
             destination = cur_line_obj.get_destination()
-            print("Destination: " + destination)
+            #print("Goto destination: " + destination)
             #input("")
 
             line = ""
@@ -292,7 +294,7 @@ class SmaliExecutionIterator():
                 # check if the line is a try_end here to update the try start stack in the middle of the goto
                 line_no += 1
                 line = self.cur_class_text[line_no]
-            print("FOUND LINE = " + line + " AT INDEX " + str(line_no + 1))
+            #print("FOUND LINE = " + line + " AT INDEX " + str(line_no + 1))
             #print("NEXT LINE AT INDEX " + str(line_no + 1) + ": " + str(line))
             #print("LINE NO: " + str(line_no + 1))
             # handle the lines that have two instructions on them
@@ -322,20 +324,16 @@ class SmaliExecutionIterator():
 
             # class filename of where the method is
             # TO DO: EXTERNAL NON-SMALI FILES, CURRENTLY THE CODE DOESN'T KNOW WHAT TO DO
-            file_path = cur_line_obj.get_owning_class_with_smali_type()
-            file_name = file_path.split("/")[-1]
+            file_path = cur_line_obj.get_owning_class_name()
             #print("FILE NAME IS " + file_name)
+            
+            next_class = self.codebase.get_class_from_fully_qualified_name(file_path)
 
-            possible_next_classes = self.codebase.get_class_from_base_filename(file_name)
-
-            if possible_next_classes == []:
-                print("EXTERNAL METHOD, IGNORE FOR NOW")
+            if next_class == None:
+                #print("EXTERNAL METHOD, IGNORE FOR NOW")
                 return self.cur_line_to_return
             
-            next_class = None
-            y = False # random variable just to see a certain feature work, remove later
-            
-            for some_class in possible_next_classes:
+            '''for some_class in possible_next_classes:
                 full_name = some_class.get_fully_qualified_name()[1:-1] + ".smali"
 
                 if file_path == full_name and y:
@@ -346,10 +344,7 @@ class SmaliExecutionIterator():
                     break
                 else:
                     print(full_name + " is not the right smali file.")
-                    y = True
-            
-            if next_class == None:
-                return self.cur_line_to_return
+                    y = True'''
                 
             next_class_text = next_class.raw_text
 
@@ -359,7 +354,7 @@ class SmaliExecutionIterator():
 
             for line in next_class_text:
                 line_no += 1
-                print(str(line_no) + ": " + line)
+                #print(str(line_no) + ": " + line)
                 if method_name in line and ".method" in line:
                     found = True
                 if found and StigmaStringParsingLib.is_valid_instruction(line):
@@ -373,7 +368,8 @@ class SmaliExecutionIterator():
             else:
                 self.locations_visited.append(method_def_obj.get_full_location(line_no, next_class_text))
 
-            self.smali_execution_iterator = SmaliExecutionIterator(self.codebase, file_name, line_no, self.locations_visited)
+            print("New file: " + file_path + " (" + str(line_no) + ")")
+            self.smali_execution_iterator = SmaliExecutionIterator(self.codebase, file_path, line_no, self.locations_visited)
             self.smali_execution_iterator.try_start_stack = self.try_start_stack
             self.smali_execution_iterator.file_path = file_path
 
@@ -401,16 +397,17 @@ class SmaliExecutionIterator():
                 #print("LINE = " + line + " AT INDEX " + str(line_no + 1))
                 line_no += 1
                 line = self.cur_class_text[line_no]
-            print("FOUND LINE = " + line + " AT INDEX " + str(line_no + 1))
+            #print("FOUND LINE = " + line + " AT INDEX " + str(line_no + 1))
             #print("NEXT LINE AT INDEX " + str(line_no + 1) + ": " + str(line))
-            if line + "at index " + str(line_no) + " in file " + self.filename in self.locations_visited:
+            if method_def_obj.get_full_location(line_no, self.cur_class_text) in self.locations_visited:
                 #input("Line has been visited before in the current recursion. Ignoring to prevent infinite recursion.")
                 self.iter_idx += 1
                 return self.cur_line_to_return
             else:
-                self.locations_visited.append(line + "at index " + str(line_no) + " in file " + self.filename)
-
-            self.smali_execution_iterator = SmaliExecutionIterator(self.codebase, self.filename, line_no, self.locations_visited)
+                self.locations_visited.append(method_def_obj.get_full_location(line_no, self.cur_class_text))
+            
+            print("New file: " + self.file_path + " (" + str(line_no) + ")")
+            self.smali_execution_iterator = SmaliExecutionIterator(self.codebase, self.file_path, line_no, self.locations_visited)
             self.smali_execution_iterator.try_start_stack = self.try_start_stack
 
         '''
@@ -430,7 +427,7 @@ class SmaliExecutionIterator():
         - TO DO: multiple try starts, make sure that the try end ends the correct one
         '''
         if(isinstance(cur_line_obj, SmaliAssemblyInstructions.TRY_START_LABEL)):
-            print(cur_line)
+            #print(cur_line)
             #input("TRY START")
             self.try_start_stack.append(cur_line_obj.get_num())
             self.iter_idx += 1
@@ -525,7 +522,7 @@ def tests():
         assert(scb.classes[i] == scb.class_names[i])
 
 
-    main = scb.get_class_from_base_filename("Main.smali")
+    main = scb.get_class_from_fully_qualified_name("Main.smali")
     assert(main.get_fully_qualified_name() == "Ledu/fandm/enovak/leaks/Main;")
 
 

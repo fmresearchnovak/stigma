@@ -486,9 +486,6 @@ class _INVOKE_INSTRUCTION(SmaliAssemblyInstruction, _JUMP_INSTRUCTION):
     def get_owning_class_name(self):
         parts = self.types_spec.split("->")
         return parts[0]
-    
-    def get_owning_class_with_smali_type(self):
-        return self.get_owning_class_name()[1:-1] + ".smali"
         
     def get_method_name(self):
         parts = self.types_spec.split("->")

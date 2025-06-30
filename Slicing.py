@@ -416,14 +416,14 @@ def main():
  
     if find_path(tracingManager.tmp_file_name, args.filename) not in tracingManager.smali_files:
         print("ERROR: Smali file not found in APK.")
-        exit(1)
+        #exit(1)
 
     if (args.register[0] != "v" and args.register[0] != "p") or not args.register[1:].isdigit():
         print("ERROR: Register input is not a valid register.")
         exit(1)
 
         
-    forward_tracing(args.filename, int(args.line_number), args.register, tracingManager, codebase)
+    forward_tracing("Lorg/telegram/messenger/SendMessagesHelper;", int(args.line_number), args.register, tracingManager, codebase)
 
     #the following code tests it without the APK file so that lines can be easily edited
     #forward_tracing(args.filename, int(args.line_number), args.register, [], {}, tmp_file_name)
