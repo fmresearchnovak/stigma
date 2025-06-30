@@ -179,21 +179,22 @@ def generate_directed_graph(graph):
     
     return html_graph
 
-def test_instance(instruction, location, tracingManager):
+def test_instance(line, location, tracingManager):
+    instruction = line[0]
+
     first = False
     original_line = tracingManager.target_line
     if original_line.lstrip() == repr(instruction):
         first = True
 
     full_action = instruction.get_slicing_action(location)
-    #print("ACTION = " + str(full_action))
     
     match full_action[0]:
-    # change to enum
         case Action.ADD:
             print("ADDING NEW LOCATION " + str(full_action[1]))
-            tracingManager.add_location(str(full_action[1]))
-            tracingManager.add_edge(location, str(full_action[1]), tracingManager.current_line_number)
+            tracingManager.add_location(full_action[1])
+            tracingManager.add_edge(location, full_action[1], tracingManager.current_line_number)
+            '''
             # S-instructions globally change a type of object and this change is attached to all instances
             if isinstance(instruction, SmaliAssemblyInstructions._S_INSTRUCTION):
                 uses_list = grep_instances(instruction.get_instance_variable(), tracingManager)
@@ -207,6 +208,7 @@ def test_instance(instruction, location, tracingManager):
 
                     if file in tracingManager.smali_files:
                         tracingManager.add_file(file, line)
+            '''
         case Action.REMOVE:
             if not first:
                 print("REMOVING LOCATION " + str(full_action[1]))
@@ -217,11 +219,22 @@ def test_instance(instruction, location, tracingManager):
             tracingManager.locations_with_partial_tracked_data.append([str(full_action[1]), str(full_action[1]), str(type(instruction))])
         case Action.CAN_GET_DATA_FROM:
             tracingManager.locations_with_partial_tracked_data.append([str(full_action[1]), str(full_action[3]), str(type(instruction))])
-        case Action.JUMP:
-            pass
+        case Action.INVOKE:
+            try:
+                result_instruction = line[1]
+                if location_in_string_exact(location, str(result_instruction)):
+                    if not first:
+                        print("REMOVING LOCATION " + str(full_action[1]))
+                        tracingManager.remove_location(full_action[1])
+                    else:
+                        print("FIRST LINE, DON'T REMOVE")
+            except IndexError:
+                pass # if there is no result, the result of the invoke goes nowhere
+
+            # add code here to add the new name of each variable passed to the new function
         case Action.RETURN:
-            pass
-        case Action.RESULT:
+            # the code here will find the previous invoke from a list and determine whether the returned value is the tracked value
+            # if so, add the destination of the result instruction
             pass
         case _:
             pass
@@ -232,17 +245,6 @@ def find_path(folder, filename):
         if filename in files:
             return os.path.join(root, filename)
     return None
-
-def get_lines_from_file(filename, tmp_file_name):
-    file_path = find_path(tmp_file_name, filename)
-    fh = open(file_path, "r")
-    lines = fh.readlines()
-    fh.close()
-    return lines, file_path
-
-def fix_line(line):
-    # this function will handle when multiple instructions are on one line
-    return line[0].replace("\n", "")
 
 def location_in_string_exact(location, line):
     pattern = rf"{re.escape(location)}(?!\d)"
@@ -271,18 +273,18 @@ def write_html_file(html_graph):
     outFile.close()
 
 def analyze_line(filename, line, tracingManager):
-    tracingManager.current_line_number += 1
+    #tracingManager.current_line_number += 1
+
+    line_as_string = "".join(line)
 
     for location in tracingManager.locations_to_check:
-        if location_in_string_exact(location, line):
+        if location_in_string_exact(location, line_as_string):
             print("----------------------------------------------------")
             print("LOCATION = " + location)
-            print("LINE = " + line)
+            print("LINE = " + line_as_string)
             print("DETERMINING NEW LOCATIONS...")
 
-            instruction = SmaliAssemblyInstructions.SmaliAssemblyInstruction().from_line(line)
-
-            test_instance(instruction, location, tracingManager)
+            test_instance(line, location, tracingManager)
 
             break
 
@@ -335,50 +337,20 @@ def forward_tracing(filename, target_line_number, target_location, tracingManage
 
     # STEP 2: Open input file
     print(tmp_file_name)
-    #lines, file_path = get_lines_from_file(filename, tmp_file_name)
-
-    # STEP 3: Get the method that the target line is in as a SmaliClassDef object
-    #smali_reg = SmaliRegister.SmaliRegister(reg)
-    #smali_class = SmaliClassDef.SmaliClassDef(file_path)
 
     target_line_number -= 1
-    #method_signature_str = get_function_name(target_line_number, lines)
-    #smali_method_def_obj = find_smali_method_def_obj(method_signature_str, smali_class, file_path)
-    #print(smali_method_def_obj)
 
-    # STEP 4: Find the text of the target line
-    '''tracingManager.target_line = lines[target_line_number].replace("\n", "")
-    if target_location not in tracingManager.target_line:
-        print("ERROR: Target register not found at the given line number.")
-        exit(1)'''
-    #target_line_found = False
-
-    tracingManager.current_line_number = target_line_number
+    #tracingManager.current_line_number = target_line_number
 
     # STEP 5: Loop through the method and get the target line
     for line in SmaliCodeBase.SmaliExecutionIterator(codebase, filename, target_line_number, []):
-        #print(line)
+        #if len(line) > 1:
+        #   tracingManager.current_line_number += len(line) - 1
 
-
-    #for line in SmaliCodeIterator.SmaliCodeIterator(smali_method_def_obj.raw_text):
-        line = str(line)
-        if len(line) > 1:
-            tracingManager.current_line_number += len(line) - 1
-
-        line = fix_line(line)
-
-        #if tracingManager.target_line in line:
-            #target_line_found = True
-
-        # STEP 6: Once the target line is found, send every line containing a location in locations_to_track to the test_instance function
-        #if target_line_found:
-            #analyze_line(filename, line, tracingManager)
+        analyze_line(line, tracingManager)
 
     html_graph = generate_directed_graph(tracingManager.edges)
     write_html_file(html_graph)
-
-    # STEP 8: Choose the next file to open, and add the first value to the locations to check, and find line number
-    return next_iteration(tracingManager)
 
 def main():
     # ARGPARSE FORMAT

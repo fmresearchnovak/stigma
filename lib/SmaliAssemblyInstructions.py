@@ -47,10 +47,9 @@ class Action(Enum):
     REMOVE = 2
     PART_OF_DATA_IN = 3
     CAN_GET_DATA_FROM = 4
-    JUMP = 5
+    INVOKE = 5
     RETURN = 6
-    RESULT = 7
-    NO_ACTIONS = 8
+    NO_ACTIONS = 7
 
 def from_line(raw_line_string):
     ''' 
@@ -446,11 +445,11 @@ class Third_Reg_To_First_Reg():
 
     def get_slicing_action(self, tracked):
         if tracked == self.get_registers()[2]:
-            return ["ADD", self.get_destination()]
+            return [Action.ADD, self.get_destination()]
         elif tracked == self.get_destination():
-            return ["REMOVE", tracked]
+            return [Action.REMOVE, tracked]
         else:
-            return ["NO ACTIONS"]
+            return [Action.NO_ACTIONS]
 
 # if tracking the third register, the tracked variable is removed. If tracking the second register, nothing happens. If tracking the first register
 # add the third register.
@@ -475,7 +474,7 @@ class _JUMP_INSTRUCTION():
 # invoke instructions
 class _INVOKE_INSTRUCTION(SmaliAssemblyInstruction, _JUMP_INSTRUCTION):
     def get_slicing_action(self, tracked):
-        return [Action.JUMP, self.get_method_name(), self.get_registers().index(tracked)]
+        return [Action.INVOKE, self.get_method_name(), self.get_registers().index(tracked)]
     
     def get_destination(self):
         return self.get_method_name()
@@ -500,7 +499,7 @@ class _INVOKE_INSTRUCTION(SmaliAssemblyInstruction, _JUMP_INSTRUCTION):
 # jump instructions
 class _JUMP_TO_LABEL_INSTRUCTION(_JUMP_INSTRUCTION):
     def get_slicing_action(self, tracked):
-        return [Action.JUMP, self.get_label()]
+        return [Action.NO_ACTIONS, self.get_label()]
 
     def get_destination(self):
         return self.get_label()
@@ -513,7 +512,7 @@ class _JUMP_TO_LABEL_INSTRUCTION(_JUMP_INSTRUCTION):
 class Result_Instruction():
     def get_slicing_action(self, tracked):
         # not finished
-        return [Action.RESULT, tracked]
+        return [Action.NO_ACTIONS, tracked]
 
 # has the tracking location but nothing happens with it
 class No_Slicing_Actions():
