@@ -474,6 +474,7 @@ class _JUMP_INSTRUCTION():
 # invoke instructions
 class _INVOKE_INSTRUCTION(SmaliAssemblyInstruction, _JUMP_INSTRUCTION):
     def get_slicing_action(self, tracked):
+        #input(str(self))
         return [Action.INVOKE, self.get_method_name(), self.get_registers().index(tracked)]
     
     def get_destination(self):
@@ -494,6 +495,12 @@ class _INVOKE_INSTRUCTION(SmaliAssemblyInstruction, _JUMP_INSTRUCTION):
         parts = self.types_spec.split("->")
         name_only = parts[1].split("(")[0]
         return name_only
+
+    def get_registers(self):
+        str_instruction = str(self)
+        opening = str_instruction.index("{")
+        closing = str_instruction.index("}")
+        return str_instruction[opening:closing].split(", ")
     
 
 # jump instructions
@@ -663,19 +670,19 @@ class _SINGLE_DEST_REGISTER_INSTRUCTION(SmaliAssemblyInstruction):
         return self.opcode() + " " + str(self.rd) + ", " + str(self.value_arg)
 
 
-class MOVE_RESULT(_ThirtyTwoBit_Parameters, _SINGLE_REGISTER_INSTRUCTION):
+class MOVE_RESULT(_ThirtyTwoBit_Parameters, _SINGLE_REGISTER_INSTRUCTION, First_Reg_Dead_End):
     def opcode(self):
         return "move-result"
 
-class MOVE_RESULT_WIDE(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _SINGLE_REGISTER_INSTRUCTION):
+class MOVE_RESULT_WIDE(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _SINGLE_REGISTER_INSTRUCTION, First_Reg_Dead_End):
     def opcode(self):
         return "move-result-wide"
 
-class MOVE_RESULT_OBJECT(_Object_Parameters, _SINGLE_REGISTER_INSTRUCTION):
+class MOVE_RESULT_OBJECT(_Object_Parameters, _SINGLE_REGISTER_INSTRUCTION, First_Reg_Dead_End):
     def opcode(self):
         return "move-result-object"
 
-class MOVE_EXCEPTION(_Object_Parameters, _SINGLE_REGISTER_INSTRUCTION):
+class MOVE_EXCEPTION(_Object_Parameters, _SINGLE_REGISTER_INSTRUCTION, First_Reg_Dead_End):
     def opcode(self):
         return "move-exception"
 
