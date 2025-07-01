@@ -2296,6 +2296,10 @@ class _LINE(SmaliAssemblyInstruction):
     def __init__(self, num):
         self.n = num
 
+class _LOCALS(SmaliAssemblyInstruction):
+    def __init__(self, num):
+        self.n = num
+
 
 class LOG_D(INVOKE_STATIC):
     # Not actually an assembly instruction!  More 

@@ -202,12 +202,7 @@ def test_instance(line, location, tracingManager):
     full_action = instruction.get_slicing_action(location)
     print("ACTION = " + str(full_action[0]))
     input("")
-
-    # this code handles all the stuff that has to be done when a new method begins for the first time
-    # such as getting new locations and moving the old list to the stack
-    if(self.parameters_immediate != []):
-        self.parameters_immediate = []
-    
+ 
     match full_action[0]:
         case Action.ADD:
             print("ADDING NEW LOCATION " + str(full_action[1]))
@@ -252,15 +247,35 @@ def test_instance(line, location, tracingManager):
 
             # add code here to add the new name of each variable passed to the new function
             parameters = instruction.get_registers()
+            input(parameters)
             which_parameters = []
             for i in range(len(parameters) - 1):
                 if parameters[i] == location:
                     which_parameters.append(i)
+            input(which_parameters)
             tracingManager.parameters_immediate = which_parameters
+            input(tracingManager.parameters_immediate)
+
+            # this code handles all the stuff that has to be done when a new method begins for the first time
+            # such as getting new locations and moving the old list to the stack
+            print("NOW EDITING LOCATIONS")
+            input(tracingManager.locations_to_check)
+            new_locations_to_check = []
+
+            for parameter_index in tracingManager.parameters_immediate:
+                # get the parameters of the new method
+                new_locations_to_check.append("v" + str(parameter_index + 1))
+            
+            tracingManager.stack_locations_to_check.append(tracingManager.locations_to_check)
+            tracingManager.locations_to_check = new_locations_to_check
+            input(tracingManager.locations_to_check)
+
+            tracingManager.parameters_immediate = []
+
         case Action.RETURN:
             # the code here will find the previous invoke from a list and determine whether the returned value is the tracked value
             # if so, add the destination of the result instruction
-            pass
+            tracingManager.locations_to_check = tracingManager.stack_locations_to_check.pop[0]
         case _:
             pass
 
@@ -303,7 +318,7 @@ def analyze_line(line, tracingManager):
     line_as_string = str(line[0])
 
     for location in tracingManager.locations_to_check:
-        if location_in_string_exact(location, line_as_string):
+        if location_in_string_exact(location, line_as_string) or tracingManager.parameters_immediate != []:
             #print("----------------------------------------------------")
             #print("LOCATION = " + location)
             #print("LINE = " + line_as_string)
