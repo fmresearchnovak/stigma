@@ -500,7 +500,7 @@ class _INVOKE_INSTRUCTION(SmaliAssemblyInstruction, _JUMP_INSTRUCTION):
         str_instruction = str(self)
         opening = str_instruction.index("{")
         closing = str_instruction.index("}")
-        return str_instruction[opening:closing].split(", ")
+        return str_instruction[opening:closing].replace(",", "").split(" ")[0]
     
 
 # jump instructions

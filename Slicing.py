@@ -254,9 +254,11 @@ def test_instance(line, location, tracingManager):
 
             # add code here to add the new name of each variable passed to the new function
             parameters = instruction.get_registers()
+            print("PARAMETERS:")
+            input(parameters)
             #input(parameters)
             which_parameters = []
-            for i in range(len(parameters) - 1):
+            for i in range(len(parameters)):
                 if parameters[i] == location:
                     which_parameters.append(i)
             #input(which_parameters)
@@ -266,6 +268,8 @@ def test_instance(line, location, tracingManager):
             # this code handles all the stuff that has to be done when a new method begins for the first time
             # such as getting new locations and moving the old list to the stack
             print("NOW EDITING LOCATIONS")
+            
+            input(tracingManager.parameters_immediate)
             #input(tracingManager.locations_to_check)
             new_locations_to_check = []
 
@@ -275,7 +279,6 @@ def test_instance(line, location, tracingManager):
             fqc = instruction.get_fully_qualified_call()
             smd = scd.get_method_by_fully_qualified_name(fqc)
             LOCALS = smd.get_locals_directive_num()
-            input(LOCALS)
 
             # ADD THE AMOUNT OF LOCALS TO FIRST INDEX, START AT 0
             for parameter_index in tracingManager.parameters_immediate:
@@ -284,7 +287,7 @@ def test_instance(line, location, tracingManager):
             
             tracingManager.stack_locations_to_check.append(tracingManager.locations_to_check)
             tracingManager.locations_to_check = new_locations_to_check
-            print(tracingManager.locations_to_check)
+            #input(tracingManager.locations_to_check)
 
             tracingManager.parameters_immediate = []
 

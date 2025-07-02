@@ -192,8 +192,8 @@ class SmaliExecutionIterator():
         self.file_path = starting_point_file_path
 
         self.tracing_manager = tracingManager
-        
-        
+
+
     def __iter__(self):
         '''Establishes the iterator.'''
         # Note: the tterator index is established in __init__(self) above.
@@ -205,14 +205,20 @@ class SmaliExecutionIterator():
         Returns:
             A SmaliAssemblyInstruction object representing the instruction.
         '''
+        print("NEW ITERATION")
+        print("file name: " + self.filename + " at index " + str(self.iter_idx))
 
+        input(self.smali_execution_iterator)
+        
         if self.tracing_manager.locations_to_check == []:
             input("TRACKED VALUE HAS BEEN LOST IN CURRENT ITERATION. RETURNING BACK")
+            print("RETURNING FROM " + self.filename)
             raise StopIteration
 
         # upon an invoke statement, take a new iterator and call next on it and return its value
         if(self.smali_execution_iterator != None):
             try:
+                print("NEW FILENAME: " + self.smali_execution_iterator.filename)
                 return self.smali_execution_iterator.__next__()
             except StopIteration:
                 self.smali_execution_iterator = None
@@ -224,6 +230,7 @@ class SmaliExecutionIterator():
         # cur_line is a string, create a SmaliAssemblyInstructions object
         cur_line = self.cur_class_text[self.iter_idx]
         print("Line " + str(self.iter_idx + 1) + ": " + cur_line + "(" + self.file_path + ")")
+        
 
         match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_END_METHOD, cur_line)
         if match_object != None:
