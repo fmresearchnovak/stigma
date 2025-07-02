@@ -206,6 +206,10 @@ class SmaliExecutionIterator():
             A SmaliAssemblyInstruction object representing the instruction.
         '''
 
+        if self.tracing_manager.locations_to_check == []:
+            input("TRACKED VALUE HAS BEEN LOST IN CURRENT ITERATION. RETURNING BACK")
+            raise StopIteration
+
         # upon an invoke statement, take a new iterator and call next on it and return its value
         if(self.smali_execution_iterator != None):
             try:

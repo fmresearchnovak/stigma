@@ -211,6 +211,9 @@ def test_instance(line, location, tracingManager):
             print("ADDING NEW LOCATION " + str(full_action[1]))
             tracingManager.add_location(full_action[1])
             tracingManager.add_edge(location, full_action[1], tracingManager.current_line_number)
+
+            if isinstance(instruction, SmaliAssemblyInstructions._I_INSTRUCTION):
+                pass
             '''
             # S-instructions globally change a type of object and this change is attached to all instances
             if isinstance(instruction, SmaliAssemblyInstructions._S_INSTRUCTION):
@@ -413,13 +416,14 @@ def forward_tracing(filename, target_line_number, target_location, tracingManage
         #print(line)
         analyze_line(line, tracingManager)
 
-        if tracingManager.current_iteration == 50:
+        if tracingManager.current_iteration == 1000:
             #print(tracingManager.locations_to_check)
             #print(tracingManager.line_directory)
             break
-
-    html_graph = generate_directed_graph(tracingManager.edges)
-    write_html_file(html_graph)
+        
+        if tracingManager.locations_to_check == [] and tracingManager.stack_locations_to_check == []:
+            input("NO TRACES LEFT OF TRACKED VALUE")
+            break
 
 def main():
     # ARGPARSE FORMAT
@@ -465,6 +469,9 @@ def main():
 
         
     forward_tracing("Lorg/telegram/messenger/SendMessagesHelper;", int(args.line_number), args.register, tracingManager, codebase)
+
+    html_graph = generate_directed_graph(tracingManager.edges)
+    write_html_file(html_graph)
 
     #the following code tests it without the APK file so that lines can be easily edited
     #forward_tracing(args.filename, int(args.line_number), args.register, [], {}, tmp_file_name)
