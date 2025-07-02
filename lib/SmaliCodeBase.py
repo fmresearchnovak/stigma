@@ -153,7 +153,7 @@ class SmaliExecutionIterator():
     filled-new-array might span multiple lines, but it isn't a jump.  This is to be determined / not yet implemented.
 
     '''
-    def __init__(self, SCB, starting_point_file_path, starting_point_linenumber, locations_visited):
+    def __init__(self, SCB, starting_point_file_path, starting_point_linenumber, tracingManager, locations_visited = []):
         '''Constructor for SmaliExecutionIterator.
         Parameters:
             SCB: The code base we wish to iterate through, a SmaliCodeBase object. 
@@ -190,6 +190,8 @@ class SmaliExecutionIterator():
 
         self.try_start_stack = []
         self.file_path = starting_point_file_path
+
+        self.tracing_manager = tracingManager
         
         
     def __iter__(self):
@@ -217,7 +219,7 @@ class SmaliExecutionIterator():
         # Step #1, store the "current" line to return to user
         # cur_line is a string, create a SmaliAssemblyInstructions object
         cur_line = self.cur_class_text[self.iter_idx]
-        #print("Line " + str(self.iter_idx + 1) + ": " + cur_line + "(" + self.file_path + ")")
+        print("Line " + str(self.iter_idx + 1) + ": " + cur_line + "(" + self.file_path + ")")
 
         match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_END_METHOD, cur_line)
         if match_object != None:
@@ -317,6 +319,12 @@ class SmaliExecutionIterator():
         '''
         if(isinstance(cur_line_obj, SmaliAssemblyInstructions._INVOKE_INSTRUCTION)):
             self.iter_idx += 1
+
+            registers = cur_line_obj.get_registers()
+            set1 = set(registers)
+            if len(set1.intersection(set(self.tracing_manager.locations_to_check))) == 0:
+                input("NO TRACKED REGISTERS PASSED THROUGH, IGNORE")
+                return self.cur_line_to_return
             
             # get the destination of the invoke instruction (the method to look for)
             method_name = cur_line_obj.get_destination()
@@ -360,6 +368,7 @@ class SmaliExecutionIterator():
                 if found and StigmaStringParsingLib.is_valid_instruction(line):
                     new_line = line
                     break
+                # ALLOW .LOCALS
 
             if method_def_obj.get_full_location(line_no, next_class_text) in self.locations_visited:
                 #input("Line has been visited before in the current recursion. Ignoring to prevent infinite recursion.")
@@ -369,7 +378,7 @@ class SmaliExecutionIterator():
                 self.locations_visited.append(method_def_obj.get_full_location(line_no, next_class_text))
 
             print("New file: " + file_path + " (" + str(line_no) + ")")
-            self.smali_execution_iterator = SmaliExecutionIterator(self.codebase, file_path, line_no, self.locations_visited)
+            self.smali_execution_iterator = SmaliExecutionIterator(self.codebase, file_path, line_no, self.tracing_manager, self.locations_visited)
             self.smali_execution_iterator.try_start_stack = self.try_start_stack
             self.smali_execution_iterator.file_path = file_path
 
@@ -407,7 +416,7 @@ class SmaliExecutionIterator():
                 self.locations_visited.append(method_def_obj.get_full_location(line_no, self.cur_class_text))
             
             print("New file: " + self.file_path + " (" + str(line_no) + ")")
-            self.smali_execution_iterator = SmaliExecutionIterator(self.codebase, self.file_path, line_no, self.locations_visited)
+            self.smali_execution_iterator = SmaliExecutionIterator(self.codebase, self.file_path, line_no, self.tracing_manager, self.locations_visited)
             self.smali_execution_iterator.try_start_stack = self.try_start_stack
 
         '''

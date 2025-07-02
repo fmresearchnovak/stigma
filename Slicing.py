@@ -23,6 +23,7 @@ class TracingManager:
     def __init__(self):
         self.temp_APK = StigmaState.Environment().get_temp_file()
         self.tmp_file_name = StigmaState.Environment().get_temp_file().name
+        self.codebase = None
 
         # edges for the directed graph
         self.edges = {}
@@ -55,6 +56,8 @@ class TracingManager:
         self.parameters_immediate = []
 
         self.stack_locations_to_check = []
+
+        self.cur_move_result_destinations = []
 
     # add edge object? add graph object?
     def add_edge(self, location, destination, line_number):
@@ -236,39 +239,49 @@ def test_instance(line, location, tracingManager):
         case Action.INVOKE:
             try:
                 result_instruction = line[1]
-                if result_instruction.get_destination() == location:
+                tracingManager.cur_move_result_destinations.append(result_instruction.get_registers()[0])
+                if result_instruction.get_registers()[0] == location:
                     if not first:
                         print("REMOVING LOCATION " + str(location))
                         tracingManager.remove_location(location)
                     else:
                         print("FIRST LINE, DON'T REMOVE")
             except IndexError:
-                pass # if there is no result, the result of the invoke goes nowhere
+                ptracingManager.cur_move_result_destinations.append("") # if there is no result, the result of the invoke goes nowhere
 
             # add code here to add the new name of each variable passed to the new function
             parameters = instruction.get_registers()
-            input(parameters)
+            #input(parameters)
             which_parameters = []
             for i in range(len(parameters) - 1):
                 if parameters[i] == location:
                     which_parameters.append(i)
-            input(which_parameters)
+            #input(which_parameters)
             tracingManager.parameters_immediate = which_parameters
-            input(tracingManager.parameters_immediate)
+            #input(tracingManager.parameters_immediate)
 
             # this code handles all the stuff that has to be done when a new method begins for the first time
             # such as getting new locations and moving the old list to the stack
             print("NOW EDITING LOCATIONS")
-            input(tracingManager.locations_to_check)
+            #input(tracingManager.locations_to_check)
             new_locations_to_check = []
 
+            # .ADD LOCALS
+            name = instruction.get_owning_class_name()
+            scd = tracingManager.codebase.get_class_from_fully_qualified_name(name)
+            fqc = instruction.get_fully_qualified_call()
+            smd = scd.get_method_by_fully_qualified_name(fqc)
+            LOCALS = smd.get_locals_directive_num()
+            input(LOCALS)
+
+            # ADD THE AMOUNT OF LOCALS TO FIRST INDEX, START AT 0
             for parameter_index in tracingManager.parameters_immediate:
                 # get the parameters of the new method
-                new_locations_to_check.append("v" + str(parameter_index + 1))
+                new_locations_to_check.append("v" + str(parameter_index + LOCALS))
             
             tracingManager.stack_locations_to_check.append(tracingManager.locations_to_check)
             tracingManager.locations_to_check = new_locations_to_check
-            input(tracingManager.locations_to_check)
+            print(tracingManager.locations_to_check)
 
             tracingManager.parameters_immediate = []
 
@@ -276,8 +289,18 @@ def test_instance(line, location, tracingManager):
             # the code here will find the previous invoke from a list and determine whether the returned value is the tracked value
             # if so, add the destination of the result instruction
             tracingManager.locations_to_check = tracingManager.stack_locations_to_check.pop[0]
+
+            # if the return statement returns the tracked value
+            if instruction.get_registers()[0] in tracingManager.locations_to_check:
+                # if there are pending move_results
+                if tracingManager.cur_move_result_destinations != []:
+                    destination = tracingManager.cur_move_result_destinations.pop(0)
+                    if destination != "":
+                        tracingManager.locations_to_check.append(destination)
         case _:
             pass
+
+    input(tracingManager.locations_to_check)
 
 def find_path(folder, filename):
     #Source: Gemini
@@ -372,26 +395,27 @@ def forward_tracing(filename, target_line_number, target_location, tracingManage
     tmp_file_name = tracingManager.tmp_file_name
 
     # STEP 1: Add first location to locations_to_check
-    print(target_location)
+    #print(target_location)
     tracingManager.add_location(target_location)
+    tracingManager.codebase = codebase
 
     # STEP 2: Open input file
-    print(tmp_file_name)
+    #print(tmp_file_name)
 
     #target_line_number -= 1
 
     # STEP 5: Loop through the method and get the target line
-    for line in SmaliCodeBase.SmaliExecutionIterator(codebase, filename, target_line_number, []):
+    for line in SmaliCodeBase.SmaliExecutionIterator(codebase, filename, target_line_number, tracingManager):
         #if len(line) > 1:
         #   tracingManager.current_line_number += len(line) - 1
         tracingManager.current_iteration += 1
-        print(str(tracingManager.current_iteration) + ":")
-        print(line)
+        #print(str(tracingManager.current_iteration) + ":")
+        #print(line)
         analyze_line(line, tracingManager)
 
-        if tracingManager.current_iteration == 20:
-            print(tracingManager.locations_to_check)
-            print(tracingManager.line_directory)
+        if tracingManager.current_iteration == 50:
+            #print(tracingManager.locations_to_check)
+            #print(tracingManager.line_directory)
             break
 
     html_graph = generate_directed_graph(tracingManager.edges)

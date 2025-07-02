@@ -803,7 +803,7 @@ class CONST_STRING(SmaliAssemblyInstruction, First_Reg_Dead_End):
         return {self.rd: SmaliTypes.ObjectReference("Ljava/lang/String;")}
         
 
-class CONST_STRING_JUMBO(CONST_STRING):
+class CONST_STRING_JUMBO(CONST_STRING, First_Reg_Dead_End):
     # https://stackoverflow.com/questions/19991833/in-dalvik-what-expression-will-generate-instructions-not-int-and-const-strin
     # found one in com.amazon.avod.thirdpartyclient.apk 
     #       const-string/jumbo v5, "stackTrace"
@@ -816,7 +816,7 @@ class CONST_STRING_JUMBO(CONST_STRING):
         return {self.rd: SmaliTypes.ObjectReference("Ljava/lang/String;")}
         
 
-class CONST_CLASS(_Object_Parameters, _SINGLE_DEST_REGISTER_INSTRUCTION):
+class CONST_CLASS(_Object_Parameters, _SINGLE_DEST_REGISTER_INSTRUCTION, First_Reg_Dead_End):
 
     def opcode(self):
         return "const-class"
