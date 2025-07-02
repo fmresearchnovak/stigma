@@ -205,8 +205,6 @@ class SmaliExecutionIterator():
         Returns:
             A SmaliAssemblyInstruction object representing the instruction.
         '''
-        print("NEW ITERATION")
-        print("file name: " + self.filename + " at index " + str(self.iter_idx))
 
         input(self.smali_execution_iterator)
         
@@ -225,6 +223,9 @@ class SmaliExecutionIterator():
 
         if(self.iter_idx >= len(self.cur_class_text)):
             raise StopIteration
+        
+        print("NEW ITERATION")
+        print("file name: " + self.filename + " at index " + str(self.iter_idx))
         
         # Step #1, store the "current" line to return to user
         # cur_line is a string, create a SmaliAssemblyInstructions object
