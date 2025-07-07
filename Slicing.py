@@ -202,17 +202,22 @@ def test_instance(line, location, tracingManager):
         first = True
 
     print("TYPE = " + str(type(instruction)))
+    #location = location[0]
     full_action = instruction.get_slicing_action(location)
     print("ACTION = " + str(full_action[0]))
-    input("")
+    #input("")
  
     match full_action[0]:
         case Action.ADD:
             print("ADDING NEW LOCATION " + str(full_action[1]))
-            tracingManager.add_location(full_action[1])
-            tracingManager.add_edge(location, full_action[1], tracingManager.current_line_number)
+            if not isinstance(instruction, SmaliAssemblyInstructions._I_INSTRUCTION) and not isinstance(instruction, SmaliAssemblyInstructions._S_INSTRUCTION):
+                tracingManager.add_location([full_action[1]])
+                tracingManager.add_edge(location, full_action[1], tracingManager.current_line_number)
+            else:
+                tracingManager.add_location([full_action[1], full_action[3]])
+                tracingManager.add_edge(location, full_action[1], tracingManager.current_line_number)
 
-            if isinstance(instruction, SmaliAssemblyInstructions._I_INSTRUCTION):
+            if isinstance(instruction, SmaliAssemblyInstructions._S_INSTRUCTION):
                 pass
             '''
             # S-instructions globally change a type of object and this change is attached to all instances
@@ -231,8 +236,12 @@ def test_instance(line, location, tracingManager):
             '''
         case Action.REMOVE:
             if not first:
-                print("REMOVING LOCATION " + str(full_action[1]))
-                tracingManager.remove_location(full_action[1])
+                if not isinstance(instruction, SmaliAssemblyInstructions._I_INSTRUCTION) and not isinstance(instruction, SmaliAssemblyInstructions._S_INSTRUCTION):
+                    print("REMOVING LOCATION " + str(full_action[1]))
+                    tracingManager.remove_location([full_action[1]])
+                else:
+                    print("REMOVING LOCATION " + str(full_action[1]))
+                    tracingManager.remove_location([full_action[1], full_action[3]])
             else:
                 print("FIRST LINE, DON'T REMOVE")
         case Action.PART_OF_DATA_IN:
@@ -243,6 +252,8 @@ def test_instance(line, location, tracingManager):
             try:
                 result_instruction = line[1]
                 tracingManager.cur_move_result_destinations.append(result_instruction.get_registers()[0])
+                print(result_instruction.get_registers()[0])
+                print(location)
                 if result_instruction.get_registers()[0] == location:
                     if not first:
                         print("REMOVING LOCATION " + str(location))
@@ -254,8 +265,8 @@ def test_instance(line, location, tracingManager):
 
             # add code here to add the new name of each variable passed to the new function
             parameters = instruction.get_registers()
-            print("PARAMETERS:")
-            input(parameters)
+            #print("PARAMETERS:")
+            #input(parameters)
             #input(parameters)
             which_parameters = []
             for i in range(len(parameters)):
@@ -267,9 +278,9 @@ def test_instance(line, location, tracingManager):
 
             # this code handles all the stuff that has to be done when a new method begins for the first time
             # such as getting new locations and moving the old list to the stack
-            print("NOW EDITING LOCATIONS")
+            #print("NOW EDITING LOCATIONS")
             
-            input(tracingManager.parameters_immediate)
+            #input(tracingManager.parameters_immediate)
             #input(tracingManager.locations_to_check)
             new_locations_to_check = []
 
@@ -306,7 +317,7 @@ def test_instance(line, location, tracingManager):
         case _:
             pass
 
-    input(tracingManager.locations_to_check)
+    #input(tracingManager.locations_to_check)
 
 def find_path(folder, filename):
     #Source: Gemini
@@ -347,7 +358,7 @@ def analyze_line(line, tracingManager):
     line_as_string = str(line[0])
 
     for location in tracingManager.locations_to_check:
-        if location_in_string_exact(location, line_as_string) or tracingManager.parameters_immediate != []:
+        if location_in_string_exact(location[0], line_as_string) or tracingManager.parameters_immediate != []:
             #print("----------------------------------------------------")
             #print("LOCATION = " + location)
             #print("LINE = " + line_as_string)
@@ -402,7 +413,7 @@ def forward_tracing(filename, target_line_number, target_location, tracingManage
 
     # STEP 1: Add first location to locations_to_check
     #print(target_location)
-    tracingManager.add_location(target_location)
+    tracingManager.add_location([target_location])
     tracingManager.codebase = codebase
 
     # STEP 2: Open input file

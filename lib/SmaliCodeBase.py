@@ -206,7 +206,7 @@ class SmaliExecutionIterator():
             A SmaliAssemblyInstruction object representing the instruction.
         '''
 
-        input(self.smali_execution_iterator)
+        #input(self.smali_execution_iterator)
         
         if self.tracing_manager.locations_to_check == []:
             input("TRACKED VALUE HAS BEEN LOST IN CURRENT ITERATION. RETURNING BACK")
@@ -216,7 +216,6 @@ class SmaliExecutionIterator():
         # upon an invoke statement, take a new iterator and call next on it and return its value
         if(self.smali_execution_iterator != None):
             try:
-                print("NEW FILENAME: " + self.smali_execution_iterator.filename)
                 return self.smali_execution_iterator.__next__()
             except StopIteration:
                 self.smali_execution_iterator = None
@@ -224,7 +223,7 @@ class SmaliExecutionIterator():
         if(self.iter_idx >= len(self.cur_class_text)):
             raise StopIteration
         
-        print("NEW ITERATION")
+        #print("NEW ITERATION")
         print("file name: " + self.filename + " at index " + str(self.iter_idx))
         
         # Step #1, store the "current" line to return to user
@@ -333,8 +332,12 @@ class SmaliExecutionIterator():
             self.iter_idx += 1
 
             registers = cur_line_obj.get_registers()
-            set1 = set(registers)
-            if len(set1.intersection(set(self.tracing_manager.locations_to_check))) == 0:
+            found_register = False
+            for location in self.tracing_manager.locations_to_check:
+                if location[0] in registers:
+                    found_register = True
+
+            if not found_register:
                 input("NO TRACKED REGISTERS PASSED THROUGH, IGNORE")
                 return self.cur_line_to_return
             
