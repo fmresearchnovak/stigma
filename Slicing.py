@@ -18,6 +18,29 @@ from lib import SmaliCodeBase
 from lib.SmaliMethodDef import SmaliMethodSignature
 import StigmaState
 
+class TracingLocation:
+    def __init__(self):
+        self.reg = None
+        self.obj_instance = None
+        self.variable = None
+
+    def set_register(self, new_reg):
+        self.reg = new_reg
+
+    def set_object_pair(self, obj, var):
+        self.obj_instance = obj
+        self.variable = var
+
+    def __eq__(self, other):
+        # the object is a register
+        if self.reg not None:
+            if str(self.reg) == other:
+                return True
+        if self.obj_instance not None:
+            if str(self.obj_instance) in other and str(self.variable) in other:
+                return True
+        return False
+
 class TracingManager:
 
     def __init__(self):
@@ -211,10 +234,16 @@ def test_instance(line, location, tracingManager):
         case Action.ADD:
             print("ADDING NEW LOCATION " + str(full_action[1]))
             if not isinstance(instruction, SmaliAssemblyInstructions._I_INSTRUCTION) and not isinstance(instruction, SmaliAssemblyInstructions._S_INSTRUCTION):
-                tracingManager.add_location([full_action[1]])
+                new_location = TracingLocation()
+                new_location.set_register(full_action[1])
+                tracingManager.add_location(new_location)
+
                 tracingManager.add_edge(location, full_action[1], tracingManager.current_line_number)
             else:
-                tracingManager.add_location([full_action[1], full_action[3]])
+                new_location = TracingLocation()
+                new_location.set_object_pair(full_action[1], full_action[3])
+                tracingManager.add_location(new_location)
+
                 tracingManager.add_edge(location, full_action[1], tracingManager.current_line_number)
 
             if isinstance(instruction, SmaliAssemblyInstructions._S_INSTRUCTION):
@@ -238,10 +267,14 @@ def test_instance(line, location, tracingManager):
             if not first:
                 if not isinstance(instruction, SmaliAssemblyInstructions._I_INSTRUCTION) and not isinstance(instruction, SmaliAssemblyInstructions._S_INSTRUCTION):
                     print("REMOVING LOCATION " + str(full_action[1]))
-                    tracingManager.remove_location([full_action[1]])
+                    new_location = TracingLocation()
+                    new_location.set_register(full_action[1])
+                    tracingManager.remove_location(new_location)
                 else:
                     print("REMOVING LOCATION " + str(full_action[1]))
-                    tracingManager.remove_location([full_action[1], full_action[3]])
+                    new_location = TracingLocation()
+                    new_location.set_object_pair(full_action[1], full_action[3])
+                    tracingManager.remove_location(new_location)
             else:
                 print("FIRST LINE, DON'T REMOVE")
         case Action.PART_OF_DATA_IN:
@@ -261,7 +294,7 @@ def test_instance(line, location, tracingManager):
                     else:
                         print("FIRST LINE, DON'T REMOVE")
             except IndexError:
-                ptracingManager.cur_move_result_destinations.append("") # if there is no result, the result of the invoke goes nowhere
+                tracingManager.cur_move_result_destinations.append("") # if there is no result, the result of the invoke goes nowhere
 
             # add code here to add the new name of each variable passed to the new function
             parameters = instruction.get_registers()
@@ -411,15 +444,11 @@ def forward_tracing(filename, target_line_number, target_location, tracingManage
 
     tmp_file_name = tracingManager.tmp_file_name
 
-    # STEP 1: Add first location to locations_to_check
-    #print(target_location)
-    tracingManager.add_location([target_location])
+    start_location = TracingLocation()
+    start_location.set_register(target_location)
+
+    tracingManager.add_location(start_location)
     tracingManager.codebase = codebase
-
-    # STEP 2: Open input file
-    #print(tmp_file_name)
-
-    #target_line_number -= 1
 
     # STEP 5: Loop through the method and get the target line
     for line in SmaliCodeBase.SmaliExecutionIterator(codebase, filename, target_line_number, tracingManager):
