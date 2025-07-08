@@ -334,7 +334,7 @@ class SmaliExecutionIterator():
             registers = cur_line_obj.get_registers()
             found_register = False
             for location in self.tracing_manager.locations_to_check:
-                if location[0] in registers:
+                if location.get_value() in registers:
                     found_register = True
 
             if not found_register:

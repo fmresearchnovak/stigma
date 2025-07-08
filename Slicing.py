@@ -31,15 +31,26 @@ class TracingLocation:
         self.obj_instance = obj
         self.variable = var
 
+    def get_value(self):
+        if self.reg is not None:
+            return self.reg
+        if self.obj_instance is not None:
+            return self.variable
+
     def __eq__(self, other):
-        # the object is a register
-        if self.reg not None:
+        if self.reg is not None:
             if str(self.reg) == other:
                 return True
-        if self.obj_instance not None:
+        if self.obj_instance is not None:
             if str(self.obj_instance) in other and str(self.variable) in other:
                 return True
         return False
+    
+    def __str__(self):
+        if self.reg is not None:
+            return str(self.reg)
+        if self.obj_instance is not None:
+            return str(self.obj_instance) + " " + str(self.variable)
 
 class TracingManager:
 
@@ -217,18 +228,13 @@ def test_instance(line, location, tracingManager):
 
     first = False
     original_line = tracingManager.target_line
-    #print(original_line.lstrip())
-    #print(repr(instruction))
-    #input("")
-    #print(tracingManager.current_iteration)
+   
     if tracingManager.current_iteration == 1:
         first = True
 
     print("TYPE = " + str(type(instruction)))
-    #location = location[0]
     full_action = instruction.get_slicing_action(location)
     print("ACTION = " + str(full_action[0]))
-    #input("")
  
     match full_action[0]:
         case Action.ADD:
@@ -267,14 +273,19 @@ def test_instance(line, location, tracingManager):
             if not first:
                 if not isinstance(instruction, SmaliAssemblyInstructions._I_INSTRUCTION) and not isinstance(instruction, SmaliAssemblyInstructions._S_INSTRUCTION):
                     print("REMOVING LOCATION " + str(full_action[1]))
-                    new_location = TracingLocation()
-                    new_location.set_register(full_action[1])
-                    tracingManager.remove_location(new_location)
+                    
+                    for location_obj in tracingManager.locations_to_check:
+                        if location_obj == location:
+                            tracingManager.remove_location(location_obj)
+                    
                 else:
                     print("REMOVING LOCATION " + str(full_action[1]))
+
                     new_location = TracingLocation()
                     new_location.set_object_pair(full_action[1], full_action[3])
-                    tracingManager.remove_location(new_location)
+                    for location_obj in tracingManager.locations_to_check:
+                        if location_obj == new_location:
+                            tracingManager.remove_location(location_obj)
             else:
                 print("FIRST LINE, DON'T REMOVE")
         case Action.PART_OF_DATA_IN:
@@ -287,10 +298,12 @@ def test_instance(line, location, tracingManager):
                 tracingManager.cur_move_result_destinations.append(result_instruction.get_registers()[0])
                 print(result_instruction.get_registers()[0])
                 print(location)
-                if result_instruction.get_registers()[0] == location:
+                if location == result_instruction.get_registers()[0]:
                     if not first:
                         print("REMOVING LOCATION " + str(location))
-                        tracingManager.remove_location(location)
+                        for location_obj in tracingManager.locations_to_check:
+                            if location_obj == location:
+                                tracingManager.remove_location(location_obj)
                     else:
                         print("FIRST LINE, DON'T REMOVE")
             except IndexError:
@@ -298,23 +311,16 @@ def test_instance(line, location, tracingManager):
 
             # add code here to add the new name of each variable passed to the new function
             parameters = instruction.get_registers()
-            #print("PARAMETERS:")
-            #input(parameters)
-            #input(parameters)
+            
             which_parameters = []
             for i in range(len(parameters)):
-                if parameters[i] == location:
+                if location == parameters[i]:
                     which_parameters.append(i)
-            #input(which_parameters)
             tracingManager.parameters_immediate = which_parameters
-            #input(tracingManager.parameters_immediate)
 
             # this code handles all the stuff that has to be done when a new method begins for the first time
             # such as getting new locations and moving the old list to the stack
-            #print("NOW EDITING LOCATIONS")
             
-            #input(tracingManager.parameters_immediate)
-            #input(tracingManager.locations_to_check)
             new_locations_to_check = []
 
             # .ADD LOCALS
@@ -327,7 +333,10 @@ def test_instance(line, location, tracingManager):
             # ADD THE AMOUNT OF LOCALS TO FIRST INDEX, START AT 0
             for parameter_index in tracingManager.parameters_immediate:
                 # get the parameters of the new method
-                new_locations_to_check.append("v" + str(parameter_index + LOCALS))
+                new_location = "v" + str(parameter_index + LOCALS)
+                new_location_obj = TracingLocation()
+                new_location_obj.set_register(new_location)
+                new_locations_to_check.append(new_location_obj)
             
             tracingManager.stack_locations_to_check.append(tracingManager.locations_to_check)
             tracingManager.locations_to_check = new_locations_to_check
@@ -360,8 +369,19 @@ def find_path(folder, filename):
     return None
 
 def location_in_string_exact(location, line):
-    pattern = rf"{re.escape(location)}(?!\d)"
-    return bool(re.search(pattern, line))
+    # checks whether the location (either a register or a object-variable pair) is located in a line
+    location = str(location)
+    
+    # if length is 1 it's a register, if not it's a object-variable pair
+    parts = location.split(" ")
+
+    if len(parts) == 1:
+        pattern = rf"{re.escape(parts[0])}(?!\d)"
+        return bool(re.search(pattern, line))
+    else:
+        pattern = rf"{re.escape(parts[0])}(?!\d)"
+        pattern2 = rf"{re.escape(parts[1])}(?!\d)"
+        return bool(re.search(pattern, line)) and bool(re.search(pattern2, line))
 
 def grep_instances(variable, tracingManager):
     cmd = ["grep", str(variable).replace("\n", ""), "-r", tracingManager.tmp_file_name]
@@ -391,14 +411,8 @@ def analyze_line(line, tracingManager):
     line_as_string = str(line[0])
 
     for location in tracingManager.locations_to_check:
-        if location_in_string_exact(location[0], line_as_string) or tracingManager.parameters_immediate != []:
-            #print("----------------------------------------------------")
-            #print("LOCATION = " + location)
-            #print("LINE = " + line_as_string)
-            #print("DETERMINING NEW LOCATIONS...")
-
+        if location_in_string_exact(location, line_as_string) or tracingManager.parameters_immediate != []:
             test_instance(line, location, tracingManager)
-
             break
 
 def next_iteration(tracingManager):
@@ -467,6 +481,11 @@ def forward_tracing(filename, target_line_number, target_location, tracingManage
         if tracingManager.locations_to_check == [] and tracingManager.stack_locations_to_check == []:
             input("NO TRACES LEFT OF TRACKED VALUE")
             break
+        
+        input("REPORT")
+        for location in tracingManager.locations_to_check:
+            print(location)
+        input("")
 
 def main():
     # ARGPARSE FORMAT
