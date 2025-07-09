@@ -95,7 +95,8 @@ class TracingManager:
 
     # add edge object? add graph object?
     def add_edge(self, location, destination, line_number):
-        if location in self.edges:
+        return # want to make it work before I deal with the graph
+        if location.get_value() in self.edges:
             duplicate = False
             for pair in self.edges[location]:
                 print(pair[0])
@@ -235,7 +236,7 @@ def test_instance(line, location, tracingManager):
     print("TYPE = " + str(type(instruction)))
     full_action = instruction.get_slicing_action(location)
     print("ACTION = " + str(full_action[0]))
- 
+
     match full_action[0]:
         case Action.ADD:
             print("ADDING NEW LOCATION " + str(full_action[1]))
@@ -309,26 +310,36 @@ def test_instance(line, location, tracingManager):
             except IndexError:
                 tracingManager.cur_move_result_destinations.append("") # if there is no result, the result of the invoke goes nowhere
 
-            # add code here to add the new name of each variable passed to the new function
-            parameters = instruction.get_registers()
-            
-            which_parameters = []
-            for i in range(len(parameters)):
-                if location == parameters[i]:
-                    which_parameters.append(i)
-            tracingManager.parameters_immediate = which_parameters
-
-            # this code handles all the stuff that has to be done when a new method begins for the first time
-            # such as getting new locations and moving the old list to the stack
-            
-            new_locations_to_check = []
-
             # .ADD LOCALS
             name = instruction.get_owning_class_name()
             scd = tracingManager.codebase.get_class_from_fully_qualified_name(name)
             fqc = instruction.get_fully_qualified_call()
             smd = scd.get_method_by_fully_qualified_name(fqc)
             LOCALS = smd.get_locals_directive_num()
+
+            # add code here to add the new name of each variable passed to the new function
+            parameters = instruction.get_registers()
+            
+            # this code checks whether the parameters going into the method match with any local versions of tracked registers.
+            which_parameters = []
+            for i in range(len(parameters)):
+                if i[0] == "p": # dereference the local register
+                    parameter_index = i[1]
+                    new_location = "v" + str(parameter_index + LOCALS)
+                    parameters[i] = new_location
+                if location == parameters[i]:
+                    which_parameters.append(i)
+            tracingManager.parameters_immediate = which_parameters
+
+            # return if which_parameters is empty
+            if which_parameters == []:
+                print("NO TRACKED PARAMETERS FOUND, RETURNING BACK")
+                return 1       
+
+            # this code handles all the stuff that has to be done when a new method begins for the first time
+            # such as getting new locations and moving the old list to the stack
+            
+            new_locations_to_check = []
 
             # ADD THE AMOUNT OF LOCALS TO FIRST INDEX, START AT 0
             for parameter_index in tracingManager.parameters_immediate:
@@ -358,6 +369,8 @@ def test_instance(line, location, tracingManager):
                         tracingManager.locations_to_check.append(destination)
         case _:
             pass
+        
+    return 0
 
     #input(tracingManager.locations_to_check)
 
@@ -409,11 +422,14 @@ def analyze_line(line, tracingManager):
     #tracingManager.current_line_number += 1
     #print(line)
     line_as_string = str(line[0])
+    status = 0
 
     for location in tracingManager.locations_to_check:
         if location_in_string_exact(location, line_as_string) or tracingManager.parameters_immediate != []:
-            test_instance(line, location, tracingManager)
+            status = test_instance(line, location, tracingManager)
             break
+    
+    return status
 
 def next_iteration(tracingManager):
     if len(tracingManager.get_files()) > 0:
@@ -471,7 +487,10 @@ def forward_tracing(filename, target_line_number, target_location, tracingManage
         tracingManager.current_iteration += 1
         #print(str(tracingManager.current_iteration) + ":")
         #print(line)
-        analyze_line(line, tracingManager)
+        status = analyze_line(line, tracingManager)
+        
+        if status == 1:
+            tracingManager.force_return()
 
         if tracingManager.current_iteration == 1000:
             #print(tracingManager.locations_to_check)

@@ -277,6 +277,7 @@ class SmaliExecutionIterator():
                     return self.cur_line_to_return
 
                 next_line = self.cur_class_text[self.iter_idx]
+                print(next_line)
                 #print("RESULT LINE " + str(self.iter_idx + 1) + ": " + next_line)
 
             if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, next_line) is not None):
@@ -337,9 +338,15 @@ class SmaliExecutionIterator():
                 if location.get_value() in registers:
                     found_register = True
 
-            if not found_register:
+            # first, look for the register
+            # then, look for if it has a different name due to the .locals
+            # then, look for a implicit pass through a range
+            '''if not found_register:
+                
+                if isinstance(cur_line_obj, SmaliAssemblyInstructions._PARAMETER_RANGE_INSTRUCTION):
+
                 input("NO TRACKED REGISTERS PASSED THROUGH, IGNORE")
-                return self.cur_line_to_return
+                return self.cur_line_to_return'''
             
             # get the destination of the invoke instruction (the method to look for)
             method_name = cur_line_obj.get_destination()
@@ -527,6 +534,13 @@ class SmaliExecutionIterator():
             self.iter_idx += 1
         
         return self.cur_line_to_return
+    
+    def force_return(self):
+        if(self.smali_execution_iterator != None):
+            try:
+                return self.smali_execution_iterator.__next__()
+            except StopIteration:
+                raise StopIteration
 
 
 def tests():
