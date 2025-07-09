@@ -420,7 +420,9 @@ class Third_Var_To_First_Reg():
         return self.get_registers()[0]
 
     def get_slicing_action(self, tracked):
+        input("Third var to first reg")
         tracked = tracked.get_value()
+        input(tracked)
         if tracked == self.get_instance_variable():
             return [Action.ADD, self.get_destination(), " in object ", self.get_registers()[1]]
         elif tracked == self.get_destination():

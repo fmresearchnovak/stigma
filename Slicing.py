@@ -31,18 +31,22 @@ class TracingLocation:
         self.obj_instance = obj
         self.variable = var
 
+    # Gets the part that holds the tracked value, either the register name or the instance variable name.
+    # Used to determine the location of the tracked value to find the slicing action, as the object is not needed
     def get_value(self):
         if self.reg is not None:
             return self.reg
         if self.obj_instance is not None:
             return self.variable
 
+    # Determines whether a line has either the register or the register-variable pair
     def __eq__(self, other):
+        other = str(other)
         if self.reg is not None:
-            if str(self.reg) == other:
+            if self.reg == other:
                 return True
         if self.obj_instance is not None:
-            if str(self.obj_instance) in other and str(self.variable) in other:
+            if self.obj_instance in other and self.variable in other:
                 return True
         return False
     
@@ -240,6 +244,7 @@ def test_instance(line, location, tracingManager):
     match full_action[0]:
         case Action.ADD:
             print("ADDING NEW LOCATION " + str(full_action[1]))
+            #input("Testing addition of a location")
             if not isinstance(instruction, SmaliAssemblyInstructions._I_INSTRUCTION) and not isinstance(instruction, SmaliAssemblyInstructions._S_INSTRUCTION):
                 new_location = TracingLocation()
                 new_location.set_register(full_action[1])
@@ -247,6 +252,7 @@ def test_instance(line, location, tracingManager):
 
                 tracingManager.add_edge(location, full_action[1], tracingManager.current_line_number)
             else:
+                #input("Here")
                 new_location = TracingLocation()
                 new_location.set_object_pair(full_action[1], full_action[3])
                 tracingManager.add_location(new_location)
@@ -274,6 +280,7 @@ def test_instance(line, location, tracingManager):
             if not first:
                 if not isinstance(instruction, SmaliAssemblyInstructions._I_INSTRUCTION) and not isinstance(instruction, SmaliAssemblyInstructions._S_INSTRUCTION):
                     print("REMOVING LOCATION " + str(full_action[1]))
+                    #input("Testing removal of a register 1")
                     
                     for location_obj in tracingManager.locations_to_check:
                         if location_obj == location:
@@ -281,12 +288,21 @@ def test_instance(line, location, tracingManager):
                     
                 else:
                     print("REMOVING LOCATION " + str(full_action[1]))
+                    #input("Testing removal of a register 2")
 
-                    new_location = TracingLocation()
-                    new_location.set_object_pair(full_action[1], full_action[3])
-                    for location_obj in tracingManager.locations_to_check:
-                        if location_obj == new_location:
-                            tracingManager.remove_location(location_obj)
+                    if full_action[1][0] =="L":
+                        new_location = TracingLocation()
+                        new_location.set_object_pair(full_action[1], full_action[3])
+                        for location_obj in tracingManager.locations_to_check:
+                            print(location_obj)
+                            print(new_location)
+                            input("")
+                            if location_obj == new_location:
+                                tracingManager.remove_location(location_obj)
+                    else:
+                        for location_obj in tracingManager.locations_to_check:
+                            if location_obj == location:
+                                tracingManager.remove_location(location_obj)
             else:
                 print("FIRST LINE, DON'T REMOVE")
         case Action.PART_OF_DATA_IN:
@@ -302,6 +318,7 @@ def test_instance(line, location, tracingManager):
                 if location == result_instruction.get_registers()[0]:
                     if not first:
                         print("REMOVING LOCATION " + str(location))
+                        #input("Testing removal of a register 3")
                         for location_obj in tracingManager.locations_to_check:
                             if location_obj == location:
                                 tracingManager.remove_location(location_obj)
@@ -426,6 +443,7 @@ def analyze_line(line, tracingManager):
 
     for location in tracingManager.locations_to_check:
         if location_in_string_exact(location, line_as_string) or tracingManager.parameters_immediate != []:
+            input("HERE")
             status = test_instance(line, location, tracingManager)
             break
     
