@@ -245,7 +245,7 @@ def test_instance(line, location, tracingManager):
         case Action.ADD:
             print("ADDING NEW LOCATION " + str(full_action[1]))
             #input("Testing addition of a location")
-            if not isinstance(instruction, SmaliAssemblyInstructions._I_INSTRUCTION) and not isinstance(instruction, SmaliAssemblyInstructions._S_INSTRUCTION):
+            if len(full_action) < 4:
                 new_location = TracingLocation()
                 new_location.set_register(full_action[1])
                 tracingManager.add_location(new_location)
@@ -310,6 +310,7 @@ def test_instance(line, location, tracingManager):
         case Action.CAN_GET_DATA_FROM:
             tracingManager.locations_with_partial_tracked_data.append([str(full_action[1]), str(full_action[3]), str(type(instruction))])
         case Action.INVOKE:
+            input("INVOKE")
             try:
                 result_instruction = line[1]
                 tracingManager.cur_move_result_destinations.append(result_instruction.get_registers()[0])
@@ -330,6 +331,9 @@ def test_instance(line, location, tracingManager):
             # .ADD LOCALS
             name = instruction.get_owning_class_name()
             scd = tracingManager.codebase.get_class_from_fully_qualified_name(name)
+            input(scd)
+            if scd == None:
+                return
             fqc = instruction.get_fully_qualified_call()
             smd = scd.get_method_by_fully_qualified_name(fqc)
             LOCALS = smd.get_locals_directive_num()
@@ -340,7 +344,7 @@ def test_instance(line, location, tracingManager):
             # this code checks whether the parameters going into the method match with any local versions of tracked registers.
             which_parameters = []
             for i in range(len(parameters)):
-                if i[0] == "p": # dereference the local register
+                if parameters[i] == "p": # dereference the local register
                     parameter_index = i[1]
                     new_location = "v" + str(parameter_index + LOCALS)
                     parameters[i] = new_location
@@ -349,6 +353,7 @@ def test_instance(line, location, tracingManager):
             tracingManager.parameters_immediate = which_parameters
 
             # return if which_parameters is empty
+            input(which_parameters)
             if which_parameters == []:
                 print("NO TRACKED PARAMETERS FOUND, RETURNING BACK")
                 return 1       
@@ -358,7 +363,9 @@ def test_instance(line, location, tracingManager):
             
             new_locations_to_check = []
 
-            # ADD THE AMOUNT OF LOCALS TO FIRST INDEX, START AT 0
+            # TO DO: ENSURE THAT WHEN LONGS GO IN, TWO REGISTERS ARE TAKEN
+            # TO DO: DIFFERENTIATE BETWEEN STATIC AND NON-STATIC INVOKES
+            input("LOCALS: " + str(LOCALS))
             for parameter_index in tracingManager.parameters_immediate:
                 # get the parameters of the new method
                 new_location = "v" + str(parameter_index + LOCALS)
@@ -443,10 +450,11 @@ def analyze_line(line, tracingManager):
 
     for location in tracingManager.locations_to_check:
         if location_in_string_exact(location, line_as_string) or tracingManager.parameters_immediate != []:
-            input("HERE")
+            #input("HERE")
             status = test_instance(line, location, tracingManager)
             break
     
+    print("STATUS: " + str(status))
     return status
 
 def next_iteration(tracingManager):
@@ -519,10 +527,10 @@ def forward_tracing(filename, target_line_number, target_location, tracingManage
             input("NO TRACES LEFT OF TRACKED VALUE")
             break
         
-        input("REPORT")
+        #input("REPORT")
         for location in tracingManager.locations_to_check:
             print(location)
-        input("")
+        #input("")
 
 def main():
     # ARGPARSE FORMAT
