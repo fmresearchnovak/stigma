@@ -426,7 +426,7 @@ class Third_Var_To_First_Reg():
         if tracked == self.get_instance_variable():
             return [Action.ADD, self.get_destination()]
         elif tracked == self.get_destination():
-            return [Action.REMOVE, tracked, " in object ", self.get_registers()[1]]
+            return [Action.REMOVE, tracked]
         else:
             return [Action.NO_ACTIONS]
 
@@ -445,6 +445,8 @@ class First_Reg_To_Third_Var():
         else:
             return [Action.NO_ACTIONS]
 
+# Third Reg to First Reg and vice versa are for aget/aput
+
 # if tracking the first register, the tracked register is removed. If tracking the second register, nothing happens. If tracking the third register,
 # add the first register.
 class Third_Reg_To_First_Reg():
@@ -454,9 +456,9 @@ class Third_Reg_To_First_Reg():
     def get_slicing_action(self, tracked):
         tracked = tracked.get_value()
         if tracked == self.get_registers()[2]:
-            return [Action.ADD, self.get_destination(), " in object ", self.get_registers()[1]]
+            return [Action.ADD, self.get_destination()]
         elif tracked == self.get_destination():
-            return [Action.REMOVE, tracked, " in object ", self.get_registers()[1]]
+            return [Action.REMOVE, tracked]
         else:
             return [Action.NO_ACTIONS]
 

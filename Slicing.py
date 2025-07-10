@@ -356,7 +356,6 @@ def test_instance(line, location, tracingManager):
             input(which_parameters)
             if which_parameters == []:
                 print("NO TRACKED PARAMETERS FOUND, RETURNING BACK")
-                return 1       
 
             # this code handles all the stuff that has to be done when a new method begins for the first time
             # such as getting new locations and moving the old list to the stack
@@ -394,8 +393,6 @@ def test_instance(line, location, tracingManager):
         case _:
             pass
         
-    return 0
-
     #input(tracingManager.locations_to_check)
 
 def find_path(folder, filename):
@@ -446,16 +443,12 @@ def analyze_line(line, tracingManager):
     #tracingManager.current_line_number += 1
     #print(line)
     line_as_string = str(line[0])
-    status = 0
 
     for location in tracingManager.locations_to_check:
         if location_in_string_exact(location, line_as_string) or tracingManager.parameters_immediate != []:
             #input("HERE")
-            status = test_instance(line, location, tracingManager)
+            test_instance(line, location, tracingManager)
             break
-    
-    print("STATUS: " + str(status))
-    return status
 
 def next_iteration(tracingManager):
     if len(tracingManager.get_files()) > 0:
@@ -513,11 +506,8 @@ def forward_tracing(filename, target_line_number, target_location, tracingManage
         tracingManager.current_iteration += 1
         #print(str(tracingManager.current_iteration) + ":")
         #print(line)
-        status = analyze_line(line, tracingManager)
+        analyze_line(line, tracingManager)
         
-        if status == 1:
-            tracingManager.force_return()
-
         if tracingManager.current_iteration == 1000:
             #print(tracingManager.locations_to_check)
             #print(tracingManager.line_directory)
@@ -526,11 +516,6 @@ def forward_tracing(filename, target_line_number, target_location, tracingManage
         if tracingManager.locations_to_check == [] and tracingManager.stack_locations_to_check == []:
             input("NO TRACES LEFT OF TRACKED VALUE")
             break
-        
-        #input("REPORT")
-        for location in tracingManager.locations_to_check:
-            print(location)
-        #input("")
 
 def main():
     # ARGPARSE FORMAT
