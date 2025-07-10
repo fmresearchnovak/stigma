@@ -27,9 +27,9 @@ class TracingLocation:
     def set_register(self, new_reg):
         self.reg = new_reg
 
-    def set_object_pair(self, obj, var):
-        self.obj_instance = obj
+    def set_object_pair(self, var, obj):
         self.variable = var
+        self.obj_instance = obj
 
     # Gets the part that holds the tracked value, either the register name or the instance variable name.
     # Used to determine the location of the tracked value to find the slicing action, as the object is not needed
@@ -46,7 +46,7 @@ class TracingLocation:
             if self.reg == other:
                 return True
         if self.obj_instance is not None:
-            if self.obj_instance in other and self.variable in other:
+            if self.obj_instance == other and self.variable == other:
                 return True
         return False
     
