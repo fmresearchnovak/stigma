@@ -342,6 +342,7 @@ def test_instance(line, location, tracingManager):
             
             # this code checks whether the parameters going into the method match with any local versions of tracked registers.
             which_parameters = []
+            new_parameters = []
             for i in range(len(parameters)):
                 if parameters[i] == "p": # dereference the local register
                     parameter_index = i[1]
@@ -364,6 +365,13 @@ def test_instance(line, location, tracingManager):
             # TO DO: ENSURE THAT WHEN LONGS GO IN, TWO REGISTERS ARE TAKEN
             # TO DO: DIFFERENTIATE BETWEEN STATIC AND NON-STATIC INVOKES
             input("LOCALS: " + str(LOCALS))
+            new_method_parameters = []
+            for parameter in parameters:
+                #print(LOCALS)
+                new_location = "v" + str(int(str(parameter)[1:]) + LOCALS)
+                new_method_parameters.append(parameter)
+            input(new_method_parameters)
+
             for parameter_index in tracingManager.parameters_immediate:
                 # get the parameters of the new method
                 new_location = "v" + str(parameter_index + LOCALS)

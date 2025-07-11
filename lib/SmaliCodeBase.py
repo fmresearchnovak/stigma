@@ -401,6 +401,8 @@ class SmaliExecutionIterator():
             smd = scd.get_method_by_fully_qualified_name(fqc)
             LOCALS = smd.get_locals_directive_num()
 
+            # get the types of each parameters, longs (J) will take up two registers
+
             # determine whether it is static or non-static
             non_static = False
             if "static" not in cur_line:
@@ -418,12 +420,17 @@ class SmaliExecutionIterator():
 
             unlocalized_line_obj = SmaliAssemblyInstructions.from_line(unlocalized_line)
             # expand invoke-ranges
+            '''
             if isinstance(unlocalized_line_obj, SmaliAssemblyInstructions.INVOKE_DIRECT_RANGE) or isinstance(unlocalized_line_obj, SmaliAssemblyInstructions.INVOKE_STATIC_RANGE) or isinstance(unlocalized_line_obj, SmaliAssemblyInstructions.INVOKE_VIRTUAL_RANGE):
                 range_registers = unlocalized_line_obj.get_registers()
+                input(range_registers)
                 first = str(range_registers[0])
                 last = str(range_registers[2])
+                
                 first_num = int(first[1:])
                 last_num = int(last[1:])
+                input(first_num)
+                input(last_num)
 
                 new_registers = []
                 for i in range(first_num, last_num):
@@ -432,14 +439,16 @@ class SmaliExecutionIterator():
                 start = unlocalized_line.index("{")
                 end = unlocalized_line.index("}")
 
+                input(new_registers)
+
                 unlocalized_line[start + 1:end - 1] = ", ".join(new_registers)
                 unlocalized_line_obj = SmaliAssemblyInstructions.from_line(unlocalized_line)
-
+            '''
             tracked_in_line = False
             for register in self.tracing_manager.locations_to_check:
-                register = str(register)
-                if register in unlocalized_line:
-                    tracked_in_line = True
+                for parameter in unlocalized_line_obj.get_registers():
+                    if register == parameter:
+                        tracked_in_line = True
 
             if not tracked_in_line:
                 input("No tracked registers found, not invoking")
