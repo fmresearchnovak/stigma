@@ -2,6 +2,7 @@
 import glob
 import os
 import re
+import random
 
 from lib import SmaliClassDef
 from lib import SmaliMethodDef
@@ -193,6 +194,11 @@ class SmaliExecutionIterator():
 
         self.tracing_manager = tracingManager
 
+        self.ID = random.randint(0, 1000000)
+
+        print("SmaliExecutionIterator (ID: " + str(self.ID) + " created for " + str(self.cur_class) + ":" + str(self.iter_idx))
+
+
 
     def __iter__(self):
         '''Establishes the iterator.'''
@@ -207,6 +213,7 @@ class SmaliExecutionIterator():
         '''
 
         #input(self.smali_execution_iterator)
+        print("SEI (id:" + str(self.ID) + ").__next__() tracking " + str(self.tracing_manager.locations_to_check))
         
         if self.tracing_manager.locations_to_check == []:
             input("TRACKED VALUE HAS BEEN LOST IN CURRENT ITERATION. RETURNING BACK")
@@ -218,18 +225,21 @@ class SmaliExecutionIterator():
             try:
                 return self.smali_execution_iterator.__next__()
             except StopIteration:
+                print("Caught a StopIteration from the inner SmaliExecutionIterator.")
+                print("\t finishing: " + str(self.smali_execution_iterator.cur_class) + ": " + str(self.smali_execution_iterator.iter_idx))
+                print("\t treturning to: " + str(self.cur_class) + ": " + str(self.iter_idx))
                 self.smali_execution_iterator = None
 
         if(self.iter_idx >= len(self.cur_class_text)):
             raise StopIteration
         
         #print("NEW ITERATION")
-        print("file name: " + self.filename + " at index " + str(self.iter_idx))
+        #print("file name: " + self.filename + " at index " + str(self.iter_idx))
         
         # Step #1, store the "current" line to return to user
         # cur_line is a string, create a SmaliAssemblyInstructions object
         cur_line = self.cur_class_text[self.iter_idx]
-        print("Line " + str(self.iter_idx + 1) + ": " + cur_line + "(" + self.file_path + ")")
+        print("SEI ID: " + str(self.ID) + " " + str(self.cur_class.get_file_basename()) + " line # " + str(self.iter_idx+1) + ":  " + repr(cur_line) + " (from " + self.file_path + ")")
         
 
         match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_END_METHOD, cur_line)
@@ -459,10 +469,11 @@ class SmaliExecutionIterator():
             else:
                 self.locations_visited.append(method_def_obj.get_full_location(line_no, next_class_text))
 
-            print("New file: " + file_path + " (" + str(line_no) + ")")
+            input("New file: " + file_path + " (" + str(line_no) + ")")
             self.smali_execution_iterator = SmaliExecutionIterator(self.codebase, file_path, line_no, self.tracing_manager, self.locations_visited)
             self.smali_execution_iterator.try_start_stack = self.try_start_stack
             self.smali_execution_iterator.file_path = file_path
+            print("SEI (ID:" + str(self.ID) + ") created new SEI with ID:" + str(self.smali_execution_iterator.ID))
 
         '''
         IF THEN JUMP INSTRUCTION
@@ -500,6 +511,7 @@ class SmaliExecutionIterator():
             print("New file: " + self.file_path + " (" + str(line_no) + ")")
             self.smali_execution_iterator = SmaliExecutionIterator(self.codebase, self.file_path, line_no, self.tracing_manager, self.locations_visited)
             self.smali_execution_iterator.try_start_stack = self.try_start_stack
+            print("SEI (ID:" + str(self.ID) + ") created new SEI with ID:" + str(self.smali_execution_iterator.ID))
 
         '''
         RETURN INSTRUCTION

@@ -55,6 +55,10 @@ class TracingLocation:
             return str(self.reg)
         if self.obj_instance is not None:
             return str(self.obj_instance) + " " + str(self.variable)
+        
+
+    def __repr__(self):
+        return str(self)
 
 class TracingManager:
 
@@ -331,7 +335,7 @@ def test_instance(line, location, tracingManager):
             # .ADD LOCALS
             name = instruction.get_owning_class_name()
             scd = tracingManager.codebase.get_class_from_fully_qualified_name(name)
-            input(scd)
+            input("invoke goes to " + str(scd))
             if scd == None:
                 return
             fqc = instruction.get_fully_qualified_call()
@@ -477,7 +481,7 @@ def next_iteration(tracingManager):
         fh.close()
 
         # STEP 9: Repeat all of the steps for the new file and its locations to check
-        print("NEW ITERATION WITH " + new_file + " " + str(new_line_number) + " " + new_location)
+        print("NEW ITERATION WITH " + str(new_file) + " " + str(new_line_number) + " " + str(new_location))
         #return forward_tracing(new_file, new_line_number, new_location, files_to_search, line_directory, tmp_file_name)
         return
 
@@ -500,7 +504,9 @@ def forward_tracing(filename, target_line_number, target_location, tracingManage
     tracingManager.codebase = codebase
 
     # STEP 5: Loop through the method and get the target line
-    for line in SmaliCodeBase.SmaliExecutionIterator(codebase, filename, target_line_number, tracingManager):
+    sei = SmaliCodeBase.SmaliExecutionIterator(codebase, filename, target_line_number, tracingManager)
+    sei.ID = 0
+    for line in sei:
         #if len(line) > 1:
         #   tracingManager.current_line_number += len(line) - 1
         tracingManager.current_iteration += 1
@@ -511,10 +517,12 @@ def forward_tracing(filename, target_line_number, target_location, tracingManage
         if tracingManager.current_iteration == 1000:
             #print(tracingManager.locations_to_check)
             #print(tracingManager.line_directory)
+            print("current iteration over 1000, stopping!")
             break
         
         if tracingManager.locations_to_check == [] and tracingManager.stack_locations_to_check == []:
-            input("NO TRACES LEFT OF TRACKED VALUE")
+            #input("NO TRACES LEFT OF TRACKED VALUE")
+            print("no locations left to trace, stopping!")
             break
 
 def main():

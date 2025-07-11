@@ -164,6 +164,9 @@ class SmaliClassDef:
         Example: "Ledu/fandm/enovak/leaks/Main;"
         '''
         return self.class_name
+    
+    def get_file_basename(self):
+        return os.path.basename(self.file_name)
 
 
     def get_super_class(self):
