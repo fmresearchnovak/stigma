@@ -2,6 +2,7 @@
 import glob
 import os
 import re
+import random
 
 from lib import SmaliClassDef
 from lib import SmaliMethodDef
@@ -193,6 +194,11 @@ class SmaliExecutionIterator():
 
         self.tracing_manager = tracingManager
 
+        self.ID = random.randint(0, 1000000)
+
+        print("SmaliExecutionIterator (ID: " + str(self.ID) + " created for " + str(self.cur_class) + ":" + str(self.iter_idx))
+
+
 
     def __iter__(self):
         '''Establishes the iterator.'''
@@ -207,7 +213,7 @@ class SmaliExecutionIterator():
         '''
 
         #input(self.smali_execution_iterator)
-
+        print("SEI (id:" + str(self.ID) + ").__next__() tracking " + str(self.tracing_manager.locations_to_check))
         # upon an invoke statement, take a new iterator and call next on it and return its value
         if(self.smali_execution_iterator != None):
             try:
@@ -463,10 +469,11 @@ class SmaliExecutionIterator():
             else:
                 self.locations_visited.append(method_def_obj.get_full_location(line_no, next_class_text))
 
-            print("New file: " + file_path + " (" + str(line_no) + ")")
+            input("New file: " + file_path + " (" + str(line_no) + ")")
             self.smali_execution_iterator = SmaliExecutionIterator(self.codebase, file_path, line_no, self.tracing_manager, self.locations_visited)
             self.smali_execution_iterator.try_start_stack = self.try_start_stack
             self.smali_execution_iterator.file_path = file_path
+            print("SEI (ID:" + str(self.ID) + ") created new SEI with ID:" + str(self.smali_execution_iterator.ID))
 
         '''
         IF THEN JUMP INSTRUCTION
@@ -504,6 +511,7 @@ class SmaliExecutionIterator():
             print("New file: " + self.file_path + " (" + str(line_no) + ")")
             self.smali_execution_iterator = SmaliExecutionIterator(self.codebase, self.file_path, line_no, self.tracing_manager, self.locations_visited)
             self.smali_execution_iterator.try_start_stack = self.try_start_stack
+            print("SEI (ID:" + str(self.ID) + ") created new SEI with ID:" + str(self.smali_execution_iterator.ID))
 
         '''
         RETURN INSTRUCTION
