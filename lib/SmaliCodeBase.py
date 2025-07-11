@@ -207,17 +207,13 @@ class SmaliExecutionIterator():
         '''
 
         #input(self.smali_execution_iterator)
-        
-        if self.tracing_manager.locations_to_check == []:
-            input("TRACKED VALUE HAS BEEN LOST IN CURRENT ITERATION. RETURNING BACK")
-            print("RETURNING FROM " + self.filename)
-            raise StopIteration
 
         # upon an invoke statement, take a new iterator and call next on it and return its value
         if(self.smali_execution_iterator != None):
             try:
                 return self.smali_execution_iterator.__next__()
             except StopIteration:
+                input("HERE")
                 self.smali_execution_iterator = None
 
         if(self.iter_idx >= len(self.cur_class_text)):
@@ -225,11 +221,10 @@ class SmaliExecutionIterator():
         
         #print("NEW ITERATION")
         print("file name: " + self.filename + " at index " + str(self.iter_idx))
-        
-        # Step #1, store the "current" line to return to user
-        # cur_line is a string, create a SmaliAssemblyInstructions object
         cur_line = self.cur_class_text[self.iter_idx]
         print("Line " + str(self.iter_idx + 1) + ": " + cur_line + "(" + self.file_path + ")")
+        # Step #1, store the "current" line to return to user
+        # cur_line is a string, create a SmaliAssemblyInstructions object
         
 
         match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_END_METHOD, cur_line)
@@ -592,6 +587,14 @@ class SmaliExecutionIterator():
             self.iter_idx += 1
         else: # no jumps, just move iter_idx down to the next immediate line
             self.iter_idx += 1
+        
+        if self.tracing_manager.locations_to_check == []:
+            input("TRACKED VALUE HAS BEEN LOST IN CURRENT ITERATION. RETURNING BACK")
+            print("RETURNING FROM " + self.filename)
+            for i in self.tracing_manager.stack_locations_to_check[0]:
+                input(str(i))
+            self.tracing_manager.locations_to_check = self.tracing_manager.stack_locations_to_check.pop(0)
+            raise StopIteration
         
         return self.cur_line_to_return
 

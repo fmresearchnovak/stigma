@@ -281,7 +281,6 @@ def test_instance(line, location, tracingManager):
                 if not isinstance(instruction, SmaliAssemblyInstructions._I_INSTRUCTION) and not isinstance(instruction, SmaliAssemblyInstructions._S_INSTRUCTION):
                     print("REMOVING LOCATION " + str(full_action[1]))
                     #input("Testing removal of a register 1")
-                    
                     for location_obj in tracingManager.locations_to_check:
                         if location_obj == location:
                             tracingManager.remove_location(location_obj)
@@ -381,7 +380,7 @@ def test_instance(line, location, tracingManager):
         case Action.RETURN:
             # the code here will find the previous invoke from a list and determine whether the returned value is the tracked value
             # if so, add the destination of the result instruction
-            tracingManager.locations_to_check = tracingManager.stack_locations_to_check.pop[0]
+            tracingManager.locations_to_check = tracingManager.stack_locations_to_check.pop(0)
 
             # if the return statement returns the tracked value
             if instruction.get_registers()[0] in tracingManager.locations_to_check:
@@ -509,6 +508,7 @@ def forward_tracing(filename, target_line_number, target_location, tracingManage
         analyze_line(line, tracingManager)
         
         if tracingManager.current_iteration == 1000:
+            print("Limit reached")
             #print(tracingManager.locations_to_check)
             #print(tracingManager.line_directory)
             break
