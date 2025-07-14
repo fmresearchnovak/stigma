@@ -28,6 +28,9 @@ def find_smali_method_def_obj(method_signature_str, smali_class, file_path):
 
     return curr_method
 
+def translate_registers_to_new_method(previous_registers, locals):
+    pass
+
 class SmaliCodeBase():
     ''' This class represents the entire code base of a smali project. '''
 
@@ -423,8 +426,9 @@ class SmaliExecutionIterator():
                     parameter_index = i + int(non_static)
                     new_location = "v" + str(parameter_index + LOCALS)
                     unlocalized_line.replace(register, new_location)
-
+            
             unlocalized_line_obj = SmaliAssemblyInstructions.from_line(unlocalized_line)
+            input(type(unlocalized_line_obj))
             # expand invoke-ranges
             '''
             if isinstance(unlocalized_line_obj, SmaliAssemblyInstructions.INVOKE_DIRECT_RANGE) or isinstance(unlocalized_line_obj, SmaliAssemblyInstructions.INVOKE_STATIC_RANGE) or isinstance(unlocalized_line_obj, SmaliAssemblyInstructions.INVOKE_VIRTUAL_RANGE):
@@ -613,6 +617,7 @@ class SmaliExecutionIterator():
             self.tracing_manager.locations_to_check = self.tracing_manager.stack_locations_to_check.pop(0)
             raise StopIteration
         
+        input(str(self.cur_line_to_return[0]))
         return self.cur_line_to_return
 
 def tests():

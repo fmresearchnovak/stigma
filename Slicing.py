@@ -343,13 +343,18 @@ def test_instance(line, location, tracingManager):
 
             # add code here to add the new name of each variable passed to the new function
             parameters = instruction.get_registers()
+
+            non_static = False
+            if "static" not in str(instruction):
+                non_static = True
             
             # this code checks whether the parameters going into the method match with any local versions of tracked registers.
             which_parameters = []
             new_parameters = []
             for i in range(len(parameters)):
-                if parameters[i] == "p": # dereference the local register
-                    parameter_index = i[1]
+                number = str(i)[1:]
+                if parameters[i][0] == "p": # dereference the local register
+                    parameter_index = number + int(non_static)
                     new_location = "v" + str(parameter_index + LOCALS)
                     parameters[i] = new_location
                 if location == parameters[i]:
@@ -370,10 +375,13 @@ def test_instance(line, location, tracingManager):
             # TO DO: DIFFERENTIATE BETWEEN STATIC AND NON-STATIC INVOKES
             input("LOCALS: " + str(LOCALS))
             new_method_parameters = []
-            for parameter in parameters:
+            for i in range(len(parameters)):
                 #print(LOCALS)
-                new_location = "v" + str(int(str(parameter)[1:]) + LOCALS)
-                new_method_parameters.append(parameter)
+                number = str(i)[1:]
+                parameter = parameters[i]
+                parameter_index = number + int(non_static)
+                new_location = "v" + str(parameter_index + LOCALS)
+                new_method_parameters.append(new_location)
             input(new_method_parameters)
 
             for parameter_index in tracingManager.parameters_immediate:
@@ -456,10 +464,15 @@ def analyze_line(line, tracingManager):
     line_as_string = str(line[0])
 
     for location in tracingManager.locations_to_check:
-        if location_in_string_exact(location, line_as_string) or tracingManager.parameters_immediate != []:
-            #input("HERE")
+        if line[0].get_registers() == location or tracingManager.parameters_immediate != []:
+            input("HERE")
             test_instance(line, location, tracingManager)
             break
+        for register in line[0].get_registers():
+            if location == register:
+                input("HERE")
+                test_instance(line, location, tracingManager)
+                break
 
 def next_iteration(tracingManager):
     if len(tracingManager.get_files()) > 0:
