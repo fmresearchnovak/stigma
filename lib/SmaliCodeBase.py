@@ -28,8 +28,61 @@ def find_smali_method_def_obj(method_signature_str, smali_class, file_path):
 
     return curr_method
 
-def translate_registers_to_new_method(previous_registers, locals):
-    pass
+def translate_p_registers_in_invoke(registers, instruction, codebase):
+    name = instruction.get_owning_class_name()
+    scd = codebase.get_class_from_fully_qualified_name(name)
+    input("invoke goes to " + str(scd))
+    if scd == None:
+        return
+    fqc = instruction.get_fully_qualified_call()
+    smd = scd.get_method_by_fully_qualified_name(fqc)
+    LOCALS = smd.get_locals_directive_num()
+
+    non_static = False
+    if "static" not in str(instruction):
+        non_static = True
+
+    new_registers = []
+    for i in range(len(registers)):
+        if str(registers[i])[0] == "p":
+            parameter_index = i + int(non_static)
+            new_location = "v" + str(parameter_index + LOCALS)
+            new_registers.append(new_location)
+        if str(registers[i])[0] == "v":
+            new_registers.append(registers[i])
+    
+    input(new_registers)
+    return new_registers
+
+def translate_registers_to_new_method(previous_registers, instruction, codebase):
+    # Step 1: Get amount of locals. The registers will be placed after all the designated locals
+    name = instruction.get_owning_class_name()
+    scd = codebase.get_class_from_fully_qualified_name(name)
+    input("invoke goes to " + str(scd))
+    if scd == None:
+        return
+    fqc = instruction.get_fully_qualified_call()
+    smd = scd.get_method_by_fully_qualified_name(fqc)
+    LOCALS = smd.get_locals_directive_num()
+
+    # Step 2: Determine whether the method is static or not. Non-static: p0 = self, so add 1 more to the register number
+    non_static = False
+    if "static" not in str(instruction):
+        non_static = True
+
+    # Step 3: Get the new register types, determine if there needs to be two registers representing a longer value
+
+    # Step 4: Iterate through all registers and translate them to new registers
+    new_registers = []
+    for i in range(len(previous_registers)):
+        previous_register = previous_registers[i]
+        index = i
+        new_number = index + LOCALS + int(non_static)
+        new_location = "v" + str(new_number)
+        new_registers.append(new_location)
+    
+    input(new_registers)
+    return new_registers
 
 class SmaliCodeBase():
     ''' This class represents the entire code base of a smali project. '''
@@ -336,12 +389,6 @@ class SmaliExecutionIterator():
         if(isinstance(cur_line_obj, SmaliAssemblyInstructions._INVOKE_INSTRUCTION)):
             self.iter_idx += 1
 
-            registers = cur_line_obj.get_registers()
-            found_register = False
-            for location in self.tracing_manager.locations_to_check:
-                if location.get_value() in registers:
-                    found_register = True
-
             # first, look for the register
             # then, look for if it has a different name due to the .locals
             # then, look for a implicit pass through a range
@@ -397,7 +444,7 @@ class SmaliExecutionIterator():
                     break
                 # ALLOW .LOCALS
             
-            instruction = SmaliAssemblyInstructions.from_line(cur_line)
+            '''instruction = SmaliAssemblyInstructions.from_line(cur_line)
             #input(instruction)
             name = instruction.get_owning_class_name()
             #input(name)
@@ -430,7 +477,7 @@ class SmaliExecutionIterator():
             unlocalized_line_obj = SmaliAssemblyInstructions.from_line(unlocalized_line)
             input(type(unlocalized_line_obj))
             # expand invoke-ranges
-            '''
+            
             if isinstance(unlocalized_line_obj, SmaliAssemblyInstructions.INVOKE_DIRECT_RANGE) or isinstance(unlocalized_line_obj, SmaliAssemblyInstructions.INVOKE_STATIC_RANGE) or isinstance(unlocalized_line_obj, SmaliAssemblyInstructions.INVOKE_VIRTUAL_RANGE):
                 range_registers = unlocalized_line_obj.get_registers()
                 input(range_registers)
@@ -455,8 +502,10 @@ class SmaliExecutionIterator():
                 unlocalized_line_obj = SmaliAssemblyInstructions.from_line(unlocalized_line)
             '''
             tracked_in_line = False
+            registers = cur_line_obj.get_registers()
+            new_registers = translate_p_registers_in_invoke(registers, cur_line_obj, self.codebase)
             for register in self.tracing_manager.locations_to_check:
-                for parameter in unlocalized_line_obj.get_registers():
+                for parameter in new_registers:
                     if register == parameter:
                         tracked_in_line = True
 
@@ -464,7 +513,7 @@ class SmaliExecutionIterator():
                 input("No tracked registers found, not invoking")
                 return self.cur_line_to_return
 
-            self.cur_line_to_return = [unlocalized_line_obj]
+            #self.cur_line_to_return = [unlocalized_line_obj]
 
             if method_def_obj.get_full_location(line_no, next_class_text) in self.locations_visited:
                 #input("Line has been visited before in the current recursion. Ignoring to prevent infinite recursion.")

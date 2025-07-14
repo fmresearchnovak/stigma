@@ -332,7 +332,7 @@ def test_instance(line, location, tracingManager):
                 tracingManager.cur_move_result_destinations.append("") # if there is no result, the result of the invoke goes nowhere
 
             # .ADD LOCALS
-            name = instruction.get_owning_class_name()
+            '''name = instruction.get_owning_class_name()
             scd = tracingManager.codebase.get_class_from_fully_qualified_name(name)
             input("invoke goes to " + str(scd))
             if scd == None:
@@ -347,17 +347,21 @@ def test_instance(line, location, tracingManager):
             non_static = False
             if "static" not in str(instruction):
                 non_static = True
-            
+            '''
+            parameters = instruction.get_registers()
+            new_registers = SmaliCodeBase.translate_registers_to_new_method(parameters, instruction, tracingManager.codebase)
+
             # this code checks whether the parameters going into the method match with any local versions of tracked registers.
             which_parameters = []
             new_parameters = []
             for i in range(len(parameters)):
                 number = str(i)[1:]
-                if parameters[i][0] == "p": # dereference the local register
+                current_parameter = parameters[i]
+                if str(current_parameter)[0] == "p": # dereference the local register
                     parameter_index = number + int(non_static)
                     new_location = "v" + str(parameter_index + LOCALS)
                     parameters[i] = new_location
-                if location == parameters[i]:
+                if location == current_parameter:
                     which_parameters.append(i)
             tracingManager.parameters_immediate = which_parameters
 
@@ -373,7 +377,7 @@ def test_instance(line, location, tracingManager):
 
             # TO DO: ENSURE THAT WHEN LONGS GO IN, TWO REGISTERS ARE TAKEN
             # TO DO: DIFFERENTIATE BETWEEN STATIC AND NON-STATIC INVOKES
-            input("LOCALS: " + str(LOCALS))
+            '''input("LOCALS: " + str(LOCALS))
             new_method_parameters = []
             for i in range(len(parameters)):
                 #print(LOCALS)
@@ -394,12 +398,22 @@ def test_instance(line, location, tracingManager):
             tracingManager.stack_locations_to_check.append(tracingManager.locations_to_check)
             tracingManager.locations_to_check = new_locations_to_check
             #input(tracingManager.locations_to_check)
+            '''
+            for parameter_index in tracingManager.parameters_immediate:
+                new_location = new_registers[parameter_index]
+                new_location_obj = TracingLocation()
+                new_location_obj.set_register(new_location)
+                new_locations_to_check.append(new_location_obj)
+            
+            tracingManager.stack_locations_to_check.append(tracingManager.locations_to_check)
+            tracingManager.locations_to_check = new_locations_to_check
 
             tracingManager.parameters_immediate = []
 
         case Action.RETURN:
             # the code here will find the previous invoke from a list and determine whether the returned value is the tracked value
             # if so, add the destination of the result instruction
+            # MAKE SURE THE LOCATIONS CHANGE UPON A RETURN
             tracingManager.locations_to_check = tracingManager.stack_locations_to_check.pop(0)
 
             # if the return statement returns the tracked value
