@@ -39,6 +39,10 @@ class TracingLocation:
         if self.obj_instance is not None:
             return self.variable
 
+    def get_object(self):
+        if self.obj_instance is not None:
+            return self.obj_instance
+
     # Determines whether a line has either the register or the register-variable pair
     def __eq__(self, other):
         other = str(other)
@@ -256,7 +260,6 @@ def test_instance(line, location, tracingManager):
 
                 tracingManager.add_edge(location, full_action[1], tracingManager.current_line_number)
             else:
-                #input("Here")
                 new_location = TracingLocation()
                 new_location.set_object_pair(full_action[1], full_action[3])
                 tracingManager.add_location(new_location)
@@ -284,28 +287,35 @@ def test_instance(line, location, tracingManager):
             if not first:
                 if not isinstance(instruction, SmaliAssemblyInstructions._I_INSTRUCTION) and not isinstance(instruction, SmaliAssemblyInstructions._S_INSTRUCTION):
                     print("REMOVING LOCATION " + str(full_action[1]))
-                    #input("Testing removal of a register 1")
                     for location_obj in tracingManager.locations_to_check:
                         if location_obj == location:
                             tracingManager.remove_location(location_obj)
                     
                 else:
                     print("REMOVING LOCATION " + str(full_action[1]))
-                    #input("Testing removal of a register 2")
 
                     if full_action[1][0] =="L":
+                        # removing instance variable
                         new_location = TracingLocation()
                         new_location.set_object_pair(full_action[1], full_action[3])
                         for location_obj in tracingManager.locations_to_check:
                             print(location_obj)
                             print(new_location)
-                            input("")
                             if location_obj == new_location:
                                 tracingManager.remove_location(location_obj)
                     else:
+                        # removing register
                         for location_obj in tracingManager.locations_to_check:
                             if location_obj == location:
                                 tracingManager.remove_location(location_obj)
+                            else:
+                                # if the object is removed, remove all tracked instance variables with that object
+                                try:
+                                    if location_obj.get_object() == location:
+                                        tracingManager.remove_location(location_obj)
+                                except:
+                                    pass
+                            
             else:
                 print("FIRST LINE, DON'T REMOVE")
         case Action.PART_OF_DATA_IN:
@@ -313,7 +323,6 @@ def test_instance(line, location, tracingManager):
         case Action.CAN_GET_DATA_FROM:
             tracingManager.locations_with_partial_tracked_data.append([str(full_action[1]), str(full_action[3]), str(type(instruction))])
         case Action.INVOKE:
-            input("INVOKE")
             try:
                 result_instruction = line[1]
                 tracingManager.cur_move_result_destinations.append(result_instruction.get_registers()[0])
@@ -322,7 +331,6 @@ def test_instance(line, location, tracingManager):
                 if location == result_instruction.get_registers()[0]:
                     if not first:
                         print("REMOVING LOCATION " + str(location))
-                        #input("Testing removal of a register 3")
                         for location_obj in tracingManager.locations_to_check:
                             if location_obj == location:
                                 tracingManager.remove_location(location_obj)
@@ -334,7 +342,6 @@ def test_instance(line, location, tracingManager):
             # .ADD LOCALS
             '''name = instruction.get_owning_class_name()
             scd = tracingManager.codebase.get_class_from_fully_qualified_name(name)
-            input("invoke goes to " + str(scd))
             if scd == None:
                 return
             fqc = instruction.get_fully_qualified_call()
@@ -366,7 +373,7 @@ def test_instance(line, location, tracingManager):
             tracingManager.parameters_immediate = which_parameters
 
             # return if which_parameters is empty
-            input(which_parameters)
+            #input(which_parameters)
             if which_parameters == []:
                 print("NO TRACKED PARAMETERS FOUND, RETURNING BACK")
 
@@ -386,7 +393,6 @@ def test_instance(line, location, tracingManager):
                 parameter_index = number + int(non_static)
                 new_location = "v" + str(parameter_index + LOCALS)
                 new_method_parameters.append(new_location)
-            input(new_method_parameters)
 
             for parameter_index in tracingManager.parameters_immediate:
                 # get the parameters of the new method
@@ -426,8 +432,6 @@ def test_instance(line, location, tracingManager):
         case _:
             pass
         
-    #input(tracingManager.locations_to_check)
-
 def find_path(folder, filename):
     #Source: Gemini
     for root, dirs, files in os.walk(folder):
@@ -477,16 +481,34 @@ def analyze_line(line, tracingManager):
     #print(line)
     line_as_string = str(line[0])
 
+    instance_found = False
     for location in tracingManager.locations_to_check:
-        if line[0].get_registers() == location or tracingManager.parameters_immediate != []:
-            input("HERE")
-            test_instance(line, location, tracingManager)
-            break
-        for register in line[0].get_registers():
-            if location == register:
-                input("HERE")
+        try:
+            # first, look for instance variables in the current line, if there is any
+            if line[0].get_instance_variable() == location or tracingManager.parameters_immediate != []:
                 test_instance(line, location, tracingManager)
-                break
+                instance_found = True
+        except:
+            # next, look for registers in the locations to check
+            for register in line[0].get_registers():
+                if location == register:
+                    test_instance(line, location, tracingManager)
+                    instance_found = True
+                # for each register, also look if they are an object of a tracked instance variable
+                # these objects could be REMOVED or copied to another register that must be ADDED
+                else:
+                    try:
+                        obj_instance = location.get_object()
+                        if location == obj_instance:
+                            input("object")
+                            test_instance(line, obj_instance, tracingManager)
+                            instance_found = True
+                    except:
+                        pass
+                if instance_found:
+                    break
+        if instance_found:
+            break
 
 def next_iteration(tracingManager):
     if len(tracingManager.get_files()) > 0:
@@ -548,15 +570,14 @@ def forward_tracing(filename, target_line_number, target_location, tracingManage
         #print(line)
         analyze_line(line, tracingManager)
         
-        if tracingManager.current_iteration == 1000:
+        if tracingManager.current_iteration == 5000:
             print("Limit reached")
             #print(tracingManager.locations_to_check)
             #print(tracingManager.line_directory)
-            print("current iteration over 1000, stopping!")
+            print("current iteration over 5000, stopping!")
             break
         
         if tracingManager.locations_to_check == [] and tracingManager.stack_locations_to_check == []:
-            #input("NO TRACES LEFT OF TRACKED VALUE")
             print("no locations left to trace, stopping!")
             break
 
