@@ -365,7 +365,7 @@ class First_Reg_Dead_End():
         if tracked == self.get_destination():
             return [Action.REMOVE, self.get_destination()]
         else:
-            return Action.NO_ACTIONS
+            return [Action.NO_ACTIONS]
 
 # if tracking the first register, the tracked register is removed. If the second register is tracked, add the first register.
 class Second_Reg_To_First_Reg():

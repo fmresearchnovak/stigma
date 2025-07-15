@@ -107,19 +107,19 @@ class TracingManager:
 
     # add edge object? add graph object?
     def add_edge(self, location, destination, line_number):
-        return # want to make it work before I deal with the graph
-        if location.get_value() in self.edges:
+        value = location.get_value()
+        if value in self.edges:
             duplicate = False
-            for pair in self.edges[location]:
+            for pair in self.edges[value]:
                 print(pair[0])
                 if pair[0] == destination:
                     duplicate = True
                     break
             if not duplicate:
-                self.edges[location].append([destination, line_number])
+                self.edges[value].append([destination, line_number])
 
         else:
-            self.edges[location] = [[destination, line_number]]
+            self.edges[value] = [[destination, line_number]]
 
     def get_edges(self):
         return self.edges
@@ -186,6 +186,7 @@ def grep_test(target, path):
 
 def format_for_html_graph(item):
     # key = split by "->", take the second half, then split the first half by "/" and get the last index, then combine first half and second half
+    item = str(item)
     if item[0] == "L":
         new_item = ""
         if "->" in item:
@@ -356,7 +357,12 @@ def test_instance(line, location, tracingManager):
                 non_static = True
             '''
             parameters = instruction.get_registers()
+            #input(instruction)
             new_registers = SmaliCodeBase.translate_registers_to_new_method(parameters, instruction, tracingManager.codebase)
+
+            if new_registers == None:
+                #input("External function, returning")
+                return
 
             # this code checks whether the parameters going into the method match with any local versions of tracked registers.
             which_parameters = []
@@ -410,6 +416,7 @@ def test_instance(line, location, tracingManager):
                 new_location_obj = TracingLocation()
                 new_location_obj.set_register(new_location)
                 new_locations_to_check.append(new_location_obj)
+                tracingManager.add_edge(location, new_location, tracingManager.current_line_number)
             
             tracingManager.stack_locations_to_check.append(tracingManager.locations_to_check)
             tracingManager.locations_to_check = new_locations_to_check
@@ -488,7 +495,7 @@ def analyze_line(line, tracingManager):
             if line[0].get_instance_variable() == location or tracingManager.parameters_immediate != []:
                 test_instance(line, location, tracingManager)
                 instance_found = True
-        except:
+        except AttributeError:
             # next, look for registers in the locations to check
             for register in line[0].get_registers():
                 if location == register:
@@ -500,10 +507,10 @@ def analyze_line(line, tracingManager):
                     try:
                         obj_instance = location.get_object()
                         if location == obj_instance:
-                            input("object")
+                            #input("object")
                             test_instance(line, obj_instance, tracingManager)
                             instance_found = True
-                    except:
+                    except AttributeError:
                         pass
                 if instance_found:
                     break
@@ -626,6 +633,7 @@ def main():
         
     forward_tracing("Lorg/telegram/messenger/SendMessagesHelper;", int(args.line_number), args.register, tracingManager, codebase)
 
+    input(tracingManager.edges)
     html_graph = generate_directed_graph(tracingManager.edges)
     write_html_file(html_graph)
 
