@@ -88,6 +88,7 @@ class TracingManager:
 
         self.target_line = ""
         self.current_line_number = 0
+        self.current_method = ""
 
         # this list has three values in every entry:
         # A: a location that holds part of the tracked data (like from arthimetic)
@@ -106,20 +107,19 @@ class TracingManager:
         self.cur_move_result_destinations = []
 
     # add edge object? add graph object?
-    def add_edge(self, location, destination, line_number):
-        value = location.get_value()
-        if value in self.edges:
+    def add_edge(self, location, destination, method_name):
+        # Step 1: self.edges is a dict, the key is method_names
+        # Add new list to dict if not there
+        if method_name in self.edges:
             duplicate = False
-            for pair in self.edges[value]:
-                print(pair[0])
-                if pair[0] == destination:
+            for entry in self.edges[method_name]:
+                if entry == [location, destination]:
                     duplicate = True
                     break
             if not duplicate:
-                self.edges[value].append([destination, line_number])
-
+                self.edges[method_name].append([location, destination])
         else:
-            self.edges[value] = [[destination, line_number]]
+            self.edges[method_name] = [[location, destination]]
 
     def get_edges(self):
         return self.edges
@@ -157,27 +157,6 @@ class TracingManager:
     def get_files(self):
         return self.files_to_search
 
-def get_function_name(line_number, lines):
-    match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_METHOD, lines[line_number])
-    while(match_object == None):
-        line_number -= 1
-        match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_METHOD, lines[line_number])
-    
-    method_signature_str = lines[line_number].replace("\n", "")
-    return method_signature_str
-
-def find_smali_method_def_obj(method_signature_str, smali_class, file_path):
-    method_index = 0
-    #figure out how to use curr_Method.get_name
-    curr_method = smali_class.methods[method_index]
-    signature = SmaliMethodSignature(method_signature_str, "Lorg/telegram/messenger/SendMessagesHelper;")
-
-    while(curr_method != signature):
-        method_index += 1
-        curr_method = smali_class.methods[method_index]
-
-    return curr_method
-
 # GREP TEST: TEST FUNCTION FOR FINDING INSTANCES OF A CERTAIN VALUE THROUGHOUT THE APK CODE
 def grep_test(target, path):
     cmd = ["grep", target, "-r", path]
@@ -205,35 +184,40 @@ def generate_directed_graph(graph):
     html_graph = ""
 
     first = True
-    #print(graph)
-    
-    for key in graph:
-        for index in range(0, len(graph[key])):
-            #print(key)
-            value = graph[key][index][0]
-            number = graph[key][index][1]
 
-            new_key = format_for_html_graph(key)
-            new_value = format_for_html_graph(value)
+    # How the HTML graph is generated:
+    # 1. Go through each method in the graph
+    # 2. Create a new subgraph heading for each method and add each edge inside
+    # 3. Edges that represent an invoke to another method or a return will have the method of its DESTINATION not its ORIGIN
+    # 4. If statements are diamond shaped to represent conditions and each arrow is labeled True or False
+
+    # TO DO: Find some way to give the register's label the method name, or a representation of it
+
+    for method in graph:
+        # begin a new subgraph
+        html_graph += 'subgraph "' + format_for_html_graph(method) + '"\n'
+
+        for entry_index in range(len(graph[method])):
+            location = graph[method][entry_index][0]
+            destination = graph[method][entry_index][1]
+
+            formatted_location = format_for_html_graph(location)
+            formatted_destination = format_for_html_graph(destination)
 
             entry = ""
 
-            if first == True:
-                entry += str(new_key) + "[" + str(new_key) + "]"
+            if first:
+                entry += str(formatted_location) + '["' + str(formatted_location) + '"]'
                 first = False
             else:
-                entry += str(new_key)
-            
-            entry += " --> "
+                entry += str(formatted_location)
 
-            if value in graph and len(graph[value]) > 1:
-                entry += str(new_value) + "{" + str(new_value) + "};"
-            else:
-                entry += str(new_value) + "[" + str(new_value) + "];"
-            
-            #entry += " <!-- Line number: " + str(number) + " -->"
+            entry += " --> "
+            entry += str(formatted_destination) + '["' + str(formatted_destination) + '"];'
 
             html_graph += entry + "\n"
+        
+        html_graph += "end" + "\n"
     
     return html_graph
 
@@ -250,6 +234,8 @@ def test_instance(line, location, tracingManager):
     full_action = instruction.get_slicing_action(location)
     print("ACTION = " + str(full_action[0]))
 
+    method_name = str(tracingManager.current_method)
+
     match full_action[0]:
         case Action.ADD:
             print("ADDING NEW LOCATION " + str(full_action[1]))
@@ -259,13 +245,13 @@ def test_instance(line, location, tracingManager):
                 new_location.set_register(full_action[1])
                 tracingManager.add_location(new_location)
 
-                tracingManager.add_edge(location, full_action[1], tracingManager.current_line_number)
+                tracingManager.add_edge(location, full_action[1], method_name)
             else:
                 new_location = TracingLocation()
                 new_location.set_object_pair(full_action[1], full_action[3])
                 tracingManager.add_location(new_location)
 
-                tracingManager.add_edge(location, full_action[1], tracingManager.current_line_number)
+                tracingManager.add_edge(location, full_action[1], function_name)
 
             if isinstance(instruction, SmaliAssemblyInstructions._S_INSTRUCTION):
                 pass
@@ -341,21 +327,14 @@ def test_instance(line, location, tracingManager):
                 tracingManager.cur_move_result_destinations.append("") # if there is no result, the result of the invoke goes nowhere
 
             # .ADD LOCALS
-            '''name = instruction.get_owning_class_name()
+            name = instruction.get_owning_class_name()
             scd = tracingManager.codebase.get_class_from_fully_qualified_name(name)
             if scd == None:
                 return
             fqc = instruction.get_fully_qualified_call()
             smd = scd.get_method_by_fully_qualified_name(fqc)
-            LOCALS = smd.get_locals_directive_num()
-
-            # add code here to add the new name of each variable passed to the new function
-            parameters = instruction.get_registers()
-
-            non_static = False
-            if "static" not in str(instruction):
-                non_static = True
-            '''
+            method_name = str(smd)
+            
             parameters = instruction.get_registers()
             #input(instruction)
             new_registers = SmaliCodeBase.translate_registers_to_new_method(parameters, instruction, tracingManager.codebase)
@@ -416,7 +395,7 @@ def test_instance(line, location, tracingManager):
                 new_location_obj = TracingLocation()
                 new_location_obj.set_register(new_location)
                 new_locations_to_check.append(new_location_obj)
-                tracingManager.add_edge(location, new_location, tracingManager.current_line_number)
+                tracingManager.add_edge(location, new_location, method_name)
             
             tracingManager.stack_locations_to_check.append(tracingManager.locations_to_check)
             tracingManager.locations_to_check = new_locations_to_check
@@ -577,11 +556,11 @@ def forward_tracing(filename, target_line_number, target_location, tracingManage
         #print(line)
         analyze_line(line, tracingManager)
         
-        if tracingManager.current_iteration == 5000:
+        if tracingManager.current_iteration == 1000:
             print("Limit reached")
             #print(tracingManager.locations_to_check)
             #print(tracingManager.line_directory)
-            print("current iteration over 5000, stopping!")
+            print("current iteration over 1000, stopping!")
             break
         
         if tracingManager.locations_to_check == [] and tracingManager.stack_locations_to_check == []:
@@ -635,6 +614,7 @@ def main():
 
     input(tracingManager.edges)
     html_graph = generate_directed_graph(tracingManager.edges)
+    input(html_graph)
     write_html_file(html_graph)
 
     #the following code tests it without the APK file so that lines can be easily edited
