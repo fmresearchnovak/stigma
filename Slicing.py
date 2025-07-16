@@ -73,6 +73,7 @@ class TracingManager:
 
         # edges for the directed graph
         self.edges = {}
+        self.removed_nodes = {}
 
         # locations (registers/variables) tracked
         self.locations_to_check = []
@@ -107,19 +108,27 @@ class TracingManager:
         self.cur_move_result_destinations = []
 
     # add edge object? add graph object?
-    def add_edge(self, location, destination, method_name):
-        # Step 1: self.edges is a dict, the key is method_names
-        # Add new list to dict if not there
+    def add_edge(self, location, destination, method_name, origin_method_name):
+        # location = origin location
+        # destination = destination location
+        # method_name = name of the method for the destination
+        # origin_method_name = name of the method for the origin
         if method_name in self.edges:
             duplicate = False
             for entry in self.edges[method_name]:
-                if entry == [location, destination]:
+                if entry == [location, destination, origin_method_name]:
                     duplicate = True
                     break
             if not duplicate:
-                self.edges[method_name].append([location, destination])
+                self.edges[method_name].append([location, destination, origin_method_name])
         else:
-            self.edges[method_name] = [[location, destination]]
+            self.edges[method_name] = [[location, destination, origin_method_name]]
+
+    def add_removed_to_node(self, location, method_name):
+        if method_name in self.removed_nodes:
+            self.removed_nodes[method_name].append(location)
+        else:
+            self.removed_nodes[method_name] = [location]
 
     def get_edges(self):
         return self.edges
@@ -175,12 +184,12 @@ def format_for_html_graph(item):
         split = first.split("/")
         new_item = split[len(split) - 1] + "-"
         new_item += second
-        new_item = new_item.replace(";", "").replace("[", "arrayof:")
+        new_item = new_item.replace(";", "").replace("[", "arrayof:").replace("<", "-").replace(">", "-")
         return new_item
     else:
         return item
 
-def generate_directed_graph(graph):
+def generate_directed_graph(graph, removed):
     html_graph = ""
 
     first = True
@@ -192,32 +201,43 @@ def generate_directed_graph(graph):
     # 4. If statements are diamond shaped to represent conditions and each arrow is labeled True or False
 
     # TO DO: Find some way to give the register's label the method name, or a representation of it
+    # TO DO: Allow seperate location and destination method names
 
     for method in graph:
         # begin a new subgraph
-        html_graph += 'subgraph "' + format_for_html_graph(method) + '"\n'
+        formatted_method = str(format_for_html_graph(method).split("(")[0])
+
+        html_graph += 'subgraph "' + formatted_method + '"\n'
 
         for entry_index in range(len(graph[method])):
             location = graph[method][entry_index][0]
             destination = graph[method][entry_index][1]
+            origin_method_name = graph[method][entry_index][2]
 
             formatted_location = format_for_html_graph(location)
             formatted_destination = format_for_html_graph(destination)
+            formatted_origin_method_name = str(format_for_html_graph(origin_method_name).split("(")[0])
 
             entry = ""
 
             if first:
-                entry += str(formatted_location) + '["' + str(formatted_location) + '"]'
+                entry += str(formatted_location) + formatted_origin_method_name + '["' + str(formatted_location) + '"]'
                 first = False
             else:
-                entry += str(formatted_location)
+                entry += str(formatted_location) + formatted_origin_method_name
+            
+            if method in removed:
+                if location in removed[method]:
+                    entry += ":::removed"
 
             entry += " --> "
-            entry += str(formatted_destination) + '["' + str(formatted_destination) + '"];'
+            entry += str(formatted_destination) + formatted_method + '["' + str(formatted_destination) + '"];'
 
             html_graph += entry + "\n"
         
         html_graph += "end" + "\n"
+
+    html_graph += "classDef removed fill:#f00" + "\n"
     
     return html_graph
 
@@ -245,13 +265,13 @@ def test_instance(line, location, tracingManager):
                 new_location.set_register(full_action[1])
                 tracingManager.add_location(new_location)
 
-                tracingManager.add_edge(location, full_action[1], method_name)
+                tracingManager.add_edge(location, full_action[1], method_name, method_name)
             else:
                 new_location = TracingLocation()
                 new_location.set_object_pair(full_action[1], full_action[3])
                 tracingManager.add_location(new_location)
 
-                tracingManager.add_edge(location, full_action[1], function_name)
+                tracingManager.add_edge(location, full_action[1], method_name, method_name)
 
             if isinstance(instruction, SmaliAssemblyInstructions._S_INSTRUCTION):
                 pass
@@ -277,6 +297,7 @@ def test_instance(line, location, tracingManager):
                     for location_obj in tracingManager.locations_to_check:
                         if location_obj == location:
                             tracingManager.remove_location(location_obj)
+                            tracingManager.add_removed_to_node(location, method_name)
                     
                 else:
                     print("REMOVING LOCATION " + str(full_action[1]))
@@ -290,6 +311,7 @@ def test_instance(line, location, tracingManager):
                             print(new_location)
                             if location_obj == new_location:
                                 tracingManager.remove_location(location_obj)
+                                tracingManager.add_removed_to_node(location, method_name)
                     else:
                         # removing register
                         for location_obj in tracingManager.locations_to_check:
@@ -300,6 +322,7 @@ def test_instance(line, location, tracingManager):
                                 try:
                                     if location_obj.get_object() == location:
                                         tracingManager.remove_location(location_obj)
+                                        tracingManager.add_removed_to_node(location, method_name)
                                 except:
                                     pass
                             
@@ -321,6 +344,7 @@ def test_instance(line, location, tracingManager):
                         for location_obj in tracingManager.locations_to_check:
                             if location_obj == location:
                                 tracingManager.remove_location(location_obj)
+                                tracingManager.add_removed_to_node(location, method_name)
                     else:
                         print("FIRST LINE, DON'T REMOVE")
             except IndexError:
@@ -333,7 +357,7 @@ def test_instance(line, location, tracingManager):
                 return
             fqc = instruction.get_fully_qualified_call()
             smd = scd.get_method_by_fully_qualified_name(fqc)
-            method_name = str(smd)
+            new_method_name = str(smd)
             
             parameters = instruction.get_registers()
             #input(instruction)
@@ -395,7 +419,7 @@ def test_instance(line, location, tracingManager):
                 new_location_obj = TracingLocation()
                 new_location_obj.set_register(new_location)
                 new_locations_to_check.append(new_location_obj)
-                tracingManager.add_edge(location, new_location, method_name)
+                tracingManager.add_edge(location, new_location, new_method_name, method_name)
             
             tracingManager.stack_locations_to_check.append(tracingManager.locations_to_check)
             tracingManager.locations_to_check = new_locations_to_check
@@ -407,6 +431,7 @@ def test_instance(line, location, tracingManager):
             # if so, add the destination of the result instruction
             # MAKE SURE THE LOCATIONS CHANGE UPON A RETURN
             tracingManager.locations_to_check = tracingManager.stack_locations_to_check.pop(0)
+            tracingManager.add_removed_to_node(location, method_name)
 
             # if the return statement returns the tracked value
             if instruction.get_registers()[0] in tracingManager.locations_to_check:
@@ -556,11 +581,11 @@ def forward_tracing(filename, target_line_number, target_location, tracingManage
         #print(line)
         analyze_line(line, tracingManager)
         
-        if tracingManager.current_iteration == 1000:
+        if tracingManager.current_iteration == 2000:
             print("Limit reached")
             #print(tracingManager.locations_to_check)
             #print(tracingManager.line_directory)
-            print("current iteration over 1000, stopping!")
+            print("current iteration over 2000, stopping!")
             break
         
         if tracingManager.locations_to_check == [] and tracingManager.stack_locations_to_check == []:
@@ -613,7 +638,7 @@ def main():
     forward_tracing("Lorg/telegram/messenger/SendMessagesHelper;", int(args.line_number), args.register, tracingManager, codebase)
 
     input(tracingManager.edges)
-    html_graph = generate_directed_graph(tracingManager.edges)
+    html_graph = generate_directed_graph(tracingManager.edges, tracingManager.removed_nodes)
     input(html_graph)
     write_html_file(html_graph)
 

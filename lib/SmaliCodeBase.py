@@ -296,8 +296,8 @@ class SmaliExecutionIterator():
         self.locations_visited.append(cur_line)
         #print("LINE " + str(self.iter_idx + 1) + ": " + cur_line)
         function, function_line_number = get_function_name(self.iter_idx, self.cur_class_text)
-        self.tracing_manager.current_method = function
         method_def_obj = find_smali_method_def_obj(function, self.cur_class, self.filename)
+        self.tracing_manager.current_method = str(method_def_obj)
         cur_line_global = method_def_obj.dereference_p_to_v_numbers(cur_line) # could just do this to every method in the whole class
 
         cur_line_obj = None
