@@ -84,10 +84,12 @@ class SmaliAssemblyInstruction():
         line = raw_line_string.strip("\n")
         if(StigmaStringParsingLib.is_comment(line)):
             return COMMENT(line)
-        if(StigmaStringParsingLib.is_try_start_label(line)):
-            return TRY_START_LABEL(line)
-        if(StigmaStringParsingLib.is_try_end_label(line)):
-            return TRY_END_LABEL(line)
+        if(StigmaStringParsingLib.is_catch_label(line)):
+            return CATCH_DIRECTIVE(line)
+        if(StigmaStringParsingLib.is_try_start_stigma_label(line)):
+            return TRY_START_STIGMA_LABEL(line)
+        if(StigmaStringParsingLib.is_try_end_stigma_label(line)):
+            return TRY_END_STIGMA_LABEL(line)
         if(StigmaStringParsingLib.is_jump_target_label(line)):
             return LABEL(line)
 
@@ -308,6 +310,9 @@ class LABEL(SmaliAssemblyInstruction):
 
     def get_label(self):
         return self.split(":")[1]
+    
+    def get_num(self):
+        return str(self.get_label()).split("_")[-1]
         
 class _ThirtyTwoBit_Parameters():
     # instruction classes that extend this type
@@ -369,7 +374,7 @@ class _Tracing_Endpoint():
 
 # if tracking the first register, the tracked register is removed. If tracking a different register, return that some of its data is in
 # the first register.
-class Second_Reg_To_First_Reg_Arith():
+class _Second_Reg_To_First_Reg_Arith():
     def get_destination(self):
         return self.get_registers()[0]
 
@@ -388,7 +393,7 @@ class Second_Reg_To_First_Reg_Arith():
             elif tracked == self.get_destination():
                 return [TracingAction.REMOVE, tracked]
 
-class Second_Reg_To_First_Reg_Arith_2addr():
+class _Second_Reg_To_First_Reg_Arith_2addr():
     def get_destination(self):
         return self.get_registers()[0]
 
@@ -403,7 +408,7 @@ class Second_Reg_To_First_Reg_Arith_2addr():
 
 # if tracking the first register, the tracked register is removed. If tracking the second register, nothing happens. If tracking the instance variable,
 # add the first register.
-class Third_Var_To_First_Reg():
+class _Third_Var_To_First_Reg_Data_Flow():
     def get_destination(self):
         return self.get_registers()[0]
 
@@ -420,7 +425,7 @@ class Third_Var_To_First_Reg():
 
 # if tracking the instance variable, the tracked variable is removed. If tracking the second register, nothing happens. If tracking the first register
 # add the instance variable.
-class First_Reg_To_Third_Var():
+class _First_Reg_To_Third_Var_Data_Flow():
     def get_destination(self):
         return self.get_instance_variable()
 
@@ -437,7 +442,7 @@ class First_Reg_To_Third_Var():
 
 # if tracking the first register, the tracked register is removed. If tracking the second register, nothing happens. If tracking the third register,
 # add the first register.
-class Third_Reg_To_First_Reg():
+class _Third_Reg_To_First_Reg_Data_Flow():
     def get_destination(self):
         return self.get_registers()[0]
 
@@ -452,7 +457,7 @@ class Third_Reg_To_First_Reg():
 
 # if tracking the third register, the tracked variable is removed. If tracking the second register, nothing happens. If tracking the first register
 # add the third register.
-class First_Reg_To_Third_Reg():
+class _First_Reg_To_Third_Reg_Data_Flow():
     def get_destination(self):
         return self.get_registers()[2]
 
@@ -516,13 +521,13 @@ class _JUMP_TO_LABEL_INSTRUCTION(_JUMP_INSTRUCTION):
     
 
 # result instructions
-class Result_Instruction():
+class _Result_Instruction():
     def get_slicing_action(self, tracked):
         # not finished
         return [TracingAction.NO_ACTIONS, tracked]
 
 # has the tracking location but nothing happens with it
-class No_Slicing_Actions():
+class _No_Slicing_Actions():
     def get_slicing_action(self, tracked):
         return [TracingAction.NO_ACTIONS]
         
@@ -844,7 +849,7 @@ class MONITOR_EXIT(_SINGLE_REGISTER_INSTRUCTION):
         return "monitor-exit"
     
     
-class CHECK_CAST( _Object_Parameters, _SINGLE_DEST_REGISTER_INSTRUCTION, No_Slicing_Actions): 
+class CHECK_CAST( _Object_Parameters, _SINGLE_DEST_REGISTER_INSTRUCTION, _No_Slicing_Actions): 
     def opcode(self):
         return "check-cast"
         
@@ -1249,14 +1254,14 @@ class _ARRAY_PARAMETERS_TYPE_PATTERN():
         return self.ans
         
         
-class AGET(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, Third_Reg_To_First_Reg):
+class AGET(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, _Third_Reg_To_First_Reg_Data_Flow):
     def opcode(self):
         return "aget"
         
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.ThirtyTwoBit()
 
-class AGET_WIDE(_ARRAY_PARAMETERS_TYPE_PATTERN, _IMPLICIT_FIRST_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, Third_Reg_To_First_Reg):
+class AGET_WIDE(_ARRAY_PARAMETERS_TYPE_PATTERN, _IMPLICIT_FIRST_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, _Third_Reg_To_First_Reg_Data_Flow):
     def opcode(self):
         return "aget-wide"
         
@@ -1264,7 +1269,7 @@ class AGET_WIDE(_ARRAY_PARAMETERS_TYPE_PATTERN, _IMPLICIT_FIRST_REGISTER_INSTRUC
         self.ans[self.rd] = SmaliTypes.SixtyFourBit()
         self.ans[self.rd + 1] = SmaliTypes.SixtyFourBit_2()
 
-class AGET_OBJECT(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, Third_Reg_To_First_Reg):
+class AGET_OBJECT(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, _Third_Reg_To_First_Reg_Data_Flow):
     def opcode(self):
         return "aget-object"
         
@@ -1277,28 +1282,28 @@ class AGET_OBJECT(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, 
         # NonSpecificObjectReference as a very low specificity level
         self.ans[self.rd] = SmaliTypes.NonSpecificObjectReference()
 
-class AGET_BOOLEAN(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, Third_Reg_To_First_Reg):
+class AGET_BOOLEAN(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, _Third_Reg_To_First_Reg_Data_Flow):
     def opcode(self):
         return "aget-boolean"
         
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.Boolean()
 
-class AGET_BYTE(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, Third_Reg_To_First_Reg):
+class AGET_BYTE(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, _Third_Reg_To_First_Reg_Data_Flow):
     def opcode(self):
         return "aget-byte"
         
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.Byte()
 
-class AGET_CHAR(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, Third_Reg_To_First_Reg):
+class AGET_CHAR(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, _Third_Reg_To_First_Reg_Data_Flow):
     def opcode(self):
         return "aget-char"
         
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.Char()
 
-class AGET_SHORT(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, Third_Reg_To_First_Reg):
+class AGET_SHORT(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, _Third_Reg_To_First_Reg_Data_Flow):
     def opcode(self):
         return "aget-short"
         
@@ -1306,7 +1311,7 @@ class AGET_SHORT(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, T
         self.ans[self.rd] = SmaliTypes.Short()
 
 
-class APUT(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_To_Third_Reg):
+class APUT(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, _First_Reg_To_Third_Reg_Data_Flow):
     # aput vX, vY, vZ
     # vX is a value to be put into the array
     # vY is an array reference
@@ -1317,7 +1322,7 @@ class APUT(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, First_R
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.Int()
 
-class APUT_WIDE(_ARRAY_PARAMETERS_TYPE_PATTERN, _IMPLICIT_FIRST_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_To_Third_Reg):
+class APUT_WIDE(_ARRAY_PARAMETERS_TYPE_PATTERN, _IMPLICIT_FIRST_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, _First_Reg_To_Third_Reg_Data_Flow):
     def opcode(self):
         return "aput-wide"
         
@@ -1325,35 +1330,35 @@ class APUT_WIDE(_ARRAY_PARAMETERS_TYPE_PATTERN, _IMPLICIT_FIRST_REGISTER_INSTRUC
         self.ans[self.rd] = SmaliTypes.SixtyFourBit()
         self.ans[self.rd + 1] = SmaliTypes.SixtyFourBit_2()
 
-class APUT_OBJECT(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_To_Third_Reg):
+class APUT_OBJECT(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, _First_Reg_To_Third_Reg_Data_Flow):
     def opcode(self):
         return "aput-object"
 
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.NonSpecificObjectReference()
 
-class APUT_BOOLEAN(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_To_Third_Reg):
+class APUT_BOOLEAN(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, _First_Reg_To_Third_Reg_Data_Flow):
     def opcode(self):
         return "aput-boolean"
         
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.Boolean()
 
-class APUT_BYTE(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_To_Third_Reg):
+class APUT_BYTE(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, _First_Reg_To_Third_Reg_Data_Flow):
     def opcode(self):
         return "aput-byte"
 
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.Byte()
 
-class APUT_CHAR(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_To_Third_Reg):
+class APUT_CHAR(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, _First_Reg_To_Third_Reg_Data_Flow):
     def opcode(self):
         return "aput-char"
 
     def _set_first_param_type(self):
         self.ans[self.rd] = SmaliTypes.Char()
 
-class APUT_SHORT(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_To_Third_Reg):
+class APUT_SHORT(_ARRAY_PARAMETERS_TYPE_PATTERN, _TRIPLE_REGISTER_INSTRUCTION, _First_Reg_To_Third_Reg_Data_Flow):
     def opcode(self):
         return "aput-short"
         
@@ -1405,12 +1410,12 @@ class _I_INSTRUCTION(SmaliAssemblyInstruction):
     def __repr__(self):
         return self.opcode() + " " + str(self.rd) + ", " + str(self.rci) + ", " + self.class_and_field_name
 
-class IGET(_I_INSTRUCTION, Third_Var_To_First_Reg):
+class IGET(_I_INSTRUCTION, _Third_Var_To_First_Reg_Data_Flow):
     def opcode(self):
         return "iget"
 
         
-class IGET_WIDE(_IMPLICIT_FIRST_REGISTER_INSTRUCTION, _I_INSTRUCTION, Third_Var_To_First_Reg):
+class IGET_WIDE(_IMPLICIT_FIRST_REGISTER_INSTRUCTION, _I_INSTRUCTION, _Third_Var_To_First_Reg_Data_Flow):
     def opcode(self):
         return "iget-wide"
         
@@ -1420,31 +1425,31 @@ class IGET_WIDE(_IMPLICIT_FIRST_REGISTER_INSTRUCTION, _I_INSTRUCTION, Third_Var_
         ans[adj_reg] = SmaliTypes.SixtyFourBit_2()
         return ans
         
-class IGET_OBJECT(_I_INSTRUCTION, Third_Var_To_First_Reg):
+class IGET_OBJECT(_I_INSTRUCTION, _Third_Var_To_First_Reg_Data_Flow):
     def opcode(self):
         return "iget-object"
 
-class IGET_BOOLEAN(_I_INSTRUCTION, Third_Var_To_First_Reg):
+class IGET_BOOLEAN(_I_INSTRUCTION, _Third_Var_To_First_Reg_Data_Flow):
     def opcode(self):
         return "iget-boolean"
 
-class IGET_BYTE(_I_INSTRUCTION, Third_Var_To_First_Reg):
+class IGET_BYTE(_I_INSTRUCTION, _Third_Var_To_First_Reg_Data_Flow):
     def opcode(self):
         return "iget-byte"
 
-class IGET_CHAR(_I_INSTRUCTION, Third_Var_To_First_Reg):
+class IGET_CHAR(_I_INSTRUCTION, _Third_Var_To_First_Reg_Data_Flow):
     def opcode(self):
         return "iget-char"
 
-class IGET_SHORT(_I_INSTRUCTION, Third_Var_To_First_Reg):
+class IGET_SHORT(_I_INSTRUCTION, _Third_Var_To_First_Reg_Data_Flow):
     def opcode(self):
         return "iget-short"
 
-class IPUT(_I_INSTRUCTION, First_Reg_To_Third_Var):
+class IPUT(_I_INSTRUCTION, _First_Reg_To_Third_Var_Data_Flow):
     def opcode(self):
         return "iput"
 
-class IPUT_WIDE(_IMPLICIT_FIRST_REGISTER_INSTRUCTION, _I_INSTRUCTION, First_Reg_To_Third_Var):
+class IPUT_WIDE(_IMPLICIT_FIRST_REGISTER_INSTRUCTION, _I_INSTRUCTION, _First_Reg_To_Third_Var_Data_Flow):
     def opcode(self):
         return "iput-wide"
         
@@ -1454,23 +1459,23 @@ class IPUT_WIDE(_IMPLICIT_FIRST_REGISTER_INSTRUCTION, _I_INSTRUCTION, First_Reg_
         ans[adj_reg] = SmaliTypes.SixtyFourBit_2()
         return ans
         
-class IPUT_OBJECT(_I_INSTRUCTION, First_Reg_To_Third_Var):
+class IPUT_OBJECT(_I_INSTRUCTION, _First_Reg_To_Third_Var_Data_Flow):
     def opcode(self):
         return "iput-object"
 
-class IPUT_BOOLEAN(_I_INSTRUCTION, First_Reg_To_Third_Var):
+class IPUT_BOOLEAN(_I_INSTRUCTION, _First_Reg_To_Third_Var_Data_Flow):
     def opcode(self):
         return "iput-boolean"
 
-class IPUT_BYTE(_I_INSTRUCTION, First_Reg_To_Third_Var):
+class IPUT_BYTE(_I_INSTRUCTION, _First_Reg_To_Third_Var_Data_Flow):
     def opcode(self):
         return "iput-byte"
 
-class IPUT_CHAR(_I_INSTRUCTION, First_Reg_To_Third_Var):
+class IPUT_CHAR(_I_INSTRUCTION, _First_Reg_To_Third_Var_Data_Flow):
     def opcode(self):
         return "iput-char"
 
-class IPUT_SHORT(_I_INSTRUCTION, First_Reg_To_Third_Var):
+class IPUT_SHORT(_I_INSTRUCTION, _First_Reg_To_Third_Var_Data_Flow):
     def opcode(self):
         return "iput-short"
 
@@ -1511,11 +1516,11 @@ class _S_INSTRUCTION(SmaliAssemblyInstruction):
         if self.field_fqn == "":
             return self.opcode() + " " + str(self.rd) + ", " + self.class_and_field_name
 
-class SGET(_S_INSTRUCTION, Third_Var_To_First_Reg):
+class SGET(_S_INSTRUCTION, _Third_Var_To_First_Reg_Data_Flow):
     def opcode(self):
         return "sget"
 
-class SGET_WIDE(_IMPLICIT_REGISTER_INSTRUCTION, _S_INSTRUCTION, Third_Var_To_First_Reg):
+class SGET_WIDE(_IMPLICIT_REGISTER_INSTRUCTION, _S_INSTRUCTION, _Third_Var_To_First_Reg_Data_Flow):
     def opcode(self):
         return "sget-wide"
 
@@ -1525,31 +1530,31 @@ class SGET_WIDE(_IMPLICIT_REGISTER_INSTRUCTION, _S_INSTRUCTION, Third_Var_To_Fir
         ans[adj_reg] = SmaliTypes.SixtyFourBit_2()
         return ans
         
-class SGET_OBJECT(_S_INSTRUCTION, Third_Var_To_First_Reg):
+class SGET_OBJECT(_S_INSTRUCTION, _Third_Var_To_First_Reg_Data_Flow):
     def opcode(self):
         return "sget-object"
 
-class SGET_BOOLEAN(_S_INSTRUCTION, Third_Var_To_First_Reg):
+class SGET_BOOLEAN(_S_INSTRUCTION, _Third_Var_To_First_Reg_Data_Flow):
     def opcode(self):
         return "sget-boolean"
 
-class SGET_BYTE(_S_INSTRUCTION, Third_Var_To_First_Reg):
+class SGET_BYTE(_S_INSTRUCTION, _Third_Var_To_First_Reg_Data_Flow):
     def opcode(self):
         return "sget-byte"
 
-class SGET_CHAR(_S_INSTRUCTION, Third_Var_To_First_Reg):
+class SGET_CHAR(_S_INSTRUCTION, _Third_Var_To_First_Reg_Data_Flow):
     def opcode(self):
         return "sget-char"
 
-class SGET_SHORT(_S_INSTRUCTION, Third_Var_To_First_Reg):
+class SGET_SHORT(_S_INSTRUCTION, _Third_Var_To_First_Reg_Data_Flow):
     def opcode(self):
         return "sget-short"
 
-class SPUT(_S_INSTRUCTION, First_Reg_To_Third_Var):
+class SPUT(_S_INSTRUCTION, _First_Reg_To_Third_Var_Data_Flow):
     def opcode(self):
         return "sput"
         
-class SPUT_WIDE(_IMPLICIT_REGISTER_INSTRUCTION, _S_INSTRUCTION, First_Reg_To_Third_Var):
+class SPUT_WIDE(_IMPLICIT_REGISTER_INSTRUCTION, _S_INSTRUCTION, _First_Reg_To_Third_Var_Data_Flow):
     def opcode(self):
         return "sput-wide"
         
@@ -1559,23 +1564,23 @@ class SPUT_WIDE(_IMPLICIT_REGISTER_INSTRUCTION, _S_INSTRUCTION, First_Reg_To_Thi
         ans[adj_reg] = SmaliTypes.SixtyFourBit_2()
         return ans
         
-class SPUT_OBJECT(_S_INSTRUCTION, First_Reg_To_Third_Var):
+class SPUT_OBJECT(_S_INSTRUCTION, _First_Reg_To_Third_Var_Data_Flow):
     def opcode(self):
         return "sput-object"
 
-class SPUT_BOOLEAN(_S_INSTRUCTION, First_Reg_To_Third_Var):
+class SPUT_BOOLEAN(_S_INSTRUCTION, _First_Reg_To_Third_Var_Data_Flow):
     def opcode(self):
         return "sput-boolean"
 
-class SPUT_BYTE(_S_INSTRUCTION, First_Reg_To_Third_Var):
+class SPUT_BYTE(_S_INSTRUCTION, _First_Reg_To_Third_Var_Data_Flow):
     def opcode(self):
         return "sput-byte"
 
-class SPUT_CHAR(_S_INSTRUCTION, First_Reg_To_Third_Var):
+class SPUT_CHAR(_S_INSTRUCTION, _First_Reg_To_Third_Var_Data_Flow):
     def opcode(self):
         return "sput-char"
 
-class SPUT_SHORT(_S_INSTRUCTION, First_Reg_To_Third_Var):
+class SPUT_SHORT(_S_INSTRUCTION, _First_Reg_To_Third_Var_Data_Flow):
     def opcode(self):
         return "sput-short"
         
@@ -1626,7 +1631,7 @@ class INVOKE_INTERFACE_RANGE(_PARAMETER_RANGE_INSTRUCTION, _INVOKE_INSTRUCTION):
         return "invoke-interface/range"
 
 
-class _TWO_REGISTER_UNARY_INSTRUCTION(SmaliAssemblyInstruction, Second_Reg_To_First_Reg_Arith):
+class _TWO_REGISTER_UNARY_INSTRUCTION(SmaliAssemblyInstruction, _Second_Reg_To_First_Reg_Arith):
     # A parent class that should never be instantiated directly
     def __init__(self, reg_dest, reg_arg):
         super().__init__()
@@ -1640,27 +1645,27 @@ class _TWO_REGISTER_UNARY_INSTRUCTION(SmaliAssemblyInstruction, Second_Reg_To_Fi
         return self.opcode() + " " + str(self.rd) + ", " + str(self.ra)
 
 
-class NEG_INT(_ThirtyTwoBit_Parameters, _TWO_REGISTER_UNARY_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class NEG_INT(_ThirtyTwoBit_Parameters, _TWO_REGISTER_UNARY_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "neg-int"
 
-class NOT_INT(_ThirtyTwoBit_Parameters, _TWO_REGISTER_UNARY_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class NOT_INT(_ThirtyTwoBit_Parameters, _TWO_REGISTER_UNARY_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "not-int"
         
-class NOT_LONG(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TWO_REGISTER_UNARY_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class NOT_LONG(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TWO_REGISTER_UNARY_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "neg-long"
 
-class NEG_LONG(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TWO_REGISTER_UNARY_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class NEG_LONG(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TWO_REGISTER_UNARY_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "neg-long"
 
-class NEG_FLOAT(_ThirtyTwoBit_Parameters, _TWO_REGISTER_UNARY_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class NEG_FLOAT(_ThirtyTwoBit_Parameters, _TWO_REGISTER_UNARY_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "neg-float"
 
-class NEG_DOUBLE(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TWO_REGISTER_UNARY_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class NEG_DOUBLE(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TWO_REGISTER_UNARY_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "neg-double"
 
@@ -1791,35 +1796,35 @@ class INT_TO_SHORT(_ThirtyTwoBit_Parameters, _TWO_REGISTER_UNARY_INSTRUCTION):
     def opcode(self):
         return "int-to-short"
 
-class ADD_INT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class ADD_INT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "add-int"
 
-class SUB_INT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class SUB_INT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "sub-int"
 
-class MUL_INT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class MUL_INT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "mul-int"
 
-class DIV_INT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class DIV_INT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "div-int"
 
-class REM_INT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class REM_INT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "rem-int"
 
-class AND_INT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class AND_INT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "and-int"
 
-class OR_INT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class OR_INT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "or-int"
 
-class XOR_INT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class XOR_INT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "xor-int"
 
@@ -1835,35 +1840,35 @@ class USHR_INT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION):
     def opcode(self):
         return "ushr-int"
 
-class ADD_LONG(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class ADD_LONG(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "add-long"
 
-class SUB_LONG(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class SUB_LONG(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "sub-long"
 
-class MUL_LONG(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class MUL_LONG(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "mul-long"
 
-class DIV_LONG(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class DIV_LONG(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "div-long"
 
-class REM_LONG(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class REM_LONG(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "rem-long"
 
-class AND_LONG(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class AND_LONG(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "and-long"
 
-class OR_LONG(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class OR_LONG(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "or-long"
 
-class XOR_LONG(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class XOR_LONG(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "xor-long"
 
@@ -1879,48 +1884,48 @@ class USHR_LONG(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TRIPLE_REGI
     def opcode(self):
         return "ushr-long"
 
-class ADD_FLOAT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class ADD_FLOAT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "add-float"
 
-class SUB_FLOAT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class SUB_FLOAT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "sub-float"
 
-class MUL_FLOAT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class MUL_FLOAT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "mul-float"
 
-class DIV_FLOAT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class DIV_FLOAT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "div-float"
 
-class REM_FLOAT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class REM_FLOAT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "rem-float"
 
-class ADD_DOUBLE(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class ADD_DOUBLE(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "add-double"
 
-class SUB_DOUBLE(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class SUB_DOUBLE(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "sub-double"
 
-class MUL_DOUBLE(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class MUL_DOUBLE(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "mul-double"
 
-class DIV_DOUBLE(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class DIV_DOUBLE(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "div-double"
 
-class REM_DOUBLE(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, Second_Reg_To_First_Reg_Arith):
+class REM_DOUBLE(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TRIPLE_REGISTER_INSTRUCTION, _Second_Reg_To_First_Reg_Arith):
     def opcode(self):
         return "rem-double"
 
 
-class _TWO_REGISTER_BINARY_INSTRUCTION(SmaliAssemblyInstruction, Second_Reg_To_First_Reg_Arith_2addr):
+class _TWO_REGISTER_BINARY_INSTRUCTION(SmaliAssemblyInstruction, _Second_Reg_To_First_Reg_Arith_2addr):
     # A parent class that should never be instantiated directly
     
     def __init__(self, reg_dest_and_arg1, reg_arg2):
@@ -2065,7 +2070,7 @@ class REM_DOUBLE_2ADDR(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _TWO_
         return "rem-double/2addr"
         
 
-class _TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION(SmaliAssemblyInstruction, Second_Reg_To_First_Reg_Arith):
+class _TWO_REGISTER_AND_LITERAL_BINARY_INSTRUCTION(SmaliAssemblyInstruction, _Second_Reg_To_First_Reg_Arith):
     # A parent class that should never be instantiated directly
     
     def __init__(self, reg_dest_and_arg1, reg_arg2, literal):
@@ -2193,27 +2198,27 @@ class _I_INSTRUCTION_QUICK(SmaliAssemblyInstruction):
     def __repr__(self):
         return self.opcode() + " " + str(self.rd) + ", " + str(self.rci) + ", " + str(self.offset)
 
-class IGET_QUICK(_I_INSTRUCTION_QUICK, Third_Var_To_First_Reg):
+class IGET_QUICK(_I_INSTRUCTION_QUICK, _Third_Var_To_First_Reg_Data_Flow):
     def opcode(self):
         return "iget-quick"
 
-class IGET_WIDE_QUICK(_SixtyFourBit_Dest, _IMPLICIT_FIRST_REGISTER_INSTRUCTION, _I_INSTRUCTION_QUICK, Third_Var_To_First_Reg):
+class IGET_WIDE_QUICK(_SixtyFourBit_Dest, _IMPLICIT_FIRST_REGISTER_INSTRUCTION, _I_INSTRUCTION_QUICK, _Third_Var_To_First_Reg_Data_Flow):
     def opcode(self):
         return "iget-wide-quick"
         
-class IGET_OBJECT_QUICK(_Object_Parameters, _I_INSTRUCTION_QUICK, Third_Var_To_First_Reg):
+class IGET_OBJECT_QUICK(_Object_Parameters, _I_INSTRUCTION_QUICK, _Third_Var_To_First_Reg_Data_Flow):
     def opcode(self):
         return "iget-object-quick"
         
-class IPUT_QUICK(_I_INSTRUCTION_QUICK, First_Reg_To_Third_Var):
+class IPUT_QUICK(_I_INSTRUCTION_QUICK, _First_Reg_To_Third_Var_Data_Flow):
     def opcode(self):
         return "iput-quick"
         
-class IPUT_WIDE_QUICK(_SixtyFourBit_Dest, _IMPLICIT_FIRST_REGISTER_INSTRUCTION, _I_INSTRUCTION_QUICK, First_Reg_To_Third_Var):
+class IPUT_WIDE_QUICK(_SixtyFourBit_Dest, _IMPLICIT_FIRST_REGISTER_INSTRUCTION, _I_INSTRUCTION_QUICK, _First_Reg_To_Third_Var_Data_Flow):
     def opcode(self):
         return "iput-wide-quick"
         
-class IPUT_OBJECT_QUICK(_Object_Parameters, _I_INSTRUCTION_QUICK, First_Reg_To_Third_Var):
+class IPUT_OBJECT_QUICK(_Object_Parameters, _I_INSTRUCTION_QUICK, _First_Reg_To_Third_Var_Data_Flow):
     def opcode(self):
         return "iput-object-quick"
 
@@ -2262,22 +2267,22 @@ class STIGMA_LABEL(SmaliAssemblyInstruction):
     def get_num(self):
         return str(self.label).split("_")[-1]
         
-class TRY_START_LABEL(STIGMA_LABEL):
+class TRY_START_STIGMA_LABEL(LABEL):
     # e.g., :try_start_stigma_0
     def __repr__(self):
-        return ":try_start_stigma_" + str(self.label)
+        return ":try_start_stigma_" + str(self.l)
         
-class TRY_END_LABEL(STIGMA_LABEL):
+class TRY_END_STIGMA_LABEL(LABEL):
     # e.g., :try_end_stigma_0
     def __repr__(self):
-        return ":try_end_stigma_" + str(self.label)
+        return ":try_end_stigma_" + str(self.l)
         
 class CATCH_LABEL(STIGMA_LABEL):
     # e.g., :catch_stigma_0
     def __repr__(self):
         return ":catch_stigma_" + str(self.label)
         
-class _CATCH(SmaliAssemblyInstruction):
+class CATCH_DIRECTIVE():
     #  # .catch Lcom/fasterxml/jackson/core/JsonProcessingException; {:try_start_0 .. :try_end_0} :catch_0
     def __init__(self, exception_type_id, start_label, range_dots, end_label, catch_label):
         self.exception_type_id = exception_type_id
@@ -2293,7 +2298,7 @@ class _CATCH(SmaliAssemblyInstruction):
     def get_destination(self):
         return self.catch_label
         
-class _CATCHALL(SmaliAssemblyInstruction): 
+class CATCHALL_DIRECTIVE(SmaliAssemblyInstruction): 
     def __init__(self, start_label, range_dots, end_label, catch_label):
         self.start_label = start_label
         self.end_label = end_label
@@ -2624,21 +2629,21 @@ def main():
     
     
     print("\ttry catch labels tests...")
-    try_start_label_asm_obj = TRY_START_LABEL(4)
-    num = try_start_label_asm_obj.n
+    TRY_START_STIGMA_LABEL_asm_obj = TRY_START_STIGMA_LABEL(4)
+    num = TRY_START_STIGMA_LABEL_asm_obj.n
     assert(num == 4)
-    assert(str(try_start_label_asm_obj) == "    :try_start_stigma_4\n")
+    assert(str(TRY_START_STIGMA_LABEL_asm_obj) == "    :try_start_stigma_4\n")
     
-    try_end_label_asm_obj = TRY_END_LABEL(num)
-    assert(try_end_label_asm_obj.n == 4)
-    assert(str(try_end_label_asm_obj) == "    :try_end_stigma_4\n")
+    TRY_END_STIGMA_LABEL_asm_obj = TRY_END_STIGMA_LABEL(num)
+    assert(TRY_END_STIGMA_LABEL_asm_obj.n == 4)
+    assert(str(TRY_END_STIGMA_LABEL_asm_obj) == "    :try_end_stigma_4\n")
     
     catch_label_asm_obj = CATCH_LABEL(num)
     assert(catch_label_asm_obj.n == 4)
     assert(str(catch_label_asm_obj) == "    :catch_stigma_4\n")
     
     type_id = "Ljava/io/IOException;"
-    catch_directive_asm_obj = CATCH_DIRECTIVE(type_id, try_start_label_asm_obj, try_end_label_asm_obj, catch_label_asm_obj)
+    catch_directive_asm_obj = CATCH_DIRECTIVE(type_id, TRY_START_STIGMA_LABEL_asm_obj, TRY_END_STIGMA_LABEL_asm_obj, catch_label_asm_obj)
     #print(str(catch_directive_asm_obj))
     #print("    .catch Ljava/io/IOException; {:try_start_stigma_4 .. :try_end_stigma_4} :catch_stigma_4\n")
     assert(str(catch_directive_asm_obj) == "    .catch Ljava/io/IOException; {:try_start_stigma_4 .. :try_end_stigma_4} :catch_stigma_4\n")

@@ -208,11 +208,17 @@ def is_comment(line):
 def is_jump_target_label(line):
     return line.strip().startswith(":")
 
-def is_try_start_label(line):
+def is_try_start_stigma_label(line):
     return line.strip().startswith(":try_start")
 
-def is_try_end_label(line):
+def is_try_end_stigma_label(line):
     return line.strip().startswith(":try_end")
+
+def is_catch_label(line):
+    return line.strip().startswith(".catch")
+
+def is_catchall_label(line):
+    return line.strip().startswith(".catchall")
     
 def is_field_instruction(line):
     search_object = re.search(BEGINS_WITH_SPUT, line)

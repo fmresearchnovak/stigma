@@ -296,7 +296,10 @@ class SmaliExecutionIterator():
         self.locations_visited.append(cur_line)
         #print("LINE " + str(self.iter_idx + 1) + ": " + cur_line)
         function, function_line_number = get_function_name(self.iter_idx, self.cur_class_text)
-        method_def_obj = find_smali_method_def_obj(function, self.cur_class, self.filename)
+        print("FUNCTION")
+        print(function.split(" ")[-1].split("(")[0])
+        method_def_obj = self.cur_class.get_method_by_name(function.split(" ")[-1].split("(")[0])
+        #method_def_obj = find_smali_method_def_obj(function, self.cur_class, self.filename)
         self.tracing_manager.current_method = str(method_def_obj)
         cur_line_global = method_def_obj.dereference_p_to_v_numbers(cur_line) # could just do this to every method in the whole class
 
@@ -583,7 +586,7 @@ class SmaliExecutionIterator():
         - Sets self.try_start_stack to the current line
         - TO DO: multiple try starts, make sure that the try end ends the correct one
         '''
-        if(isinstance(cur_line_obj, SmaliAssemblyInstructions.TRY_START_LABEL)):
+        if(isinstance(cur_line_obj, SmaliAssemblyInstructions.TRY_START_STIGMA_LABEL)):
             #print(cur_line)
             ##input("TRY START")
             self.try_start_stack.append(cur_line_obj.get_num())
@@ -596,7 +599,7 @@ class SmaliExecutionIterator():
         - Clears self.try_start_stack
         - doesn't work so just ignored for now
         '''
-        if(isinstance(cur_line_obj, SmaliAssemblyInstructions.TRY_END_LABEL)):
+        if(isinstance(cur_line_obj, SmaliAssemblyInstructions.TRY_END_STIGMA_LABEL)):
             self.iter_idx += 1
             '''print(cur_line)
             print(self.try_start_stack)
@@ -646,7 +649,7 @@ class SmaliExecutionIterator():
         - If self.try_start_stack is not "none" then this means that the code is testing what happens when an exception is thrown
         - Jump to the destination of the .catch/.catchall
         '''
-        if(isinstance(cur_line_obj, SmaliAssemblyInstructions._CATCH) or isinstance(cur_line_obj, SmaliAssemblyInstructions._CATCHALL)):
+        if(isinstance(cur_line_obj, SmaliAssemblyInstructions.CATCH_DIRECTIVE) or isinstance(cur_line_obj, SmaliAssemblyInstructions.CATCHALL_DIRECTIVE)):
             #if self.try_start_stack != "none" and self.try_start_stack in cur_line:
             self.iter_idx += 1
 
