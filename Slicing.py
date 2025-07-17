@@ -90,6 +90,7 @@ class TracingManager:
         self.target_line = ""
         self.current_line_number = 0
         self.current_method = ""
+        self.current_file = ""
 
         # this list has three values in every entry:
         # A: a location that holds part of the tracked data (like from arthimetic)
@@ -565,12 +566,11 @@ def next_iteration(tracingManager):
         return
 
 # REWRITTEN VERSION OF FUNCTION BELOW
-def forward_tracing(filename, target_line_number, target_location, tracingManager, codebase):
+def forward_tracing(target_line_number, target_location, tracingManager, codebase):
+    filename = tracingManager.current_file
     print("=================================")
     print(filename)
     print("=================================")
-
-    tmp_file_name = tracingManager.tmp_file_name
 
     start_location = TracingLocation()
     start_location.set_register(target_location)
@@ -617,6 +617,9 @@ def main():
     apk_path = SmaliCodeBase.SmaliCodeBase.findAPK(args.APK)
 
     tracingManager = TracingManager()
+    tracingManager.current_file = args.filename + ";"
+
+    filename = args.filename + ";"
 
     # https://stackoverflow.com/questions/69981912/why-i-am-getting-this-error-typeerror-namespace-object-is-not-subscriptable
     
@@ -643,7 +646,7 @@ def main():
         exit(1)
 
         
-    forward_tracing("Lorg/telegram/messenger/SendMessagesHelper;", int(args.line_number), args.register, tracingManager, codebase)
+    forward_tracing(int(args.line_number), args.register, tracingManager, codebase)
 
     input(tracingManager.edges)
     html_graph = generate_directed_graph(tracingManager.edges, tracingManager.removed_nodes)
