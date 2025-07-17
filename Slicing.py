@@ -184,7 +184,7 @@ def format_for_html_graph(item):
         split = first.split("/")
         new_item = split[len(split) - 1] + "-"
         new_item += second
-        new_item = new_item.replace(";", "").replace("[", "arrayof:").replace("<", "-").replace(">", "-")
+        new_item = new_item.replace(";", "").replace("[", "arrayof:").replace("<", "").replace(">", "")
         return new_item
     else:
         return item
@@ -230,6 +230,11 @@ def generate_directed_graph(graph, removed):
                 if location in removed[method]:
                     entry += ":::removed"
 
+            # add an intermediate upon an invoke to a new method
+            if origin_method_name != method:
+                entry += " --> "
+                entry += "INVOKE" + str(formatted_destination) + str(formatted_method) + "[INVOKE " + str(formatted_method) + "]:::invoke"
+
             entry += " --> "
             entry += str(formatted_destination) + formatted_method + '["' + str(formatted_destination) + '"];'
 
@@ -238,6 +243,7 @@ def generate_directed_graph(graph, removed):
         html_graph += "end" + "\n"
 
     html_graph += "classDef removed fill:#f00" + "\n"
+    html_graph += "classDef invoke fill:#0f0" + "\n"
     
     return html_graph
 
@@ -430,8 +436,10 @@ def test_instance(line, location, tracingManager):
             # the code here will find the previous invoke from a list and determine whether the returned value is the tracked value
             # if so, add the destination of the result instruction
             # MAKE SURE THE LOCATIONS CHANGE UPON A RETURN
+            for location in tracingManager.locations_to_check:
+                tracingManager.add_removed_to_node(location, method_name)
+
             tracingManager.locations_to_check = tracingManager.stack_locations_to_check.pop(0)
-            tracingManager.add_removed_to_node(location, method_name)
 
             # if the return statement returns the tracked value
             if instruction.get_registers()[0] in tracingManager.locations_to_check:
