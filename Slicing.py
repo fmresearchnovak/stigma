@@ -11,7 +11,7 @@ import enum
 from lib import SmaliRegister
 from lib import SmaliClassDef
 from lib import SmaliAssemblyInstructions
-from lib.SmaliAssemblyInstructions import Action
+from lib.SmaliAssemblyInstructions import TracingAction
 from lib import StigmaStringParsingLib
 from lib import SmaliCodeIterator
 from lib import SmaliCodeBase
@@ -264,7 +264,7 @@ def test_instance(line, location, tracingManager):
     method_name = str(tracingManager.current_method)
 
     match full_action[0]:
-        case Action.ADD:
+        case TracingAction.ADD:
             print("ADDING NEW LOCATION " + str(full_action[1]))
             #input("Testing addition of a location")
             if len(full_action) < 4:
@@ -297,7 +297,7 @@ def test_instance(line, location, tracingManager):
                     if file in tracingManager.smali_files:
                         tracingManager.add_file(file, line)
             '''
-        case Action.REMOVE:
+        case TracingAction.REMOVE:
             if not first:
                 if not isinstance(instruction, SmaliAssemblyInstructions._I_INSTRUCTION) and not isinstance(instruction, SmaliAssemblyInstructions._S_INSTRUCTION):
                     print("REMOVING LOCATION " + str(full_action[1]))
@@ -335,11 +335,11 @@ def test_instance(line, location, tracingManager):
                             
             else:
                 print("FIRST LINE, DON'T REMOVE")
-        case Action.PART_OF_DATA_IN:
+        case TracingAction.PART_OF_DATA_IN:
             tracingManager.locations_with_partial_tracked_data.append([str(full_action[1]), str(full_action[1]), str(type(instruction))])
-        case Action.CAN_GET_DATA_FROM:
+        case TracingAction.CAN_GET_DATA_FROM:
             tracingManager.locations_with_partial_tracked_data.append([str(full_action[1]), str(full_action[3]), str(type(instruction))])
-        case Action.INVOKE:
+        case TracingAction.INVOKE:
             try:
                 result_instruction = line[1]
                 tracingManager.cur_move_result_destinations.append(result_instruction.get_registers()[0])
@@ -433,7 +433,7 @@ def test_instance(line, location, tracingManager):
 
             tracingManager.parameters_immediate = []
 
-        case Action.RETURN:
+        case TracingAction.RETURN:
             # the code here will find the previous invoke from a list and determine whether the returned value is the tracked value
             # if so, add the destination of the result instruction
             # MAKE SURE THE LOCATIONS CHANGE UPON A RETURN

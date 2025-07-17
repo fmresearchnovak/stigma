@@ -42,7 +42,7 @@ from enum import Enum
 
 from lib.SmaliRegister import SmaliRegister
 
-class Action(Enum):
+class TracingAction(Enum):
     ADD = 1
     REMOVE = 2
     PART_OF_DATA_IN = 3
@@ -356,28 +356,16 @@ class _SixtyFourBit_Dest():
 # THE FOLLOWING PARENT FUNCTIONS TELL THE SLICING FUNCTION WHAT TO DO WHEN INTERPRETING THE INSTRUCTION
 
 # if tracking the first register, the tracked register is removed. If any other register is tracked, nothing happens.
-class First_Reg_Dead_End():
+class _Tracing_Endpoint():
     def get_destination(self):
         return self.get_registers()[0]
 
     def get_slicing_action(self, tracked):
         tracked = tracked.get_value()
         if tracked == self.get_destination():
-            return [Action.REMOVE, self.get_destination()]
+            return [TracingAction.REMOVE, self.get_destination()]
         else:
-            return [Action.NO_ACTIONS]
-
-# if tracking the first register, the tracked register is removed. If the second register is tracked, add the first register.
-class Second_Reg_To_First_Reg():
-    def get_destination(self):
-        return self.get_registers()[0]
-
-    def get_slicing_action(self, tracked):
-        tracked = tracked.get_value()
-        if tracked == self.get_registers()[1]:
-            return [Action.ADD, self.get_destination()]
-        elif tracked == self.get_destination():
-            return [Action.REMOVE, tracked]
+            return [TracingAction.NO_ACTIONS]
 
 # if tracking the first register, the tracked register is removed. If tracking a different register, return that some of its data is in
 # the first register.
@@ -389,16 +377,16 @@ class Second_Reg_To_First_Reg_Arith():
         tracked = tracked.get_value()
         if len(self.get_registers()) == 3:
             if tracked == self.get_registers()[1]:
-                return [Action.CAN_GET_DATA_FROM, self.get_destination(), "WITH", self.get_registers()[2]]
+                return [TracingAction.CAN_GET_DATA_FROM, self.get_destination(), "WITH", self.get_registers()[2]]
             elif tracked == self.get_registers()[2]:
-                return [Action.CAN_GET_DATA_FROM, self.get_destination(), "WITH", self.get_registers()[1]]
+                return [TracingAction.CAN_GET_DATA_FROM, self.get_destination(), "WITH", self.get_registers()[1]]
             elif tracked == self.get_destination():
-                return [Action.REMOVE, tracked]
+                return [TracingAction.REMOVE, tracked]
         else: # len == 2 (NEG and NOT instructions)
             if tracked == self.get_registers()[1]:
-                return [Action.PART_OF_DATA_IN, self.get_destination()]
+                return [TracingAction.PART_OF_DATA_IN, self.get_destination()]
             elif tracked == self.get_destination():
-                return [Action.REMOVE, tracked]
+                return [TracingAction.REMOVE, tracked]
 
 class Second_Reg_To_First_Reg_Arith_2addr():
     def get_destination(self):
@@ -407,9 +395,9 @@ class Second_Reg_To_First_Reg_Arith_2addr():
     def get_slicing_action(self, tracked):
         tracked = tracked.get_value()
         if tracked == self.get_registers()[1]:
-            return [Action.PART_OF_DATA_IN, self.get_destination()]
+            return [TracingAction.PART_OF_DATA_IN, self.get_destination()]
         elif tracked == self.get_destination():
-            return [Action.REMOVE, tracked]
+            return [TracingAction.REMOVE, tracked]
         else:
             return ["NO ACTIONS"]
 
@@ -424,11 +412,11 @@ class Third_Var_To_First_Reg():
         tracked = tracked.get_value()
         #input(tracked)
         if tracked == self.get_instance_variable():
-            return [Action.ADD, self.get_destination()]
+            return [TracingAction.ADD, self.get_destination()]
         elif tracked == self.get_destination():
-            return [Action.REMOVE, tracked]
+            return [TracingAction.REMOVE, tracked]
         else:
-            return [Action.NO_ACTIONS]
+            return [TracingAction.NO_ACTIONS]
 
 # if tracking the instance variable, the tracked variable is removed. If tracking the second register, nothing happens. If tracking the first register
 # add the instance variable.
@@ -439,11 +427,11 @@ class First_Reg_To_Third_Var():
     def get_slicing_action(self, tracked):
         tracked = tracked.get_value()
         if tracked == self.get_registers()[0]:
-            return [Action.ADD, self.get_destination(), " in object ", self.get_registers()[1]]
+            return [TracingAction.ADD, self.get_destination(), " in object ", self.get_registers()[1]]
         elif tracked == self.get_destination():
-            return [Action.REMOVE, tracked, " in object ", self.get_registers()[1]]
+            return [TracingAction.REMOVE, tracked, " in object ", self.get_registers()[1]]
         else:
-            return [Action.NO_ACTIONS]
+            return [TracingAction.NO_ACTIONS]
 
 # Third Reg to First Reg and vice versa are for aget/aput
 
@@ -456,11 +444,11 @@ class Third_Reg_To_First_Reg():
     def get_slicing_action(self, tracked):
         tracked = tracked.get_value()
         if tracked == self.get_registers()[2]:
-            return [Action.ADD, self.get_destination()]
+            return [TracingAction.ADD, self.get_destination()]
         elif tracked == self.get_destination():
-            return [Action.REMOVE, tracked]
+            return [TracingAction.REMOVE, tracked]
         else:
-            return [Action.NO_ACTIONS]
+            return [TracingAction.NO_ACTIONS]
 
 # if tracking the third register, the tracked variable is removed. If tracking the second register, nothing happens. If tracking the first register
 # add the third register.
@@ -471,11 +459,11 @@ class First_Reg_To_Third_Reg():
     def get_slicing_action(self, tracked):
         tracked = tracked.get_value()
         if tracked == self.get_registers()[0]:
-            return [Action.ADD, self.get_destination(), " in object ", self.get_registers()[1]]
+            return [TracingAction.ADD, self.get_destination(), " in object ", self.get_registers()[1]]
         elif tracked == self.get_destination():
-            return [Action.REMOVE, tracked, " in object ", self.get_registers()[1]]
+            return [TracingAction.REMOVE, tracked, " in object ", self.get_registers()[1]]
         else:
-            return [Action.NO_ACTIONS]
+            return [TracingAction.NO_ACTIONS]
         
 class _JUMP_INSTRUCTION():
     '''Classes that inherit this are those that move the execution flow
@@ -487,7 +475,7 @@ class _JUMP_INSTRUCTION():
 class _INVOKE_INSTRUCTION(SmaliAssemblyInstruction, _JUMP_INSTRUCTION):
     def get_slicing_action(self, tracked):
         #input(str(self))
-        return [Action.INVOKE, self.get_method_name(), self.get_registers().index(tracked.get_value())]
+        return [TracingAction.INVOKE, self.get_method_name(), self.get_registers().index(tracked.get_value())]
     
     def get_destination(self):
         return self.get_method_name()
@@ -518,7 +506,7 @@ class _INVOKE_INSTRUCTION(SmaliAssemblyInstruction, _JUMP_INSTRUCTION):
 # jump instructions
 class _JUMP_TO_LABEL_INSTRUCTION(_JUMP_INSTRUCTION):
     def get_slicing_action(self, tracked):
-        return [Action.NO_ACTIONS, self.get_label()]
+        return [TracingAction.NO_ACTIONS, self.get_label()]
 
     def get_destination(self):
         return self.get_label()
@@ -531,12 +519,12 @@ class _JUMP_TO_LABEL_INSTRUCTION(_JUMP_INSTRUCTION):
 class Result_Instruction():
     def get_slicing_action(self, tracked):
         # not finished
-        return [Action.NO_ACTIONS, tracked]
+        return [TracingAction.NO_ACTIONS, tracked]
 
 # has the tracking location but nothing happens with it
 class No_Slicing_Actions():
     def get_slicing_action(self, tracked):
-        return [Action.NO_ACTIONS]
+        return [TracingAction.NO_ACTIONS]
         
 #class _NoType_OR_NoParameters():
     # instruction classes that extend this type
@@ -580,11 +568,21 @@ class COMMENT(SmaliAssemblyInstruction):
         return "# " + self.l
 
 
-class MOVE(_ThirtyTwoBit_Parameters, SmaliAssemblyInstruction, Second_Reg_To_First_Reg):
+class MOVE(_ThirtyTwoBit_Parameters, SmaliAssemblyInstruction):
     ''' move v6, p2 '''
     def __init__(self, reg1, reg2):
         self.reg1 = SmaliRegister(reg1)
         self.reg2 = SmaliRegister(reg2)
+    
+    def get_destination(self):
+        return self.get_registers()[0]
+
+    def get_slicing_action(self, tracked):
+        tracked = tracked.get_value()
+        if tracked == self.get_registers()[1]:
+            return [TracingAction.ADD, self.get_destination()]
+        elif tracked == self.get_destination():
+            return [TracingAction.REMOVE, tracked]
 
     def get_registers(self):
         if(self.reg1 == ""):
@@ -682,19 +680,19 @@ class _SINGLE_DEST_REGISTER_INSTRUCTION(SmaliAssemblyInstruction):
         return self.opcode() + " " + str(self.rd) + ", " + str(self.value_arg)
 
 
-class MOVE_RESULT(_ThirtyTwoBit_Parameters, _SINGLE_REGISTER_INSTRUCTION, First_Reg_Dead_End):
+class MOVE_RESULT(_ThirtyTwoBit_Parameters, _SINGLE_REGISTER_INSTRUCTION, _Tracing_Endpoint):
     def opcode(self):
         return "move-result"
 
-class MOVE_RESULT_WIDE(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _SINGLE_REGISTER_INSTRUCTION, First_Reg_Dead_End):
+class MOVE_RESULT_WIDE(_SixtyFourBit_Dest, _IMPLICIT_REGISTER_INSTRUCTION, _SINGLE_REGISTER_INSTRUCTION, _Tracing_Endpoint):
     def opcode(self):
         return "move-result-wide"
 
-class MOVE_RESULT_OBJECT(_Object_Parameters, _SINGLE_REGISTER_INSTRUCTION, First_Reg_Dead_End):
+class MOVE_RESULT_OBJECT(_Object_Parameters, _SINGLE_REGISTER_INSTRUCTION, _Tracing_Endpoint):
     def opcode(self):
         return "move-result-object"
 
-class MOVE_EXCEPTION(_Object_Parameters, _SINGLE_REGISTER_INSTRUCTION, First_Reg_Dead_End):
+class MOVE_EXCEPTION(_Object_Parameters, _SINGLE_REGISTER_INSTRUCTION, _Tracing_Endpoint):
     def opcode(self):
         return "move-exception"
 
@@ -734,7 +732,7 @@ class RETURN_OBJECT(_Object_Parameters, _SINGLE_REGISTER_INSTRUCTION, RETURN_INS
 
 
 
-class CONST(_ThirtyTwoBit_Parameters, _SINGLE_DEST_REGISTER_INSTRUCTION, First_Reg_Dead_End):
+class CONST(_ThirtyTwoBit_Parameters, _SINGLE_DEST_REGISTER_INSTRUCTION, _Tracing_Endpoint):
         
     def opcode(self):
         return "const"
@@ -769,7 +767,7 @@ class CONST_WIDE_HIGH16(CONST_WIDE):
         return "const-wide/high16"
 
 
-class CONST_STRING(SmaliAssemblyInstruction, First_Reg_Dead_End):
+class CONST_STRING(SmaliAssemblyInstruction, _Tracing_Endpoint):
     # const-string v3, "this ain\'t it!"
     # const-string v5, "AudioTrack failed to initialize (status "
     # 
@@ -815,7 +813,7 @@ class CONST_STRING(SmaliAssemblyInstruction, First_Reg_Dead_End):
         return {self.rd: SmaliTypes.ObjectReference("Ljava/lang/String;")}
         
 
-class CONST_STRING_JUMBO(CONST_STRING, First_Reg_Dead_End):
+class CONST_STRING_JUMBO(CONST_STRING, _Tracing_Endpoint):
     # https://stackoverflow.com/questions/19991833/in-dalvik-what-expression-will-generate-instructions-not-int-and-const-strin
     # found one in com.amazon.avod.thirdpartyclient.apk 
     #       const-string/jumbo v5, "stackTrace"
@@ -828,7 +826,7 @@ class CONST_STRING_JUMBO(CONST_STRING, First_Reg_Dead_End):
         return {self.rd: SmaliTypes.ObjectReference("Ljava/lang/String;")}
         
 
-class CONST_CLASS(_Object_Parameters, _SINGLE_DEST_REGISTER_INSTRUCTION, First_Reg_Dead_End):
+class CONST_CLASS(_Object_Parameters, _SINGLE_DEST_REGISTER_INSTRUCTION, _Tracing_Endpoint):
 
     def opcode(self):
         return "const-class"
@@ -854,7 +852,7 @@ class CHECK_CAST( _Object_Parameters, _SINGLE_DEST_REGISTER_INSTRUCTION, No_Slic
         return {self.rd: SmaliTypes.from_string(self.value_arg)}
          
         
-class INSTANCE_OF(SmaliAssemblyInstruction, First_Reg_Dead_End):
+class INSTANCE_OF(SmaliAssemblyInstruction, _Tracing_Endpoint):
     def __init__(self, reg_res, reg_arg, type_id):
         self.rr = SmaliRegister(reg_res)
         self.ra = SmaliRegister(reg_arg)
@@ -875,7 +873,7 @@ class INSTANCE_OF(SmaliAssemblyInstruction, First_Reg_Dead_End):
         return res
         
 
-class NEW_INSTANCE(SmaliAssemblyInstruction, First_Reg_Dead_End):
+class NEW_INSTANCE(SmaliAssemblyInstruction, _Tracing_Endpoint):
     def __init__(self, reg_dest, type_id):
         self.rd = SmaliRegister(reg_dest)
         self.type_id = type_id
@@ -894,7 +892,7 @@ class NEW_INSTANCE(SmaliAssemblyInstruction, First_Reg_Dead_End):
         
 
 
-class ARRAY_LENGTH(SmaliAssemblyInstruction, First_Reg_Dead_End):
+class ARRAY_LENGTH(SmaliAssemblyInstruction, _Tracing_Endpoint):
     # e.g., array-length v0, p2
     def __init__(self, reg_dest, reg_array_ref):
         self.rd = SmaliRegister(reg_dest)
@@ -915,7 +913,7 @@ class ARRAY_LENGTH(SmaliAssemblyInstruction, First_Reg_Dead_End):
         return ans
     
         
-class NEW_ARRAY(SmaliAssemblyInstruction, First_Reg_Dead_End):
+class NEW_ARRAY(SmaliAssemblyInstruction, _Tracing_Endpoint):
     # e.g., new-array v3, v5, [Ljava/lang/String;
     def __init__(self, reg_dest, reg_size, type_id):
         self.rd = SmaliRegister(reg_dest)
@@ -1067,15 +1065,15 @@ class _TRIPLE_REGISTER_INSTRUCTION(SmaliAssemblyInstruction):
         return self.opcode() + " " + str(self.rd) + ", " + str(self.ra1) + ", " + str(self.ra2)
         
         
-class CMPL_FLOAT( _ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_Dead_End):
+class CMPL_FLOAT( _ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, _Tracing_Endpoint):
     def opcode(self):
         return "cmpl-float"
         
-class CMPG_FLOAT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, First_Reg_Dead_End):
+class CMPG_FLOAT(_ThirtyTwoBit_Parameters, _TRIPLE_REGISTER_INSTRUCTION, _Tracing_Endpoint):
     def opcode(self):
         return "cmpg-float"
         
-class CMPL_DOUBLE(_TRIPLE_REGISTER_INSTRUCTION, First_Reg_Dead_End):
+class CMPL_DOUBLE(_TRIPLE_REGISTER_INSTRUCTION, _Tracing_Endpoint):
     def opcode(self):
         return "cmpl-double"
         
@@ -1098,7 +1096,7 @@ class CMPL_DOUBLE(_TRIPLE_REGISTER_INSTRUCTION, First_Reg_Dead_End):
         ans[self.rd] = SmaliTypes.ThirtyTwoBit()
         return ans
         
-class CMPG_DOUBLE(_TRIPLE_REGISTER_INSTRUCTION, First_Reg_Dead_End):
+class CMPG_DOUBLE(_TRIPLE_REGISTER_INSTRUCTION, _Tracing_Endpoint):
     def opcode(self):
         return "cmpg-double"
     
@@ -1121,7 +1119,7 @@ class CMPG_DOUBLE(_TRIPLE_REGISTER_INSTRUCTION, First_Reg_Dead_End):
         ans[self.rd] = SmaliTypes.ThirtyTwoBit()
         return ans
         
-class CMP_LONG(_TRIPLE_REGISTER_INSTRUCTION, First_Reg_Dead_End):
+class CMP_LONG(_TRIPLE_REGISTER_INSTRUCTION, _Tracing_Endpoint):
     def opcode(self):
         return "cmp-long"
         
