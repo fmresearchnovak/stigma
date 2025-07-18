@@ -272,6 +272,9 @@ def test_instance(line, location, tracingManager):
                 new_location.set_register(full_action[1])
                 tracingManager.add_location(new_location)
 
+                localized_registers = SmaliCodeBase.translate_v_registers_adding_edge([location, full_action[1]], instruction, tracingManager.codebase)
+                #input(localized_registers)
+
                 tracingManager.add_edge(location, full_action[1], method_name, method_name)
             else:
                 new_location = TracingLocation()

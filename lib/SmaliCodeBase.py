@@ -43,6 +43,34 @@ def translate_p_registers_in_invoke(registers, instruction, codebase):
     #input(new_registers)
     return new_registers
 
+def translate_v_registers_adding_edge(registers, instruction, codebase):
+
+    pass
+
+    '''
+    name = instruction.get_owning_class_name()
+    scd = codebase.get_class_from_fully_qualified_name(name)
+    if scd == None:
+        return
+    fqc = instruction.get_fully_qualified_call()
+    smd = scd.get_method_by_fully_qualified_name(fqc)
+    LOCALS = smd.get_locals_directive_num()
+
+
+    new_registers = []
+
+
+    for i in range(len(registers)):
+        if registers[i].number() > LOCALS:
+            new_number = registers[i].number() - LOCALS
+            new_location = "p" + str(new_number)
+            new_registers.append(new_location)
+        else:
+            new_registers.append(registers[i])
+
+    return new_registers
+    '''
+
 def translate_registers_to_new_method(previous_registers, instruction, codebase):
     # Step 1: Get amount of locals. The registers will be placed after all the designated locals
     name = instruction.get_owning_class_name()
