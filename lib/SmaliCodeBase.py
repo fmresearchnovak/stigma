@@ -303,7 +303,7 @@ class SmaliExecutionIterator():
         self.cur_line_to_return = [cur_line_obj]
 
         # Step #2, determine whether the current line could have a move result (such as an invoke instruction)
-        if(StigmaStringParsingLib.could_have_a_subsequent_move_result(cur_line)):
+        if re.search(StigmaStringParsingLib.BEGINS_WITH_INVOKE, cur_line) is not None:
             #print(cur_line + " COULD HAVE SUBSEQUENT MOVE RESULT")
             # Move iter_idx down to the next line to check whether it is a move_result
             # Skip the blank line
@@ -346,8 +346,6 @@ class SmaliExecutionIterator():
         - Make iter_idx the new line's index
         '''
         if(isinstance(cur_line_obj, SmaliAssemblyInstructions.GOTO)):
-            input("GOTO")
-            
             line_no = cur_line_obj.get_line_number_of_destination(function_line_number, self.cur_class_text)
 
             if method_def_obj.get_full_location(line_no, self.cur_class_text) in self.locations_visited:

@@ -609,7 +609,8 @@ def main():
         print("ERROR: Five arguments required.")
         exit(1)
     
-    parser = argparse.ArgumentParser(description = "Given a line of code and a register to track, traces the contents of the register throughout the process.")
+    parser = argparse.ArgumentParser(description = '''Given a line of code and a register to track, traces the contents of the register throughout the process.\n 
+                                    Example usage: python3 Slicing.py someapkfile.apk Lorg/some_path_to_file 1000 v1''')
 
     parser.add_argument("APK", help="The path to the APK file that the target file is located in.")
     parser.add_argument("filename", help="The file that contains the target line of code.")

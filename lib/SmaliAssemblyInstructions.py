@@ -86,12 +86,14 @@ class SmaliAssemblyInstruction():
             return COMMENT(line)
         if(StigmaStringParsingLib.is_catch_label(line)):
             line = line.replace(".catch", "catch_directive")
+        if(StigmaStringParsingLib.is_catchall_label(line)):
+            line = line.replace(".catchall", "catchall_directive")
         if(StigmaStringParsingLib.is_try_start_stigma_label(line)):
             return TRY_START_STIGMA_LABEL(line)
         if(StigmaStringParsingLib.is_try_end_stigma_label(line)):
             return TRY_END_STIGMA_LABEL(line)
         if(StigmaStringParsingLib.is_jump_target_label(line)):
-            return LABEL(line)
+            return _LABEL(line)
 
         hash_pos = line.find("#")
         if hash_pos != -1:
@@ -312,7 +314,7 @@ class _IMPLICIT_FIRST_REGISTER_INSTRUCTION():
 
 
 # this is currently untested, can't test until fully implemented
-class LABEL(SmaliAssemblyInstruction):
+class _LABEL(SmaliAssemblyInstruction):
     '''# A label instruction, e.g., ":label_1"'''
     def __init__(self, line):
         self.l = line
@@ -1051,7 +1053,7 @@ class GOTO(SmaliAssemblyInstruction, _JUMP_TO_LABEL_INSTRUCTION):
         line = ""
         new_line_number = function_line_number
 
-        while str(LABEL(":" + destination)) != line:
+        while str(_LABEL(":" + destination)) != line:
             new_line_number += 1
             line = text[new_line_number]
         
@@ -1220,17 +1222,17 @@ class _ONE_REG_EQ_ZERO(SmaliAssemblyInstruction, _JUMP_TO_LABEL_INSTRUCTION):
         
     def __repr__(self):
         # It might be necessary to use repr(self.target)
-        # here because self.target might be a smali.LABEL
+        # here because self.target might be a smali._LABEL
         # object or it might be a string.  
         
-        # If it is a smali.LABEL object
+        # If it is a smali._LABEL object
         # then we use repr to get a string that does not contain
         # the preceding four spaces and trailing \n which would be 
         # redundant LABELS are weird because it is possible to use a 
-        # LABEL in-line
+        # _LABEL in-line
         
         # This could be a bug in other classes, maybe re-write 
-        # the LABEL(SmaliAssemblyInstruction) class
+        # the _LABEL(SmaliAssemblyInstruction) class
         return self.opcode() + " " + str(self.ra) + ", " + str(self.target)
         
 
@@ -2279,29 +2281,29 @@ class INVOKE_SUPER_QUICK(_PARAMETER_LIST_INSTRUCTION, _INVOKE_INSTRUCTION):
 # class INVOKE_VIRTUAL_QUICK_RANGE
 # class INVOKE_SUPER_QUICK_RANGE
         
-class STIGMA_LABEL(SmaliAssemblyInstruction):
+class _STIGMA_LABEL(SmaliAssemblyInstruction):
     def __init__(self, label):
         self.label = label
 
     def __repr__(self):
         # LABELS are weird.  If you change this code be careful of compatibility 
-        # with instructions such as IF_EQZ that use a LABEL in-line
+        # with instructions such as IF_EQZ that use a _LABEL in-line
         return ":stigma_jump_label_" + str(self.label)
     
     def get_num(self):
         return str(self.label).split("_")[-1]
         
-class TRY_START_STIGMA_LABEL(LABEL):
+class TRY_START_STIGMA_LABEL(_LABEL):
     # e.g., :try_start_stigma_0
     def __repr__(self):
         return ":try_start_stigma_" + str(self.l)
         
-class TRY_END_STIGMA_LABEL(LABEL):
+class TRY_END_STIGMA_LABEL(_LABEL):
     # e.g., :try_end_stigma_0
     def __repr__(self):
         return ":try_end_stigma_" + str(self.l)
         
-class CATCH_LABEL(STIGMA_LABEL):
+class CATCH_LABEL(_STIGMA_LABEL):
     # e.g., :catch_stigma_0
     def __repr__(self):
         return ":catch_stigma_" + str(self.label)
