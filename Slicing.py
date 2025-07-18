@@ -510,23 +510,26 @@ def analyze_line(line, tracingManager):
                 instance_found = True
         except AttributeError:
             # next, look for registers in the locations to check
-            for register in line[0].get_registers():
-                if location == register:
-                    test_instance(line, location, tracingManager)
-                    instance_found = True
-                # for each register, also look if they are an object of a tracked instance variable
-                # these objects could be REMOVED or copied to another register that must be ADDED
-                else:
-                    try:
-                        obj_instance = location.get_object()
-                        if location == obj_instance:
-                            #input("object")
-                            test_instance(line, obj_instance, tracingManager)
-                            instance_found = True
-                    except AttributeError:
-                        pass
-                if instance_found:
-                    break
+            try:
+                for register in line[0].get_registers():
+                    if location == register:
+                        test_instance(line, location, tracingManager)
+                        instance_found = True
+                    # for each register, also look if they are an object of a tracked instance variable
+                    # these objects could be REMOVED or copied to another register that must be ADDED
+                    else:
+                        try:
+                            obj_instance = location.get_object()
+                            if location == obj_instance:
+                                #input("object")
+                                test_instance(line, obj_instance, tracingManager)
+                                instance_found = True
+                        except AttributeError:
+                            pass
+                    if instance_found:
+                        break
+            except AttributeError:
+                pass
         if instance_found:
             break
 
@@ -589,11 +592,11 @@ def forward_tracing(target_line_number, target_location, tracingManager, codebas
         #print(line)
         analyze_line(line, tracingManager)
         
-        if tracingManager.current_iteration == 2000:
+        if tracingManager.current_iteration == 1000:
             print("Limit reached")
             #print(tracingManager.locations_to_check)
             #print(tracingManager.line_directory)
-            print("current iteration over 2000, stopping!")
+            print("current iteration over 1000, stopping!")
             break
         
         if tracingManager.locations_to_check == [] and tracingManager.stack_locations_to_check == []:

@@ -17,17 +17,6 @@ def get_function_name(line_number, lines):
     method_signature_str = lines[line_number].replace("\n", "")
     return method_signature_str, line_number
 
-def find_smali_method_def_obj(method_signature_str, smali_class, file_path):
-    method_index = 0
-    curr_method = smali_class.methods[method_index]
-    signature = SmaliMethodDef.SmaliMethodSignature(method_signature_str, smali_class.get_fully_qualified_name())
-
-    while(curr_method != signature):
-        method_index += 1
-        curr_method = smali_class.methods[method_index]
-
-    return curr_method
-
 def translate_p_registers_in_invoke(registers, instruction, codebase):
     name = instruction.get_owning_class_name()
     scd = codebase.get_class_from_fully_qualified_name(name)
@@ -269,7 +258,6 @@ class SmaliExecutionIterator():
         '''
 
         ##input(self.smali_execution_iterator)
-        print("SEI (id:" + str(self.ID) + ").__next__() tracking " + str(self.tracing_manager.locations_to_check))
         # upon an invoke statement, take a new iterator and call next on it and return its value
         if(self.smali_execution_iterator != None):
             try:
@@ -280,7 +268,8 @@ class SmaliExecutionIterator():
 
         if(self.iter_idx >= len(self.cur_class_text)):
             raise StopIteration
-        
+
+        print("SEI (id:" + str(self.ID) + ").__next__() tracking " + str(self.tracing_manager.locations_to_check))
         #print("NEW ITERATION")
         print("file name: " + self.filename + " at index " + str(self.iter_idx))
         cur_line = self.cur_class_text[self.iter_idx]
@@ -343,7 +332,7 @@ class SmaliExecutionIterator():
 
             if(re.search(StigmaStringParsingLib.BEGINS_WITH_MOVE_RESULT, next_line) is not None):
                 function, function_line_number = get_function_name(self.iter_idx, self.cur_class_text)
-                method_def_obj = find_smali_method_def_obj(function, self.cur_class, self.filename)
+                method_def_obj = self.cur_class.get_method_by_name(function.split(" ")[-1].split("(")[0])
                 next_line_global = method_def_obj.dereference_p_to_v_numbers(next_line)
                 self.cur_line_to_return.append(SmaliAssemblyInstructions.from_line(next_line))
             else:
@@ -357,22 +346,10 @@ class SmaliExecutionIterator():
         - Make iter_idx the new line's index
         '''
         if(isinstance(cur_line_obj, SmaliAssemblyInstructions.GOTO)):
-            ##input("GOTO")
-            destination = cur_line_obj.get_destination()
-            #print("Goto destination: " + destination)
-            ##input("")
+            input("GOTO")
+            
+            line_no = cur_line_obj.get_line_number_of_destination(function_line_number, self.cur_class_text)
 
-            line = ""
-            line_no = function_line_number
-            while str(SmaliAssemblyInstructions.LABEL(":" + destination)) != line:
-                #print("LINE = " + line + " AT INDEX " + str(line_no + 1))
-                # check if the line is a try_end here to update the try start stack in the middle of the goto
-                line_no += 1
-                line = self.cur_class_text[line_no]
-            #print("FOUND LINE = " + line + " AT INDEX " + str(line_no + 1))
-            #print("NEXT LINE AT INDEX " + str(line_no + 1) + ": " + str(line))
-            #print("LINE NO: " + str(line_no + 1))
-            # handle the lines that have two instructions on them
             if method_def_obj.get_full_location(line_no, self.cur_class_text) in self.locations_visited:
                 ##input("Line has been visited before in the current recursion. Ignoring to prevent infinite recursion.")
                 self.iter_idx += 1

@@ -85,7 +85,7 @@ class SmaliAssemblyInstruction():
         if(StigmaStringParsingLib.is_comment(line)):
             return COMMENT(line)
         if(StigmaStringParsingLib.is_catch_label(line)):
-            return CATCH_DIRECTIVE(line)
+            line = line.replace(".catch", "catch_directive")
         if(StigmaStringParsingLib.is_try_start_stigma_label(line)):
             return TRY_START_STIGMA_LABEL(line)
         if(StigmaStringParsingLib.is_try_end_stigma_label(line)):
@@ -202,22 +202,34 @@ class SmaliAssemblyInstruction():
         
 
     def get_registers(self):
-        ''' Returns a list of all the registers (list of SmaliRegister objects) used in this instruction.'''
+        ''' Returns a list of all the registers (list of SmaliRegister objects) used in this instruction.
+        Returns:
+            List of the registers used, from left to right, as SmaliRegister objects. Does not just return unique registers.
+        '''
         return []
 
     def get_p_registers(self):
-        ''' Returns a list of all the "parameter" registers (list of SmaliRegister objects) used in this instruction.
-        Note: "parameter" registers are those that start with "p" such as p0, p1, etc.'''
+        ''' Finds all of the "parameter" (p) registers used in this instruction and returns a list of them only. This method does not translate v registers to p registers.
+        Returns:
+            A list object of all register objects used by the instruction that start with "p"
+        '''
         return list(filter(lambda x : x[0] == "p", self.get_registers()))
         
     def get_implicit_registers(self):
-        ''' Returns a list of all the implicit registers (list of SmaliRegister objects) used in this instruction.
-        Implicit registers are those that are not explicitly listed in the instruction but are used by the instruction.
+        '''
+        This method finds all of the implicit registers, or registers not directly stated in the instruction, and returns a list of them.
+        This method does nothing for the SmaliAssemblyInstruction class and should be implemented in methods that extend it, such as INVOKE_RANGE and MOVE_WIDE.
+
+        Returns:
+            A list of the implicit registers for the instruction
+
         For example, in a "move-wide" instruction, the implicit registers are the ones that are used to store the second half of the 64-bit values.
         Example: move-wide v0, v2
         v0 is a 'wide' 64-bit register containing the first half of a double or long value.  The other half of the value is stored implicitly in v1.
         The value from v2 and v3 is copied into v0 and v1.
-        get_implicit_registers() would return [v1, v3].'''
+        get_implicit_registers() would return [v1, v3].
+        '''
+
         return []
 
     def __eq__(self, other):
@@ -1032,6 +1044,18 @@ class GOTO(SmaliAssemblyInstruction, _JUMP_TO_LABEL_INSTRUCTION):
 
     def __repr__(self):
         return self.opcode() + " " + str(self.target)
+    
+    def get_line_number_of_destination(self, function_line_number, text):
+        destination = self.get_destination()
+
+        line = ""
+        new_line_number = function_line_number
+
+        while str(LABEL(":" + destination)) != line:
+            new_line_number += 1
+            line = text[new_line_number]
+        
+        return new_line_number
 
 class GOTO_16(GOTO):
     def opcode(self):
