@@ -222,7 +222,7 @@ def generate_directed_graph(graph, removed):
             entry = ""
 
             if first:
-                entry += str(formatted_location) + formatted_origin_method_name + '["' + str(formatted_location) + '"]'
+                entry += str(formatted_location) + formatted_origin_method_name + '>"' + str(formatted_location) + '"]'
                 first = False
             else:
                 entry += str(formatted_location) + formatted_origin_method_name
@@ -266,14 +266,12 @@ def test_instance(line, location, tracingManager):
     match full_action[0]:
         case TracingAction.ADD:
             print("ADDING NEW LOCATION " + str(full_action[1]))
-            #input("Testing addition of a location")
             if len(full_action) < 4:
                 new_location = TracingLocation()
                 new_location.set_register(full_action[1])
                 tracingManager.add_location(new_location)
 
                 localized_registers = SmaliCodeBase.translate_v_registers_adding_edge([location, full_action[1]], instruction, tracingManager.codebase)
-                #input(localized_registers)
 
                 tracingManager.add_edge(location, full_action[1], method_name, method_name)
             else:
@@ -370,11 +368,9 @@ def test_instance(line, location, tracingManager):
             new_method_name = str(smd)
             
             parameters = instruction.get_registers()
-            #input(instruction)
             new_registers = SmaliCodeBase.translate_registers_to_new_method(parameters, instruction, tracingManager.codebase)
 
             if new_registers == None:
-                #input("External function, returning")
                 return
 
             # this code checks whether the parameters going into the method match with any local versions of tracked registers.
@@ -392,7 +388,6 @@ def test_instance(line, location, tracingManager):
             tracingManager.parameters_immediate = which_parameters
 
             # return if which_parameters is empty
-            #input(which_parameters)
             if which_parameters == []:
                 print("NO TRACKED PARAMETERS FOUND, RETURNING BACK")
 
@@ -402,28 +397,7 @@ def test_instance(line, location, tracingManager):
             new_locations_to_check = []
 
             # TO DO: ENSURE THAT WHEN LONGS GO IN, TWO REGISTERS ARE TAKEN
-            # TO DO: DIFFERENTIATE BETWEEN STATIC AND NON-STATIC INVOKES
-            '''input("LOCALS: " + str(LOCALS))
-            new_method_parameters = []
-            for i in range(len(parameters)):
-                #print(LOCALS)
-                number = str(i)[1:]
-                parameter = parameters[i]
-                parameter_index = number + int(non_static)
-                new_location = "v" + str(parameter_index + LOCALS)
-                new_method_parameters.append(new_location)
-
-            for parameter_index in tracingManager.parameters_immediate:
-                # get the parameters of the new method
-                new_location = "v" + str(parameter_index + LOCALS)
-                new_location_obj = TracingLocation()
-                new_location_obj.set_register(new_location)
-                new_locations_to_check.append(new_location_obj)
             
-            tracingManager.stack_locations_to_check.append(tracingManager.locations_to_check)
-            tracingManager.locations_to_check = new_locations_to_check
-            #input(tracingManager.locations_to_check)
-            '''
             for parameter_index in tracingManager.parameters_immediate:
                 new_location = new_registers[parameter_index]
                 new_location_obj = TracingLocation()
@@ -441,6 +415,7 @@ def test_instance(line, location, tracingManager):
             # if so, add the destination of the result instruction
             # MAKE SURE THE LOCATIONS CHANGE UPON A RETURN
             for location in tracingManager.locations_to_check:
+                input("testing removing nodes upon a return statement")
                 tracingManager.add_removed_to_node(location, method_name)
 
             tracingManager.locations_to_check = tracingManager.stack_locations_to_check.pop(0)
@@ -508,9 +483,12 @@ def analyze_line(line, tracingManager):
     for location in tracingManager.locations_to_check:
         try:
             # first, look for instance variables in the current line, if there is any
-            if line[0].get_instance_variable() == location or tracingManager.parameters_immediate != []:
-                test_instance(line, location, tracingManager)
-                instance_found = True
+            print(line[0].get_instance_variable())
+            print(location)
+            for register in line[0].get_registers():
+                    if location == register:
+                        test_instance(line, location, tracingManager)
+                        break
         except AttributeError:
             # next, look for registers in the locations to check
             try:
@@ -524,7 +502,6 @@ def analyze_line(line, tracingManager):
                         try:
                             obj_instance = location.get_object()
                             if location == obj_instance:
-                                #input("object")
                                 test_instance(line, obj_instance, tracingManager)
                                 instance_found = True
                         except AttributeError:
@@ -595,11 +572,11 @@ def forward_tracing(target_line_number, target_location, tracingManager, codebas
         #print(line)
         analyze_line(line, tracingManager)
         
-        if tracingManager.current_iteration == 1000:
+        if tracingManager.current_iteration == 5000:
             print("Limit reached")
             #print(tracingManager.locations_to_check)
             #print(tracingManager.line_directory)
-            print("current iteration over 1000, stopping!")
+            print("current iteration over 5000, stopping!")
             break
         
         if tracingManager.locations_to_check == [] and tracingManager.stack_locations_to_check == []:

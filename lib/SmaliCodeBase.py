@@ -20,7 +20,6 @@ def get_function_name(line_number, lines):
 def translate_p_registers_in_invoke(registers, instruction, codebase):
     name = instruction.get_owning_class_name()
     scd = codebase.get_class_from_fully_qualified_name(name)
-    #input("invoke goes to " + str(scd))
     if scd == None:
         return
     fqc = instruction.get_fully_qualified_call()
@@ -40,7 +39,6 @@ def translate_p_registers_in_invoke(registers, instruction, codebase):
         if str(registers[i])[0] == "v":
             new_registers.append(registers[i])
     
-    #input(new_registers)
     return new_registers
 
 def translate_v_registers_adding_edge(registers, instruction, codebase):
@@ -75,7 +73,6 @@ def translate_registers_to_new_method(previous_registers, instruction, codebase)
     # Step 1: Get amount of locals. The registers will be placed after all the designated locals
     name = instruction.get_owning_class_name()
     scd = codebase.get_class_from_fully_qualified_name(name)
-    #input("invoke goes to " + str(scd))
     if scd == None:
         return
     fqc = instruction.get_fully_qualified_call()
@@ -98,7 +95,6 @@ def translate_registers_to_new_method(previous_registers, instruction, codebase)
         new_location = "v" + str(new_number)
         new_registers.append(new_location)
     
-    #input(new_registers)
     return new_registers
 
 class SmaliCodeBase():
@@ -285,13 +281,11 @@ class SmaliExecutionIterator():
             A SmaliAssemblyInstruction object representing the instruction.
         '''
 
-        ##input(self.smali_execution_iterator)
         # upon an invoke statement, take a new iterator and call next on it and return its value
         if(self.smali_execution_iterator != None):
             try:
                 return self.smali_execution_iterator.__next__()
             except StopIteration:
-                #input("HERE")
                 self.smali_execution_iterator = None
 
         if(self.iter_idx >= len(self.cur_class_text)):
@@ -325,7 +319,6 @@ class SmaliExecutionIterator():
             cur_line_obj = SmaliAssemblyInstructions.from_line(cur_line_global)
         except SyntaxError:
             self.iter_idx += 1
-            #input("Line cannot be parsed. Continuing on with no action.")
             return self.cur_line_to_return
 
         self.cur_line_to_return = [cur_line_obj]
@@ -344,7 +337,6 @@ class SmaliExecutionIterator():
             # Get the text of this next line
             next_line = self.cur_class_text[self.iter_idx]
             #print("RESULT LINE " + str(self.iter_idx + 1) + ": " + next_line)
-            ##input("")
 
             # Check if the line is 1. not a valid individual instruction by itself and 2. not a move_result
             while(not StigmaStringParsingLib.is_valid_instruction(next_line) \
@@ -365,7 +357,6 @@ class SmaliExecutionIterator():
                 self.cur_line_to_return.append(SmaliAssemblyInstructions.from_line(next_line))
             else:
                 #print("NO MOVE RESULT FOUND")
-                ##input("")
                 self.iter_idx -= 2
         
         '''
@@ -377,7 +368,6 @@ class SmaliExecutionIterator():
             line_no = cur_line_obj.get_line_number_of_destination(function_line_number, self.cur_class_text)
 
             if method_def_obj.get_full_location(line_no, self.cur_class_text) in self.locations_visited:
-                ##input("Line has been visited before in the current recursion. Ignoring to prevent infinite recursion.")
                 self.iter_idx += 1
                 return self.cur_line_to_return
             else:
@@ -385,7 +375,6 @@ class SmaliExecutionIterator():
 
             self.iter_idx = line_no
             #self.try_start_stack = []
-            ##input("")
 
         '''
         INVOKE INSTRUCTION
@@ -403,7 +392,6 @@ class SmaliExecutionIterator():
                 
                 if isinstance(cur_line_obj, SmaliAssemblyInstructions._PARAMETER_RANGE_INSTRUCTION):
 
-                #input("NO TRACKED REGISTERS PASSED THROUGH, IGNORE")
                 return self.cur_line_to_return'''
             
             # get the destination of the invoke instruction (the method to look for)
@@ -416,7 +404,6 @@ class SmaliExecutionIterator():
             #print("FILE NAME IS " + file_name)
             
             next_class = self.codebase.get_class_from_fully_qualified_name(file_path)
-            #input(next_class)
 
             if next_class == None:
                 #print("EXTERNAL METHOD, IGNORE FOR NOW")
@@ -426,7 +413,6 @@ class SmaliExecutionIterator():
                 full_name = some_class.get_fully_qualified_name()[1:-1] + ".smali"
 
                 if file_path == full_name and y:
-                    #input(full_name + " is the right smali file.")
 
                 if file_path == full_name:
                     next_class = some_class
@@ -452,15 +438,11 @@ class SmaliExecutionIterator():
                 # ALLOW .LOCALS
             
             '''instruction = SmaliAssemblyInstructions.from_line(cur_line)
-            ##input(instruction)
             name = instruction.get_owning_class_name()
-            ##input(name)
             scd = self.tracing_manager.codebase.get_class_from_fully_qualified_name(name)
             if scd == None:
                 return self.cur_line_to_return
-            ##input(scd)
             fqc = instruction.get_fully_qualified_call()
-            ##input(fqc)
             smd = scd.get_method_by_fully_qualified_name(fqc)
             LOCALS = smd.get_locals_directive_num()
 
@@ -482,19 +464,15 @@ class SmaliExecutionIterator():
                     unlocalized_line.replace(register, new_location)
             
             unlocalized_line_obj = SmaliAssemblyInstructions.from_line(unlocalized_line)
-            #input(type(unlocalized_line_obj))
             # expand invoke-ranges
             
             if isinstance(unlocalized_line_obj, SmaliAssemblyInstructions.INVOKE_DIRECT_RANGE) or isinstance(unlocalized_line_obj, SmaliAssemblyInstructions.INVOKE_STATIC_RANGE) or isinstance(unlocalized_line_obj, SmaliAssemblyInstructions.INVOKE_VIRTUAL_RANGE):
                 range_registers = unlocalized_line_obj.get_registers()
-                #input(range_registers)
                 first = str(range_registers[0])
                 last = str(range_registers[2])
                 
                 first_num = int(first[1:])
                 last_num = int(last[1:])
-                #input(first_num)
-                #input(last_num)
 
                 new_registers = []
                 for i in range(first_num, last_num):
@@ -503,7 +481,6 @@ class SmaliExecutionIterator():
                 start = unlocalized_line.index("{")
                 end = unlocalized_line.index("}")
 
-                #input(new_registers)
 
                 unlocalized_line[start + 1:end - 1] = ", ".join(new_registers)
                 unlocalized_line_obj = SmaliAssemblyInstructions.from_line(unlocalized_line)
@@ -517,19 +494,16 @@ class SmaliExecutionIterator():
                         tracked_in_line = True
 
             if not tracked_in_line:
-                #input("No tracked registers found, not invoking")
                 return self.cur_line_to_return
 
             #self.cur_line_to_return = [unlocalized_line_obj]
 
             if method_def_obj.get_full_location(line_no, next_class_text) in self.locations_visited:
-                ##input("Line has been visited before in the current recursion. Ignoring to prevent infinite recursion.")
                 self.iter_idx += 1
                 return self.cur_line_to_return
             else:
                 self.locations_visited.append(method_def_obj.get_full_location(line_no, next_class_text))
 
-            #input("New file: " + file_path + " (" + str(line_no) + ")")
             self.smali_execution_iterator = SmaliExecutionIterator(self.codebase, file_path, line_no, self.tracing_manager, self.locations_visited)
             self.smali_execution_iterator.try_start_stack = self.try_start_stack
             self.smali_execution_iterator.file_path = file_path
@@ -543,13 +517,11 @@ class SmaliExecutionIterator():
         - Handles possible infinite loops
         '''
         if(isinstance(cur_line_obj, SmaliAssemblyInstructions._TWO_REG_EQ) or isinstance(cur_line_obj, SmaliAssemblyInstructions._ONE_REG_EQ_ZERO)):
-            ##input("IF INSTRUCTION")
             self.locations_visited.append([str(cur_line_obj), self.filename, self.iter_idx])
             self.iter_idx += 1
             destination = cur_line_obj.get_destination()
             #("ASSUMING STATEMENT IS TRUE")
             #print("Destination: " + destination)
-            ##input("")
 
             line_no = function_line_number
             found = False
@@ -562,7 +534,6 @@ class SmaliExecutionIterator():
             #print("FOUND LINE = " + line + " AT INDEX " + str(line_no + 1))
             #print("NEXT LINE AT INDEX " + str(line_no + 1) + ": " + str(line))
             if method_def_obj.get_full_location(line_no, self.cur_class_text) in self.locations_visited:
-                ##input("Line has been visited before in the current recursion. Ignoring to prevent infinite recursion.")
                 self.iter_idx += 1
                 return self.cur_line_to_return
             else:
@@ -581,7 +552,23 @@ class SmaliExecutionIterator():
         '''
         if(isinstance(cur_line_obj, SmaliAssemblyInstructions.RETURN_INSTRUCTION)):
             print("RETURNING FROM " + self.filename)
-            ##input("")
+            print(self.tracing_manager.get_edges())
+            input("")
+            for location in self.tracing_manager.locations_to_check:
+                print(location)
+                print(function)
+                input("")
+                self.tracing_manager.add_removed_to_node(location, function)
+            '''
+            tracingManager.locations_to_check = tracingManager.stack_locations_to_check.pop(0)
+
+            # if the return statement returns the tracked value
+            if instruction.get_registers()[0] in tracingManager.locations_to_check:
+                # if there are pending move_results
+                if tracingManager.cur_move_result_destinations != []:
+                    destination = tracingManager.cur_move_result_destinations.pop(0)
+                    if destination != "":
+                        tracingManager.locations_to_check.append(destination)'''
             raise StopIteration
 
         '''
@@ -591,10 +578,8 @@ class SmaliExecutionIterator():
         '''
         if(isinstance(cur_line_obj, SmaliAssemblyInstructions.TRY_START_STIGMA_LABEL)):
             #print(cur_line)
-            ##input("TRY START")
             self.try_start_stack.append(cur_line_obj.get_num())
             self.iter_idx += 1
-            ##input(self.try_start_stack)
             return self.cur_line_to_return
 
         '''
@@ -606,7 +591,6 @@ class SmaliExecutionIterator():
             self.iter_idx += 1
             '''print(cur_line)
             print(self.try_start_stack)
-            #input("TRY END")
 
             index = len(self.try_start_stack) - 1
             while self.try_start_stack[index] != cur_line_obj.get_num():
@@ -614,7 +598,6 @@ class SmaliExecutionIterator():
             self.try_start_stack.pop(index)
 
             self.iter_idx += 1
-            #input(self.try_start_stack)
             '''
 
         '''THROW INSTRUCTIONS
@@ -624,27 +607,22 @@ class SmaliExecutionIterator():
         if(isinstance(cur_line_obj, SmaliAssemblyInstructions.THROW)):
             raise StopIteration
             '''
-            #input(str(self.iter_idx) + " THROW INSTRUCTION")
-            #input(cur_line)
 
 
             if len(self.try_start_stack) != 0:
                 self.try_start_stack.pop()
             else:
-                #input("NO TRY STARTS FOUND")
                 raise StopIteration
 
 
             match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_CATCH, cur_line)
             if len(self.try_start_stack) == 0: # unhandled exception
-                #input("END ITERATION")
                 raise StopIteration
             
             if match_object != None or self.try_start_stack[-1] not in cur_line:
                 self.iter_idx += 1
                 cur_line = self.cur_class_text[self.iter_idx]
                 match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_CATCH, cur_line)
-            #input("FOUND " + str(self.try_start_stack[-1]) + " at line " + str(self.iter_idx) + ": " + cur_line)
             self.iter_idx += 1'''
             
         '''CATCH AND CATCHALL INSTRUCTIONS
@@ -666,14 +644,11 @@ class SmaliExecutionIterator():
             self.iter_idx += 1
         
         if self.tracing_manager.locations_to_check == []:
-            #input("TRACKED VALUE HAS BEEN LOST IN CURRENT ITERATION. RETURNING BACK")
             print("RETURNING FROM " + self.filename)
             #for i in self.tracing_manager.stack_locations_to_check[0]:
-                #input(str(i))
             self.tracing_manager.locations_to_check = self.tracing_manager.stack_locations_to_check.pop(0)
             raise StopIteration
         
-        #input(str(self.cur_line_to_return[0]))
         return self.cur_line_to_return
 
 def tests():
