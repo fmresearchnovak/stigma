@@ -127,7 +127,8 @@ class TracingManager:
 
     def add_removed_to_node(self, location, method_name):
         if method_name in self.removed_nodes:
-            self.removed_nodes[method_name].append(location)
+            if location not in self.removed_nodes[method_name]:
+                self.removed_nodes[method_name].append(location)
         else:
             self.removed_nodes[method_name] = [location]
 
@@ -237,9 +238,13 @@ def generate_directed_graph(graph, removed):
                 entry += "INVOKE" + str(formatted_destination) + str(formatted_method) + "[INVOKE " + str(formatted_method) + "]:::invoke"
 
             entry += " --> "
-            entry += str(formatted_destination) + formatted_method + '["' + str(formatted_destination) + '"];'
+            entry += str(formatted_destination) + formatted_method + '["' + str(formatted_destination) + '"]'
 
-            html_graph += entry + "\n"
+            if method in removed:
+                if destination in removed[method]:
+                    entry += ":::removed"
+
+            html_graph += entry + ";\n"
         
         html_graph += "end" + "\n"
 
@@ -310,7 +315,7 @@ def test_instance(line, location, tracingManager):
                 else:
                     print("REMOVING LOCATION " + str(full_action[1]))
 
-                    if full_action[1][0] =="L":
+                    if str(full_action[1])[0] =="L":
                         # removing instance variable
                         new_location = TracingLocation()
                         new_location.set_object_pair(full_action[1], full_action[3])
@@ -636,6 +641,8 @@ def main():
     html_graph = generate_directed_graph(tracingManager.edges, tracingManager.removed_nodes)
     input(html_graph)
     write_html_file(html_graph)
+    input("removed")
+    input(tracingManager.removed_nodes)
 
     #the following code tests it without the APK file so that lines can be easily edited
     #forward_tracing(args.filename, int(args.line_number), args.register, [], {}, tmp_file_name)

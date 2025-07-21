@@ -553,7 +553,7 @@ class SmaliExecutionIterator():
         if(isinstance(cur_line_obj, SmaliAssemblyInstructions.RETURN_INSTRUCTION)):
             print("RETURNING FROM " + self.filename)
             print(self.tracing_manager.get_edges())
-            input("")
+            #input("")
             for location in self.tracing_manager.locations_to_check:
                 print(location)
                 print(function)
