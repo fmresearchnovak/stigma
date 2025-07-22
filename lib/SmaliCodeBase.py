@@ -569,8 +569,9 @@ class SmaliExecutionIterator():
             #input("")
             for location in self.tracing_manager.locations_to_check:
                 print(location)
-                print(function)
-                self.tracing_manager.add_removed_to_node(location, function)
+                print(method_def_obj)
+                input("ADDING REMOVED TO " + str(location) + " IN FUNCTION " + str(method_def_obj))
+                self.tracing_manager.add_removed_to_node(location, str(method_def_obj))
             '''
             self.tracing_manager.locations_to_check = self.tracing_manager.stack_locations_to_check.pop(0)
 

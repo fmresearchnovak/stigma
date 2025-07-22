@@ -229,11 +229,13 @@ def generate_directed_graph(graph, removed):
             else:
                 entry += str(formatted_location) + formatted_origin_method_name
             
-            input(removed)
+            print(removed)
+            input("REMOVED")
             for a in removed[method]:
                 print(type(a))
             
             if method in removed:
+                input("Checking for " + str(location))
                 if location in removed[method]:
                     entry += ":::removed"
 
@@ -246,8 +248,13 @@ def generate_directed_graph(graph, removed):
             entry += str(formatted_destination) + formatted_method + '["' + str(formatted_destination) + '"]'
 
             if method in removed:
-                if destination in removed[method]:
-                    entry += ":::removed"
+                input("Checking for " + str(destination))
+                input(str(removed[method][1]))
+
+                for item in removed[method]:
+                    fixed_item = str(item).split(" ")[-1]
+                    if fixed_item == destination:
+                        entry += ":::removed"
 
             html_graph += entry + ";\n"
         
@@ -272,7 +279,8 @@ def test_instance(line, location, tracingManager):
     print("ACTION = " + str(full_action[0]))
 
     method_name = str(tracingManager.current_method)
-    input(method_name)
+    if method_name[0] == ".":
+        input(method_name)
 
     match full_action[0]:
         case TracingAction.ADD:
