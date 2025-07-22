@@ -464,6 +464,7 @@ class SmaliClassDef:
             name: The basic name of a method (e.g., "foo"), a string
         Returns:
             A SmaliMethodDef object matching the given name or None if no such method is not found.
+            If more than one method of this name exists in this class (overloaded e.g., foo(I), foo(), foo(Ljava/lang/String;)) the first one found in the smali file is returned.
         '''
         for m in self.methods:
             if(m.get_name() == name):
