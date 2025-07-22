@@ -126,6 +126,7 @@ class TracingManager:
             self.edges[method_name] = [[location, destination, origin_method_name]]
 
     def add_removed_to_node(self, location, method_name):
+        input(method_name)
         if method_name in self.removed_nodes:
             if location not in self.removed_nodes[method_name]:
                 self.removed_nodes[method_name].append(location)
@@ -228,6 +229,10 @@ def generate_directed_graph(graph, removed):
             else:
                 entry += str(formatted_location) + formatted_origin_method_name
             
+            input(removed)
+            for a in removed[method]:
+                print(type(a))
+            
             if method in removed:
                 if location in removed[method]:
                     entry += ":::removed"
@@ -267,6 +272,7 @@ def test_instance(line, location, tracingManager):
     print("ACTION = " + str(full_action[0]))
 
     method_name = str(tracingManager.current_method)
+    input(method_name)
 
     match full_action[0]:
         case TracingAction.ADD:
@@ -306,7 +312,7 @@ def test_instance(line, location, tracingManager):
         case TracingAction.REMOVE:
             if not first:
                 if not isinstance(instruction, SmaliAssemblyInstructions._I_INSTRUCTION) and not isinstance(instruction, SmaliAssemblyInstructions._S_INSTRUCTION):
-                    print("REMOVING LOCATION " + str(full_action[1]))
+                    print("315 REMOVING LOCATION " + str(full_action[1]))
                     for location_obj in tracingManager.locations_to_check:
                         if location_obj == location:
                             tracingManager.remove_location(location_obj)
@@ -637,12 +643,12 @@ def main():
         
     forward_tracing(int(args.line_number), args.register, tracingManager, codebase)
 
-    input(tracingManager.edges)
+    #input(tracingManager.edges)
     html_graph = generate_directed_graph(tracingManager.edges, tracingManager.removed_nodes)
-    input(html_graph)
+    #input(html_graph)
     write_html_file(html_graph)
-    input("removed")
-    input(tracingManager.removed_nodes)
+    #input("removed")
+    #input(tracingManager.removed_nodes)
 
     #the following code tests it without the APK file so that lines can be easily edited
     #forward_tracing(args.filename, int(args.line_number), args.register, [], {}, tmp_file_name)

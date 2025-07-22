@@ -8,6 +8,7 @@ from lib import SmaliClassDef
 from lib import SmaliMethodDef
 from lib import StigmaStringParsingLib
 from lib import SmaliAssemblyInstructions
+from lib.SmaliMethodDef import SmaliMethodSignature
 
 def get_function_name(line_number, lines):
     match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_METHOD, lines[line_number])
@@ -16,6 +17,18 @@ def get_function_name(line_number, lines):
         match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_METHOD, lines[line_number])
     method_signature_str = lines[line_number].replace("\n", "")
     return method_signature_str, line_number
+
+def find_smali_method_def_obj(method_signature_str, smali_class):
+    method_index = 0
+    #figure out how to use curr_Method.get_name
+    curr_method = smali_class.methods[method_index]
+    signature = SmaliMethodSignature(method_signature_str, smali_class.get_fully_qualified_name())
+
+    while(curr_method != signature):
+        method_index += 1
+        curr_method = smali_class.methods[method_index]
+
+    return curr_method
 
 def translate_p_registers_in_invoke(registers, instruction, codebase):
     name = instruction.get_owning_class_name()
@@ -307,9 +320,9 @@ class SmaliExecutionIterator():
         self.locations_visited.append(cur_line)
         #print("LINE " + str(self.iter_idx + 1) + ": " + cur_line)
         function, function_line_number = get_function_name(self.iter_idx, self.cur_class_text)
+        method_def_obj = find_smali_method_def_obj(function, self.cur_class)
+        method_def_obj = self.cur_class.get_method_by_fully_qualified_name(method_def_obj)
         print("FUNCTION")
-        print(function.split(" ")[-1].split("(")[0])
-        method_def_obj = self.cur_class.get_method_by_name(function.split(" ")[-1].split("(")[0])
         #method_def_obj = find_smali_method_def_obj(function, self.cur_class, self.filename)
         self.tracing_manager.current_method = str(method_def_obj)
         cur_line_global = method_def_obj.dereference_p_to_v_numbers(cur_line) # could just do this to every method in the whole class
@@ -557,18 +570,17 @@ class SmaliExecutionIterator():
             for location in self.tracing_manager.locations_to_check:
                 print(location)
                 print(function)
-                input("")
                 self.tracing_manager.add_removed_to_node(location, function)
             '''
-            tracingManager.locations_to_check = tracingManager.stack_locations_to_check.pop(0)
+            self.tracing_manager.locations_to_check = self.tracing_manager.stack_locations_to_check.pop(0)
 
             # if the return statement returns the tracked value
-            if instruction.get_registers()[0] in tracingManager.locations_to_check:
+            if cur_line_obj.get_registers()[0] in self.tracing_manager.locations_to_check:
                 # if there are pending move_results
-                if tracingManager.cur_move_result_destinations != []:
-                    destination = tracingManager.cur_move_result_destinations.pop(0)
+                if self.tracing_manager.cur_move_result_destinations != []:
+                    destination = self.tracing_manager.cur_move_result_destinations.pop(0)
                     if destination != "":
-                        tracingManager.locations_to_check.append(destination)'''
+                        self.tracing_manager.locations_to_check.append(destination)'''
             raise StopIteration
 
         '''
