@@ -119,7 +119,7 @@ class SmaliCodeBase():
            path_to_directory (str): The absolute path to the directory containing the smali files
         '''
         file_paths = SmaliCodeBase.findSmaliFiles(path_to_directory)
-        print("TEST")
+        #print("TEST")
         #print(path_to_directory)
 
 
@@ -322,7 +322,7 @@ class SmaliExecutionIterator():
         function, function_line_number = get_function_name(self.iter_idx, self.cur_class_text)
         method_def_obj = find_smali_method_def_obj(function, self.cur_class)
         method_def_obj = self.cur_class.get_method_by_fully_qualified_name(method_def_obj)
-        print("FUNCTION")
+        #print("FUNCTION")
         #method_def_obj = find_smali_method_def_obj(function, self.cur_class, self.filename)
         self.tracing_manager.current_method = str(method_def_obj)
         cur_line_global = method_def_obj.dereference_p_to_v_numbers(cur_line) # could just do this to every method in the whole class
@@ -570,7 +570,7 @@ class SmaliExecutionIterator():
             for location in self.tracing_manager.locations_to_check:
                 print(location)
                 print(method_def_obj)
-                input("ADDING REMOVED TO " + str(location) + " IN FUNCTION " + str(method_def_obj))
+                #input("ADDING REMOVED TO " + str(location) + " IN FUNCTION " + str(method_def_obj))
                 self.tracing_manager.add_removed_to_node(location, str(method_def_obj))
             '''
             self.tracing_manager.locations_to_check = self.tracing_manager.stack_locations_to_check.pop(0)

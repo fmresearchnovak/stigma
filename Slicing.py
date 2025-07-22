@@ -126,7 +126,7 @@ class TracingManager:
             self.edges[method_name] = [[location, destination, origin_method_name]]
 
     def add_removed_to_node(self, location, method_name):
-        input(method_name)
+        #input(method_name)
         if method_name in self.removed_nodes:
             if location not in self.removed_nodes[method_name]:
                 self.removed_nodes[method_name].append(location)
@@ -229,16 +229,16 @@ def generate_directed_graph(graph, removed):
             else:
                 entry += str(formatted_location) + formatted_origin_method_name
             
-            print(removed)
-            input("REMOVED")
-            for a in removed[method]:
-                print(type(a))
+            #print(removed)
+            #input("REMOVED")
+            #for a in removed[method]:
+                #print(type(a))
             
             if method in removed:
-                input("Checking for " + str(location))
-                if location in removed[method]:
-                    entry += ":::removed"
-
+                for item in removed[method]:
+                    fixed_item = str(item).split(" ")[-1]
+                    if fixed_item == location:
+                        entry += ":::removed"
             # add an intermediate upon an invoke to a new method
             if origin_method_name != method:
                 entry += " --> "
@@ -248,9 +248,6 @@ def generate_directed_graph(graph, removed):
             entry += str(formatted_destination) + formatted_method + '["' + str(formatted_destination) + '"]'
 
             if method in removed:
-                input("Checking for " + str(destination))
-                input(str(removed[method][1]))
-
                 for item in removed[method]:
                     fixed_item = str(item).split(" ")[-1]
                     if fixed_item == destination:
@@ -263,6 +260,9 @@ def generate_directed_graph(graph, removed):
     html_graph += "classDef removed fill:#f00" + "\n"
     html_graph += "classDef invoke fill:#0f0" + "\n"
     
+    input("graph")
+    input(html_graph)
+
     return html_graph
 
 def test_instance(line, location, tracingManager):
@@ -279,9 +279,7 @@ def test_instance(line, location, tracingManager):
     print("ACTION = " + str(full_action[0]))
 
     method_name = str(tracingManager.current_method)
-    if method_name[0] == ".":
-        input(method_name)
-
+    
     match full_action[0]:
         case TracingAction.ADD:
             print("ADDING NEW LOCATION " + str(full_action[1]))
@@ -334,8 +332,8 @@ def test_instance(line, location, tracingManager):
                         new_location = TracingLocation()
                         new_location.set_object_pair(full_action[1], full_action[3])
                         for location_obj in tracingManager.locations_to_check:
-                            print(location_obj)
-                            print(new_location)
+                            #print(location_obj)
+                            #print(new_location)
                             if location_obj == new_location:
                                 tracingManager.remove_location(location_obj)
                                 tracingManager.add_removed_to_node(location, method_name)
@@ -344,6 +342,7 @@ def test_instance(line, location, tracingManager):
                         for location_obj in tracingManager.locations_to_check:
                             if location_obj == location:
                                 tracingManager.remove_location(location_obj)
+                                tracingManager.add_removed_to_node(location, method_name)
                             else:
                                 # if the object is removed, remove all tracked instance variables with that object
                                 try:
@@ -363,8 +362,8 @@ def test_instance(line, location, tracingManager):
             try:
                 result_instruction = line[1]
                 tracingManager.cur_move_result_destinations.append(result_instruction.get_registers()[0])
-                print(result_instruction.get_registers()[0])
-                print(location)
+                #print(result_instruction.get_registers()[0])
+                #print(location)
                 if location == result_instruction.get_registers()[0]:
                     if not first:
                         print("REMOVING LOCATION " + str(location))
@@ -502,8 +501,8 @@ def analyze_line(line, tracingManager):
     for location in tracingManager.locations_to_check:
         try:
             # first, look for instance variables in the current line, if there is any
-            print(line[0].get_instance_variable())
-            print(location)
+            #print(line[0].get_instance_variable())
+            #print(location)
             for register in line[0].get_registers():
                     if location == register:
                         test_instance(line, location, tracingManager)
@@ -591,7 +590,7 @@ def forward_tracing(target_line_number, target_location, tracingManager, codebas
         #print(line)
         analyze_line(line, tracingManager)
         
-        if tracingManager.current_iteration == 5000:
+        if tracingManager.current_iteration == 2000:
             print("Limit reached")
             #print(tracingManager.locations_to_check)
             #print(tracingManager.line_directory)
