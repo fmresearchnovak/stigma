@@ -422,18 +422,6 @@ class SmaliExecutionIterator():
                 #print("EXTERNAL METHOD, IGNORE FOR NOW")
                 return self.cur_line_to_return
             
-            '''for some_class in possible_next_classes:
-                full_name = some_class.get_fully_qualified_name()[1:-1] + ".smali"
-
-                if file_path == full_name and y:
-
-                if file_path == full_name:
-                    next_class = some_class
-                    break
-                else:
-                    print(full_name + " is not the right smali file.")
-                    y = True'''
-                
             next_class_text = next_class.raw_text
 
             line_no = 0
@@ -450,54 +438,6 @@ class SmaliExecutionIterator():
                     break
                 # ALLOW .LOCALS
             
-            '''instruction = SmaliAssemblyInstructions.from_line(cur_line)
-            name = instruction.get_owning_class_name()
-            scd = self.tracing_manager.codebase.get_class_from_fully_qualified_name(name)
-            if scd == None:
-                return self.cur_line_to_return
-            fqc = instruction.get_fully_qualified_call()
-            smd = scd.get_method_by_fully_qualified_name(fqc)
-            LOCALS = smd.get_locals_directive_num()
-
-            # get the types of each parameters, longs (J) will take up two registers
-
-            # determine whether it is static or non-static
-            non_static = False
-            if "static" not in cur_line:
-                non_static = True
-
-            # change any p numbers to v numbers in the invoke statement
-            current_line_registers = cur_line_obj.get_registers()
-            unlocalized_line = cur_line
-
-            for i in range(len(current_line_registers)):
-                if str(registers[i])[0] == "p":
-                    parameter_index = i + int(non_static)
-                    new_location = "v" + str(parameter_index + LOCALS)
-                    unlocalized_line.replace(register, new_location)
-            
-            unlocalized_line_obj = SmaliAssemblyInstructions.from_line(unlocalized_line)
-            # expand invoke-ranges
-            
-            if isinstance(unlocalized_line_obj, SmaliAssemblyInstructions.INVOKE_DIRECT_RANGE) or isinstance(unlocalized_line_obj, SmaliAssemblyInstructions.INVOKE_STATIC_RANGE) or isinstance(unlocalized_line_obj, SmaliAssemblyInstructions.INVOKE_VIRTUAL_RANGE):
-                range_registers = unlocalized_line_obj.get_registers()
-                first = str(range_registers[0])
-                last = str(range_registers[2])
-                
-                first_num = int(first[1:])
-                last_num = int(last[1:])
-
-                new_registers = []
-                for i in range(first_num, last_num):
-                    new_registers.append("v" + str(i))
-                
-                start = unlocalized_line.index("{")
-                end = unlocalized_line.index("}")
-
-
-                unlocalized_line[start + 1:end - 1] = ", ".join(new_registers)
-                unlocalized_line_obj = SmaliAssemblyInstructions.from_line(unlocalized_line)
-            '''
             tracked_in_line = False
             registers = cur_line_obj.get_registers()
             new_registers = translate_p_registers_in_invoke(registers, cur_line_obj, self.codebase)
@@ -572,9 +512,11 @@ class SmaliExecutionIterator():
                 print(method_def_obj)
                 #input("ADDING REMOVED TO " + str(location) + " IN FUNCTION " + str(method_def_obj))
                 self.tracing_manager.add_removed_to_node(location, str(method_def_obj))
+            
+            #input(self.tracing_manager.stack_locations_to_check)
+            #if len(self.tracing_manager.stack_locations_to_check) != 0:
+            #self.tracing_manager.locations_to_check = self.tracing_manager.stack_locations_to_check.pop()
             '''
-            self.tracing_manager.locations_to_check = self.tracing_manager.stack_locations_to_check.pop(0)
-
             # if the return statement returns the tracked value
             if cur_line_obj.get_registers()[0] in self.tracing_manager.locations_to_check:
                 # if there are pending move_results

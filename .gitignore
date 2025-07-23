@@ -15,6 +15,7 @@ __pycache__/
 # Smali test files
 # include these so tests function
 SendMessagesHelper.smali
+testforslicing/
 #*.smali
 
 # Graph output

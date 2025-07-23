@@ -426,6 +426,10 @@ def test_instance(line, location, tracingManager):
             tracingManager.stack_locations_to_check.append(tracingManager.locations_to_check)
             tracingManager.locations_to_check = new_locations_to_check
 
+            input(tracingManager.get_edges())
+            input(tracingManager.stack_locations_to_check)
+            input(tracingManager.locations_to_check)
+
             tracingManager.parameters_immediate = []
 
         case TracingAction.RETURN:
@@ -590,11 +594,11 @@ def forward_tracing(target_line_number, target_location, tracingManager, codebas
         #print(line)
         analyze_line(line, tracingManager)
         
-        if tracingManager.current_iteration == 2000:
+        if tracingManager.current_iteration == 1000:
             print("Limit reached")
             #print(tracingManager.locations_to_check)
             #print(tracingManager.line_directory)
-            print("current iteration over 5000, stopping!")
+            print("current iteration over 1000, stopping!")
             break
         
         if tracingManager.locations_to_check == [] and tracingManager.stack_locations_to_check == []:
@@ -621,8 +625,8 @@ def test_and_debug_main():
 
     tracingManager = TracingManager()
     tracingManager.current_file = args.filename + ";"
-    tracingManager.smali_files = SmaliCodeBase.SmaliCodeBase.findSmaliFiles("test/")
-    codebase = SmaliCodeBase.SmaliCodeBase("test/")
+    tracingManager.smali_files = SmaliCodeBase.SmaliCodeBase.findSmaliFiles("testforslicing/")
+    codebase = SmaliCodeBase.SmaliCodeBase("testforslicing/")
  
     #if find_path("test/", args.filename) not in tracingManager.smali_files:
     #    print("ERROR: Smali file not found in test folder!")
