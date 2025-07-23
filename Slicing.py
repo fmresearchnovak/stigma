@@ -260,8 +260,8 @@ def generate_directed_graph(graph, removed):
     html_graph += "classDef removed fill:#f00" + "\n"
     html_graph += "classDef invoke fill:#0f0" + "\n"
     
-    input("graph")
-    input(html_graph)
+    #input("graph")
+    #input(html_graph)
 
     return html_graph
 
@@ -424,11 +424,14 @@ def test_instance(line, location, tracingManager):
                 tracingManager.add_edge(location, new_location, new_method_name, method_name)
             
             tracingManager.stack_locations_to_check.append(tracingManager.locations_to_check)
+            print("STACK LOCATIONS ADD")
+            input(tracingManager.stack_locations_to_check)
             tracingManager.locations_to_check = new_locations_to_check
 
-            input(tracingManager.get_edges())
-            input(tracingManager.stack_locations_to_check)
-            input(tracingManager.locations_to_check)
+            #input(tracingManager.get_edges())
+            #input(tracingManager.stack_locations_to_check)
+            #input(tracingManager.locations_to_check)
+            print(tracingManager.get_edges())
 
             tracingManager.parameters_immediate = []
 
@@ -439,16 +442,6 @@ def test_instance(line, location, tracingManager):
             for location in tracingManager.locations_to_check:
                 input("testing removing nodes upon a return statement")
                 tracingManager.add_removed_to_node(location, method_name)
-
-            tracingManager.locations_to_check = tracingManager.stack_locations_to_check.pop(0)
-
-            # if the return statement returns the tracked value
-            if instruction.get_registers()[0] in tracingManager.locations_to_check:
-                # if there are pending move_results
-                if tracingManager.cur_move_result_destinations != []:
-                    destination = tracingManager.cur_move_result_destinations.pop(0)
-                    if destination != "":
-                        tracingManager.locations_to_check.append(destination)
         case _:
             pass
         
@@ -604,7 +597,7 @@ def forward_tracing(target_line_number, target_location, tracingManager, codebas
         if tracingManager.locations_to_check == [] and tracingManager.stack_locations_to_check == []:
             print("no locations left to trace, stopping!")
             break
-
+    
 
 def test_and_debug_main():
     # ARGPARSE FORMAT
@@ -638,6 +631,7 @@ def test_and_debug_main():
 
         
     forward_tracing(int(args.line_number), args.register, tracingManager, codebase)
+    print(tracingManager.get_edges())
     html_graph = generate_directed_graph(tracingManager.edges, tracingManager.removed_nodes)
     write_html_file(html_graph)
  
@@ -692,7 +686,7 @@ def main():
         
     forward_tracing(int(args.line_number), args.register, tracingManager, codebase)
 
-    #input(tracingManager.edges)
+    input(tracingManager.get_edges())
     html_graph = generate_directed_graph(tracingManager.edges, tracingManager.removed_nodes)
     #input(html_graph)
     write_html_file(html_graph)

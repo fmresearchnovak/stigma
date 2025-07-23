@@ -304,6 +304,13 @@ class SmaliExecutionIterator():
         if(self.iter_idx >= len(self.cur_class_text)):
             raise StopIteration
 
+        if self.tracing_manager.locations_to_check == []:
+            print("RETURNING FROM " + self.filename)
+            #for i in self.tracing_manager.stack_locations_to_check[0]:
+            if len(self.tracing_manager.stack_locations_to_check) != 0:
+                self.tracing_manager.locations_to_check = self.tracing_manager.stack_locations_to_check.pop(0)
+            raise StopIteration
+
         print("SEI (id:" + str(self.ID) + ").__next__() tracking " + str(self.tracing_manager.locations_to_check))
         #print("NEW ITERATION")
         print("file name: " + self.filename + " at index " + str(self.iter_idx))
@@ -492,6 +499,10 @@ class SmaliExecutionIterator():
             else:
                 self.locations_visited.append(method_def_obj.get_full_location(line_no, self.cur_class_text))
             
+            self.tracing_manager.stack_locations_to_check.append(self.tracing_manager.locations_to_check)
+            print("STACK LOCATIONS ADD")
+            #input(self.tracing_manager.stack_locations_to_check)
+            
             print("New file: " + self.file_path + " (" + str(line_no) + ")")
             self.smali_execution_iterator = SmaliExecutionIterator(self.codebase, self.file_path, line_no, self.tracing_manager, self.locations_visited)
             self.smali_execution_iterator.try_start_stack = self.try_start_stack
@@ -513,17 +524,18 @@ class SmaliExecutionIterator():
                 #input("ADDING REMOVED TO " + str(location) + " IN FUNCTION " + str(method_def_obj))
                 self.tracing_manager.add_removed_to_node(location, str(method_def_obj))
             
-            #input(self.tracing_manager.stack_locations_to_check)
+            print("STACK LOCATIONS REMOVE")
+            input(self.tracing_manager.stack_locations_to_check)
             #if len(self.tracing_manager.stack_locations_to_check) != 0:
-            #self.tracing_manager.locations_to_check = self.tracing_manager.stack_locations_to_check.pop()
-            '''
+            self.tracing_manager.locations_to_check = self.tracing_manager.stack_locations_to_check.pop()
+            
             # if the return statement returns the tracked value
             if cur_line_obj.get_registers()[0] in self.tracing_manager.locations_to_check:
                 # if there are pending move_results
                 if self.tracing_manager.cur_move_result_destinations != []:
                     destination = self.tracing_manager.cur_move_result_destinations.pop(0)
                     if destination != "":
-                        self.tracing_manager.locations_to_check.append(destination)'''
+                        self.tracing_manager.locations_to_check.append(destination)
             raise StopIteration
 
         '''
@@ -597,12 +609,6 @@ class SmaliExecutionIterator():
             self.iter_idx += 1
         else: # no jumps, just move iter_idx down to the next immediate line
             self.iter_idx += 1
-        
-        if self.tracing_manager.locations_to_check == []:
-            print("RETURNING FROM " + self.filename)
-            #for i in self.tracing_manager.stack_locations_to_check[0]:
-            self.tracing_manager.locations_to_check = self.tracing_manager.stack_locations_to_check.pop(0)
-            raise StopIteration
         
         return self.cur_line_to_return
 
