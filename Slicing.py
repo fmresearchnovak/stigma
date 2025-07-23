@@ -601,6 +601,44 @@ def forward_tracing(target_line_number, target_location, tracingManager, codebas
             print("no locations left to trace, stopping!")
             break
 
+
+def test_and_debug_main():
+    # ARGPARSE FORMAT
+    if len(sys.argv) != 5:
+        print("ERROR: Five arguments required.")
+        exit(1)
+    
+    parser = argparse.ArgumentParser(description = '''Given a line of code and a register to track, traces the contents of the register throughout the process.\n 
+                                    Example usage: python3 Slicing.py someapkfile.apk Lorg/some_path_to_file 1000 v1''')
+
+    parser.add_argument("APK", help="[IGNORED] The path to the APK file that the target file is located in.")
+    parser.add_argument("filename", help="The file that contains the target line of code.  File must be in test/")
+    parser.add_argument("line_number", help="Line number of the line of code containing a reference to the desired register.")
+    parser.add_argument("register", help="The register that you wish to trace the data of.")
+
+    args = parser.parse_args()
+
+
+    tracingManager = TracingManager()
+    tracingManager.current_file = args.filename + ";"
+    tracingManager.smali_files = SmaliCodeBase.SmaliCodeBase.findSmaliFiles("test/")
+    codebase = SmaliCodeBase.SmaliCodeBase("test/")
+ 
+    #if find_path("test/", args.filename) not in tracingManager.smali_files:
+    #    print("ERROR: Smali file not found in test folder!")
+    #    exit(1)
+
+    if (args.register[0] != "v" and args.register[0] != "p") or not args.register[1:].isdigit():
+        print("ERROR: Register input is not a valid register.")
+        exit(1)
+
+        
+    forward_tracing(int(args.line_number), args.register, tracingManager, codebase)
+    html_graph = generate_directed_graph(tracingManager.edges, tracingManager.removed_nodes)
+    write_html_file(html_graph)
+ 
+
+
 def main():
     # ARGPARSE FORMAT
     if len(sys.argv) != 5:
@@ -660,7 +698,9 @@ def main():
     #the following code tests it without the APK file so that lines can be easily edited
     #forward_tracing(args.filename, int(args.line_number), args.register, [], {}, tmp_file_name)
 
-main()
+#main()
+test_and_debug_main()
+
 
 #main("SendMessagesHelper.smali", 27946, "v4")
 
