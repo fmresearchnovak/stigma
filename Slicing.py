@@ -376,7 +376,7 @@ def test_instance(line, location, tracingManager):
                         print("FIRST LINE, DON'T REMOVE")
             except IndexError:
                 tracingManager.cur_move_result_destinations.append("") # if there is no result, the result of the invoke goes nowhere
-
+            
             # .ADD LOCALS
             name = instruction.get_owning_class_name()
             scd = tracingManager.codebase.get_class_from_fully_qualified_name(name)
@@ -426,7 +426,7 @@ def test_instance(line, location, tracingManager):
             
             tracingManager.stack_locations_to_check.append(tracingManager.locations_to_check)
             print("STACK LOCATIONS ADD")
-            input(tracingManager.stack_locations_to_check)
+            print(tracingManager.stack_locations_to_check)
             tracingManager.locations_to_check = new_locations_to_check
 
             #input(tracingManager.get_edges())
@@ -588,7 +588,7 @@ def forward_tracing(target_line_number, target_location, tracingManager, codebas
         #print(line)
         analyze_line(line, tracingManager)
         
-        if tracingManager.current_iteration == 2000:
+        if tracingManager.current_iteration == 1000:
             print("Limit reached")
             #print(tracingManager.locations_to_check)
             #print(tracingManager.line_directory)
@@ -687,7 +687,7 @@ def main():
         
     forward_tracing(int(args.line_number), args.register, tracingManager, codebase)
 
-    input(tracingManager.get_edges())
+    print(tracingManager.get_edges())
     html_graph = generate_directed_graph(tracingManager.edges, tracingManager.removed_nodes)
     #input(html_graph)
     write_html_file(html_graph)
@@ -697,8 +697,8 @@ def main():
     #the following code tests it without the APK file so that lines can be easily edited
     #forward_tracing(args.filename, int(args.line_number), args.register, [], {}, tmp_file_name)
 
-#main()
-test_and_debug_main()
+main()
+#test_and_debug_main()
 
 
 #main("SendMessagesHelper.smali", 27946, "v4")
