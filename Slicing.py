@@ -192,8 +192,11 @@ def format_for_html_graph(item):
     else:
         return item
 
-def generate_directed_graph(graph, removed):
+def generate_directed_graph(graph, removed, first_register):
     html_graph = ""
+
+    if len(graph) == 0:
+        html_graph = str(first_register) + "[" + str(first_register) + "]" + "\n"
 
     first = True
 
@@ -690,7 +693,7 @@ def main():
     forward_tracing(int(args.line_number), args.register, tracingManager, codebase)
 
     print(tracingManager.get_edges())
-    html_graph = generate_directed_graph(tracingManager.edges, tracingManager.removed_nodes)
+    html_graph = generate_directed_graph(tracingManager.edges, tracingManager.removed_nodes, args.register)
     #input(html_graph)
     write_html_file(html_graph)
     #input("removed")
