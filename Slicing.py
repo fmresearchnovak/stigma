@@ -208,9 +208,10 @@ def generate_directed_graph(graph, removed):
 
     for method in graph:
         # begin a new subgraph
-        formatted_method = str(format_for_html_graph(method).split("(")[0])
+        formatted_method_for_heading = format_for_html_graph(method)
+        formatted_method = formatted_method_for_heading.replace("(", '-').replace(")", '-')
 
-        html_graph += 'subgraph "' + formatted_method + '"\n'
+        html_graph += 'subgraph "' + formatted_method_for_heading + '"\n'
 
         for entry_index in range(len(graph[method])):
             location = graph[method][entry_index][0]
@@ -219,7 +220,7 @@ def generate_directed_graph(graph, removed):
 
             formatted_location = format_for_html_graph(location)
             formatted_destination = format_for_html_graph(destination)
-            formatted_origin_method_name = str(format_for_html_graph(origin_method_name).split("(")[0])
+            formatted_origin_method_name = str(format_for_html_graph(origin_method_name).replace("(", '-').replace(")", '-'))
 
             entry = ""
 
