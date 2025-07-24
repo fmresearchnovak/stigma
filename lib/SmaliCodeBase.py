@@ -300,15 +300,12 @@ class SmaliExecutionIterator():
                 return self.smali_execution_iterator.__next__()
             except StopIteration:
                 self.smali_execution_iterator = None
-
-        if(self.iter_idx >= len(self.cur_class_text)):
-            raise StopIteration
-
+        
         if self.tracing_manager.locations_to_check == []:
             print("RETURNING FROM " + self.filename)
             #for i in self.tracing_manager.stack_locations_to_check[0]:
             if len(self.tracing_manager.stack_locations_to_check) != 0:
-                self.tracing_manager.locations_to_check = self.tracing_manager.stack_locations_to_check.pop(0)
+                self.tracing_manager.locations_to_check = self.tracing_manager.stack_locations_to_check.pop()
             raise StopIteration
 
         print("SEI (id:" + str(self.ID) + ").__next__() tracking " + str(self.tracing_manager.locations_to_check))
@@ -322,6 +319,7 @@ class SmaliExecutionIterator():
 
         match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_END_METHOD, cur_line)
         if match_object != None:
+            self.tracing_manager.locations_to_check = self.tracing_manager.stack_locations_to_check.pop()
             raise StopIteration
 
         self.locations_visited.append(cur_line)
@@ -578,6 +576,7 @@ class SmaliExecutionIterator():
         - If self.try_start_stack is not "none", jump immediately to the closest catch/catchall with the try_start
         - doesn't work so the iteration just ends
         '''
+            self.tracing_manager.locations_to_check = self.tracing_manager.stack_locations_to_check.pop()
             raise StopIteration
             '''
 

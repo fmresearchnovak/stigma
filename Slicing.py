@@ -587,7 +587,7 @@ def forward_tracing(target_line_number, target_location, tracingManager, codebas
         #print(line)
         analyze_line(line, tracingManager)
         
-        if tracingManager.current_iteration == 1000:
+        if tracingManager.current_iteration == 2000:
             print("Limit reached")
             #print(tracingManager.locations_to_check)
             #print(tracingManager.line_directory)
