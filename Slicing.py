@@ -417,6 +417,8 @@ def test_instance(line, location, tracingManager):
 
             # TO DO: ENSURE THAT WHEN LONGS GO IN, TWO REGISTERS ARE TAKEN
             
+                #tracingManager.locations_visited.append(instruction.get_full_location(line_no, next_class_text))
+
             for parameter_index in tracingManager.parameters_immediate:
                 new_location = new_registers[parameter_index]
                 new_location_obj = TracingLocation()

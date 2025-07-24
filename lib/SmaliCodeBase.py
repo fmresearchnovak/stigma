@@ -460,9 +460,6 @@ class SmaliExecutionIterator():
             if method_def_obj.get_full_location(line_no, next_class_text) in self.locations_visited:
                 self.iter_idx += 1
                 return self.cur_line_to_return
-            else:
-                self.locations_visited.append(method_def_obj.get_full_location(line_no, next_class_text))
-                
 
             self.smali_execution_iterator = SmaliExecutionIterator(self.codebase, file_path, line_no, self.tracing_manager, self.locations_visited)
             self.smali_execution_iterator.try_start_stack = self.try_start_stack
