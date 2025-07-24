@@ -396,13 +396,14 @@ class SmaliExecutionIterator():
             self.iter_idx = line_no
             #self.try_start_stack = []
 
-        '''
+        
+        elif(isinstance(cur_line_obj, SmaliAssemblyInstructions._INVOKE_INSTRUCTION)):
+            '''
         INVOKE INSTRUCTION
         - Find the smali file and line containing the method declaration
         - Create a new SmaliExecutionIterator for that file
         - Slicing.py will handle any register moves
         '''
-        if(isinstance(cur_line_obj, SmaliAssemblyInstructions._INVOKE_INSTRUCTION)):
             self.iter_idx += 1
 
             # first, look for the register
@@ -469,14 +470,14 @@ class SmaliExecutionIterator():
             self.smali_execution_iterator.file_path = file_path
             print("SEI (ID:" + str(self.ID) + ") created new SEI with ID:" + str(self.smali_execution_iterator.ID))
 
-        '''
+        elif(isinstance(cur_line_obj, SmaliAssemblyInstructions._TWO_REG_EQ) or isinstance(cur_line_obj, SmaliAssemblyInstructions._ONE_REG_EQ_ZERO)):
+            '''
         IF THEN JUMP INSTRUCTION
         - Get the destination of the if statement
         - Create a SmaliExecutionIterator for the destination assuming that the if statement returns true
         - The result of forward tracing through the if statement will be stored in a seperate list, will be different than assuming that the statement is false
         - Handles possible infinite loops
         '''
-        if(isinstance(cur_line_obj, SmaliAssemblyInstructions._TWO_REG_EQ) or isinstance(cur_line_obj, SmaliAssemblyInstructions._ONE_REG_EQ_ZERO)):
             self.locations_visited.append([str(cur_line_obj), self.filename, self.iter_idx])
             self.iter_idx += 1
             destination = cur_line_obj.get_destination()
@@ -501,20 +502,21 @@ class SmaliExecutionIterator():
             
             self.tracing_manager.stack_locations_to_check.append(self.tracing_manager.locations_to_check)
             print("STACK LOCATIONS ADD")
-            #input(self.tracing_manager.stack_locations_to_check)
+            print(self.tracing_manager.stack_locations_to_check)
             
             print("New file: " + self.file_path + " (" + str(line_no) + ")")
             self.smali_execution_iterator = SmaliExecutionIterator(self.codebase, self.file_path, line_no, self.tracing_manager, self.locations_visited)
             self.smali_execution_iterator.try_start_stack = self.try_start_stack
             print("SEI (ID:" + str(self.ID) + ") created new SEI with ID:" + str(self.smali_execution_iterator.ID))
 
-        '''
+        
+        elif(isinstance(cur_line_obj, SmaliAssemblyInstructions.RETURN_INSTRUCTION)):
+            '''
         RETURN INSTRUCTION
         - Move self.iter_idx back there, the line being already visited will analyze the return result instead
         - Slicing.py will determine if any register changes have occured
         - If previous_positions is empty, exit the file completely
         '''
-        if(isinstance(cur_line_obj, SmaliAssemblyInstructions.RETURN_INSTRUCTION)):
             print("RETURNING FROM " + self.filename)
             print(self.tracing_manager.get_edges())
             #input("")
@@ -525,36 +527,39 @@ class SmaliExecutionIterator():
                 self.tracing_manager.add_removed_to_node(location, str(method_def_obj))
             
             print("STACK LOCATIONS REMOVE")
-            input(self.tracing_manager.stack_locations_to_check)
+            print(self.tracing_manager.stack_locations_to_check)
             #if len(self.tracing_manager.stack_locations_to_check) != 0:
             self.tracing_manager.locations_to_check = self.tracing_manager.stack_locations_to_check.pop()
+            print(self.tracing_manager.stack_locations_to_check)
             
             # if the return statement returns the tracked value
-            if cur_line_obj.get_registers()[0] in self.tracing_manager.locations_to_check:
+            '''if cur_line_obj.get_registers()[0] in self.tracing_manager.locations_to_check:
                 # if there are pending move_results
                 if self.tracing_manager.cur_move_result_destinations != []:
                     destination = self.tracing_manager.cur_move_result_destinations.pop(0)
                     if destination != "":
-                        self.tracing_manager.locations_to_check.append(destination)
+                        self.tracing_manager.locations_to_check.append(destination)'''
             raise StopIteration
 
-        '''
+        
+        elif(isinstance(cur_line_obj, SmaliAssemblyInstructions.TRY_START_STIGMA_LABEL)):
+            '''
         TRY START LABEL
         - Sets self.try_start_stack to the current line
         - TO DO: multiple try starts, make sure that the try end ends the correct one
         '''
-        if(isinstance(cur_line_obj, SmaliAssemblyInstructions.TRY_START_STIGMA_LABEL)):
             #print(cur_line)
             self.try_start_stack.append(cur_line_obj.get_num())
             self.iter_idx += 1
             return self.cur_line_to_return
 
-        '''
+        
+        elif(isinstance(cur_line_obj, SmaliAssemblyInstructions.TRY_END_STIGMA_LABEL)):
+            '''
         TRY END LABEL
         - Clears self.try_start_stack
         - doesn't work so just ignored for now
         '''
-        if(isinstance(cur_line_obj, SmaliAssemblyInstructions.TRY_END_STIGMA_LABEL)):
             self.iter_idx += 1
             '''print(cur_line)
             print(self.try_start_stack)
@@ -567,11 +572,12 @@ class SmaliExecutionIterator():
             self.iter_idx += 1
             '''
 
-        '''THROW INSTRUCTIONS
+        
+        elif(isinstance(cur_line_obj, SmaliAssemblyInstructions.THROW)):
+            '''THROW INSTRUCTIONS
         - If self.try_start_stack is not "none", jump immediately to the closest catch/catchall with the try_start
         - doesn't work so the iteration just ends
         '''
-        if(isinstance(cur_line_obj, SmaliAssemblyInstructions.THROW)):
             raise StopIteration
             '''
 
@@ -592,12 +598,13 @@ class SmaliExecutionIterator():
                 match_object = re.match(StigmaStringParsingLib.BEGINS_WITH_DOT_CATCH, cur_line)
             self.iter_idx += 1'''
             
-        '''CATCH AND CATCHALL INSTRUCTIONS
+        
+        elif(isinstance(cur_line_obj, SmaliAssemblyInstructions.CATCH_DIRECTIVE) or isinstance(cur_line_obj, SmaliAssemblyInstructions.CATCHALL_DIRECTIVE)):
+            '''CATCH AND CATCHALL INSTRUCTIONS
         - Ignored if self.try_start_stack is "none"
         - If self.try_start_stack is not "none" then this means that the code is testing what happens when an exception is thrown
         - Jump to the destination of the .catch/.catchall
         '''
-        if(isinstance(cur_line_obj, SmaliAssemblyInstructions.CATCH_DIRECTIVE) or isinstance(cur_line_obj, SmaliAssemblyInstructions.CATCHALL_DIRECTIVE)):
             #if self.try_start_stack != "none" and self.try_start_stack in cur_line:
             self.iter_idx += 1
 
