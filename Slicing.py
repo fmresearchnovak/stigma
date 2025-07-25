@@ -262,7 +262,8 @@ def generate_directed_graph(graph, removed, first_register):
         html_graph += "end" + "\n"
 
     html_graph += "classDef removed fill:#f00" + "\n"
-    html_graph += "classDef invoke fill:#0f0" + "\n"
+    html_graph += "classDef invoke fill:#0ff" + "\n"
+    html_graph += "classDef condition fill:#f9f" + "\n"
     
     #input("graph")
     #input(html_graph)

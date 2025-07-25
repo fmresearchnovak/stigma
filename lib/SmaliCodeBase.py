@@ -477,24 +477,29 @@ class SmaliExecutionIterator():
             self.locations_visited.append([str(cur_line_obj), self.filename, self.iter_idx])
             self.iter_idx += 1
             destination = cur_line_obj.get_destination()
-            #("ASSUMING STATEMENT IS TRUE")
-            #print("Destination: " + destination)
-
+        
             line_no = function_line_number
             found = False
 
             line = ""
             while ":" + destination != line.lstrip().replace("\n", ""):
-                #print("LINE = " + line + " AT INDEX " + str(line_no + 1))
                 line_no += 1
                 line = self.cur_class_text[line_no]
-            #print("FOUND LINE = " + line + " AT INDEX " + str(line_no + 1))
-            #print("NEXT LINE AT INDEX " + str(line_no + 1) + ": " + str(line))
+            
             if method_def_obj.get_full_location(line_no, self.cur_class_text) in self.locations_visited:
+                # if statement already been visited in iteration
                 self.iter_idx += 1
                 return self.cur_line_to_return
             else:
                 self.locations_visited.append(method_def_obj.get_full_location(line_no, self.cur_class_text))
+
+            condition_name = str(cur_line_obj)
+            formatted_method = self.tracing_manager.current_method.replace("(", '-').replace(")", '-')
+            formatted_condition_name = condition_name.lstrip().replace(" ", "-")
+            full_condition_key = formatted_condition_name + formatted_method + str(self.iter_idx)
+            for location in self.tracing_manager.locations_to_check:
+                pass
+                #self.tracing_manager.add_edge(location, full_condition_key, self.tracing_manager.current_method, self.tracing_manager.current_method)
             
             self.tracing_manager.stack_locations_to_check.append(self.tracing_manager.locations_to_check)
             print("STACK LOCATIONS ADD")
