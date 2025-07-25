@@ -495,11 +495,16 @@ class SmaliExecutionIterator():
 
             condition_name = str(cur_line_obj)
             formatted_method = self.tracing_manager.current_method.replace("(", '-').replace(")", '-')
-            formatted_condition_name = condition_name.lstrip().replace(" ", "-")
-            full_condition_key = formatted_condition_name + formatted_method + str(self.iter_idx)
+            formatted_condition_name = condition_name.split(", :")[0].lstrip().replace(" ", "-")
+            self.tracing_manager.if_results.append(formatted_condition_name)
             for location in self.tracing_manager.locations_to_check:
-                pass
-                #self.tracing_manager.add_edge(location, full_condition_key, self.tracing_manager.current_method, self.tracing_manager.current_method)
+                #pass
+                self.tracing_manager.add_edge(location, formatted_condition_name, self.tracing_manager.current_method, self.tracing_manager.current_method)
+            self.tracing_manager.add_edge(formatted_condition_name, formatted_condition_name + "-TRUE", self.tracing_manager.current_method, self.tracing_manager.current_method)
+            self.tracing_manager.add_edge(formatted_condition_name, formatted_condition_name + "-FALSE", self.tracing_manager.current_method, self.tracing_manager.current_method)
+            for location in self.tracing_manager.locations_to_check:
+                self.tracing_manager.add_edge(formatted_condition_name + "-TRUE", str(location) + formatted_condition_name + "T", self.tracing_manager.current_method, self.tracing_manager.current_method)
+                self.tracing_manager.add_edge(formatted_condition_name + "-FALSE", str(location) + formatted_condition_name + "F", self.tracing_manager.current_method, self.tracing_manager.current_method)
             
             self.tracing_manager.stack_locations_to_check.append(self.tracing_manager.locations_to_check)
             print("STACK LOCATIONS ADD")

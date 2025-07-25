@@ -108,6 +108,8 @@ class TracingManager:
 
         self.cur_move_result_destinations = []
 
+        self.if_results = []
+
     # add edge object? add graph object?
     def add_edge(self, location, destination, method_name, origin_method_name):
         # location = origin location
@@ -249,7 +251,19 @@ def generate_directed_graph(graph, removed, first_register):
                 entry += "INVOKE" + str(formatted_destination) + str(formatted_method) + "[INVOKE " + str(formatted_method) + "]:::invoke"
 
             entry += " --> "
-            entry += str(formatted_destination) + formatted_method + '["' + str(formatted_destination) + '"]'
+            entry += str(formatted_destination) + formatted_method
+            
+            if "-TRUE" in formatted_destination:
+                entry +='("TRUE"):::true'
+            elif "-FALSE" in formatted_destination:
+                entry +='("FALSE"):::false'
+            elif "if-" in formatted_destination:
+                if formatted_destination[-1] == "T" or formatted_destination[-1] == "F":
+                    entry +='["' + formatted_destination.split("if-")[0] + '"]'
+                else:
+                    entry +='{"' + str(formatted_destination) + '"}:::condition'
+            else:
+                entry +='["' + str(formatted_destination) + '"]'
 
             if method in removed:
                 for item in removed[method]:
@@ -264,6 +278,8 @@ def generate_directed_graph(graph, removed, first_register):
     html_graph += "classDef removed fill:#f00" + "\n"
     html_graph += "classDef invoke fill:#0ff" + "\n"
     html_graph += "classDef condition fill:#f9f" + "\n"
+    html_graph += "classDef true fill:#0f0" + "\n"
+    html_graph += "classDef false fill:#f66" + "\n"
     
     #input("graph")
     #input(html_graph)
@@ -699,6 +715,7 @@ def main():
     write_html_file(html_graph)
     #input("removed")
     #input(tracingManager.removed_nodes)
+    print(tracingManager.if_results)
 
     #the following code tests it without the APK file so that lines can be easily edited
     #forward_tracing(args.filename, int(args.line_number), args.register, [], {}, tmp_file_name)
