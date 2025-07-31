@@ -64,6 +64,40 @@ class TracingLocation:
     def __repr__(self):
         return str(self)
 
+class TracingEdgePoint:
+    def __init__(self):
+        self.location = None
+        self.method = None
+        self.line_number = None
+        self.if_statements = []
+
+    def set_location(self, location):
+        # location will be a TracingLocation object
+        self.location = location
+
+    def set_method(self, method):
+        self.method = method
+
+    def set_line_number(self, number):
+        self.line_number = number
+
+    def set_if_statements(self, if_statements):
+        for statement in if_statements:
+            self.if_statements.append(statement)
+
+    def __eq__(self, other):
+        if self.location is not None:
+            if self.location == other.location and self.method == other.method and self.line_number == other.line_number and self.if_statements == other.if_statements:
+                return True
+        return False
+
+    def get_graph_key(self):
+        pass
+        # this method will find the cooresponding graph key for the edge point, which will be formatted to work in the graph
+
+    def __str__(self):
+        return "TracingEdgePoint for location " + str(location) + " in method " + str(method) + " at line number " + str(line_number)
+
 class TracingManager:
 
     def __init__(self):
