@@ -547,16 +547,12 @@ def write_html_file(html_graph):
     outFile.close()
 
 def analyze_line(line, tracingManager):
-    #tracingManager.current_line_number += 1
-    #print(line)
     line_as_string = str(line[0])
 
     instance_found = False
     for location in tracingManager.locations_to_check:
         try:
             # first, look for instance variables in the current line, if there is any
-            #print(line[0].get_instance_variable())
-            #print(location)
             for register in line[0].get_registers():
                     if location == register:
                         test_instance(line, location, tracingManager)
