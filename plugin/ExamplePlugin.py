@@ -1,6 +1,6 @@
 
 import Instrumenter
-import SmaliAssemblyInstructions as smali
+from lib import SmaliAssemblyInstructions as smali
 
 
 
