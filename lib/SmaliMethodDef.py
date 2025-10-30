@@ -626,7 +626,7 @@ class SmaliMethodDef:
 
 
 	def make_new_jump_label(self):
-		res = smali.STIGMA_LABEL(self.num_jumps)
+		res = smali._STIGMA_LABEL(self.num_jumps)
 		self.num_jumps += 1
 		return res
 		

@@ -51,8 +51,10 @@ def get_launcher_classes():
 
 
 
-def sign_up_method_start(new_method):
+def sign_up_method_start(new_method, num_regs):
     global start_of_method_handler
+    global MAX_DESIRED_NUM_REGISTERS
+    MAX_DESIRED_NUM_REGISTERS = num_regs
     # this method allows the plugin author to submit a handler function
     # which will be called to insert new code at the start of each and every
     # method

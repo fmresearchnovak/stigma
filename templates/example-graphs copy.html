@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Directed Graph Example with Mermaid.js</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true, maxTextSize: 90000 });
+    </script>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1 {
+            color: #0056b3;
+        }
+        .graph-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-top: 30px;
+            text-align: center; /* Center the SVG output */
+        }
+        pre.mermaid-code {
+            background-color: #e9e9e9;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            text-align: left;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Directed Graph Example (Mermaid.js)</h1>
+    <p>This page demonstrates how to display a directed graph using the <a href="https://mermaid.js.org/" target="_blank">Mermaid.js</a> library. You define the graph using simple text syntax, and Mermaid renders it into an SVG image.</p>
+
+    <div class="graph-container">
+        <h2>Simple Flowchart</h2>
+        <pre class="mermaid">
+graph LR
+v2>"v2"]:::removed --> v4["v4"];
+v4["v4"] --> v5["v5"];
+v4["v4"] --> if-eq-v4-v7{if-eq-v4-v7}:::condition
+v5["v5"] --> if-eq-v4-v7{if-eq-v4-v7}:::condition
+if-eq-v4-v7{if-eq-v4-v7}:::condition --> TRUE["TRUE"]:::true
+if-eq-v4-v7{if-eq-v4-v7}:::condition --> FALSE["FALSE"]:::false
+TRUE["TRUE"]:::true --> v4T["v4"]
+TRUE["TRUE"]:::true --> v5T["v5"]:::removed
+FALSE["FALSE"]:::false --> v4F["v4"]
+FALSE["FALSE"]:::false --> v5F["v5"]
+
+classDef removed fill:#f00
+classDef condition fill:#f9f
+classDef true fill:#0f0
+classDef false fill:#f66
+    
+        </pre>
+        <p>This flowchart shows a basic decision process.</p>
+    </div>
+
+
+
+    <div class="graph-container">
+        <h2>More Complex Graph with Subgraphs</h2>
+        <pre class="mermaid">
+graph TD
+    subgraph Data Flow
+        DB((Database)) --> API[REST API];
+        API --> APP(Web Application);
+    end
+
+    subgraph User Interaction
+        USER[User] -- interacts with --> APP;
+        APP -- sends data to --> MQ[Message Queue];
+    end
+
+    MQ --> Processor(Data Processor);
+    Processor --> DB;
+
+    click APP "https://www.example.com" "Visit Example App"
+        </pre>
+        <p>This graph illustrates a more complex system with data flow and user interaction subgraphs.</p>
+    </div>
+
+    <div class="graph-container">
+        <h2>Custom Styling and Icons</h2>
+        <pre class="mermaid">
+graph TD
+    A[Christmas] -->|Get money| B(Go shopping)
+    B --> C{Let me think}
+    C -- One --> D[Laptop]
+    C -- Two --> E[iPhone]
+    C -- Three --> F[fa:fa-car Car]
+    D --> G((End))
+    E --> G
+    F --> G
+
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style B fill:#bbf,stroke:#f66,stroke-width:2px,color:#fff
+    style C fill:#ccf,stroke:#000,stroke-width:2px,stroke-dasharray: 5 5
+    style D fill:#f9f,stroke:#333,stroke-width:2px
+    style E fill:#f9f,stroke:#333,stroke-width:2px
+    style F fill:#f9f,stroke:#333,stroke-width:2px
+
+        </pre>
+        <p>You can also apply custom styles and use Font Awesome icons within your Mermaid diagrams.</p>
+    </div>
+
+
+</body>
+</html>
