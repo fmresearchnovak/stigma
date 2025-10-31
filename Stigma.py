@@ -354,9 +354,10 @@ def rebuildApk(newAPKName, temp_directory_name):
     # https://github.com/iBotPeaches/Apktool/issues/2219
     use_aapt2 = aapt2_helper()
     if (use_aapt2):
-        rebuildCMD = ["java", "-jar", "pre-builts/apktool.jar", "b", temp_file.name, "--use-aapt2", "-o", os.path.join(temp_directory_name, newAPKName)]
-    else:
-        rebuildCMD = ["java", "-jar", "pre-builts/apktool.jar", "b", temp_file.name, "-o", os.path.join(temp_directory_name, newAPKName)]
+        pass
+        #rebuildCMD = ["java", "-jar", "pre-builts/apktool.jar", "b", temp_file.name, "--use-aapt2", "-o", os.path.join(temp_directory_name, newAPKName)]
+    #else:
+    rebuildCMD = ["java", "-jar", "pre-builts/apktool.jar", "b", temp_file.name, "-o", os.path.join(temp_directory_name, newAPKName)]
 
     #print("Rebuilding:", rebuildCMD)
     if (os.name == "nt"):
