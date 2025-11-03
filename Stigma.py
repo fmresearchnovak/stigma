@@ -376,7 +376,7 @@ def rebuildApk(newAPKName, temp_directory_name):
 
 def alignApk(unalignedAPKName, modifiedAPKName, temp_directory_name):
     # https://pedrovhb.com/posts/fix_it_yourself/
-    cmd = ["pre-builts/zipalign", "4", os.path.join(temp_directory_name, unalignedAPKName), modifiedAPKName]
+    cmd = ["/lib/android-sdk/build-tools/debian/zipalign", "4", os.path.join(temp_directory_name, unalignedAPKName), modifiedAPKName]
     subprocess.run(cmd)
 
 def signApk(newAPKName):
@@ -405,10 +405,10 @@ def signApk(newAPKName):
 
     # print("Signing...")
     # apksigner sign --ks stigma-keys.keystore --ks-pass pass:MzJiY2ZjNjY5Z --ks-key-alias stigma_keystore_alias ./leak_detect_test/Tracked_StigmaTest.apk
-    cmd = ["pre-builts/apksigner", "sign", "--ks", keystore_name, "--ks-pass", "pass:"+password, "--ks-key-alias", stigma_alias, newAPKName]
+    cmd = ["/lib/android-sdk/build-tools/debian/apksigner", "sign", "--ks", keystore_name, "--ks-pass", "pass:"+password, "--ks-key-alias", stigma_alias, newAPKName]
     if (os.name == "nt"):
         cmd.insert(0, "bash")
-        cmd[1] = "./pre-builts/apksigner"
+        cmd[1] = "./lib/android-sdk/build-tools/debian/apksigner"
         #print("Signing with apksigner:", cmd)
         completedProcess = subprocess.run(cmd, shell=True)
     elif (os.name == "posix"):
