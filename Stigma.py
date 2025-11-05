@@ -376,7 +376,13 @@ def rebuildApk(newAPKName, temp_directory_name):
 
 def alignApk(unalignedAPKName, modifiedAPKName, temp_directory_name):
     # https://pedrovhb.com/posts/fix_it_yourself/
-    cmd = ["/lib/android-sdk/build-tools/debian/zipalign", "4", os.path.join(temp_directory_name, unalignedAPKName), modifiedAPKName]
+
+    # find zipalign
+    zipalign_path = "/lib/android-sdk/build-tools/debian/zipalign"
+    if not os.path.exists(zipalign_path):
+        zipalign_path = input("Zipalign not found in lib folder. Please manually input path to zipalign.")
+
+    cmd = [zipalign_path, "4", os.path.join(temp_directory_name, unalignedAPKName), modifiedAPKName]
     subprocess.run(cmd)
 
 def signApk(newAPKName):
@@ -405,10 +411,16 @@ def signApk(newAPKName):
 
     # print("Signing...")
     # apksigner sign --ks stigma-keys.keystore --ks-pass pass:MzJiY2ZjNjY5Z --ks-key-alias stigma_keystore_alias ./leak_detect_test/Tracked_StigmaTest.apk
-    cmd = ["/lib/android-sdk/build-tools/debian/apksigner", "sign", "--ks", keystore_name, "--ks-pass", "pass:"+password, "--ks-key-alias", stigma_alias, newAPKName]
+
+    # find apksigner
+    signer_path = "/lib/android-sdk/build-tools/debian/apksigner"
+    if not os.path.exists(signer_path):
+        signer_path = input("Apksigner not found in lib folder. Please manually input path to apksigner.")
+
+    cmd = [signer_path, "sign", "--ks", keystore_name, "--ks-pass", "pass:"+password, "--ks-key-alias", stigma_alias, newAPKName]
     if (os.name == "nt"):
         cmd.insert(0, "bash")
-        cmd[1] = "./lib/android-sdk/build-tools/debian/apksigner"
+        cmd[1] = "." + signer_path
         #print("Signing with apksigner:", cmd)
         completedProcess = subprocess.run(cmd, shell=True)
     elif (os.name == "posix"):
