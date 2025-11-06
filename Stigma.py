@@ -30,7 +30,6 @@ def aapt2_helper():
                 return True
     return False 
 
-
 def dumpApk(apk_path):
     # dump apk files
     tmp_file_name = StigmaState.Environment().get_temp_file().name
@@ -44,7 +43,6 @@ def dumpApk(apk_path):
         completed_process = subprocess.run(cmd)
     completed_process.check_returncode()
     print("Apk unpacked in %.1f seconds" % (time.time() - start_time))
-
 
 def findPlugin(p):
     # checks a few variations for the plugin name so Stigma is easier
@@ -87,8 +85,6 @@ def importPlugin(plugin_name):
     print("Loading Plugin: " + str(plugin_name))
     mod = importlib.import_module(plugin_name)
     mod.main()
-
-
 
 def _has_launcher_intent_filter(xml_element):
     for child in xml_element:
@@ -454,6 +450,11 @@ def stigmaMainWorkflow(args):
 
     unalignedAPKName = "Unaligned_" + os.path.basename(args.APK)
     modifiedAPKName = "Modified_" + os.path.basename(args.APK)
+
+    if(os.path.exists(modifiedAPKName)){
+        print(modifiedAPKName + " already exists.  Deleting it now!")
+        os.remove(modifiedAPKName)
+    }
 
     dry_run = (args.plugin == None)
     if (not dry_run):
