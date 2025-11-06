@@ -10,13 +10,12 @@ def new_method_handler(scd, smd):
     
     block = []
 
-    if (scd in Instrumenter.get_launcher_classes() and smd.signature.name == "onCreate"):
-        block.append(smali.CONST_STRING("v0", "\"Stigma Method Tracker\""))
-        block.append(smali.BLANK_LINE())
-        block.append(smali.CONST_STRING("v1", "\"" + smd.signature.name + "\""))
-        block.append(smali.BLANK_LINE())
-        block.append(smali.INVOKE_STATIC(["v0", "v1"], "Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I"))
-        block.append(smali.BLANK_LINE())
+    block.append(smali.CONST_STRING("v0", "\"Stigma Method Tracker\""))
+    block.append(smali.BLANK_LINE())
+    block.append(smali.CONST_STRING("v1", "\"" + smd.signature.name + "\""))
+    block.append(smali.BLANK_LINE())
+    block.append(smali.INVOKE_STATIC(["v0", "v1"], "Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I"))
+    block.append(smali.BLANK_LINE())
 
     return block
 
@@ -24,7 +23,7 @@ def new_method_handler(scd, smd):
 
 def main():
     
-    Instrumenter.sign_up_launcher_activity_oncreate_start(new_method_handler, 3)
+    Instrumenter.sign_up_method_start(new_method_handler, 3)
 
     
 

@@ -157,6 +157,7 @@ cython_debug/
 apk/
 APK/
 *.apk
+*.apk.idsig
 
 # The keystore
 *.keystore
