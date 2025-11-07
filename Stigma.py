@@ -451,10 +451,9 @@ def stigmaMainWorkflow(args):
     unalignedAPKName = "Unaligned_" + os.path.basename(args.APK)
     modifiedAPKName = "Modified_" + os.path.basename(args.APK)
 
-    if(os.path.exists(modifiedAPKName)){
-        print(modifiedAPKName + " already exists.  Deleting it now!")
+    if(os.path.exists(modifiedAPKName)):
+        print(modifiedAPKName + " already exists. Deleting it now!")
         os.remove(modifiedAPKName)
-    }
 
     dry_run = (args.plugin == None)
     if (not dry_run):
