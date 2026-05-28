@@ -33,7 +33,7 @@ It is recommended to use a virtual environment for easier python module dependen
 
 You likely need to download some APK file to be run through Stigma. We recommend downloading from [https://www.apkmirror.com](https://www.apkmirror.com/) or [https://f-droid.org](https://f-droid.org/). 
 
-After successfully running, a new APK file should be generated (and signed): `Modified_some_app.apk`  
+After successfully running stigma, a new APK file should be generated (and signed): `Modified_some_app.apk`  
 
 You can run this APK on an emulator or physical device.  Using ExamplePlugin.py you should be able to see "Stigma" and "Example Plugin" appear in the logcat.
 
